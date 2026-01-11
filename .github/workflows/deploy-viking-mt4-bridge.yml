@@ -3,6 +3,7 @@
 # ============================================================
 # Deploys VIKING bridge components to VPS
 # COMPLETELY SEPARATE from FIDUS MT5 bridge
+# Uses direct file writing via SSH (not scp-action)
 # ============================================================
 
 name: Deploy VIKING MT4 Bridge
@@ -26,11 +27,6 @@ on:
         default: 'true'
         type: boolean
 
-env:
-  # VIKING specific paths
-  VIKING_BRIDGE_PATH: /opt/viking_bridge
-  MT4_EXPERTS_PATH: 'C:\Program Files\MEXAtlantic MT4 Terminal\MQL4\Experts'
-
 jobs:
   deploy-viking-bridge:
     runs-on: ubuntu-latest
@@ -40,11 +36,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
       
       - name: Validate files exist
         run: |
@@ -62,7 +53,69 @@ jobs:
           
           echo "✅ All files validated"
       
-      - name: Deploy Python Bridge Service
+      - name: Create deployment directory and deploy files
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 120s
+          command_timeout: 300s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "VIKING MT4 Bridge Deployment" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            # Create viking_bridge directory
+            $vikingPath = "C:\viking_bridge"
+            if (-not (Test-Path $vikingPath)) {
+                New-Item -ItemType Directory -Path $vikingPath -Force | Out-Null
+                Write-Host "✅ Created directory: $vikingPath" -ForegroundColor Green
+            } else {
+                Write-Host "📁 Directory exists: $vikingPath" -ForegroundColor Yellow
+            }
+            
+            # Stop existing Python processes for viking bridge
+            Write-Host "🔍 Checking for existing VIKING bridge process..." -ForegroundColor Cyan
+            Get-Process python* -ErrorAction SilentlyContinue | Where-Object {
+                try { $_.Path -and (Get-Content $_.Path -ErrorAction SilentlyContinue) -match "viking" } catch { $false }
+            } | ForEach-Object {
+                Write-Host "⏹️ Stopping process: $($_.Id)" -ForegroundColor Yellow
+                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+            }
+            
+            # Download files from GitHub raw
+            Write-Host "📥 Downloading VIKING bridge files from GitHub..." -ForegroundColor Cyan
+            
+            $repo = "${{ github.repository }}"
+            $branch = "${{ github.ref_name }}"
+            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/backend/mt4_bridge"
+            
+            # Download Python service
+            Write-Host "  Downloading viking_mt4_bridge_service.py..." -ForegroundColor Gray
+            Invoke-WebRequest -Uri "$baseUrl/viking_mt4_bridge_service.py" -OutFile "$vikingPath\viking_mt4_bridge_service.py" -UseBasicParsing
+            
+            # Download requirements
+            Write-Host "  Downloading requirements_viking.txt..." -ForegroundColor Gray
+            Invoke-WebRequest -Uri "$baseUrl/requirements_viking.txt" -OutFile "$vikingPath\requirements_viking.txt" -UseBasicParsing
+            
+            # Download EA file
+            Write-Host "  Downloading VIKING_MT4_Bridge.mq4..." -ForegroundColor Gray
+            Invoke-WebRequest -Uri "$baseUrl/VIKING_MT4_Bridge.mq4" -OutFile "$vikingPath\VIKING_MT4_Bridge.mq4" -UseBasicParsing
+            
+            # Download batch file
+            Write-Host "  Downloading start_viking_bridge.bat..." -ForegroundColor Gray
+            Invoke-WebRequest -Uri "$baseUrl/start_viking_bridge.bat" -OutFile "$vikingPath\start_viking_bridge.bat" -UseBasicParsing
+            
+            Write-Host "✅ All files downloaded" -ForegroundColor Green
+            
+            # List downloaded files
+            Write-Host ""
+            Write-Host "📁 Files in $vikingPath :" -ForegroundColor Cyan
+            Get-ChildItem $vikingPath | Format-Table Name, Length, LastWriteTime -AutoSize
+      
+      - name: Create .env file with MongoDB URL
         if: ${{ inputs.deploy_service }}
         uses: appleboy/ssh-action@master
         with:
@@ -73,36 +126,16 @@ jobs:
           timeout: 60s
           command_timeout: 60s
           script: |
-            Write-Host "🚀 Deploying VIKING Bridge Service..." -ForegroundColor Cyan
+            Write-Host "📝 Creating .env file..." -ForegroundColor Cyan
             
-            # Create directory if not exists
-            $vikingPath = "C:\viking_bridge"
-            if (-not (Test-Path $vikingPath)) {
-                New-Item -ItemType Directory -Path $vikingPath -Force
-                Write-Host "✅ Created directory: $vikingPath" -ForegroundColor Green
-            }
+            $envContent = @"
+            MONGO_URL=${{ secrets.MONGO_URL }}
+            DB_NAME=fidus_production
+            VIKING_BRIDGE_PORT=8001
+            "@
             
-            # Stop existing service if running
-            $process = Get-Process -Name "python*" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*viking*" }
-            if ($process) {
-                Write-Host "⏹️ Stopping existing VIKING bridge..." -ForegroundColor Yellow
-                $process | Stop-Process -Force
-                Start-Sleep -Seconds 2
-            }
-            
-            Write-Host "✅ Directory prepared: $vikingPath" -ForegroundColor Green
-      
-      - name: Copy service files to VPS
-        if: ${{ inputs.deploy_service }}
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          source: "backend/mt4_bridge/viking_mt4_bridge_service.py,backend/mt4_bridge/requirements_viking.txt,backend/mt4_bridge/start_viking_bridge.bat"
-          target: 'C:\viking_bridge'
-          strip_components: 2
+            $envContent | Out-File -FilePath "C:\viking_bridge\.env" -Encoding UTF8
+            Write-Host "✅ .env file created" -ForegroundColor Green
       
       - name: Install dependencies and start service
         if: ${{ inputs.deploy_service && inputs.restart_service }}
@@ -112,44 +145,46 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          timeout: 120s
-          command_timeout: 120s
+          timeout: 180s
+          command_timeout: 180s
           script: |
             Write-Host "📦 Installing Python dependencies..." -ForegroundColor Cyan
             
             cd C:\viking_bridge
             
+            # Install requirements
             pip install -r requirements_viking.txt
+            
+            Write-Host "✅ Dependencies installed" -ForegroundColor Green
             
             Write-Host "🚀 Starting VIKING bridge service..." -ForegroundColor Cyan
             
-            # Start service in background
-            Start-Process -FilePath "python" -ArgumentList "viking_mt4_bridge_service.py" -WorkingDirectory "C:\viking_bridge" -WindowStyle Hidden
+            # Start service in background using Start-Process
+            Start-Process -FilePath "python" -ArgumentList "viking_mt4_bridge_service.py" -WorkingDirectory "C:\viking_bridge" -WindowStyle Hidden -RedirectStandardOutput "C:\viking_bridge\service_stdout.log" -RedirectStandardError "C:\viking_bridge\service_stderr.log"
             
-            Start-Sleep -Seconds 3
+            Start-Sleep -Seconds 5
             
-            # Verify service started
-            $process = Get-Process -Name "python*" -ErrorAction SilentlyContinue
-            if ($process) {
-                Write-Host "✅ VIKING bridge service started successfully" -ForegroundColor Green
-                Write-Host "📊 Service running on port 8001" -ForegroundColor Green
+            # Check if service is running
+            $pythonProcs = Get-Process python* -ErrorAction SilentlyContinue
+            if ($pythonProcs) {
+                Write-Host "✅ Python process started" -ForegroundColor Green
+                
+                # Test health endpoint
+                try {
+                    $response = Invoke-WebRequest -Uri "http://localhost:8001/api/viking/health" -UseBasicParsing -TimeoutSec 10
+                    Write-Host "✅ Health check passed: $($response.StatusCode)" -ForegroundColor Green
+                } catch {
+                    Write-Host "⚠️ Health check failed (service may still be starting)" -ForegroundColor Yellow
+                }
             } else {
-                Write-Host "❌ Failed to start service" -ForegroundColor Red
+                Write-Host "❌ Failed to start Python process" -ForegroundColor Red
+                Write-Host "Checking logs..." -ForegroundColor Yellow
+                if (Test-Path "C:\viking_bridge\service_stderr.log") {
+                    Get-Content "C:\viking_bridge\service_stderr.log" -Tail 20
+                }
             }
       
-      - name: Copy EA file to VPS
-        if: ${{ inputs.deploy_ea }}
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          source: "backend/mt4_bridge/VIKING_MT4_Bridge.mq4"
-          target: 'C:\viking_bridge'
-          strip_components: 2
-      
-      - name: Deploy MT4 EA file
+      - name: Deploy EA to MT4 terminal
         if: ${{ inputs.deploy_ea }}
         uses: appleboy/ssh-action@master
         with:
@@ -160,26 +195,43 @@ jobs:
           timeout: 60s
           command_timeout: 60s
           script: |
-            Write-Host "📝 Deploying VIKING MT4 EA..." -ForegroundColor Cyan
+            Write-Host "📝 Deploying EA to MT4 terminal..." -ForegroundColor Cyan
             
             $eaSource = "C:\viking_bridge\VIKING_MT4_Bridge.mq4"
-            $eaDest = "C:\Program Files\MEXAtlantic MT4 Terminal\MQL4\Experts\VIKING_MT4_Bridge.mq4"
             
-            if (Test-Path $eaSource) {
-                Copy-Item -Path $eaSource -Destination $eaDest -Force
-                Write-Host "✅ EA copied to MT4 Experts folder" -ForegroundColor Green
-            } else {
-                Write-Host "⚠️ EA source file not found at: $eaSource" -ForegroundColor Yellow
+            # Try multiple possible MT4 paths
+            $mt4Paths = @(
+                "C:\Program Files\MEXAtlantic MT4 Terminal\MQL4\Experts",
+                "C:\Program Files (x86)\MEXAtlantic MT4 Terminal\MQL4\Experts",
+                "C:\Program Files\MEX Atlantic MT4 Terminal\MQL4\Experts",
+                "C:\Program Files (x86)\MEX Atlantic MT4 Terminal\MQL4\Experts"
+            )
+            
+            $copied = $false
+            foreach ($mt4Path in $mt4Paths) {
+                if (Test-Path $mt4Path) {
+                    $eaDest = Join-Path $mt4Path "VIKING_MT4_Bridge.mq4"
+                    Copy-Item -Path $eaSource -Destination $eaDest -Force
+                    Write-Host "✅ EA copied to: $eaDest" -ForegroundColor Green
+                    $copied = $true
+                    break
+                }
+            }
+            
+            if (-not $copied) {
+                Write-Host "⚠️ Could not find MT4 Experts folder. EA is at: $eaSource" -ForegroundColor Yellow
+                Write-Host "Please copy manually to your MT4 MQL4\Experts folder" -ForegroundColor Yellow
             }
             
             Write-Host ""
-            Write-Host "📋 EA deployment notes:" -ForegroundColor Cyan
-            Write-Host "  1. EA file is at: $eaDest"
-            Write-Host "  2. Compile in MetaEditor if needed"
-            Write-Host "  3. Attach to any chart on account 33627673"
-            Write-Host "  4. Enable WebRequest for localhost:8001"
+            Write-Host "📋 Next steps:" -ForegroundColor Cyan
+            Write-Host "  1. Open MetaEditor and compile the EA (if needed)"
+            Write-Host "  2. In MT4: Tools > Options > Expert Advisors"
+            Write-Host "  3. Enable 'Allow WebRequest for listed URL'"
+            Write-Host "  4. Add URL: http://localhost:8001"
+            Write-Host "  5. Attach EA to any chart on account 33627673"
       
-      - name: Verify deployment
+      - name: Final verification
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -190,48 +242,50 @@ jobs:
           command_timeout: 60s
           script: |
             Write-Host ""
-            Write-Host "============================================================" -ForegroundColor Cyan
-            Write-Host "   VIKING MT4 Bridge Deployment Summary" -ForegroundColor Cyan
-            Write-Host "============================================================" -ForegroundColor Cyan
-            Write-Host ""
-            
-            Write-Host "📁 Files deployed to: C:\viking_bridge" -ForegroundColor White
-            Get-ChildItem -Path "C:\viking_bridge" -ErrorAction SilentlyContinue | Format-Table Name, Length, LastWriteTime
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "   DEPLOYMENT SUMMARY" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
             
             Write-Host ""
-            Write-Host "🔄 Service Status:" -ForegroundColor White
-            $process = Get-Process -Name "python*" -ErrorAction SilentlyContinue
-            if ($process) {
-                Write-Host "  ✅ Python process is RUNNING" -ForegroundColor Green
+            Write-Host "📁 Deployed files:" -ForegroundColor White
+            Get-ChildItem "C:\viking_bridge" | Format-Table Name, Length -AutoSize
+            
+            Write-Host ""
+            Write-Host "🔄 Service status:" -ForegroundColor White
+            $proc = Get-Process python* -ErrorAction SilentlyContinue
+            if ($proc) {
+                Write-Host "  ✅ Python is running (PID: $($proc.Id -join ', '))" -ForegroundColor Green
             } else {
-                Write-Host "  ⚠️ Python process is NOT running" -ForegroundColor Yellow
+                Write-Host "  ⚠️ Python not running" -ForegroundColor Yellow
+            }
+            
+            # Test health endpoint
+            try {
+                $health = Invoke-RestMethod -Uri "http://localhost:8001/api/viking/health" -TimeoutSec 5
+                Write-Host "  ✅ VIKING Bridge responding on port 8001" -ForegroundColor Green
+                Write-Host "     MongoDB: $($health.mongodb)" -ForegroundColor Gray
+            } catch {
+                Write-Host "  ⚠️ Could not reach VIKING Bridge on port 8001" -ForegroundColor Yellow
             }
             
             Write-Host ""
-            Write-Host "📋 Next Steps:" -ForegroundColor White
-            Write-Host "  1. Open MT4 terminal for account 33627673"
-            Write-Host "  2. Compile EA in MetaEditor (if needed)"
-            Write-Host "  3. Enable WebRequest: Tools > Options > Expert Advisors"
-            Write-Host "     Add URL: http://localhost:8001"
-            Write-Host "  4. Attach EA to any chart"
-            Write-Host ""
-            Write-Host "============================================================" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
       
       - name: Post deployment summary
         run: |
           echo "## 🚀 VIKING MT4 Bridge Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Files Deployed:" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Deployed to C:\\viking_bridge:" >> $GITHUB_STEP_SUMMARY
           echo "- \`viking_mt4_bridge_service.py\` - Python bridge service" >> $GITHUB_STEP_SUMMARY
           echo "- \`VIKING_MT4_Bridge.mq4\` - MT4 Expert Advisor" >> $GITHUB_STEP_SUMMARY
           echo "- \`requirements_viking.txt\` - Python dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "- \`.env\` - MongoDB configuration" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Service Configuration:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Port:** 8001 (separate from FIDUS on 8000)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Port:** 8001 (separate from FIDUS)" >> $GITHUB_STEP_SUMMARY
           echo "- **Account:** 33627673 (VIKING CORE)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Collections:** viking_accounts, viking_deals_history" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Manual Steps Required:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Compile EA in MetaEditor (if needed)" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Compile EA in MetaEditor" >> $GITHUB_STEP_SUMMARY
           echo "2. Enable WebRequest for \`http://localhost:8001\`" >> $GITHUB_STEP_SUMMARY
           echo "3. Attach EA to chart on account 33627673" >> $GITHUB_STEP_SUMMARY
