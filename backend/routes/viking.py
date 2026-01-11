@@ -17,8 +17,8 @@ import logging
 import sys
 sys.path.append('/app/backend')
 
-# JWT Authentication
-from auth.dependencies import get_current_user
+# Note: VIKING routes are internal APIs for MT4 bridge sync
+# Authentication can be added later if needed via auth.dependencies.get_current_agent
 
 router = APIRouter(prefix="/api/viking", tags=["VIKING Trading"])
 
