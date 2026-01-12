@@ -352,13 +352,13 @@ const VikingDashboard = () => {
               className="border"
               style={{ 
                 backgroundColor: `${VKNG_COLORS.darkGray}`,
-                borderColor: `${VKNG_COLORS.gold}30`
+                borderColor: `${VKNG_COLORS.purple}30`
               }}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
-                    <span style={{ color: VKNG_COLORS.gold }}>⚡</span>
+                    <span style={{ color: VKNG_COLORS.purple }}>⚡</span>
                     VIKING CORE Strategy
                   </CardTitle>
                   <Badge className={`${getStatusColor(coreAccount?.status)} border`}>
