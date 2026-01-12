@@ -403,19 +403,7 @@ function App() {
     );
   }
 
-  // EARLY RETURN: VIKING standalone application - completely separate from FIDUS
-  if (isVikingRoute) {
-    return (
-      <BrowserRouter>
-        <ToastProvider>
-          <Routes>
-            <Route path="/viking" element={<VikingApp />} />
-            <Route path="/viking/*" element={<VikingApp />} />
-          </Routes>
-        </ToastProvider>
-      </BrowserRouter>
-    );
-  }
+  // DUPLICATE VIKING ROUTE CHECK REMOVED - handled earlier in the component
 
   return (
     <BrowserRouter>
