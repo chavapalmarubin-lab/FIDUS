@@ -715,9 +715,12 @@ async def get_viking_symbol_distribution(strategy: str):
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
-        # Aggregate trades by symbol
+        # Aggregate trades by symbol - handle both string and int account numbers
         pipeline = [
-            {"$match": {"account": account["account"]}},
+            {"$match": {"$or": [
+                {"account": account["account"]},
+                {"account": str(account["account"])}
+            ]}},
             {"$group": {
                 "_id": "$symbol",
                 "count": {"$sum": 1},
