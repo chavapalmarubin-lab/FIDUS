@@ -36,8 +36,8 @@ const VKNG_COLORS = {
 
 // VKNG AI credentials
 const VKNG_CREDENTIALS = {
-  username: 'viking_admin',
-  password: 'viking2026'
+  username: 'admin',
+  password: 'Password123'
 };
 
 const VikingLogin = ({ onLogin }) => {
@@ -275,7 +275,7 @@ const VikingLogin = ({ onLogin }) => {
           className="mt-6 text-center"
         >
           <p className="text-xs" style={{ color: `${VKNG_COLORS.textSecondary}60` }}>
-            Demo: viking_admin / viking2026
+            Login: admin / Password123
           </p>
         </motion.div>
       </motion.div>
