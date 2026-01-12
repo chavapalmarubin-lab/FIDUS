@@ -153,6 +153,18 @@ const VikingDashboard = () => {
       if (riskDataRes.success) {
         setRiskData(riskDataRes.risk);
       }
+
+      // Fetch balance history for charts
+      const balanceRes = await fetch(`${BACKEND_URL}/api/viking/balance-snapshots/CORE`);
+      const balanceData = await balanceRes.json();
+      
+      if (balanceData.success && balanceData.snapshots) {
+        setBalanceHistory(balanceData.snapshots.map(s => ({
+          date: new Date(s.timestamp).toLocaleDateString(),
+          balance: s.balance,
+          equity: s.equity
+        })));
+      }
       
     } catch (err) {
       console.error("Error fetching VIKING data:", err);
