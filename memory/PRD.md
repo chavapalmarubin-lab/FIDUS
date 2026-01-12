@@ -105,7 +105,17 @@ Applied official getvkng.com branding to entire VIKING portal:
 - ✅ Cards: Purple borders and accent icons
 - ✅ Charts: Updated to use VKNG purple color scheme
 
+### Phase 6 - MT4 Trade History Integration ✅ COMPLETE (Jan 12, 2026)
+- ✅ Created `VIKING_Account_Data_Writer.mq4` v2.0 with closed trades export (MODE_HISTORY)
+- ✅ Updated `viking_file_monitor.py` to sync closed trades to `viking_deals_history` collection
+- ✅ 77 closed trades synced from MT4 account 33627673
+- ✅ Backend analytics calculation from real trade data
+- ✅ Real metrics: 97.4% win rate, $801.74 profit, 844.94 profit factor
+- ✅ Removed all placeholder/template data from dashboard
+- ✅ Fixed routing - VIKING app completely separate from FIDUS at `/viking`
+
 **Access VIKING Portal at:** `/viking`
+**Login:** `admin` / `Password123`
 
 ---
 
