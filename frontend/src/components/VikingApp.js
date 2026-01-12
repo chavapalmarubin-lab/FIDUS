@@ -18,19 +18,13 @@ import { Button } from './ui/button';
 import { LogOut, User, Bell, Settings } from 'lucide-react';
 
 const VikingApp = () => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Check for existing VIKING session
-    const isAuth = localStorage.getItem('viking_authenticated') === 'true';
-    const vikingUser = localStorage.getItem('viking_user');
-    
-    if (isAuth && vikingUser) {
-      setAuthenticated(true);
-      setUser(vikingUser);
-    }
-  }, []);
+  // Check for existing VIKING session on initial load
+  const [authenticated, setAuthenticated] = useState(() => {
+    return localStorage.getItem('viking_authenticated') === 'true';
+  });
+  const [user, setUser] = useState(() => {
+    return localStorage.getItem('viking_user') || null;
+  });
 
   const handleLogin = (success) => {
     if (success) {
