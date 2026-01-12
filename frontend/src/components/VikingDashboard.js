@@ -253,13 +253,7 @@ const VikingDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-3" style={{ color: VKNG_COLORS.textPrimary }}>
-            <img 
-              src="/vkng-logo.png" 
-              alt="VKNG" 
-              className="h-8 w-auto"
-              style={{ filter: 'drop-shadow(0 0 10px rgba(155, 39, 255, 0.4))' }}
-            />
+          <h1 className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>
             Trading Operations
           </h1>
           <p className="mt-1" style={{ color: VKNG_COLORS.textSecondary }}>
