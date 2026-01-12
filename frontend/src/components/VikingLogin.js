@@ -47,6 +47,13 @@ const VikingLogin = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Ensure we're on /viking route
+  React.useEffect(() => {
+    if (!window.location.pathname.startsWith('/viking')) {
+      window.location.href = '/viking';
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
