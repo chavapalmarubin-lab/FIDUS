@@ -47,6 +47,10 @@ const VikingApp = () => {
     localStorage.removeItem('viking_user');
     setAuthenticated(false);
     setUser(null);
+    // Ensure we stay on /viking route
+    if (window.location.pathname !== '/viking') {
+      window.location.href = '/viking';
+    }
   };
 
   // Show login if not authenticated
