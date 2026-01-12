@@ -258,7 +258,7 @@ const VikingDashboard = () => {
               src="/vkng-logo.png" 
               alt="VKNG" 
               className="h-8 w-auto"
-              style={{ filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.4))' }}
+              style={{ filter: 'drop-shadow(0 0 10px rgba(155, 39, 255, 0.4))' }}
             />
             Trading Operations
           </h1>
@@ -279,8 +279,8 @@ const VikingDashboard = () => {
             disabled={calculating}
             className="transition-all duration-200"
             style={{ 
-              borderColor: VKNG_COLORS.gold,
-              color: VKNG_COLORS.gold,
+              borderColor: VKNG_COLORS.purple,
+              color: VKNG_COLORS.purple,
               backgroundColor: 'transparent'
             }}
             data-testid="viking-calculate-btn"
