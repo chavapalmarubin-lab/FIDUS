@@ -1090,11 +1090,11 @@ const VikingDashboard = () => {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Worst Month %</p>
-                      <p className="text-lg font-bold text-green-400">+{riskData?.balance_metrics?.worst_month_pct || 0.6}%</p>
+                      <p className="text-lg font-bold text-green-400">{riskData?.balance_metrics?.worst_month_pct != null ? `${riskData.balance_metrics.worst_month_pct > 0 ? '+' : ''}${riskData.balance_metrics.worst_month_pct}%` : '--'}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Deepest Valley</p>
-                      <p className="text-lg font-bold text-red-400">{riskData?.balance_metrics?.deepest_valley || -7.4}%</p>
+                      <p className="text-lg font-bold text-red-400">{riskData?.balance_metrics?.deepest_valley != null ? `${riskData.balance_metrics.deepest_valley}%` : '--'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1108,15 +1108,15 @@ const VikingDashboard = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-gray-500">Worst Day %</p>
-                      <p className="text-lg font-bold text-red-400">{riskData?.equity_metrics?.worst_day_pct || -7.2}%</p>
+                      <p className="text-lg font-bold text-red-400">{riskData?.equity_metrics?.worst_day_pct != null ? `${riskData.equity_metrics.worst_day_pct}%` : '--'}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Worst Week %</p>
-                      <p className="text-lg font-bold text-red-400">{riskData?.equity_metrics?.worst_week_pct || -5.0}%</p>
+                      <p className="text-lg font-bold text-red-400">{riskData?.equity_metrics?.worst_week_pct != null ? `${riskData.equity_metrics.worst_week_pct}%` : '--'}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Worst Month %</p>
-                      <p className="text-lg font-bold text-red-400">{riskData?.equity_metrics?.worst_month_pct || -7.5}%</p>
+                      <p className="text-lg font-bold text-red-400">{riskData?.equity_metrics?.worst_month_pct != null ? `${riskData.equity_metrics.worst_month_pct}%` : '--'}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Deepest Valley</p>
