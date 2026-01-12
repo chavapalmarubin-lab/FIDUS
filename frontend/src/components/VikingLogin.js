@@ -76,13 +76,13 @@ const VikingLogin = ({ onLogin }) => {
         <div 
           className="absolute inset-0 opacity-30"
           style={{
-            background: `radial-gradient(ellipse at 50% 0%, ${VKNG_COLORS.gold}20 0%, transparent 50%)`
+            background: `radial-gradient(ellipse at 50% 0%, ${VKNG_COLORS.purple}20 0%, transparent 50%)`
           }}
         />
         <div 
           className="absolute inset-0 opacity-20"
           style={{
-            background: `radial-gradient(ellipse at 80% 80%, ${VKNG_COLORS.gold}10 0%, transparent 40%)`
+            background: `radial-gradient(ellipse at 80% 80%, ${VKNG_COLORS.magenta}10 0%, transparent 40%)`
           }}
         />
       </div>
@@ -91,7 +91,7 @@ const VikingLogin = ({ onLogin }) => {
       <div 
         className="absolute inset-0 opacity-5"
         style={{
-          backgroundImage: `linear-gradient(${VKNG_COLORS.gold}20 1px, transparent 1px), linear-gradient(90deg, ${VKNG_COLORS.gold}20 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${VKNG_COLORS.purple}20 1px, transparent 1px), linear-gradient(90deg, ${VKNG_COLORS.purple}20 1px, transparent 1px)`,
           backgroundSize: '50px 50px'
         }}
       />
@@ -106,7 +106,7 @@ const VikingLogin = ({ onLogin }) => {
           className="border-0 shadow-2xl backdrop-blur-xl"
           style={{ 
             backgroundColor: `${VKNG_COLORS.darkGray}F0`,
-            boxShadow: `0 25px 50px -12px ${VKNG_COLORS.gold}20`
+            boxShadow: `0 25px 50px -12px ${VKNG_COLORS.purple}20`
           }}
         >
           <CardHeader className="text-center pb-4 pt-8">
@@ -121,7 +121,7 @@ const VikingLogin = ({ onLogin }) => {
                 src="/vkng-logo.png" 
                 alt="VKNG AI" 
                 className="h-20 w-auto mx-auto"
-                style={{ filter: 'drop-shadow(0 0 30px rgba(212, 175, 55, 0.5))' }}
+                style={{ filter: 'drop-shadow(0 0 30px rgba(155, 39, 255, 0.5))' }}
               />
             </motion.div>
             
@@ -145,9 +145,9 @@ const VikingLogin = ({ onLogin }) => {
               <div 
                 className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs"
                 style={{ 
-                  backgroundColor: `${VKNG_COLORS.gold}15`,
-                  color: VKNG_COLORS.gold,
-                  border: `1px solid ${VKNG_COLORS.gold}30`
+                  backgroundColor: `${VKNG_COLORS.purple}15`,
+                  color: VKNG_COLORS.purpleLight,
+                  border: `1px solid ${VKNG_COLORS.purple}30`
                 }}
               >
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: VKNG_COLORS.success }}></span>
@@ -236,9 +236,9 @@ const VikingLogin = ({ onLogin }) => {
                 disabled={loading}
                 className="w-full h-12 text-base font-semibold border-0 mt-2 transition-all duration-300"
                 style={{ 
-                  background: `linear-gradient(135deg, ${VKNG_COLORS.gold} 0%, ${VKNG_COLORS.goldDark} 100%)`,
-                  color: VKNG_COLORS.dark,
-                  boxShadow: `0 4px 20px ${VKNG_COLORS.gold}40`
+                  background: `linear-gradient(135deg, ${VKNG_COLORS.pink} 0%, ${VKNG_COLORS.magenta} 100%)`,
+                  color: VKNG_COLORS.textPrimary,
+                  boxShadow: `0 4px 20px ${VKNG_COLORS.purple}40`
                 }}
                 data-testid="viking-login-btn"
               >
