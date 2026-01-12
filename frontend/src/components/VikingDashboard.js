@@ -476,19 +476,86 @@ const VikingDashboard = () => {
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Balance Chart Placeholder */}
+            {/* Balance Chart */}
             <Card className="lg:col-span-2 bg-gray-900/50 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-sm text-gray-400">Balance Over Time</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center border border-dashed border-gray-700 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Balance chart will populate</p>
-                    <p className="text-xs">when MT4 bridge syncs data</p>
+                {balanceHistory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={balanceHistory}>
+                      <defs>
+                        <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                      <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        labelStyle={{ color: '#fff' }}
+                        formatter={(value) => [formatCurrency(value), '']}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="balance" 
+                        stroke={COLORS.primary} 
+                        fill="url(#balanceGradient)" 
+                        strokeWidth={2}
+                        name="Balance"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="equity" 
+                        stroke={COLORS.secondary} 
+                        strokeWidth={2}
+                        dot={false}
+                        name="Equity"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : coreAccount?.balance > 0 ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={[
+                        { date: 'Start', balance: 86000, equity: 86000 },
+                        { date: 'Now', balance: coreAccount?.balance || 0, equity: coreAccount?.equity || 0 }
+                      ]}>
+                        <defs>
+                          <linearGradient id="balanceGradient2" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                        <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
+                          formatter={(value) => [formatCurrency(value), '']}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="balance" 
+                          stroke={COLORS.primary} 
+                          fill="url(#balanceGradient2)" 
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
-                </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center border border-dashed border-gray-700 rounded-lg">
+                    <div className="text-center text-gray-500">
+                      <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>Waiting for balance data</p>
+                      <p className="text-xs">Data will populate when MT4 syncs</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
