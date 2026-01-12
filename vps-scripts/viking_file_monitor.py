@@ -1,18 +1,21 @@
 """
-VIKING File Monitor Service - Auto-discovers and monitors viking_account_33627673_data.json
-EXACT COPY of FIDUS mt4_file_monitor.py - only changed for VIKING account
+VIKING File Monitor Service v2.0
+- Monitors viking_account_33627673_data.json
+- Updates viking_accounts collection with account data
+- Updates viking_deals_history collection with closed trades
 """
 import os
 import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 import sys
 
 # Configuration
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb+srv://chavapalmarubin_db_user:2170TenochSecure@fidus.y1p9be2.mongodb.net/fidus_production?retryWrites=true&w=majority')
 ACCOUNT_ID = "VIKING_33627673"
+ACCOUNT_NUMBER = 33627673
 POLL_INTERVAL = 30  # Check every 30 seconds
 
 def find_account_data_file():
@@ -70,7 +73,21 @@ def read_account_data(file_path):
         print(f"❌ Error reading file: {e}")
         return None
 
-def upload_to_mongodb(db, account_data):
+def parse_mt4_datetime(dt_str):
+    """Parse MT4 datetime string to Python datetime"""
+    if not dt_str:
+        return None
+    try:
+        # MT4 format: "2025.01.12 15:30:45"
+        return datetime.strptime(dt_str, "%Y.%m.%d %H:%M:%S")
+    except:
+        try:
+            # Alternative format
+            return datetime.strptime(dt_str, "%Y.%m.%d %H:%M")
+        except:
+            return None
+
+def upload_account_data(db, account_data):
     """Upload account data to MongoDB viking_accounts collection"""
     try:
         doc = {
@@ -90,6 +107,8 @@ def upload_to_mongodb(db, account_data):
             "leverage": account_data.get("leverage"),
             "positions_count": account_data.get("positions_count", 0),
             "orders_count": account_data.get("orders_count", 0),
+            "closed_trades_count": account_data.get("closed_trades_count", 0),
+            "history_total": account_data.get("history_total", 0),
             "status": "active",
             "last_sync": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
@@ -97,31 +116,73 @@ def upload_to_mongodb(db, account_data):
             "error_message": None
         }
         
-        # Write to viking_accounts collection (not mt5_accounts)
         result = db.viking_accounts.update_one(
             {"_id": ACCOUNT_ID},
             {"$set": doc},
             upsert=True
         )
         
-        if result.upserted_id:
-            print(f"✅ Created account: {ACCOUNT_ID}")
-        else:
-            print(f"✅ Updated: Balance=${doc['balance']:.2f}, Equity=${doc['equity']:.2f}")
-        
         return True
     except Exception as e:
-        print(f"❌ Upload error: {e}")
+        print(f"❌ Account upload error: {e}")
         return False
+
+def upload_closed_trades(db, closed_trades):
+    """Upload closed trades to MongoDB viking_deals_history collection"""
+    if not closed_trades:
+        return 0
+    
+    try:
+        operations = []
+        
+        for trade in closed_trades:
+            ticket = trade.get("ticket")
+            if not ticket:
+                continue
+            
+            doc = {
+                "ticket": ticket,
+                "account": ACCOUNT_NUMBER,
+                "strategy": "CORE",
+                "symbol": trade.get("symbol"),
+                "type": trade.get("type"),
+                "volume": float(trade.get("volume", 0)),
+                "open_price": float(trade.get("open_price", 0)),
+                "close_price": float(trade.get("close_price", 0)),
+                "open_time": parse_mt4_datetime(trade.get("open_time")),
+                "close_time": parse_mt4_datetime(trade.get("close_time")),
+                "profit": float(trade.get("profit", 0)),
+                "swap": float(trade.get("swap", 0)),
+                "commission": float(trade.get("commission", 0)),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            
+            # Use upsert to avoid duplicates
+            operations.append(
+                UpdateOne(
+                    {"ticket": ticket, "account": ACCOUNT_NUMBER},
+                    {"$set": doc, "$setOnInsert": {"created_at": datetime.now(timezone.utc)}},
+                    upsert=True
+                )
+            )
+        
+        if operations:
+            result = db.viking_deals_history.bulk_write(operations, ordered=False)
+            return result.upserted_count + result.modified_count
+        
+        return 0
+    except Exception as e:
+        print(f"❌ Closed trades upload error: {e}")
+        return 0
 
 def main():
     """Main service loop"""
     print("=" * 70)
-    print("VIKING FILE MONITOR SERVICE")
+    print("VIKING FILE MONITOR SERVICE v2.0")
     print("=" * 70)
     print(f"Account: {ACCOUNT_ID}")
     print(f"MongoDB: {MONGO_URL[:50]}...")
-    print(f"Collection: viking_accounts")
+    print(f"Collections: viking_accounts, viking_deals_history")
     print("=" * 70)
     
     # Find account data file
@@ -141,6 +202,15 @@ def main():
     if not db:
         print("❌ Cannot start without MongoDB connection")
         sys.exit(1)
+    
+    # Create index for deals history
+    try:
+        db.viking_deals_history.create_index([("ticket", 1), ("account", 1)], unique=True)
+        db.viking_deals_history.create_index([("close_time", -1)])
+        db.viking_deals_history.create_index([("symbol", 1)])
+        print("✅ Indexes created for viking_deals_history")
+    except Exception as e:
+        print(f"⚠️  Index creation: {e}")
     
     print(f"\n🚀 Service started. Monitoring: {file_path}")
     print(f"📊 Poll interval: {POLL_INTERVAL} seconds\n")
@@ -164,9 +234,20 @@ def main():
                 account_data = read_account_data(file_path)
                 
                 if account_data:
-                    if upload_to_mongodb(db, account_data):
-                        last_modified = current_modified
-                        error_count = 0
+                    # Upload account data
+                    if upload_account_data(db, account_data):
+                        print(f"✅ Account: Balance=${account_data.get('balance', 0):,.2f}, Equity=${account_data.get('equity', 0):,.2f}")
+                    
+                    # Upload closed trades
+                    closed_trades = account_data.get("closed_trades", [])
+                    if closed_trades:
+                        trades_synced = upload_closed_trades(db, closed_trades)
+                        print(f"✅ Closed trades synced: {trades_synced} (from {len(closed_trades)} in file)")
+                    else:
+                        print("ℹ️  No closed trades in file")
+                    
+                    last_modified = current_modified
+                    error_count = 0
                 else:
                     error_count += 1
                     if error_count > 5:

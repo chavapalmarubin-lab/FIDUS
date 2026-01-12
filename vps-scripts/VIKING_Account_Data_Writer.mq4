@@ -5,11 +5,12 @@
 //+------------------------------------------------------------------+
 #property copyright "VKNG AI Platform"
 #property link      ""
-#property version   "1.00"
+#property version   "2.00"
 #property strict
 
 // Input parameters
 input int SyncIntervalSeconds = 120;  // Sync interval in seconds
+input int MaxClosedTrades = 100;      // Max closed trades to export
 
 // Global variables
 string DataFilePath = "viking_account_33627673_data.json";
@@ -20,11 +21,12 @@ datetime LastSyncTime = 0;
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   Print("VIKING Account Data Writer EA Started");
+   Print("VIKING Account Data Writer EA Started (v2.0 with History)");
    Print("Account: ", AccountNumber());
    Print("Server: ", AccountServer());
    Print("Data File: ", DataFilePath);
    Print("Sync Interval: ", SyncIntervalSeconds, " seconds");
+   Print("Max Closed Trades: ", MaxClosedTrades);
    
    // Write initial data
    WriteAccountData();
@@ -91,7 +93,9 @@ void WriteAccountData()
    // Timestamp
    FileWriteString(fileHandle, "  \"timestamp\": \"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\",\n");
    
-   // Open positions
+   // ============================================
+   // OPEN POSITIONS (MODE_TRADES)
+   // ============================================
    FileWriteString(fileHandle, "  \"positions\": [\n");
    
    int totalOrders = OrdersTotal();
@@ -117,7 +121,7 @@ void WriteAccountData()
             FileWriteString(fileHandle, "      \"profit\": " + DoubleToString(OrderProfit(), 2) + ",\n");
             FileWriteString(fileHandle, "      \"swap\": " + DoubleToString(OrderSwap(), 2) + ",\n");
             FileWriteString(fileHandle, "      \"commission\": " + DoubleToString(OrderCommission(), 2) + ",\n");
-            FileWriteString(fileHandle, "      \"open_time\": \"" + TimeToString(OrderOpenTime(), TIME_DATE|TIME_MINUTES) + "\"\n");
+            FileWriteString(fileHandle, "      \"open_time\": \"" + TimeToString(OrderOpenTime(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\"\n");
             FileWriteString(fileHandle, "    }");
             
             positionCount++;
@@ -127,7 +131,9 @@ void WriteAccountData()
    
    FileWriteString(fileHandle, "\n  ],\n");
    
-   // Pending orders
+   // ============================================
+   // PENDING ORDERS
+   // ============================================
    FileWriteString(fileHandle, "  \"orders\": [\n");
    
    int orderCount = 0;
@@ -147,7 +153,7 @@ void WriteAccountData()
             FileWriteString(fileHandle, "      \"type\": \"" + OrderTypeToString(OrderType()) + "\",\n");
             FileWriteString(fileHandle, "      \"volume\": " + DoubleToString(OrderLots(), 2) + ",\n");
             FileWriteString(fileHandle, "      \"open_price\": " + DoubleToString(OrderOpenPrice(), 5) + ",\n");
-            FileWriteString(fileHandle, "      \"open_time\": \"" + TimeToString(OrderOpenTime(), TIME_DATE|TIME_MINUTES) + "\"\n");
+            FileWriteString(fileHandle, "      \"open_time\": \"" + TimeToString(OrderOpenTime(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\"\n");
             FileWriteString(fileHandle, "    }");
             
             orderCount++;
@@ -157,9 +163,51 @@ void WriteAccountData()
    
    FileWriteString(fileHandle, "\n  ],\n");
    
+   // ============================================
+   // CLOSED TRADES HISTORY (MODE_HISTORY)
+   // ============================================
+   FileWriteString(fileHandle, "  \"closed_trades\": [\n");
+   
+   int historyTotal = OrdersHistoryTotal();
+   int historyCount = 0;
+   
+   // Loop from most recent to oldest
+   for(i = historyTotal - 1; i >= 0 && historyCount < MaxClosedTrades; i--)
+   {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY))
+      {
+         // Only include actual trades (BUY=0, SELL=1), not deposits/withdrawals
+         if(OrderType() <= 1)
+         {
+            if(historyCount > 0)
+               FileWriteString(fileHandle, ",\n");
+            
+            FileWriteString(fileHandle, "    {\n");
+            FileWriteString(fileHandle, "      \"ticket\": " + IntegerToString(OrderTicket()) + ",\n");
+            FileWriteString(fileHandle, "      \"symbol\": \"" + OrderSymbol() + "\",\n");
+            FileWriteString(fileHandle, "      \"type\": \"" + OrderTypeToString(OrderType()) + "\",\n");
+            FileWriteString(fileHandle, "      \"volume\": " + DoubleToString(OrderLots(), 2) + ",\n");
+            FileWriteString(fileHandle, "      \"open_price\": " + DoubleToString(OrderOpenPrice(), 5) + ",\n");
+            FileWriteString(fileHandle, "      \"close_price\": " + DoubleToString(OrderClosePrice(), 5) + ",\n");
+            FileWriteString(fileHandle, "      \"open_time\": \"" + TimeToString(OrderOpenTime(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\",\n");
+            FileWriteString(fileHandle, "      \"close_time\": \"" + TimeToString(OrderCloseTime(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\",\n");
+            FileWriteString(fileHandle, "      \"profit\": " + DoubleToString(OrderProfit(), 2) + ",\n");
+            FileWriteString(fileHandle, "      \"swap\": " + DoubleToString(OrderSwap(), 2) + ",\n");
+            FileWriteString(fileHandle, "      \"commission\": " + DoubleToString(OrderCommission(), 2) + "\n");
+            FileWriteString(fileHandle, "    }");
+            
+            historyCount++;
+         }
+      }
+   }
+   
+   FileWriteString(fileHandle, "\n  ],\n");
+   
    // Statistics
    FileWriteString(fileHandle, "  \"positions_count\": " + IntegerToString(positionCount) + ",\n");
-   FileWriteString(fileHandle, "  \"orders_count\": " + IntegerToString(orderCount) + "\n");
+   FileWriteString(fileHandle, "  \"orders_count\": " + IntegerToString(orderCount) + ",\n");
+   FileWriteString(fileHandle, "  \"closed_trades_count\": " + IntegerToString(historyCount) + ",\n");
+   FileWriteString(fileHandle, "  \"history_total\": " + IntegerToString(historyTotal) + "\n");
    
    // End JSON
    FileWriteString(fileHandle, "}\n");
@@ -169,7 +217,8 @@ void WriteAccountData()
    Print("Data written: Balance=", DoubleToString(AccountBalance(), 2), 
          ", Equity=", DoubleToString(AccountEquity(), 2),
          ", Positions=", positionCount,
-         ", Orders=", orderCount);
+         ", Orders=", orderCount,
+         ", ClosedTrades=", historyCount);
 }
 
 //+------------------------------------------------------------------+
