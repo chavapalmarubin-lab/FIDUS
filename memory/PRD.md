@@ -65,7 +65,18 @@ VIKING is a **completely separate trading operation** from FIDUS Funds. It manag
 4. ✅ Enable WebRequest for `http://localhost:8001` in MT4 Options
 5. ✅ Attach EA to any chart on account 33627673
 6. ✅ MongoDB connected - viking_accounts collection active
-7. ⏳ Set up Windows Task Scheduler for auto-start on reboot
+7. ✅ Set up Windows Task Scheduler for auto-start on reboot
+
+### Phase 3 - Analytics & Visualization ✅ COMPLETE (Jan 12, 2026)
+1. ✅ Balance Charts - Added AreaChart with balance/equity visualization
+2. ✅ Analytics Calculations Endpoint - `/api/viking/calculate-analytics/{strategy}`
+   - Total Return %, Monthly/Weekly/Daily Return %
+   - Profit Factor, Win Rate %, Risk/Reward Ratio
+   - Peak Drawdown, Trade Statistics
+3. ✅ Balance Snapshots - `/api/viking/snapshot-balance/{strategy}` and `/api/viking/balance-snapshots/{strategy}`
+4. ✅ Profit Analysis Chart - Best/Worst/Average trade visualization
+5. ✅ Symbol Distribution - Pie chart from `/api/viking/symbols/{strategy}`
+6. ✅ "Calculate Analytics" button added to dashboard header
 
 ### VIKING MT4 Bridge Files (Created Jan 11, 2026)
 | File | Location | Description |
