@@ -58,6 +58,30 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Helper function to parse MT4 datetime format
+const parseMT4DateTime = (dateStr) => {
+  if (!dateStr) return null;
+  // MT4 format: "2026.01.09 21:37:53"
+  if (typeof dateStr === 'string' && dateStr.includes('.')) {
+    const [datePart, timePart] = dateStr.split(' ');
+    const [year, month, day] = datePart.split('.');
+    return new Date(`${year}-${month}-${day}T${timePart || '00:00:00'}`);
+  }
+  return new Date(dateStr);
+};
+
+// Format datetime for display
+const formatDateTime = (dateStr) => {
+  const date = parseMT4DateTime(dateStr);
+  if (!date || isNaN(date.getTime())) return '--';
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 // VKNG AI Brand Colors (from getvkng.com - Purple/Magenta theme)
 const VKNG_COLORS = {
   purple: '#9B27FF',
