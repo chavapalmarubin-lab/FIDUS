@@ -58,31 +58,32 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// VKNG AI Brand Colors (from getvkng.com)
+// VKNG AI Brand Colors (from getvkng.com - Purple/Magenta theme)
 const VKNG_COLORS = {
-  gold: '#D4AF37',
-  goldLight: '#F4D03F',
-  goldDark: '#B8860B',
-  dark: '#0A0A0A',
-  darkGray: '#141414',
-  mediumGray: '#1A1A1A',
+  purple: '#9B27FF',
+  purpleLight: '#A239EA',
+  magenta: '#CC00FF',
+  pink: '#E621A4',
+  dark: '#0A112B',
+  darkGray: '#0D1629',
+  mediumGray: '#1A2744',
   textPrimary: '#FFFFFF',
   textSecondary: '#9CA3AF'
 };
 
 // Colors for charts
 const COLORS = {
-  primary: '#D4AF37',    // VKNG Gold
-  secondary: '#F4D03F',  // Light Gold
+  primary: '#9B27FF',    // VKNG Purple
+  secondary: '#A239EA',  // Light Purple
   success: '#22c55e',    // Green
   danger: '#ef4444',     // Red
   warning: '#eab308',    // Yellow
   purple: '#8b5cf6',     // Purple
   cyan: '#06b6d4',       // Cyan
-  pink: '#ec4899'        // Pink
+  pink: '#E621A4'        // VKNG Pink
 };
 
-const SYMBOL_COLORS = ['#D4AF37', '#F4D03F', '#22c55e', '#8b5cf6', '#06b6d4', '#ec4899'];
+const SYMBOL_COLORS = ['#9B27FF', '#A239EA', '#22c55e', '#E621A4', '#06b6d4', '#ec4899'];
 
 const VikingDashboard = () => {
   const [loading, setLoading] = useState(true);
