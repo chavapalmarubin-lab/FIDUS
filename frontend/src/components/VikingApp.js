@@ -1,13 +1,8 @@
 /**
- * VIKING Trading Operations - Standalone Application
+ * VKNG AI Trading Operations - Standalone Application
  * 
- * This is a completely separate application from FIDUS
+ * Branded with official VKNG AI colors and logo from getvkng.com
  * Access at: /viking
- * 
- * Features:
- * - Separate login (viking_admin / viking2026)
- * - VIKING-only dashboard with all tabs
- * - No access to FIDUS features
  */
 
 import React, { useState } from 'react';
@@ -15,7 +10,20 @@ import { motion } from 'framer-motion';
 import VikingLogin from './VikingLogin';
 import VikingDashboard from './VikingDashboard';
 import { Button } from './ui/button';
-import { LogOut, User, Bell, Settings } from 'lucide-react';
+import { LogOut, User, Bell, TrendingUp } from 'lucide-react';
+
+// VKNG AI Brand Colors (from getvkng.com)
+const VKNG_COLORS = {
+  gold: '#D4AF37',
+  goldLight: '#F4D03F',
+  goldDark: '#B8860B',
+  dark: '#0A0A0A',
+  darkGray: '#141414',
+  mediumGray: '#1A1A1A',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  success: '#22C55E'
+};
 
 const VikingApp = () => {
   // Check for existing VIKING session on initial load
@@ -45,36 +53,89 @@ const VikingApp = () => {
     return <VikingLogin onLogin={handleLogin} />;
   }
 
-  // Show VIKING dashboard when authenticated
+  // Show VKNG AI dashboard when authenticated
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-      {/* VIKING Header */}
-      <header className="bg-gray-900/80 border-b border-gray-800 backdrop-blur-sm sticky top-0 z-50">
+    <div 
+      className="min-h-screen"
+      style={{ backgroundColor: VKNG_COLORS.dark }}
+    >
+      {/* VKNG AI Header */}
+      <header 
+        className="sticky top-0 z-50 backdrop-blur-xl"
+        style={{ 
+          backgroundColor: `${VKNG_COLORS.darkGray}E0`,
+          borderBottom: `1px solid ${VKNG_COLORS.mediumGray}`
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo & Title */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                <span className="text-xl">⚔️</span>
+            <div className="flex items-center gap-4">
+              <img 
+                src="/viking-logo.avif" 
+                alt="VKNG AI" 
+                className="h-10 w-auto"
+                style={{ filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.3))' }}
+              />
+              <div className="hidden sm:block">
+                <h1 
+                  className="text-lg font-bold"
+                  style={{ color: VKNG_COLORS.textPrimary }}
+                >
+                  VKNG AI
+                </h1>
+                <p 
+                  className="text-xs -mt-0.5"
+                  style={{ color: VKNG_COLORS.textSecondary }}
+                >
+                  Trading Operations
+                </p>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">VIKING Trading</h1>
-                <p className="text-xs text-gray-500">Operations Portal</p>
+            </div>
+
+            {/* Center - Status */}
+            <div className="hidden md:flex items-center gap-6">
+              <div 
+                className="flex items-center gap-2 px-4 py-1.5 rounded-full"
+                style={{ 
+                  backgroundColor: `${VKNG_COLORS.success}15`,
+                  border: `1px solid ${VKNG_COLORS.success}30`
+                }}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{ backgroundColor: VKNG_COLORS.success }}
+                />
+                <span className="text-xs font-medium" style={{ color: VKNG_COLORS.success }}>
+                  LIVE
+                </span>
+              </div>
+              
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                style={{ backgroundColor: VKNG_COLORS.mediumGray }}
+              >
+                <TrendingUp className="w-4 h-4" style={{ color: VKNG_COLORS.gold }} />
+                <span className="text-xs" style={{ color: VKNG_COLORS.textSecondary }}>
+                  Account 33627673
+                </span>
               </div>
             </div>
 
             {/* Right side */}
-            <div className="flex items-center gap-4">
-              {/* Status indicator */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-xs text-green-400">Live</span>
-              </div>
-
+            <div className="flex items-center gap-3">
               {/* User info */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 rounded-lg">
-                <User className="w-4 h-4 text-amber-500" />
-                <span className="text-sm text-gray-300 hidden sm:inline">{user}</span>
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                style={{ backgroundColor: VKNG_COLORS.mediumGray }}
+              >
+                <User className="w-4 h-4" style={{ color: VKNG_COLORS.gold }} />
+                <span 
+                  className="text-sm hidden sm:inline"
+                  style={{ color: VKNG_COLORS.textPrimary }}
+                >
+                  {user}
+                </span>
               </div>
 
               {/* Logout button */}
@@ -82,7 +143,11 @@ const VikingApp = () => {
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                className="border-0 transition-colors"
+                style={{ 
+                  color: VKNG_COLORS.textSecondary,
+                  backgroundColor: 'transparent'
+                }}
                 data-testid="viking-logout-btn"
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -105,11 +170,28 @@ const VikingApp = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 mt-8">
+      <footer style={{ borderTop: `1px solid ${VKNG_COLORS.mediumGray}` }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between text-xs text-gray-600">
-            <p>VIKING Trading Operations • Account 33627673</p>
-            <p>Separate from FIDUS • Real-time MT4 Analytics</p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/viking-logo.avif" 
+                alt="VKNG AI" 
+                className="h-6 w-auto opacity-50"
+              />
+              <p 
+                className="text-xs"
+                style={{ color: `${VKNG_COLORS.textSecondary}60` }}
+              >
+                VKNG AI Trading Operations
+              </p>
+            </div>
+            <p 
+              className="text-xs"
+              style={{ color: `${VKNG_COLORS.textSecondary}40` }}
+            >
+              Elite Traders + AI Execution • Real-time MT4 Analytics
+            </p>
           </div>
         </div>
       </footer>
