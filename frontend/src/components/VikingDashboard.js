@@ -970,27 +970,27 @@ const VikingDashboard = () => {
                     </tr>
                     <tr className="border-b border-gray-800">
                       <td className="py-2 text-gray-300">Months</td>
-                      <td className="text-right text-green-400">5</td>
-                      <td className="text-right text-red-400">0</td>
+                      <td className="text-right text-green-400">{analytics?.winning_months ?? '--'}</td>
+                      <td className="text-right text-red-400">{analytics?.losing_months ?? '--'}</td>
                       <td className="text-right">
                         <div className="w-16 bg-gray-700 rounded-full h-2 ml-auto">
-                          <div className="bg-green-500 h-2 rounded-full" style={{ width: '100%' }}></div>
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: analytics?.monthly_win_rate ? `${analytics.monthly_win_rate}%` : '0%' }}></div>
                         </div>
                       </td>
-                      <td className="text-right text-green-400">$3,677.84</td>
-                      <td className="text-right text-green-400">$91.77</td>
+                      <td className="text-right text-green-400">{analytics?.avg_monthly_profit != null ? formatCurrency(analytics.avg_monthly_profit) : '--'}</td>
+                      <td className="text-right text-green-400">{analytics?.avg_monthly_profit_per_trade != null ? formatCurrency(analytics.avg_monthly_profit_per_trade) : '--'}</td>
                     </tr>
                     <tr>
                       <td className="py-2 text-gray-300">Closed Trades</td>
-                      <td className="text-right text-green-400">{analytics?.winning_trades || 6685}</td>
-                      <td className="text-right text-red-400">{analytics?.losing_trades || 1910}</td>
+                      <td className="text-right text-green-400">{analytics?.winning_trades ?? '--'}</td>
+                      <td className="text-right text-red-400">{analytics?.losing_trades ?? '--'}</td>
                       <td className="text-right">
                         <div className="w-16 bg-gray-700 rounded-full h-2 ml-auto">
-                          <div className="bg-green-500 h-2 rounded-full" style={{ width: `${analytics?.trade_win_rate || 77.8}%` }}></div>
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: analytics?.trade_win_rate ? `${analytics.trade_win_rate}%` : '0%' }}></div>
                         </div>
                       </td>
-                      <td className="text-right text-green-400">$617.43</td>
-                      <td className="text-right text-red-400">-$997.58</td>
+                      <td className="text-right text-green-400">{analytics?.avg_winning_trade != null ? formatCurrency(analytics.avg_winning_trade) : '--'}</td>
+                      <td className="text-right text-red-400">{analytics?.avg_losing_trade != null ? formatCurrency(analytics.avg_losing_trade) : '--'}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1006,31 +1006,31 @@ const VikingDashboard = () => {
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Monthly Return</p>
-                <p className="text-xl font-bold text-green-400">{formatPercent(riskData?.monthly_return || 10.8)}</p>
+                <p className="text-xl font-bold text-green-400">{riskData?.monthly_return != null ? formatPercent(riskData.monthly_return) : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Avg Trade Length</p>
-                <p className="text-xl font-bold text-gray-300">{riskData?.avg_trade_length || 6.5} hours</p>
+                <p className="text-xl font-bold text-gray-300">{riskData?.avg_trade_length != null ? `${riskData.avg_trade_length} hours` : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Trades Per Day</p>
-                <p className="text-xl font-bold text-gray-300">{riskData?.trades_per_day || 105.0}</p>
+                <p className="text-xl font-bold text-gray-300">{riskData?.trades_per_day != null ? riskData.trades_per_day.toFixed(1) : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">History</p>
-                <p className="text-xl font-bold text-gray-300">{riskData?.history_days || 114} days</p>
+                <p className="text-xl font-bold text-gray-300">{riskData?.history_days != null ? `${riskData.history_days} days` : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Risk/Reward</p>
-                <p className="text-xl font-bold text-green-400">+{riskData?.risk_reward_ratio || 4.31}</p>
+                <p className="text-xl font-bold text-green-400">{riskData?.risk_reward_ratio != null ? `+${riskData.risk_reward_ratio}` : '--'}</p>
               </CardContent>
             </Card>
           </div>
