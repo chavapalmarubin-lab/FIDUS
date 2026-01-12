@@ -58,12 +58,14 @@ VIKING is a **completely separate trading operation** from FIDUS Funds. It manag
 - `viking_deals_history` - Trade history with compound index (account, ticket)
 - `viking_analytics` - Calculated performance metrics
 
-### Next Steps (Phase 2 - VPS Configuration)
-1. Deploy VIKING MT4 Bridge service to VPS (port 8001)
-2. Copy EA to MEXAtlantic MT4 terminal MQL4/Experts folder
-3. Compile EA in MetaEditor
-4. Enable WebRequest for `http://localhost:8001` in MT4 Options
-5. Attach EA to any chart on account 33627673
+### Phase 2 - VPS Configuration ✅ COMPLETE (Jan 11, 2026)
+1. ✅ Deploy VIKING MT4 Bridge service to VPS (port 8001)
+2. ✅ Copy EA to MEXAtlantic MT4 terminal MQL4/Experts folder
+3. ✅ Compile EA in MetaEditor
+4. ✅ Enable WebRequest for `http://localhost:8001` in MT4 Options
+5. ✅ Attach EA to any chart on account 33627673
+6. ✅ MongoDB connected - viking_accounts collection active
+7. ⏳ Set up Windows Task Scheduler for auto-start on reboot
 
 ### VIKING MT4 Bridge Files (Created Jan 11, 2026)
 | File | Location | Description |
