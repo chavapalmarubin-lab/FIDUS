@@ -257,7 +257,7 @@ const VikingDashboard = () => {
             Trading Operations
           </h1>
           <p className="mt-1" style={{ color: VKNG_COLORS.textSecondary }}>
-            Separate from FIDUS Funds • Real-time MT4 Performance Analytics
+            Real-time MT4 Performance Analytics
           </p>
         </div>
         <div className="flex items-center gap-3">
