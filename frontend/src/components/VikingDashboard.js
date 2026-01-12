@@ -233,8 +233,11 @@ const VikingDashboard = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-400">Loading VIKING data...</p>
+          <Loader2 
+            className="w-12 h-12 animate-spin mx-auto mb-4" 
+            style={{ color: VKNG_COLORS.gold }}
+          />
+          <p style={{ color: VKNG_COLORS.textSecondary }}>Loading VKNG AI data...</p>
         </div>
       </div>
     );
