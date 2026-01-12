@@ -632,24 +632,26 @@ const VikingDashboard = () => {
                     </div>
                   </div>
                 )}
-                {/* Legend */}
-                <div className="mt-4 space-y-1">
-                  {(symbolDistribution.length > 0 ? symbolDistribution : [
-                    { symbol: 'AUDCAD.ecn', percentage: 65.9 },
-                    { symbol: 'DE40', percentage: 25.7 },
-                    { symbol: 'US500', percentage: 8.4 }
-                  ]).slice(0, 5).map((item, idx) => (
-                    <div key={item.symbol} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: SYMBOL_COLORS[idx % SYMBOL_COLORS.length] }}
-                        />
-                        <span className="text-gray-400">{item.symbol}</span>
+                {/* Legend - only show if we have real data */}
+                {symbolDistribution.length > 0 && (
+                  <div className="mt-4 space-y-1">
+                    {symbolDistribution.slice(0, 5).map((item, idx) => (
+                      <div key={item.symbol} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: SYMBOL_COLORS[idx % SYMBOL_COLORS.length] }}
+                          />
+                          <span className="text-gray-400">{item.symbol}</span>
+                        </div>
+                        <span className="text-gray-300">{item.percentage}%</span>
                       </div>
-                      <span className="text-gray-300">{item.percentage}%</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                )}
+                {symbolDistribution.length === 0 && (
+                  <p className="text-xs text-gray-500 text-center mt-4">Trade history required for symbol distribution</p>
+                )}
                 </div>
               </CardContent>
             </Card>
