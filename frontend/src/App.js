@@ -383,6 +383,20 @@ function App() {
     );
   }
 
+  // EARLY RETURN: VIKING standalone application - completely separate from FIDUS
+  if (isVikingRoute) {
+    return (
+      <BrowserRouter>
+        <ToastProvider>
+          <Routes>
+            <Route path="/viking" element={<VikingApp />} />
+            <Route path="/viking/*" element={<VikingApp />} />
+          </Routes>
+        </ToastProvider>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <ToastProvider>
