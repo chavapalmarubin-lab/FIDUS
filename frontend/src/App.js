@@ -30,6 +30,7 @@ import "./styles/dashboard-responsive.css";
 function App() {
   // CRITICAL: Check if we're on a public route BEFORE any auth logic
   const isProspectsRoute = window.location.pathname.startsWith('/prospects');
+  const isVikingRoute = window.location.pathname.startsWith('/viking');
   
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
   const [user, setUser] = useState(null);
