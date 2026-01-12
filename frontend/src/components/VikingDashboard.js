@@ -1,9 +1,9 @@
 /**
- * VIKING Trading Operations Dashboard
+ * VKNG AI Trading Operations Dashboard
  * 
- * COMPLETELY SEPARATE FROM FIDUS FUNDS
+ * Branded with official VKNG AI colors from getvkng.com
  * 
- * This dashboard manages VIKING trading strategies:
+ * This dashboard manages VKNG AI trading strategies:
  * - CORE Strategy: Account 33627673 (MEXAtlantic)
  * - PRO Strategy: Account 1309411 (Traders Trust)
  * 
@@ -58,10 +58,22 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Colors for charts following FXBlue style
+// VKNG AI Brand Colors (from getvkng.com)
+const VKNG_COLORS = {
+  gold: '#D4AF37',
+  goldLight: '#F4D03F',
+  goldDark: '#B8860B',
+  dark: '#0A0A0A',
+  darkGray: '#141414',
+  mediumGray: '#1A1A1A',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#9CA3AF'
+};
+
+// Colors for charts
 const COLORS = {
-  primary: '#3b82f6',    // Blue
-  secondary: '#f97316',  // Orange
+  primary: '#D4AF37',    // VKNG Gold
+  secondary: '#F4D03F',  // Light Gold
   success: '#22c55e',    // Green
   danger: '#ef4444',     // Red
   warning: '#eab308',    // Yellow
@@ -70,7 +82,7 @@ const COLORS = {
   pink: '#ec4899'        // Pink
 };
 
-const SYMBOL_COLORS = ['#3b82f6', '#f97316', '#eab308', '#22c55e', '#8b5cf6', '#ec4899'];
+const SYMBOL_COLORS = ['#D4AF37', '#F4D03F', '#22c55e', '#8b5cf6', '#06b6d4', '#ec4899'];
 
 const VikingDashboard = () => {
   const [loading, setLoading] = useState(true);
