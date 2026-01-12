@@ -316,7 +316,7 @@ const VikingDashboard = () => {
         </div>
       )}
 
-      {/* Sub-navigation tabs following FXBlue format - VKNG Gold Theme */}
+      {/* Sub-navigation tabs following FXBlue format - VKNG Purple/Magenta Theme */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
         <TabsList 
           className="p-1 w-full justify-start gap-1 overflow-x-auto rounded-lg"
@@ -331,9 +331,11 @@ const VikingDashboard = () => {
               value={tab}
               className="capitalize rounded-md px-4 py-2 text-sm font-medium transition-all"
               style={{ 
-                backgroundColor: activeSubTab === tab ? VKNG_COLORS.gold : 'transparent',
-                color: activeSubTab === tab ? VKNG_COLORS.dark : VKNG_COLORS.textSecondary,
-                boxShadow: activeSubTab === tab ? `0 2px 8px ${VKNG_COLORS.gold}40` : 'none'
+                background: activeSubTab === tab 
+                  ? `linear-gradient(135deg, ${VKNG_COLORS.pink} 0%, ${VKNG_COLORS.magenta} 100%)`
+                  : 'transparent',
+                color: activeSubTab === tab ? VKNG_COLORS.textPrimary : VKNG_COLORS.textSecondary,
+                boxShadow: activeSubTab === tab ? `0 2px 8px ${VKNG_COLORS.purple}40` : 'none'
               }}
             >
               {tab}
