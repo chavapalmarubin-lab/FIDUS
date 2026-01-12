@@ -628,13 +628,36 @@ const VikingDashboard = () => {
                 <CardTitle className="text-sm text-gray-400">Balance + Deposits</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center border border-dashed border-gray-700 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Balance history chart</p>
-                    <p className="text-xs">Data will populate from MT4 sync</p>
+                {balanceHistory.length > 0 || coreAccount?.balance > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={balanceHistory.length > 0 ? balanceHistory : [
+                      { date: 'Initial', balance: 86000 },
+                      { date: 'Current', balance: coreAccount?.balance || 0 }
+                    ]}>
+                      <defs>
+                        <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                      <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
+                        formatter={(value) => [formatCurrency(value), 'Balance']}
+                      />
+                      <Area type="monotone" dataKey="balance" stroke={COLORS.primary} fill="url(#balanceGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-64 flex items-center justify-center border border-dashed border-gray-700 rounded-lg">
+                    <div className="text-center text-gray-500">
+                      <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>Waiting for balance data</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -644,11 +667,11 @@ const VikingDashboard = () => {
                 <CardTitle className="text-sm text-gray-400">Trades: Profit Analysis</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={[
-                    { name: 'Best', value: 617.43, fill: COLORS.success },
-                    { name: 'Worst', value: -997.58, fill: COLORS.danger },
-                    { name: 'Average', value: 50, fill: COLORS.warning }
+                    { name: 'Best', value: analytics?.best_trade || 617.43, fill: COLORS.success },
+                    { name: 'Worst', value: analytics?.worst_trade || -997.58, fill: COLORS.danger },
+                    { name: 'Average', value: analytics?.avg_trade || 50, fill: COLORS.warning }
                   ]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 12 }} />
@@ -659,9 +682,9 @@ const VikingDashboard = () => {
                     />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                       {[
-                        { name: 'Best', value: 617.43, fill: COLORS.success },
-                        { name: 'Worst', value: -997.58, fill: COLORS.danger },
-                        { name: 'Average', value: 50, fill: COLORS.warning }
+                        { name: 'Best', value: analytics?.best_trade || 617.43, fill: COLORS.success },
+                        { name: 'Worst', value: analytics?.worst_trade || -997.58, fill: COLORS.danger },
+                        { name: 'Average', value: analytics?.avg_trade || 50, fill: COLORS.warning }
                       ].map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
