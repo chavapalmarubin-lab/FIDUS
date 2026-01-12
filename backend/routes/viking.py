@@ -34,6 +34,32 @@ def init_db(database):
     logger.info("✅ VIKING routes initialized with database connection")
 
 
+def parse_mt4_datetime(dt_value):
+    """Parse datetime from various formats including MT4 format"""
+    if dt_value is None:
+        return None
+    if isinstance(dt_value, datetime):
+        return dt_value
+    if isinstance(dt_value, str):
+        # Try MT4 format first: "2026.01.02 01:11:00"
+        try:
+            return datetime.strptime(dt_value, "%Y.%m.%d %H:%M:%S")
+        except:
+            pass
+        # Try ISO format
+        try:
+            return datetime.fromisoformat(dt_value.replace('Z', '+00:00'))
+        except:
+            pass
+        # Try other common formats
+        for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y.%m.%d %H:%M"]:
+            try:
+                return datetime.strptime(dt_value, fmt)
+            except:
+                continue
+    return None
+
+
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
