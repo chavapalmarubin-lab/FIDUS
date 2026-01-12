@@ -740,35 +740,38 @@ const VikingDashboard = () => {
               <CardTitle className="text-sm text-gray-400">Market / Return Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {(symbolDistribution.length > 0 ? symbolDistribution : [
-                  { symbol: 'AUDCAD.ecn', trades: 5660, total_profit: 4500 },
-                  { symbol: 'DE40', trades: 2200, total_profit: 2100 },
-                  { symbol: 'US500', trades: 735, total_profit: 957 }
-                ]).slice(0, 3).map((item, idx) => (
-                  <div key={item.symbol} className="bg-gray-800/50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: SYMBOL_COLORS[idx % SYMBOL_COLORS.length] }}
-                      />
-                      <span className="text-white font-medium">{item.symbol}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <p className="text-gray-500">Trades</p>
-                        <p className="text-gray-300">{item.trades?.toLocaleString() || '--'}</p>
+              {symbolDistribution.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {symbolDistribution.slice(0, 3).map((item, idx) => (
+                    <div key={item.symbol} className="bg-gray-800/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: SYMBOL_COLORS[idx % SYMBOL_COLORS.length] }}
+                        />
+                        <span className="text-white font-medium">{item.symbol}</span>
                       </div>
-                      <div>
-                        <p className="text-gray-500">Profit</p>
-                        <p className={`${(item.total_profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {formatCurrency(item.total_profit)}
-                        </p>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-gray-500">Trades</p>
+                          <p className="text-gray-300">{item.trades?.toLocaleString() || '--'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Profit</p>
+                          <p className={`${(item.total_profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {formatCurrency(item.total_profit)}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Trade history required for market analysis</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -780,25 +783,25 @@ const VikingDashboard = () => {
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Weekly Return</p>
-                <p className="text-xl font-bold text-green-400">{formatPercent(analytics?.weekly_return || 2.5)}</p>
+                <p className="text-xl font-bold text-green-400">{analytics?.weekly_return != null ? formatPercent(analytics.weekly_return) : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Monthly Return</p>
-                <p className="text-xl font-bold text-green-400">{formatPercent(analytics?.monthly_return || 10.8)}</p>
+                <p className="text-xl font-bold text-green-400">{analytics?.monthly_return != null ? formatPercent(analytics.monthly_return) : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">Profit Factor</p>
-                <p className="text-xl font-bold text-blue-400">{(analytics?.profit_factor || 1.36).toFixed(2)}</p>
+                <p className="text-xl font-bold text-blue-400">{analytics?.profit_factor != null ? analytics.profit_factor.toFixed(2) : '--'}</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900/50 border-gray-800">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-500">History</p>
-                <p className="text-xl font-bold text-gray-300">{analytics?.history_days || 114} days</p>
+                <p className="text-xl font-bold text-gray-300">{analytics?.history_days != null ? `${analytics.history_days} days` : '--'}</p>
               </CardContent>
             </Card>
           </div>
