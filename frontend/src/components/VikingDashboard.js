@@ -1186,17 +1186,17 @@ const VikingDashboard = () => {
                         <tr key={deal.ticket || idx} className="border-b border-gray-800 hover:bg-gray-800/50">
                           <td className="py-2 px-2 text-gray-300">{deal.ticket}</td>
                           <td className="py-2 px-2 text-gray-400 text-xs">
-                            {deal.open_time ? new Date(deal.open_time).toLocaleString() : '--'}
+                            {formatDateTime(deal.close_time)}
                           </td>
                           <td className="py-2 px-2">
-                            <Badge className={deal.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+                            <Badge className={deal.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
                               {deal.type}
                             </Badge>
                           </td>
                           <td className="py-2 px-2 text-right text-gray-300">{deal.volume}</td>
                           <td className="py-2 px-2 text-gray-300">{deal.symbol}</td>
-                          <td className="py-2 px-2 text-right text-gray-300">{deal.open_price}</td>
-                          <td className="py-2 px-2 text-right text-gray-300">{deal.close_price || '--'}</td>
+                          <td className="py-2 px-2 text-right text-gray-300">{deal.open_price?.toFixed(2)}</td>
+                          <td className="py-2 px-2 text-right text-gray-300">{deal.close_price?.toFixed(2) || '--'}</td>
                           <td className="py-2 px-2 text-right text-gray-400">{formatCurrency(deal.commission)}</td>
                           <td className="py-2 px-2 text-right text-gray-400">{formatCurrency(deal.swap)}</td>
                           <td className={`py-2 px-2 text-right font-medium ${(deal.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
