@@ -117,10 +117,10 @@ const VikingLogin = ({ onLogin }) => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <img 
-                src="/viking-logo.avif" 
+                src="/vkng-logo.png" 
                 alt="VKNG AI" 
-                className="h-24 w-auto mx-auto"
-                style={{ filter: 'drop-shadow(0 0 20px rgba(212, 175, 55, 0.3))' }}
+                className="h-20 w-auto mx-auto"
+                style={{ filter: 'drop-shadow(0 0 30px rgba(212, 175, 55, 0.5))' }}
               />
             </motion.div>
             

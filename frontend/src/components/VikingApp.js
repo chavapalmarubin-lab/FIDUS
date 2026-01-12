@@ -72,10 +72,10 @@ const VikingApp = () => {
             {/* Logo & Title */}
             <div className="flex items-center gap-4">
               <img 
-                src="/viking-logo.avif" 
+                src="/vkng-logo.png" 
                 alt="VKNG AI" 
                 className="h-10 w-auto"
-                style={{ filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.3))' }}
+                style={{ filter: 'drop-shadow(0 0 15px rgba(212, 175, 55, 0.5))' }}
               />
               <div className="hidden sm:block">
                 <h1 
@@ -175,9 +175,9 @@ const VikingApp = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               <img 
-                src="/viking-logo.avif" 
+                src="/vkng-logo.png" 
                 alt="VKNG AI" 
-                className="h-6 w-auto opacity-50"
+                className="h-6 w-auto opacity-70"
               />
               <p 
                 className="text-xs"
