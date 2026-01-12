@@ -653,12 +653,18 @@ async def get_viking_summary():
                 sort=[("calculated_at", -1)]
             )
             
-            # Get trade counts
+            # Get trade counts - handle both string and int account numbers
             total_deals = await db.viking_deals_history.count_documents(
-                {"account": account["account"]}
+                {"$or": [
+                    {"account": account["account"]},
+                    {"account": str(account["account"])}
+                ]}
             )
             open_orders = await db.viking_deals_history.count_documents(
-                {"account": account["account"], "close_time": None}
+                {"$or": [
+                    {"account": account["account"]},
+                    {"account": str(account["account"])}
+                ], "close_time": None}
             )
             
             strategy_data = {
