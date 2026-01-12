@@ -83,7 +83,29 @@ const VikingDashboard = () => {
   const [deals, setDeals] = useState([]);
   const [symbolDistribution, setSymbolDistribution] = useState([]);
   const [riskData, setRiskData] = useState(null);
+  const [balanceHistory, setBalanceHistory] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [calculating, setCalculating] = useState(false);
+
+  // Calculate analytics
+  const calculateAnalytics = async () => {
+    try {
+      setCalculating(true);
+      const res = await fetch(`${BACKEND_URL}/api/viking/calculate-analytics/CORE`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAnalytics(data.analytics);
+      }
+      // Refresh all data
+      await fetchData();
+    } catch (err) {
+      console.error("Error calculating analytics:", err);
+    } finally {
+      setCalculating(false);
+    }
+  };
 
   // Fetch all VIKING data
   const fetchData = useCallback(async () => {
