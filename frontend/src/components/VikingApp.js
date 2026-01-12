@@ -76,7 +76,7 @@ const VikingApp = () => {
                 src="/vkng-logo.png" 
                 alt="VKNG AI" 
                 className="h-10 w-auto"
-                style={{ filter: 'drop-shadow(0 0 15px rgba(212, 175, 55, 0.5))' }}
+                style={{ filter: 'drop-shadow(0 0 15px rgba(155, 39, 255, 0.5))' }}
               />
               <div className="hidden sm:block">
                 <h1 
@@ -116,7 +116,7 @@ const VikingApp = () => {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
                 style={{ backgroundColor: VKNG_COLORS.mediumGray }}
               >
-                <TrendingUp className="w-4 h-4" style={{ color: VKNG_COLORS.gold }} />
+                <TrendingUp className="w-4 h-4" style={{ color: VKNG_COLORS.purple }} />
                 <span className="text-xs" style={{ color: VKNG_COLORS.textSecondary }}>
                   Account 33627673
                 </span>
@@ -130,7 +130,7 @@ const VikingApp = () => {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
                 style={{ backgroundColor: VKNG_COLORS.mediumGray }}
               >
-                <User className="w-4 h-4" style={{ color: VKNG_COLORS.gold }} />
+                <User className="w-4 h-4" style={{ color: VKNG_COLORS.purple }} />
                 <span 
                   className="text-sm hidden sm:inline"
                   style={{ color: VKNG_COLORS.textPrimary }}
