@@ -315,46 +315,26 @@ const VikingDashboard = () => {
       {/* Sub-navigation tabs following FXBlue format - VKNG Gold Theme */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
         <TabsList 
-          className="p-1 w-full justify-start gap-1 overflow-x-auto"
+          className="p-1 w-full justify-start gap-1 overflow-x-auto rounded-lg"
           style={{ 
             backgroundColor: VKNG_COLORS.darkGray,
             border: `1px solid ${VKNG_COLORS.mediumGray}`
           }}
         >
-          <TabsTrigger 
-            value="overview" 
-            className="data-[state=active]:text-black"
-            style={{ 
-              '--tw-bg-opacity': 1
-            }}
-            data-state-active-style={{ backgroundColor: VKNG_COLORS.gold }}
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger 
-            value="analysis" 
-            className="data-[state=active]:text-black"
-          >
-            Analysis
-          </TabsTrigger>
-          <TabsTrigger 
-            value="stats" 
-            className="data-[state=active]:text-black"
-          >
-            Stats
-          </TabsTrigger>
-          <TabsTrigger 
-            value="risk" 
-            className="data-[state=active]:text-black"
-          >
-            Risk
-          </TabsTrigger>
-          <TabsTrigger 
-            value="orders" 
-            className="data-[state=active]:text-black"
-          >
-            Orders
-          </TabsTrigger>
+          {['overview', 'analysis', 'stats', 'risk', 'orders'].map((tab) => (
+            <TabsTrigger 
+              key={tab}
+              value={tab}
+              className="capitalize rounded-md px-4 py-2 text-sm font-medium transition-all"
+              style={{ 
+                backgroundColor: activeSubTab === tab ? VKNG_COLORS.gold : 'transparent',
+                color: activeSubTab === tab ? VKNG_COLORS.dark : VKNG_COLORS.textSecondary,
+                boxShadow: activeSubTab === tab ? `0 2px 8px ${VKNG_COLORS.gold}40` : 'none'
+              }}
+            >
+              {tab}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         {/* OVERVIEW TAB */}
