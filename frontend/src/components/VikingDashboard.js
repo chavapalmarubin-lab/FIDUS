@@ -903,23 +903,23 @@ const VikingDashboard = () => {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                   <p className="text-xs text-gray-500">Total Return</p>
-                  <p className="text-lg font-bold text-green-400">{formatPercent(analytics?.total_return || 49.01)}</p>
+                  <p className="text-lg font-bold text-green-400">{analytics?.total_return != null ? formatPercent(analytics.total_return) : '--'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Banked Return</p>
-                  <p className="text-lg font-bold text-green-400">{formatPercent(analytics?.total_return || 49.01)}</p>
+                  <p className="text-lg font-bold text-green-400">{analytics?.total_return != null ? formatPercent(analytics.total_return) : '--'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Per Day</p>
-                  <p className="text-lg font-bold text-green-400">{formatPercent(analytics?.daily_return || 0.49)}</p>
+                  <p className="text-lg font-bold text-green-400">{analytics?.daily_return != null ? formatPercent(analytics.daily_return) : '--'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Per Week</p>
-                  <p className="text-lg font-bold text-green-400">{formatPercent(analytics?.weekly_return || 2.46)}</p>
+                  <p className="text-lg font-bold text-green-400">{analytics?.weekly_return != null ? formatPercent(analytics.weekly_return) : '--'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Per Month</p>
-                  <p className="text-lg font-bold text-green-400">{formatPercent(analytics?.monthly_return || 10.75)}</p>
+                  <p className="text-lg font-bold text-green-400">{analytics?.monthly_return != null ? formatPercent(analytics.monthly_return) : '--'}</p>
                 </div>
               </div>
             </CardContent>
