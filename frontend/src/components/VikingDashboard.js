@@ -252,6 +252,21 @@ const VikingDashboard = () => {
             </span>
           )}
           <Button 
+            onClick={calculateAnalytics} 
+            variant="outline" 
+            size="sm"
+            disabled={calculating}
+            className="border-purple-700 hover:bg-purple-800 text-purple-400"
+            data-testid="viking-calculate-btn"
+          >
+            {calculating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <BarChart3 className="w-4 h-4 mr-2" />
+            )}
+            Calculate Analytics
+          </Button>
+          <Button 
             onClick={fetchData} 
             variant="outline" 
             size="sm"
