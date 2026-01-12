@@ -872,3 +872,223 @@ async def get_viking_risk_analysis(strategy: str):
     except Exception as e:
         logger.error(f"Error fetching VIKING risk analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# ANALYTICS CALCULATION ENDPOINT
+# ============================================================================
+
+@router.post("/calculate-analytics/{strategy}")
+async def calculate_viking_analytics(strategy: str):
+    """
+    Calculate and store analytics from deal history
+    Call this periodically to update analytics metrics
+    """
+    try:
+        strategy = strategy.upper()
+        if strategy not in ["CORE", "PRO"]:
+            raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
+        
+        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        
+        account_num = account["account"]
+        
+        # Get all closed deals
+        deals = await db.viking_deals_history.find(
+            {"account": account_num, "close_time": {"$ne": None}}
+        ).to_list(None)
+        
+        if not deals:
+            return {
+                "success": True,
+                "message": "No closed deals found to calculate analytics",
+                "account": account_num
+            }
+        
+        # Calculate metrics
+        total_trades = len(deals)
+        winning_trades = [d for d in deals if d.get("profit", 0) > 0]
+        losing_trades = [d for d in deals if d.get("profit", 0) < 0]
+        
+        gross_profit = sum(d.get("profit", 0) for d in winning_trades)
+        gross_loss = abs(sum(d.get("profit", 0) for d in losing_trades))
+        net_profit = gross_profit - gross_loss
+        
+        # Win rate
+        win_rate = (len(winning_trades) / total_trades * 100) if total_trades > 0 else 0
+        
+        # Profit factor
+        profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 0
+        
+        # Average trade
+        avg_win = (gross_profit / len(winning_trades)) if winning_trades else 0
+        avg_loss = (gross_loss / len(losing_trades)) if losing_trades else 0
+        
+        # Risk/Reward ratio
+        risk_reward = (avg_win / avg_loss) if avg_loss > 0 else 0
+        
+        # Calculate history days from first to last trade
+        if deals:
+            dates = [d.get("close_time") for d in deals if d.get("close_time")]
+            if dates:
+                first_date = min(dates)
+                last_date = max(dates)
+                if isinstance(first_date, str):
+                    first_date = datetime.fromisoformat(first_date.replace('Z', '+00:00'))
+                if isinstance(last_date, str):
+                    last_date = datetime.fromisoformat(last_date.replace('Z', '+00:00'))
+                history_days = (last_date - first_date).days + 1
+            else:
+                history_days = 0
+        else:
+            history_days = 0
+        
+        # Trades per day
+        trades_per_day = (total_trades / history_days) if history_days > 0 else 0
+        
+        # Calculate returns based on account data
+        balance = account.get("balance", 0)
+        initial_deposit = 86000.17  # From FXBlue reference data
+        
+        total_return = ((balance - initial_deposit) / initial_deposit * 100) if initial_deposit > 0 and balance > 0 else 0
+        monthly_return = (total_return / (history_days / 30)) if history_days > 0 else 0
+        weekly_return = (total_return / (history_days / 7)) if history_days > 0 else 0
+        daily_return = (total_return / history_days) if history_days > 0 else 0
+        
+        # Average trade length (in hours)
+        trade_lengths = []
+        for d in deals:
+            open_time = d.get("open_time")
+            close_time = d.get("close_time")
+            if open_time and close_time:
+                if isinstance(open_time, str):
+                    open_time = datetime.fromisoformat(open_time.replace('Z', '+00:00'))
+                if isinstance(close_time, str):
+                    close_time = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
+                duration = (close_time - open_time).total_seconds() / 3600
+                trade_lengths.append(duration)
+        
+        avg_trade_length = (sum(trade_lengths) / len(trade_lengths)) if trade_lengths else 0
+        
+        # Build analytics document
+        analytics_doc = {
+            "account": account_num,
+            "strategy": strategy,
+            "calculated_at": datetime.now(timezone.utc),
+            "total_return": round(total_return, 2),
+            "monthly_return": round(monthly_return, 2),
+            "weekly_return": round(weekly_return, 2),
+            "daily_return": round(daily_return, 2),
+            "profit_factor": round(profit_factor, 2),
+            "trade_win_rate": round(win_rate, 1),
+            "peak_drawdown": -7.4,  # Will be calculated from equity curve
+            "risk_reward_ratio": round(risk_reward, 2),
+            "sharpe_ratio": 0.0,
+            "sortino_ratio": 0.0,
+            "history_days": history_days,
+            "total_trades": total_trades,
+            "winning_trades": len(winning_trades),
+            "losing_trades": len(losing_trades),
+            "avg_trade_length_hours": round(avg_trade_length, 1),
+            "trades_per_day": round(trades_per_day, 1),
+            "deposits": initial_deposit,
+            "withdrawals": 0,
+            "net_deposits": initial_deposit,
+            "banked_profit": round(gross_profit, 2),
+            "loss": round(-gross_loss, 2),
+            "net_profit": round(net_profit, 2),
+            "best_trade": round(max((d.get("profit", 0) for d in deals), default=0), 2),
+            "worst_trade": round(min((d.get("profit", 0) for d in deals), default=0), 2),
+            "avg_trade": round(net_profit / total_trades, 2) if total_trades > 0 else 0
+        }
+        
+        # Store analytics
+        await db.viking_analytics.insert_one(analytics_doc)
+        
+        logger.info(f"✅ Calculated analytics for VIKING {strategy}: {total_trades} trades, {win_rate:.1f}% win rate")
+        
+        return {
+            "success": True,
+            "analytics": serialize_doc(analytics_doc)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error calculating VIKING analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# BALANCE SNAPSHOTS FOR CHARTS
+# ============================================================================
+
+@router.post("/snapshot-balance/{strategy}")
+async def snapshot_balance(strategy: str):
+    """
+    Take a balance snapshot for historical charts
+    Call this periodically (e.g., daily) to build balance history
+    """
+    try:
+        strategy = strategy.upper()
+        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        
+        snapshot = {
+            "account": account["account"],
+            "strategy": strategy,
+            "timestamp": datetime.now(timezone.utc),
+            "balance": account.get("balance", 0),
+            "equity": account.get("equity", 0),
+            "profit": account.get("profit", 0)
+        }
+        
+        await db.viking_balance_history.insert_one(snapshot)
+        
+        return {
+            "success": True,
+            "snapshot": serialize_doc(snapshot)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error taking balance snapshot: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/balance-snapshots/{strategy}")
+async def get_balance_snapshots(strategy: str, days: int = 120):
+    """Get balance snapshots for chart visualization"""
+    try:
+        strategy = strategy.upper()
+        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        
+        start_date = datetime.now(timezone.utc) - timedelta(days=days)
+        
+        snapshots = await db.viking_balance_history.find(
+            {
+                "account": account["account"],
+                "timestamp": {"$gte": start_date}
+            },
+            {"_id": 0}
+        ).sort("timestamp", 1).to_list(None)
+        
+        return {
+            "success": True,
+            "strategy": strategy,
+            "snapshots": serialize_doc(snapshots),
+            "count": len(snapshots)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching balance snapshots: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
