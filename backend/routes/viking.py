@@ -895,9 +895,12 @@ async def calculate_viking_analytics(strategy: str):
         
         account_num = account["account"]
         
-        # Get all closed deals
+        # Get all closed deals - handle both string and int account numbers
         deals = await db.viking_deals_history.find(
-            {"account": account_num, "close_time": {"$ne": None}}
+            {"$or": [
+                {"account": account_num},
+                {"account": str(account_num)}
+            ], "close_time": {"$ne": None}}
         ).to_list(None)
         
         if not deals:
