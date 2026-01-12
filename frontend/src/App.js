@@ -17,6 +17,8 @@ import ReferralAgentClients from "./pages/referral-agent/Clients";
 import ReferralAgentCommissions from "./pages/referral-agent/Commissions";
 import ReferralAgentProfile from "./pages/referral-agent/Profile";
 import ProtectedRoute from "./components/referral-agent/ProtectedRoute";
+// VIKING Standalone Application
+import VikingApp from "./components/VikingApp";
 // Clean Google integration - removed unused imports
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
