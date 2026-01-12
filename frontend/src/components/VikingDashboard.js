@@ -298,22 +298,47 @@ const VikingDashboard = () => {
         </div>
       )}
 
-      {/* Sub-navigation tabs following FXBlue format */}
+      {/* Sub-navigation tabs following FXBlue format - VKNG Gold Theme */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
-        <TabsList className="bg-gray-800/50 border border-gray-700 p-1 w-full justify-start gap-1 overflow-x-auto">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
+        <TabsList 
+          className="p-1 w-full justify-start gap-1 overflow-x-auto"
+          style={{ 
+            backgroundColor: VKNG_COLORS.darkGray,
+            border: `1px solid ${VKNG_COLORS.mediumGray}`
+          }}
+        >
+          <TabsTrigger 
+            value="overview" 
+            className="data-[state=active]:text-black"
+            style={{ 
+              '--tw-bg-opacity': 1
+            }}
+            data-state-active-style={{ backgroundColor: VKNG_COLORS.gold }}
+          >
             Overview
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger 
+            value="analysis" 
+            className="data-[state=active]:text-black"
+          >
             Analysis
           </TabsTrigger>
-          <TabsTrigger value="stats" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger 
+            value="stats" 
+            className="data-[state=active]:text-black"
+          >
             Stats
           </TabsTrigger>
-          <TabsTrigger value="risk" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger 
+            value="risk" 
+            className="data-[state=active]:text-black"
+          >
             Risk
           </TabsTrigger>
-          <TabsTrigger value="orders" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger 
+            value="orders" 
+            className="data-[state=active]:text-black"
+          >
             Orders
           </TabsTrigger>
         </TabsList>
