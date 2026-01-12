@@ -465,13 +465,13 @@ const VikingDashboard = () => {
             </Card>
           </div>
 
-          {/* Stats Summary Row - FXBlue Style */}
+          {/* Stats Summary Row - Shows real data only */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-400 mb-1">Total Return</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {formatPercent(analytics?.total_return || 49.0)}
+                  {analytics?.total_return != null ? formatPercent(analytics.total_return) : '--'}
                 </p>
               </CardContent>
             </Card>
@@ -479,7 +479,7 @@ const VikingDashboard = () => {
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-400 mb-1">Monthly Return</p>
                 <p className="text-2xl font-bold text-blue-400">
-                  {formatPercent(analytics?.monthly_return || 10.8)}
+                  {analytics?.monthly_return != null ? formatPercent(analytics.monthly_return) : '--'}
                 </p>
               </CardContent>
             </Card>
@@ -487,7 +487,7 @@ const VikingDashboard = () => {
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-400 mb-1">Profit Factor</p>
                 <p className="text-2xl font-bold text-purple-400">
-                  {(analytics?.profit_factor || 1.36).toFixed(2)}
+                  {analytics?.profit_factor != null ? analytics.profit_factor.toFixed(2) : '--'}
                 </p>
               </CardContent>
             </Card>
@@ -495,20 +495,20 @@ const VikingDashboard = () => {
               <CardContent className="pt-4">
                 <p className="text-xs text-gray-400 mb-1">History</p>
                 <p className="text-2xl font-bold text-cyan-400">
-                  {analytics?.history_days || 114} days
+                  {analytics?.history_days != null ? `${analytics.history_days} days` : '--'}
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Additional Stats Grid */}
+          {/* Additional Stats Grid - Real data only */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <StatCard label="Weekly Return" value={formatPercent(analytics?.weekly_return || 2.5)} color="text-green-400" />
-            <StatCard label="Peak Drawdown" value={formatPercent(analytics?.peak_drawdown || -7.4)} color="text-red-400" />
-            <StatCard label="Trade Win %" value={`${(analytics?.trade_win_rate || 77.8).toFixed(1)}%`} color="text-blue-400" />
-            <StatCard label="Trades/Day" value={(analytics?.trades_per_day || 75.5).toFixed(1)} color="text-purple-400" />
-            <StatCard label="Risk/Reward" value={(analytics?.risk_reward_ratio || 4.31).toFixed(2)} color="text-cyan-400" />
-            <StatCard label="Total Trades" value={(analytics?.total_trades || 8595).toLocaleString()} color="text-orange-400" />
+            <StatCard label="Weekly Return" value={analytics?.weekly_return != null ? formatPercent(analytics.weekly_return) : '--'} color="text-green-400" />
+            <StatCard label="Peak Drawdown" value={analytics?.peak_drawdown != null ? formatPercent(analytics.peak_drawdown) : '--'} color="text-red-400" />
+            <StatCard label="Trade Win %" value={analytics?.trade_win_rate != null ? `${analytics.trade_win_rate.toFixed(1)}%` : '--'} color="text-blue-400" />
+            <StatCard label="Trades/Day" value={analytics?.trades_per_day != null ? analytics.trades_per_day.toFixed(1) : '--'} color="text-purple-400" />
+            <StatCard label="Risk/Reward" value={analytics?.risk_reward_ratio != null ? analytics.risk_reward_ratio.toFixed(2) : '--'} color="text-cyan-400" />
+            <StatCard label="Total Trades" value={analytics?.total_trades != null ? analytics.total_trades.toLocaleString() : '--'} color="text-orange-400" />
           </div>
 
           {/* Charts Row */}
