@@ -968,14 +968,11 @@ async def calculate_viking_analytics(strategy: str):
         
         # Calculate history days from first to last trade
         if deals:
-            dates = [d.get("close_time") for d in deals if d.get("close_time")]
+            dates = [parse_mt4_datetime(d.get("close_time")) for d in deals if d.get("close_time")]
+            dates = [d for d in dates if d is not None]  # Filter out None values
             if dates:
                 first_date = min(dates)
                 last_date = max(dates)
-                if isinstance(first_date, str):
-                    first_date = datetime.fromisoformat(first_date.replace('Z', '+00:00'))
-                if isinstance(last_date, str):
-                    last_date = datetime.fromisoformat(last_date.replace('Z', '+00:00'))
                 history_days = (last_date - first_date).days + 1
             else:
                 history_days = 0
