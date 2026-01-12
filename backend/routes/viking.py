@@ -492,7 +492,12 @@ async def get_viking_deals(
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
-        query = {"account": account["account"]}
+        # Handle both string and int account numbers
+        account_query = {"$or": [
+            {"account": account["account"]},
+            {"account": str(account["account"])}
+        ]}
+        query = {**account_query}
         if symbol:
             query["symbol"] = {"$regex": symbol, "$options": "i"}
         
