@@ -994,13 +994,9 @@ async def calculate_viking_analytics(strategy: str):
         # Average trade length (in hours)
         trade_lengths = []
         for d in deals:
-            open_time = d.get("open_time")
-            close_time = d.get("close_time")
+            open_time = parse_mt4_datetime(d.get("open_time"))
+            close_time = parse_mt4_datetime(d.get("close_time"))
             if open_time and close_time:
-                if isinstance(open_time, str):
-                    open_time = datetime.fromisoformat(open_time.replace('Z', '+00:00'))
-                if isinstance(close_time, str):
-                    close_time = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
                 duration = (close_time - open_time).total_seconds() / 3600
                 trade_lengths.append(duration)
         
