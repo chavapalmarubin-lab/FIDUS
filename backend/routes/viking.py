@@ -984,11 +984,13 @@ async def calculate_viking_analytics(strategy: str):
         
         # Calculate returns based on account data
         balance = account.get("balance", 0)
-        initial_deposit = 86000.17  # From FXBlue reference data
+        # Calculate initial deposit from balance minus net profit
+        initial_deposit = balance - net_profit if balance > 0 else 0
         
-        total_return = ((balance - initial_deposit) / initial_deposit * 100) if initial_deposit > 0 and balance > 0 else 0
-        monthly_return = (total_return / (history_days / 30)) if history_days > 0 else 0
-        weekly_return = (total_return / (history_days / 7)) if history_days > 0 else 0
+        # Calculate returns as percentage gain
+        total_return = (net_profit / initial_deposit * 100) if initial_deposit > 0 else 0
+        monthly_return = (total_return / max(history_days / 30, 1)) if history_days > 0 else 0
+        weekly_return = (total_return / max(history_days / 7, 1)) if history_days > 0 else 0
         daily_return = (total_return / history_days) if history_days > 0 else 0
         
         # Average trade length (in hours)
