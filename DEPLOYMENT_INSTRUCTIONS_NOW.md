@@ -64,7 +64,7 @@ CLIENT_MONEY = sum(inv['principal_amount'] for inv in active_investments)
 ## 📊 Preview Already Works
 
 Test here to see correct values:
-**https://fintech-dashboard-60.preview.emergentagent.com**
+**https://viking-analytics.preview.emergentagent.com**
 
 Preview shows:
 - ✅ Client Money: $134,145.41

@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com/api"
+BACKEND_URL = "https://viking-analytics.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {

@@ -8,7 +8,7 @@ import requests
 import json
 
 def create_salvador_investments():
-    base_url = "https://fintech-dashboard-60.preview.emergentagent.com"
+    base_url = "https://viking-analytics.preview.emergentagent.com"
     
     # Authenticate as admin
     auth_response = requests.post(f"{base_url}/api/auth/login", json={

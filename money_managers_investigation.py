@@ -42,7 +42,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com"
+BACKEND_URL = "https://viking-analytics.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

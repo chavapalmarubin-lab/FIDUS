@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com/api"
+BACKEND_URL = "https://viking-analytics.preview.emergentagent.com/api"
 
 class SimplifiedPipelineFinalTest:
     def __init__(self):

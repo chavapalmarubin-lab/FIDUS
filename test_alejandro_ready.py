@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com"
+BACKEND_URL = "https://viking-analytics.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""

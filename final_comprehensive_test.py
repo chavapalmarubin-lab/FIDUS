@@ -4,7 +4,7 @@ FINAL COMPREHENSIVE TEST: Alejandro Mariscal Production Setup Verification
 
 Testing the exact requirements from the review request:
 1. Authentication: admin/password123
-2. Backend URL: https://fintech-dashboard-60.preview.emergentagent.com/api
+2. Backend URL: https://viking-analytics.preview.emergentagent.com/api
 3. Investment Admin Overview: Should show AUM > $100,000 and total_investments > 0
 4. MT5 Accounts (CRITICAL): GET /mt5/accounts/client_alejandro
    - Should return exactly 4 MEXAtlantic accounts: 886557 ($80k), 886066 ($10k), 886602 ($10k), 885822 ($18,151.41)
@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Use the exact backend URL from the review request
-BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com/api"
+BACKEND_URL = "https://viking-analytics.preview.emergentagent.com/api"
 
 class FinalComprehensiveTester:
     def __init__(self):

@@ -3,7 +3,7 @@ Test Render Production API - Corrected Login
 """
 import requests
 
-BACKEND_URL = "https://fintech-dashboard-60.preview.emergentagent.com"
+BACKEND_URL = "https://viking-analytics.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

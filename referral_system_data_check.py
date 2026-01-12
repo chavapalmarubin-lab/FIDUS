@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional
 
 class ReferralDataChecker:
     def __init__(self):
-        self.base_url = "https://fintech-dashboard-60.preview.emergentagent.com/api"
+        self.base_url = "https://viking-analytics.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         

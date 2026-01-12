@@ -1,166 +1,146 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to fix a broken production financial dashboard, which evolved into a comprehensive platform refactor to enforce a Single Source of Truth (SSOT) architecture. The user is highly technical, provides very specific instructions, and expects fast execution.
+The user's initial request was to fix a failing MT4 account connection. This quickly pivoted to a high-priority feature request: create a completely new, standalone VIKING trading analytics dashboard, separate from the existing FIDUS platform.
 
-The most recent tasks involved fixing the Referrals tab, implementing a Wealth Calendar, performing a critical architectural refactor of the Fund Portfolio page, managing MT4/MT5 account passwords, removing a section from the public-facing prospects page, and now, debugging a new MT4 account connection issue.
+PRODUCT REQUIREMENTS:
+-   **Separate Application:** VIKING should be a distinct application, accessible at its own URL (), with its own login page and credentials. It must be completely isolated from the FIDUS funds and data.
+-   **MT4 Integration:** The dashboard must sync real-time data from a VIKING CORE MT4 account (33627673). A second PRO account (1309411) is planned for the future.
+-   **UI/UX:** The UI must follow the format and layout of an FXBlue analytics page, as specified by the user. It needs to have multiple tabs: Overview, Analysis, Stats, Risk, and Orders.
+-   **Branding:** The application must use the branding (dark theme, gold/amber accents, and logo) from the website .
+-   **Backend:** New API endpoints and MongoDB collections (, , ) must be created to support the VIKING dashboard.
+-   **Analytics:** The backend must calculate a comprehensive set of trading metrics (Total Return, Profit Factor, Drawdown, etc.) from the trade history.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack financial dashboard (React + FastAPI + MongoDB). It has undergone significant refactoring and bug fixing.
+A full-stack application (React + FastAPI + MongoDB). The main FIDUS application exists at the root URL, and a new, completely separate VIKING application has been created and is accessible at the  route.
 
--   **Architecture:** A critical architectural flaw was corrected. The application now properly distinguishes between **Total Fund Assets** (a single pool of money from all MT5/MT4 trading accounts) and **Client Obligations** (what the company owes clients based on their investment products like CORE, BALANCE, DYNAMIC).
--   **Frontend:** The UI has been substantially improved.
-    -    was completely rewritten to reflect the new, correct architecture.
-    -   A new  component was added to  to show fund health and projections.
-    -   The  public page was updated to remove a specified marketing section.
--   **Backend:** Key API endpoints for investments, cash flow, and referrals have been fixed. Logic was corrected to handle data inconsistencies (like MongoDB s) and to align with business requirements (like salesperson sorting).
--   **DevOps:** A GitHub Action workflow () was created to facilitate updating trading account passwords in the MongoDB database.
+-   **VIKING Frontend:** A standalone VIKING app has been built with its own login page () and dashboard (). It has been styled with a dark theme, gold accents, and the official VIKING logo to match the  branding. The dashboard includes the required tab structure and fetches live data from the backend.
+-   **VIKING Backend:** New API endpoints under  have been created to serve data and analytics. An analytics calculation engine has been implemented in .
+-   **VIKING MT4 Bridge:** A new, isolated MT4 bridge is fully operational. It consists of an MQL4 Expert Advisor () running on the user's VPS, which sends data via HTTP POST to a dedicated Python service (). This service writes the data directly to the new  and  MongoDB collections. The user has confirmed data is flowing successfully.
 
 **Last working item**:
--   **Last item agent was working:** Investigating a connection failure for a new **Traders Trust MT4 account (1309411)**. The user provided screenshots showing it fails with an Invalid account error, while another MEX Atlantic account is working correctly.
+-   **Last item agent was working:** Applying the VIKING branding (dark theme, gold/amber accents, and logo) to the standalone VIKING application. This involved modifying , , and .
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Backend investigation. First, use  to query the  collection in MongoDB to check for the credentials of account .
--   **User Testing Done:** Y (User provided screenshots confirming the Invalid account error).
+-   **Which testing method agent to use?** screenshot tool. A visual confirmation is needed to ensure the new branding has been applied correctly across the entire VIKING user flow.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Traders Trust MT4 account (1309411) connection failed (P0)**
-
-**Issues Detail:**
--   **Issue 1: Traders Trust MT4 account (1309411) connection failed**
-    -   **Attempted fixes:** None yet. This is a new issue.
-    -   **Next debug checklist:**
-        1.  Connect to the database and inspect the  collection.
-        2.  Search for an entry where the  number is .
-        3.  **If an entry exists:** Verify the  and  fields are correct. The user's screenshot shows the server is likely .
-        4.  **If no entry exists:** Inform the user that the account is not configured in the database and ask for the correct  and  to create the configuration entry.
-    -   **Why fix this issue and what will be achieved with the fix?** To successfully integrate the new Traders Trust account into the platform, allowing its performance to be tracked in real-time.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend first to confirm the connection works. Then, frontend (screenshot tool) to verify the account and its data appear correctly on the Fund Portfolio dashboard.
-    -   **Blocked on other issue:** None.
+-   There are no blocking issues. The primary focus is completing the VIKING feature set.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Verify VIKING application branding (P0)**
+    -   **Where to resume:** The branding styles have been applied to the code. The next step is to test the visual output.
+    -   **What will be achieved with this?** Confirm that the VIKING login page and dashboard correctly display the new dark theme, gold/amber accents, and the official logo.
+    -   **Status:** TESTING PENDING
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   (P1) Configure  for MT5 bridge auto-healing.
+    -   **(P0) Fully Implement Analytics UI:** The backend calculates many metrics, but the , , and  tabs on the frontend () still contain many placeholder elements. These need to be wired up to display the real analytics data (e.g., Symbol Distribution Pie Chart, Risk of Ruin table, detailed stats tables).
+    -   **(P1) Display Deal History:** The  tab in  needs to be implemented to fetch and display the list of closed trades from the  collection.
 -   **Future Tasks:**
-    -   (P2) Remove obsolete V1 API code and old/backup frontend components (e.g., ).
-    -   (P2) Implement Referral Link Analytics Backend.
+    -   **(P2) Setup Traders Trust PRO account (1309411):** The user has explicitly postponed this. It will involve installing a new MT4 terminal on the VPS and configuring the bridge for the second account.
+    -   **(P2) Refactor VIKING Components:** The  component is large and could be broken down into smaller components for each tab. The  route could also be refactored to move analytics logic into a  module.
+    -   **(P2) FIDUS-related tasks:** Several older tasks related to the FIDUS part of the application remain, such as code cleanup and fixing minor bugs (e.g., Lucrum MT5 Bridge Has Duplicate Key Errors).
 
 **Completed work in this session**
--   **Architectural Overhaul:**
-    -   Completely refactored the **Fund Portfolio** page () to correctly separate Fund Assets (one pool of MT5 money) from Client Obligations (what is owed based on products).
--   **Feature Implementation:**
-    -   Created and integrated a new **Wealth Calendar** UI component () into the Cash Flow tab.
--   **Critical Bug Fixes:**
-    -   **Investments Tab:** Fixed a  by resolving MongoDB  serialization issues in  and cleaning corrupted database records.
-    -   **Referrals Tab:** Fixed a bug that was hiding a key salesperson and corrected the sorting logic to be based on sales performance ().
-    -   **Ready Clients Filter:** Corrected the logic to ensure all active clients were being counted.
-    -   **Cash Flow UI:** Fixed the timeline to correctly display a per-client breakdown of payments.
--   **DevOps & Maintenance:**
-    -   Created a **GitHub Action** () to allow for easier updates of trading account passwords stored in the database.
-    -   Updated passwords for all 21 MEX Atlantic & Lucrum Capital accounts in the MongoDB  collection.
-    -   Removed a Seguridad Garantizada marketing card from the public prospects page () and all translation files.
-    -   Created a new referral agent portal for Carol.
+-   **VIKING Standalone Application:** Created a completely separate application at  with its own login and dashboard. (, , )
+-   **VIKING Backend & Analytics:** Built all necessary API endpoints () and an analytics calculation engine. ()
+-   **VIKING MT4 Bridge:** Successfully created, deployed, and debugged a new, isolated MT4 bridge (EA + Python service) to sync live trading data to MongoDB.
+-   **Live Data Integration:** Connected the VIKING frontend to the backend to display live account data and charts.
+-   **VIKING Branding:** Styled the entire VIKING application with a dark theme, gold accents, and the official logo to match .
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Lucrum MT5 Bridge Has Duplicate Key Errors (P2)**
-    -   **Debug checklist:** Investigate the  service on the VPS to see why  operations are failing. This may be due to a code version mismatch or an issue with the upsert logic itself.
-    -   **Why to solve this issue and what will be achieved with this?** Ensures complete and accurate historical deal data is available for all Lucrum accounts.
+    -   **Debug checklist:** Investigate  on the VPS to find the cause of  failures.
+    -   **Why to solve this issue and what will be achieved with this?** Ensures complete historical deal data for Lucrum accounts.
     -   **Should Test frontend/backend/both after fix:** Backend.
     -   **Is recurring issue?** Y
 -   **Issue 2: Failing logins for three specific referral agents (P2)**
-    -   **Debug checklist:** Identify the affected referral agents. Check their records in the  and  collections. Verify their credentials and account status.
-    -   **Why to solve this issue and what will be achieved with this?** To ensure all authorized referral agents can access their dashboard.
-    -   **Should Test frontend/backend/both after fix:** Backend (login API) and Frontend (login flow).
+    -   **Debug checklist:** Check  and  collections in the database for the affected agents.
+    -   **Why to solve this issue and what will be achieved with this?** Ensures all referral agents can access their dashboards.
+    -   **Should Test frontend/backend/both after fix:** Backend (API) and Frontend (login flow).
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   None. The major recurring issue with the Investments Tab 500 error was definitively fixed by addressing the root cause (ObjectId serialization).
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Single Source of Truth (SSOT):** The core architectural principle guiding the project. The platform now correctly understands that Fund Assets (from MT5 accounts) are a single pool used to meet Client Obligations (defined by investment products).
--   **MongoDB  Serialization:** A critical bug was caused by improper handling of MongoDB's . The fix required adding  to queries and cleaning string fields that contained  values.
--   **GitHub Actions:** Used for a custom, manually-triggered workflow to manage database credentials, separating infrastructure tasks from application code.
--   **i18next Internationalization:** The public-facing pages support multiple languages using JSON translation files.
+-   **Application Splitting:** The React app now serves two applications based on URL: the original FIDUS app at  and the new VIKING portal at .
+-   **MT4 Integration:** An isolated data bridge was created using an MQL4 Expert Advisor (EA) that sends data via HTTP POST to a Python FastAPI service, which then writes to MongoDB.
+-   **UI Branding:** The VIKING app was themed using Tailwind CSS to match an external website's branding (dark theme, specific colors, and logo).
 
 **key DB schema**
--   : Source of truth for client obligations. Defines  and  (CORE, BALANCE, etc.).
--   : Contains real-time equity and P&L data synced from trading accounts.
--   : Stores connection credentials (, , ) for each trading account. **This is the key collection for debugging the current issue.**
--   : Stores data for referral agents. Was fixed to have consistent  and  fields.
+-   : { , , , , , ,  }
+-   : { , , , , , ,  }
+-   : { , , , ,  }
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : Main FastAPI application file where multiple endpoints were fixed.
--   : Central calculation service where  bugs were fixed.
--   : API routes for the Referrals tab; sorting and filtering logic was corrected here.
--   : Core UI component that was completely rewritten.
--   : New component created for the Wealth Calendar feature.
--   : Public-facing component that was modified to remove a marketing element.
--   : New GitHub Action workflow file.
--   : Directory containing , , , and  files that were edited.
+-   : Modified to add the  route.
+-   : New file; wrapper for the standalone VIKING application.
+-   : New file; the login page for the VIKING portal.
+-   : New file; the main UI for the VIKING dashboard.
+-   : New file; contains all API endpoints and analytics logic for VIKING.
+-   : New file; the Expert Advisor that runs in the MT4 terminal.
+-   : New file; the Python service that receives data from the EA.
+-   : New file; the GitHub Action to deploy the bridge.
 
 **Areas that need refactoring**:
--   The backend in  remains monolithic and could be broken down into smaller, more manageable route files by feature.
--   Old and backup files (, ) in the frontend directory should be deleted to clean up the codebase.
+-   The  component is over 800 lines long and handles all 5 tabs. It should be broken down into smaller, more manageable sub-components.
+-   The analytics calculation logic within  could be abstracted into a separate  module for better separation of concerns.
 
 **key api endpoints**
--   : Fixed (no longer returns 500 error).
--   : Fixed (now sorts by sales volume and filters correctly).
--   : A key endpoint used by the new  component.
+-   : Receives live account data from the MT4 EA.
+-   : Receives historical trade data from the MT4 EA.
+-   : Provides frontend with combined account and analytics data.
+-   : Triggers an on-demand calculation of all trading metrics.
 
 **Critical Info for New Agent**
--   The user is direct and provides clear, multi-step instructions. Follow them precisely.
--   The core architectural concept is: **MT5 accounts = ONE fund pool. Client products (CORE/BALANCE/DYNAMIC) = OBLIGATIONS.** Do not mix these. The Fund Portfolio UI now reflects this correctly.
--   Trading account credentials are not in  files; they are stored in the  collection in MongoDB. This is where you must look to debug the current Invalid account issue.
--   The production environment is updated only when the user performs a Save to GitHub, which triggers a Render deployment. Your local preview will be ahead of production.
+-   The project has pivoted to focus exclusively on the **VIKING** application. Do not work on FIDUS unless specifically instructed.
+-   The application is now split: FIDUS is at the root URL (), and VIKING is at .
+-   The VIKING MT4 data bridge is **live and operational**. The dashboard should be receiving real data.
+-   The user has postponed work on the second VIKING PRO account. Focus only on the VIKING CORE account (33627673).
+-   The next priority is to complete the UI for the analytics features that are already built on the backend.
 
 **documents and test reports created in this job**
--   
+-    (created and updated with VIKING requirements)
+-    (instructions for the MT4 bridge)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Asks about updating the password for a Lucrum Capital account in addition to MEX Atlantic. (COMPLETED)
-2.  **Agent:** Confirms and notes that there are 7 Lucrum accounts in the DB.
-3.  **User:** Confirms to update all 7 Lucrum accounts. (COMPLETED)
-4.  **Agent:** Updates all accounts in MongoDB and provides a final prompt for the user's VPS admin.
-5.  **User:** Asks for a GitHub Action to update VPS accounts. (CLARIFIED/IMPLEMENTED)
-6.  **Agent:** Clarifies that a GitHub Action can only update the database, not the VPS terminals directly. Creates the database update workflow.
-7.  **User:** Reports that the Run workflow button is missing on GitHub. (RESOLVED)
-8.  **Agent:** Explains how to find the button and confirms the YAML is valid.
-9.  **User:** Provides new, comprehensive instructions for the VPS admin, including details about automated scripts. (INFO)
-10. **User:** Reports that the dashboard is showing incorrect fund totals, providing a screenshot of the OLD, broken UI. (RESOLVED - agent confirmed fix was not yet deployed to production).
-11. **User:** Asks to remove the Seguridad Garantizada section from the public prospects page. (COMPLETED)
-12. **User:** Reports a connection failure for a Traders Trust MT4 account, providing screenshots. (**CURRENT TASK**)
+1.  **User:** Reports GitHub Actions deployment workflow is failing. (COMPLETED - Agent fixed it)
+2.  **User:** Asks for the  file content to manually create it on the VPS. (COMPLETED - Agent provided it)
+3.  **User:** Reports MongoDB authentication is failing on the VPS Python service. (COMPLETED - Agent debugged and provided corrected files/credentials)
+4.  **User:** Confirms the Python service is running and the bridge is operational. Asks to set up auto-start. (COMPLETED - Agent provided the script)
+5.  **User:** Confirms auto-start is done. Asks to proceed with adding real-time charts and analytics to the dashboard. (COMPLETED - Agent implemented this)
+6.  **User:** Sees live data flowing and asks to create a separate login for VIKING on a separate domain/URL. (COMPLETED - Agent created the  route and standalone app)
+7.  **User:** Asks to use the branding and logo from . (COMPLETED - Agent implemented the branding)
 
 **Project Health Check:**
--   **Broken**:
-    -   Connection to Traders Trust MT4 account  is failing with Invalid account.
--   **Mocked**:
-    -   None.
+-   **Broken**: None.
+-   **Mocked**: Several UI sections within the VIKING dashboard (, ,  tabs) are placeholders and need to be connected to the full analytics data provided by the backend.
 
 **3rd Party Integrations**
 -   **Render:** Used for hosting and deployment.
 -   **MongoDB Atlas:** Production database.
--   **GitHub Actions:** Used for a custom CI workflow to update database records.
+-   **GitHub Actions:** Used for custom deployment workflows.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. Both frontend and backend testing agents were used to verify major fixes and features.
--   **Troubleshoot agent used after agent stuck in loop:** YES.
--   **Test files created:** None persistent.
+-   **Testing agent used after significant changes:** NO
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None.
 -   **Known regressions:** None.
 
 **Credentials to test flow:**
--   **Admin Username**: 
--   **Admin Password**: 
+-   **FIDUS Admin:**  / 
+-   **VIKING Admin:**  / 
 
 **What agent forgot to execute**
--   The agent did not begin work on two less critical issues from the original handoff summary: Lucrum MT5 Bridge Has Duplicate Key Errors and Failing logins for three specific referral agents. These have been carried forward to the Earlier issues found/mentioned but not fixed section.</analysis>
+-   The agent did not perform a final visual test (e.g., via screenshot) after applying the last set of branding and styling changes to the VIKING application components. This verification is the immediate next step.</analysis>
