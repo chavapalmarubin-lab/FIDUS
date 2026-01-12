@@ -652,7 +652,6 @@ const VikingDashboard = () => {
                 {symbolDistribution.length === 0 && (
                   <p className="text-xs text-gray-500 text-center mt-4">Trade history required for symbol distribution</p>
                 )}
-                </div>
               </CardContent>
             </Card>
           </div>
