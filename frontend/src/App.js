@@ -32,6 +32,26 @@ function App() {
   const isProspectsRoute = window.location.pathname.startsWith('/prospects');
   const isVikingRoute = window.location.pathname.startsWith('/viking');
   
+  // DEBUG: Log route detection
+  console.log('🛡️ APP INIT - pathname:', window.location.pathname);
+  console.log('🛡️ isVikingRoute:', isVikingRoute);
+  console.log('🛡️ isProspectsRoute:', isProspectsRoute);
+  
+  // VIKING ROUTE: Return early BEFORE any state initialization
+  if (isVikingRoute) {
+    console.log('🚀 VIKING ROUTE DETECTED - Rendering VikingApp directly');
+    return (
+      <BrowserRouter>
+        <ToastProvider>
+          <Routes>
+            <Route path="/viking" element={<VikingApp />} />
+            <Route path="/viking/*" element={<VikingApp />} />
+          </Routes>
+        </ToastProvider>
+      </BrowserRouter>
+    );
+  }
+  
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
   const [user, setUser] = useState(null);
   // Prospects Portal - Phase 1 MVP Active
