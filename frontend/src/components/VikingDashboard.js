@@ -342,11 +342,17 @@ const VikingDashboard = () => {
           {/* Strategy Cards Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* VIKING CORE Strategy Card */}
-            <Card className="bg-gray-900/50 border-gray-800">
+            <Card 
+              className="border"
+              style={{ 
+                backgroundColor: `${VKNG_COLORS.darkGray}`,
+                borderColor: `${VKNG_COLORS.gold}30`
+              }}
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg text-white flex items-center gap-2">
-                    <span className="text-2xl">🛡️</span>
+                  <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
+                    <span style={{ color: VKNG_COLORS.gold }}>⚡</span>
                     VIKING CORE Strategy
                   </CardTitle>
                   <Badge className={`${getStatusColor(coreAccount?.status)} border`}>
@@ -354,7 +360,7 @@ const VikingDashboard = () => {
                     <span className="ml-1 capitalize">{coreAccount?.status?.replace('_', ' ') || 'Unknown'}</span>
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>
                   Account: {coreAccount?.account || '33627673'} | {coreAccount?.broker || 'MEXAtlantic'}
                 </p>
               </CardHeader>
