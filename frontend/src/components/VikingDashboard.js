@@ -249,17 +249,22 @@ const VikingDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="text-3xl">⚔️</span>
-            VIKING Trading Operations
+          <h1 className="text-2xl font-bold flex items-center gap-3" style={{ color: VKNG_COLORS.textPrimary }}>
+            <img 
+              src="/vkng-logo.png" 
+              alt="VKNG" 
+              className="h-8 w-auto"
+              style={{ filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.4))' }}
+            />
+            Trading Operations
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="mt-1" style={{ color: VKNG_COLORS.textSecondary }}>
             Separate from FIDUS Funds • Real-time MT4 Performance Analytics
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastUpdate && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs" style={{ color: `${VKNG_COLORS.textSecondary}80` }}>
               Last update: {lastUpdate}
             </span>
           )}
@@ -268,7 +273,12 @@ const VikingDashboard = () => {
             variant="outline" 
             size="sm"
             disabled={calculating}
-            className="border-purple-700 hover:bg-purple-800 text-purple-400"
+            className="transition-all duration-200"
+            style={{ 
+              borderColor: VKNG_COLORS.gold,
+              color: VKNG_COLORS.gold,
+              backgroundColor: 'transparent'
+            }}
             data-testid="viking-calculate-btn"
           >
             {calculating ? (
@@ -282,7 +292,11 @@ const VikingDashboard = () => {
             onClick={fetchData} 
             variant="outline" 
             size="sm"
-            className="border-gray-700 hover:bg-gray-800"
+            className="transition-all duration-200"
+            style={{ 
+              borderColor: VKNG_COLORS.mediumGray,
+              color: VKNG_COLORS.textSecondary
+            }}
             data-testid="viking-refresh-btn"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
