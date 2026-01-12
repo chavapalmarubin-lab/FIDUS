@@ -1169,14 +1169,14 @@ const VikingDashboard = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-800">
-                        <th className="text-left py-2 px-2 text-gray-500">Order</th>
-                        <th className="text-left py-2 px-2 text-gray-500">Time</th>
+                        <th className="text-left py-2 px-2 text-gray-500">Ticket</th>
+                        <th className="text-left py-2 px-2 text-gray-500">Closed</th>
                         <th className="text-left py-2 px-2 text-gray-500">Type</th>
-                        <th className="text-right py-2 px-2 text-gray-500">Size</th>
+                        <th className="text-right py-2 px-2 text-gray-500">Lots</th>
                         <th className="text-left py-2 px-2 text-gray-500">Symbol</th>
                         <th className="text-right py-2 px-2 text-gray-500">Open</th>
                         <th className="text-right py-2 px-2 text-gray-500">Close</th>
-                        <th className="text-right py-2 px-2 text-gray-500">Commission</th>
+                        <th className="text-right py-2 px-2 text-gray-500">Comm</th>
                         <th className="text-right py-2 px-2 text-gray-500">Swap</th>
                         <th className="text-right py-2 px-2 text-gray-500">Profit</th>
                       </tr>
