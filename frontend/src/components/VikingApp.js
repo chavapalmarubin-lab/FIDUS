@@ -12,14 +12,15 @@ import VikingDashboard from './VikingDashboard';
 import { Button } from './ui/button';
 import { LogOut, User, Bell, TrendingUp } from 'lucide-react';
 
-// VKNG AI Brand Colors (from getvkng.com)
+// VKNG AI Brand Colors (from getvkng.com - Purple/Magenta theme)
 const VKNG_COLORS = {
-  gold: '#D4AF37',
-  goldLight: '#F4D03F',
-  goldDark: '#B8860B',
-  dark: '#0A0A0A',
-  darkGray: '#141414',
-  mediumGray: '#1A1A1A',
+  purple: '#9B27FF',
+  purpleLight: '#A239EA',
+  magenta: '#CC00FF',
+  pink: '#E621A4',
+  dark: '#0A112B',
+  darkGray: '#0D1629',
+  mediumGray: '#1A2744',
   textPrimary: '#FFFFFF',
   textSecondary: '#9CA3AF',
   success: '#22C55E'
