@@ -4,6 +4,7 @@
 # Deploys VIKING PRO bridge components to VPS (Traders Trust)
 # Account: 1309411 | Strategy: PRO
 # Uses file-based JSON sync method (EA writes -> Python reads)
+# Deploys to C:\viking_bridge (same folder as CORE)
 # ============================================================
 
 name: Deploy VIKING PRO MT4 Bridge
@@ -34,6 +35,7 @@ env:
   ACCOUNT_ID: "1309411"
   STRATEGY: "PRO"
   BROKER: "Traders Trust"
+  BRIDGE_DIR: "C:\\viking_bridge"
 
 jobs:
   deploy-viking-pro:
