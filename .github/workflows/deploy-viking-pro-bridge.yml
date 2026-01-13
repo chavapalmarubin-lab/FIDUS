@@ -134,22 +134,29 @@ jobs:
           port: ${{ env.VPS_SSH_PORT }}
           timeout: 120s
           script: |
-            $repo = "${{ github.repository }}"
-            $branch = "${{ github.ref_name }}"
-            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
-            $bridgePath = "C:\viking_bridge"
+            powershell -Command "
+            \$repo = '${{ github.repository }}'
+            \$branch = '${{ github.ref_name }}'
+            \$baseUrl = \"https://raw.githubusercontent.com/\$repo/\$branch/vps-scripts\"
+            \$bridgePath = 'C:\viking_bridge'
             
-            Write-Host "📥 Downloading files from GitHub..." -ForegroundColor Cyan
+            Write-Host 'Downloading files from GitHub...' -ForegroundColor Cyan
             
             # Download Python service
-            Write-Host "  → viking_pro_file_monitor.py" -ForegroundColor Gray
-            Invoke-WebRequest -Uri "$baseUrl/viking_pro_file_monitor.py" -OutFile "$bridgePath\viking_pro_file_monitor.py" -UseBasicParsing
+            Write-Host '  -> viking_pro_file_monitor.py' -ForegroundColor Gray
+            Invoke-WebRequest -Uri \"\$baseUrl/viking_pro_file_monitor.py\" -OutFile \"\$bridgePath\viking_pro_file_monitor.py\" -UseBasicParsing
+            
+            # Download batch file
+            Write-Host '  -> start_viking_pro_monitor.bat' -ForegroundColor Gray
+            Invoke-WebRequest -Uri \"\$baseUrl/start_viking_pro_monitor.bat\" -OutFile \"\$bridgePath\start_viking_pro_monitor.bat\" -UseBasicParsing
             
             # Download EA file
-            Write-Host "  → VIKING_PRO_Account_Data_Writer.mq4" -ForegroundColor Gray
-            Invoke-WebRequest -Uri "$baseUrl/VIKING_PRO_Account_Data_Writer.mq4" -OutFile "$bridgePath\VIKING_PRO_Account_Data_Writer.mq4" -UseBasicParsing
+            Write-Host '  -> VIKING_PRO_Account_Data_Writer.mq4' -ForegroundColor Gray
+            Invoke-WebRequest -Uri \"\$baseUrl/VIKING_PRO_Account_Data_Writer.mq4\" -OutFile \"\$bridgePath\VIKING_PRO_Account_Data_Writer.mq4\" -UseBasicParsing
             
-            Write-Host "✅ Files downloaded" -ForegroundColor Green
+            Write-Host 'Files downloaded successfully' -ForegroundColor Green
+            Get-ChildItem \$bridgePath | Format-Table Name, Length
+            "
 
       - name: Full Deploy - Create Config & Batch Files
         if: ${{ github.event.inputs.action == 'full_deploy' }}
