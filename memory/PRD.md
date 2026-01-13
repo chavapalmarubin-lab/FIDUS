@@ -122,14 +122,27 @@ Applied official getvkng.com branding to entire VIKING portal:
 - ✅ **Risk Tab**: Risk of Ruin probability table, Balance Metrics, Equity Metrics
 - ✅ All data is real, calculated from 77 closed trades in `viking_deals_history`
 
-### Phase 8 - Multi-Strategy Support ✅ IN PROGRESS (Jan 13, 2026)
+### Phase 8 - Multi-Strategy Support ✅ COMPLETE (Jan 13, 2026)
 - ✅ Added Strategy Selector (ALL | CORE | PRO) to dashboard header
 - ✅ Combined Portfolio summary showing total balance/equity across all accounts
 - ✅ VIKING CORE card (blue accent) - Active, connected to MEXAtlantic
 - ✅ VIKING PRO card (purple accent) - Pending Setup, for Traders Trust account
 - ✅ Created PRO account EA: `VIKING_PRO_Account_Data_Writer.mq4`
 - ✅ Created PRO account Python service: `viking_pro_file_monitor.py`
-- ⏳ **Pending**: Deploy EA and Python service on VPS for account 1309411
+- ✅ Created comprehensive GitHub Action: `deploy-viking-pro-bridge.yml`
+  - Full deployment (EA + Python service + batch files + scheduled task)
+  - Separate options: deploy EA only, deploy Python only, restart, status, logs, test sync
+- ⏳ **Pending User Action**: Deploy EA and Python service on VPS for account 1309411
+  - User can trigger via GitHub Actions → "Deploy VIKING PRO MT4 Bridge" workflow
+
+### Phase 9 - Orders Tab Pagination ✅ COMPLETE (Jan 13, 2026)
+- ✅ Added pagination controls to Orders tab header
+- ✅ "Show" dropdown: 10, 25, 50, 100 items per page
+- ✅ Page navigation: First, Prev, Next, Last buttons
+- ✅ Page indicator: "Page X of Y"
+- ✅ Bottom pagination summary: "Showing X - Y of Z trades"
+- ✅ "Jump to page" input for direct navigation
+- ✅ Backend pagination API already supported (`skip` and `limit` params)
 
 **PRO Account Credentials:**
 - Account: 1309411
