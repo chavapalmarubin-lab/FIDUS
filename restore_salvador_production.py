@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 class SalvadorProductionRestorer:
     def __init__(self):
         self.production_url = "https://fidus-invest.emergent.host"
-        self.preview_url = "https://viking-analytics.preview.emergentagent.com"
+        self.preview_url = "https://quant-viking.preview.emergentagent.com"
         self.admin_token = None
         
         # Salvador's expected data

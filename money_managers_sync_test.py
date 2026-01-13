@@ -27,7 +27,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://viking-analytics.preview.emergentagent.com/api"
+BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

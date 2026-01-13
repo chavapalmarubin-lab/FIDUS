@@ -20,7 +20,7 @@ from datetime import datetime
 import sys
 
 class MT5DuplicationFixer:
-    def __init__(self, base_url="https://viking-analytics.preview.emergentagent.com"):
+    def __init__(self, base_url="https://quant-viking.preview.emergentagent.com"):
         self.base_url = base_url
         self.auth_token = None
         self.actions_taken = []

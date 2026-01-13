@@ -23,7 +23,7 @@ class ComprehensiveOAuthDebugSuite:
     
     def __init__(self):
         # Get backend URL from environment
-        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://viking-analytics.preview.emergentagent.com')
+        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://quant-viking.preview.emergentagent.com')
         if not self.backend_url.endswith('/api'):
             self.backend_url = f"{self.backend_url}/api"
         

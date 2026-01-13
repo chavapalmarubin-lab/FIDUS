@@ -21,7 +21,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://viking-analytics.preview.emergentagent.com"
+BACKEND_URL = "https://quant-viking.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

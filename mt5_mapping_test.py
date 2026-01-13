@@ -25,7 +25,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 class MT5MappingTester:
-    def __init__(self, base_url="https://viking-analytics.preview.emergentagent.com"):
+    def __init__(self, base_url="https://quant-viking.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

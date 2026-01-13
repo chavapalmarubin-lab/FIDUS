@@ -37,7 +37,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://viking-analytics.preview.emergentagent.com/api"
+BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
 
 class CurrencyConversionTest:
     def __init__(self):
