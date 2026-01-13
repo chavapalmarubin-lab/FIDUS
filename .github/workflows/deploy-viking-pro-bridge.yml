@@ -83,38 +83,46 @@ jobs:
           port: ${{ env.VPS_SSH_PORT }}
           timeout: 60s
           script: |
-            Write-Host "============================================" -ForegroundColor Cyan
-            Write-Host "VIKING PRO MT4 Bridge - Full Deployment" -ForegroundColor Cyan
-            Write-Host "Account: 1309411 | Traders Trust" -ForegroundColor Cyan
-            Write-Host "============================================" -ForegroundColor Cyan
+            powershell -Command "
+            Write-Host '============================================' -ForegroundColor Cyan
+            Write-Host 'VIKING PRO MT4 Bridge - Full Deployment' -ForegroundColor Cyan
+            Write-Host 'Account: 1309411 | Traders Trust' -ForegroundColor Cyan
+            Write-Host '============================================' -ForegroundColor Cyan
             
             # Create bridge directory
-            $bridgePath = "C:\viking_bridge"
-            if (-not (Test-Path $bridgePath)) {
-                New-Item -ItemType Directory -Path $bridgePath -Force | Out-Null
-                Write-Host "✅ Created: $bridgePath" -ForegroundColor Green
+            \$bridgePath = 'C:\viking_bridge'
+            if (-not (Test-Path \$bridgePath)) {
+                New-Item -ItemType Directory -Path \$bridgePath -Force | Out-Null
+                Write-Host 'Created: C:\viking_bridge' -ForegroundColor Green
             } else {
-                Write-Host "📁 Directory exists: $bridgePath" -ForegroundColor Yellow
+                Write-Host 'Directory exists: C:\viking_bridge' -ForegroundColor Yellow
             }
             
-            # Stop existing processes
-            Write-Host ""
-            Write-Host "🔍 Stopping existing VIKING PRO processes..." -ForegroundColor Cyan
-            Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {
-                $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
-                if ($cmdLine -match "viking_pro") {
-                    Write-Host "  Stopping PID: $($_.Id)" -ForegroundColor Yellow
-                    Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+            # Stop existing PRO processes (ignore errors)
+            Write-Host 'Checking for existing VIKING PRO processes...' -ForegroundColor Cyan
+            try {
+                Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {
+                    try {
+                        \$cmdLine = (Get-CimInstance Win32_Process -Filter \"ProcessId = \$(\$_.Id)\" -ErrorAction SilentlyContinue).CommandLine
+                        if (\$cmdLine -match 'viking_pro') {
+                            Write-Host \"  Stopping PID: \$(\$_.Id)\" -ForegroundColor Yellow
+                            Stop-Process -Id \$_.Id -Force -ErrorAction SilentlyContinue
+                        }
+                    } catch { }
                 }
-            }
+            } catch { Write-Host 'No processes to stop' -ForegroundColor Gray }
             
-            # Stop scheduled task if exists
-            $taskName = "VIKING_PRO_Bridge"
-            $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-            if ($task) {
-                Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-                Write-Host "⏹️  Stopped scheduled task: $taskName" -ForegroundColor Yellow
-            }
+            # Stop scheduled task if exists (ignore errors)
+            try {
+                \$task = Get-ScheduledTask -TaskName 'VIKING_PRO_File_Monitor' -ErrorAction SilentlyContinue
+                if (\$task) {
+                    Stop-ScheduledTask -TaskName 'VIKING_PRO_File_Monitor' -ErrorAction SilentlyContinue
+                    Write-Host 'Stopped scheduled task' -ForegroundColor Yellow
+                }
+            } catch { }
+            
+            Write-Host 'Directory setup complete' -ForegroundColor Green
+            "
 
       - name: Full Deploy - Download Files
         if: ${{ github.event.inputs.action == 'full_deploy' }}
