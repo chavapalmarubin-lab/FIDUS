@@ -122,6 +122,20 @@ Applied official getvkng.com branding to entire VIKING portal:
 - ✅ **Risk Tab**: Risk of Ruin probability table, Balance Metrics, Equity Metrics
 - ✅ All data is real, calculated from 77 closed trades in `viking_deals_history`
 
+### Phase 8 - Multi-Strategy Support ✅ IN PROGRESS (Jan 13, 2026)
+- ✅ Added Strategy Selector (ALL | CORE | PRO) to dashboard header
+- ✅ Combined Portfolio summary showing total balance/equity across all accounts
+- ✅ VIKING CORE card (blue accent) - Active, connected to MEXAtlantic
+- ✅ VIKING PRO card (purple accent) - Pending Setup, for Traders Trust account
+- ✅ Created PRO account EA: `VIKING_PRO_Account_Data_Writer.mq4`
+- ✅ Created PRO account Python service: `viking_pro_file_monitor.py`
+- ⏳ **Pending**: Deploy EA and Python service on VPS for account 1309411
+
+**PRO Account Credentials:**
+- Account: 1309411
+- Broker: Traders Trust
+- Password: `eM@54f*M4PB1`
+
 **Access VIKING Portal at:** `/viking`
 **Login:** `admin` / `Password123`
 
