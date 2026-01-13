@@ -266,22 +266,6 @@ const VikingDashboard = () => {
   useEffect(() => {
     setOrdersPage(1);
   }, [selectedStrategy]);
-  
-  // Refetch deals when page changes
-  useEffect(() => {
-    if (ordersPage > 1 || ordersPerPage !== 25) {
-      const fetchDeals = async () => {
-        const strategy = selectedStrategy === 'ALL' ? 'CORE' : selectedStrategy;
-        const dealsRes = await fetch(`${BACKEND_URL}/api/viking/deals/${strategy}?limit=${ordersPerPage}&skip=${(ordersPage - 1) * ordersPerPage}`);
-        const dealsData = await dealsRes.json();
-        if (dealsData.success) {
-          setDeals(dealsData.deals || []);
-          setTotalDeals(dealsData.pagination?.total || dealsData.deals?.length || 0);
-        }
-      };
-      fetchDeals();
-    }
-  }, [ordersPage, ordersPerPage, selectedStrategy]);
 
   // Helper functions
   const formatCurrency = (value) => {
