@@ -601,30 +601,6 @@ const VikingDashboard = () => {
             </Card>
             )}
           </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Balance</p>
-                      <p className="text-xl font-bold text-white">{formatCurrency(proAccount?.balance)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Equity</p>
-                      <p className="text-xl font-bold text-white">{formatCurrency(proAccount?.equity)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Floating P/L</p>
-                      <p className={`text-lg font-semibold ${(proAccount?.floating_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(proAccount?.floating_pnl)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Free Margin</p>
-                      <p className="text-lg font-semibold text-gray-300">{formatCurrency(proAccount?.free_margin)}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Stats Summary Row - Shows real data only */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
