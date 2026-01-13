@@ -1,3 +1,11 @@
+# ============================================================
+# VIKING PRO MT4 Bridge Deployment Workflow
+# ============================================================
+# Deploys VIKING PRO bridge components to VPS (Traders Trust)
+# Account: 1309411 | Strategy: PRO
+# Uses file-based JSON sync method (EA writes -> Python reads)
+# ============================================================
+
 name: Deploy VIKING PRO MT4 Bridge
 
 on:
@@ -6,102 +14,581 @@ on:
       action:
         description: 'Action to perform'
         required: true
-        default: 'deploy'
+        default: 'full_deploy'
         type: choice
         options:
-          - deploy
-          - restart
-          - status
-          - logs
+          - full_deploy
+          - deploy_ea_only
+          - deploy_python_only
+          - restart_service
+          - check_status
+          - view_logs
+          - test_sync
 
 env:
   VPS_HOST: ${{ secrets.VPS_HOST }}
-  VPS_USER: ${{ secrets.VPS_USER }}
+  VPS_USER: ${{ secrets.VPS_USERNAME }}
   VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+  VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }}
+  MONGO_URL: ${{ secrets.MONGO_URL }}
+  ACCOUNT_ID: "1309411"
+  STRATEGY: "PRO"
+  BROKER: "Traders Trust"
 
 jobs:
-  deploy-viking-pro-bridge:
+  deploy-viking-pro:
     runs-on: ubuntu-latest
+    name: VIKING PRO Bridge (${{ github.event.inputs.action }})
+    timeout-minutes: 15
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup SSH
+      
+      - name: Validate source files
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "🔍 Validating VIKING PRO bridge files..."
+          
+          # Check EA file
+          if [ -f "vps-scripts/VIKING_PRO_Account_Data_Writer.mq4" ]; then
+            echo "✅ EA file: vps-scripts/VIKING_PRO_Account_Data_Writer.mq4"
+          else
+            echo "❌ EA file not found!"
+            exit 1
+          fi
+          
+          # Check Python service
+          if [ -f "vps-scripts/viking_pro_file_monitor.py" ]; then
+            echo "✅ Python service: vps-scripts/viking_pro_file_monitor.py"
+          else
+            echo "❌ Python service not found!"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All source files validated"
 
-      - name: Deploy VIKING PRO Bridge
-        if: ${{ github.event.inputs.action == 'deploy' }}
-        run: |
-          # Create deployment script
-          cat > deploy_pro.ps1 << 'DEPLOY_SCRIPT'
-          # VIKING PRO Bridge Deployment Script
-          Write-Host "=========================================="
-          Write-Host "VIKING PRO MT4 Bridge Deployment"
-          Write-Host "=========================================="
-          
-          # Create bridge directory
-          $bridgeDir = "C:\viking_bridge_pro"
-          if (-not (Test-Path $bridgeDir)) {
-              New-Item -ItemType Directory -Path $bridgeDir -Force
-              Write-Host "Created directory: $bridgeDir"
-          }
-          
-          # Download Python service
-          Write-Host "Downloading Python service..."
-          $pythonServiceUrl = "https://raw.githubusercontent.com/${{ github.repository }}/main/vps-scripts/viking_pro_file_monitor.py"
-          Invoke-WebRequest -Uri $pythonServiceUrl -OutFile "$bridgeDir\viking_pro_file_monitor.py"
-          
-          # Install dependencies
-          Write-Host "Installing Python dependencies..."
-          pip install pymongo --quiet
-          
-          # Create Windows service wrapper batch file
-          $batchContent = @"
-          @echo off
-          cd /d C:\viking_bridge_pro
-          python viking_pro_file_monitor.py
-          "@
-          Set-Content -Path "$bridgeDir\start_viking_pro_bridge.bat" -Value $batchContent
-          
-          # Create scheduled task for auto-start
-          Write-Host "Setting up auto-start task..."
-          $taskName = "VIKING_PRO_Bridge"
-          $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-          if ($existingTask) {
-              Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
-          }
-          
-          $action = New-ScheduledTaskAction -Execute "python" -Argument "C:\viking_bridge_pro\viking_pro_file_monitor.py" -WorkingDirectory "C:\viking_bridge_pro"
-          $trigger = New-ScheduledTaskTrigger -AtStartup
-          $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-          Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -User "SYSTEM" -RunLevel Highest
-          
-          Write-Host "=========================================="
-          Write-Host "Deployment complete!"
-          Write-Host "Task '$taskName' created for auto-start"
-          Write-Host "=========================================="
-          DEPLOY_SCRIPT
-          
-          # Copy and execute on VPS
-          sshpass -p "${{ env.VPS_PASSWORD }}" scp deploy_pro.ps1 ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:C:/temp/
-          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -ExecutionPolicy Bypass -File C:/temp/deploy_pro.ps1"
+      # ============================================================
+      # FULL DEPLOYMENT
+      # ============================================================
+      - name: Full Deploy - Create Directories
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "VIKING PRO MT4 Bridge - Full Deployment" -ForegroundColor Cyan
+            Write-Host "Account: 1309411 | Traders Trust" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            # Create bridge directory
+            $bridgePath = "C:\viking_bridge_pro"
+            if (-not (Test-Path $bridgePath)) {
+                New-Item -ItemType Directory -Path $bridgePath -Force | Out-Null
+                Write-Host "✅ Created: $bridgePath" -ForegroundColor Green
+            } else {
+                Write-Host "📁 Directory exists: $bridgePath" -ForegroundColor Yellow
+            }
+            
+            # Stop existing processes
+            Write-Host ""
+            Write-Host "🔍 Stopping existing VIKING PRO processes..." -ForegroundColor Cyan
+            Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {
+                $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                if ($cmdLine -match "viking_pro") {
+                    Write-Host "  Stopping PID: $($_.Id)" -ForegroundColor Yellow
+                    Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+                }
+            }
+            
+            # Stop scheduled task if exists
+            $taskName = "VIKING_PRO_Bridge"
+            $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+            if ($task) {
+                Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+                Write-Host "⏹️  Stopped scheduled task: $taskName" -ForegroundColor Yellow
+            }
 
-      - name: Restart VIKING PRO Bridge
-        if: ${{ github.event.inputs.action == 'restart' }}
-        run: |
-          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -Command 'Stop-ScheduledTask -TaskName VIKING_PRO_Bridge; Start-ScheduledTask -TaskName VIKING_PRO_Bridge'"
-          echo "✅ VIKING PRO Bridge restarted"
+      - name: Full Deploy - Download Files
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 120s
+          script: |
+            $repo = "${{ github.repository }}"
+            $branch = "${{ github.ref_name }}"
+            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
+            $bridgePath = "C:\viking_bridge_pro"
+            
+            Write-Host "📥 Downloading files from GitHub..." -ForegroundColor Cyan
+            
+            # Download Python service
+            Write-Host "  → viking_pro_file_monitor.py" -ForegroundColor Gray
+            Invoke-WebRequest -Uri "$baseUrl/viking_pro_file_monitor.py" -OutFile "$bridgePath\viking_pro_file_monitor.py" -UseBasicParsing
+            
+            # Download EA file
+            Write-Host "  → VIKING_PRO_Account_Data_Writer.mq4" -ForegroundColor Gray
+            Invoke-WebRequest -Uri "$baseUrl/VIKING_PRO_Account_Data_Writer.mq4" -OutFile "$bridgePath\VIKING_PRO_Account_Data_Writer.mq4" -UseBasicParsing
+            
+            Write-Host "✅ Files downloaded" -ForegroundColor Green
 
+      - name: Full Deploy - Create Config & Batch Files
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            $bridgePath = "C:\viking_bridge_pro"
+            
+            Write-Host "📝 Creating configuration files..." -ForegroundColor Cyan
+            
+            # Create .env file
+            $envContent = @"
+            MONGO_URL=${{ env.MONGO_URL }}
+            DB_NAME=fidus_production
+            ACCOUNT_ID=VIKING_1309411
+            ACCOUNT_NUMBER=1309411
+            STRATEGY=PRO
+            BROKER=Traders Trust
+            "@
+            Set-Content -Path "$bridgePath\.env" -Value $envContent -Encoding UTF8
+            Write-Host "✅ Created .env" -ForegroundColor Green
+            
+            # Create batch file for manual start
+            $batchContent = @"
+            @echo off
+            echo ==========================================
+            echo VIKING PRO File Monitor Service
+            echo Account: 1309411 (Traders Trust)
+            echo ==========================================
+            cd /d C:\viking_bridge_pro
+            python viking_pro_file_monitor.py
+            pause
+            "@
+            Set-Content -Path "$bridgePath\start_viking_pro_bridge.bat" -Value $batchContent
+            Write-Host "✅ Created start_viking_pro_bridge.bat" -ForegroundColor Green
+            
+            # List all files
+            Write-Host ""
+            Write-Host "📁 Files in $bridgePath :" -ForegroundColor Cyan
+            Get-ChildItem $bridgePath | Format-Table Name, Length, LastWriteTime -AutoSize
+
+      - name: Full Deploy - Install Dependencies
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 180s
+          script: |
+            Write-Host "📦 Installing Python dependencies..." -ForegroundColor Cyan
+            pip install pymongo python-dotenv --quiet
+            Write-Host "✅ Dependencies installed" -ForegroundColor Green
+
+      - name: Full Deploy - Setup Scheduled Task
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "⏰ Setting up Windows Scheduled Task..." -ForegroundColor Cyan
+            
+            $taskName = "VIKING_PRO_Bridge"
+            $bridgePath = "C:\viking_bridge_pro"
+            
+            # Remove existing task
+            $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+            if ($existingTask) {
+                Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+                Write-Host "  Removed existing task" -ForegroundColor Yellow
+            }
+            
+            # Create new scheduled task
+            $action = New-ScheduledTaskAction -Execute "python" -Argument "$bridgePath\viking_pro_file_monitor.py" -WorkingDirectory $bridgePath
+            $trigger = New-ScheduledTaskTrigger -AtStartup
+            $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit (New-TimeSpan -Days 365)
+            
+            Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -User "SYSTEM" -RunLevel Highest
+            
+            Write-Host "✅ Scheduled Task created: $taskName" -ForegroundColor Green
+            Write-Host "   → Will auto-start on system boot" -ForegroundColor Gray
+
+      - name: Full Deploy - Copy EA to MT4 Terminal
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "📋 Copying EA to Traders Trust MT4..." -ForegroundColor Cyan
+            
+            $eaSource = "C:\viking_bridge_pro\VIKING_PRO_Account_Data_Writer.mq4"
+            
+            # Try multiple MT4 paths for Traders Trust
+            $mt4Paths = @(
+                "C:\Program Files\Traders Trust MT4\MQL4\Experts",
+                "C:\Program Files (x86)\Traders Trust MT4\MQL4\Experts",
+                "C:\Program Files\Traders Trust MT4 Terminal\MQL4\Experts",
+                "C:\Program Files (x86)\Traders Trust MT4 Terminal\MQL4\Experts",
+                "C:\Program Files\TradersTrust-Live\MQL4\Experts",
+                "C:\Program Files (x86)\TradersTrust-Live\MQL4\Experts",
+                "C:\Program Files\Traders Trust Live\MQL4\Experts",
+                "C:\Program Files (x86)\Traders Trust Live\MQL4\Experts"
+            )
+            
+            $copied = $false
+            foreach ($mt4Path in $mt4Paths) {
+                if (Test-Path $mt4Path) {
+                    $eaDest = Join-Path $mt4Path "VIKING_PRO_Account_Data_Writer.mq4"
+                    Copy-Item -Path $eaSource -Destination $eaDest -Force
+                    Write-Host "✅ EA copied to: $eaDest" -ForegroundColor Green
+                    $copied = $true
+                    break
+                }
+            }
+            
+            if (-not $copied) {
+                Write-Host "⚠️  Could not find Traders Trust MT4 Experts folder" -ForegroundColor Yellow
+                Write-Host "   EA is available at: $eaSource" -ForegroundColor Yellow
+                Write-Host "   Copy manually to your MT4 MQL4\Experts folder" -ForegroundColor Yellow
+            }
+
+      - name: Full Deploy - Start Service
+        if: ${{ github.event.inputs.action == 'full_deploy' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "🚀 Starting VIKING PRO service..." -ForegroundColor Cyan
+            
+            # Start via scheduled task
+            Start-ScheduledTask -TaskName "VIKING_PRO_Bridge"
+            
+            Start-Sleep -Seconds 5
+            
+            # Check task status
+            $task = Get-ScheduledTask -TaskName "VIKING_PRO_Bridge"
+            Write-Host "Task State: $($task.State)" -ForegroundColor Gray
+            
+            # Check Python process
+            $pythonProc = Get-Process python* -ErrorAction SilentlyContinue | Where-Object {
+                (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine -match "viking_pro"
+            }
+            
+            if ($pythonProc) {
+                Write-Host "✅ Python process running (PID: $($pythonProc.Id))" -ForegroundColor Green
+            } else {
+                Write-Host "⚠️  Python process not detected yet (may still be starting)" -ForegroundColor Yellow
+            }
+
+      # ============================================================
+      # DEPLOY EA ONLY
+      # ============================================================
+      - name: Deploy EA Only
+        if: ${{ github.event.inputs.action == 'deploy_ea_only' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            $repo = "${{ github.repository }}"
+            $branch = "${{ github.ref_name }}"
+            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
+            
+            Write-Host "📥 Downloading EA file..." -ForegroundColor Cyan
+            
+            # Ensure directory exists
+            $bridgePath = "C:\viking_bridge_pro"
+            if (-not (Test-Path $bridgePath)) {
+                New-Item -ItemType Directory -Path $bridgePath -Force | Out-Null
+            }
+            
+            # Download EA
+            Invoke-WebRequest -Uri "$baseUrl/VIKING_PRO_Account_Data_Writer.mq4" -OutFile "$bridgePath\VIKING_PRO_Account_Data_Writer.mq4" -UseBasicParsing
+            
+            Write-Host "✅ EA downloaded to: $bridgePath\VIKING_PRO_Account_Data_Writer.mq4" -ForegroundColor Green
+            
+            # Try to copy to MT4
+            $mt4Paths = @(
+                "C:\Program Files\Traders Trust MT4\MQL4\Experts",
+                "C:\Program Files (x86)\Traders Trust MT4\MQL4\Experts",
+                "C:\Program Files\TradersTrust-Live\MQL4\Experts"
+            )
+            
+            foreach ($mt4Path in $mt4Paths) {
+                if (Test-Path $mt4Path) {
+                    Copy-Item -Path "$bridgePath\VIKING_PRO_Account_Data_Writer.mq4" -Destination "$mt4Path\VIKING_PRO_Account_Data_Writer.mq4" -Force
+                    Write-Host "✅ EA copied to MT4: $mt4Path" -ForegroundColor Green
+                    break
+                }
+            }
+
+      # ============================================================
+      # DEPLOY PYTHON ONLY
+      # ============================================================
+      - name: Deploy Python Only
+        if: ${{ github.event.inputs.action == 'deploy_python_only' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 120s
+          script: |
+            $repo = "${{ github.repository }}"
+            $branch = "${{ github.ref_name }}"
+            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
+            $bridgePath = "C:\viking_bridge_pro"
+            
+            Write-Host "📥 Downloading Python service..." -ForegroundColor Cyan
+            
+            # Stop existing service
+            Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {
+                $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                if ($cmdLine -match "viking_pro") {
+                    Stop-Process -Id $_.Id -Force
+                }
+            }
+            
+            # Download Python service
+            Invoke-WebRequest -Uri "$baseUrl/viking_pro_file_monitor.py" -OutFile "$bridgePath\viking_pro_file_monitor.py" -UseBasicParsing
+            
+            Write-Host "✅ Python service updated" -ForegroundColor Green
+            
+            # Restart service
+            Start-ScheduledTask -TaskName "VIKING_PRO_Bridge" -ErrorAction SilentlyContinue
+            Write-Host "🔄 Service restarted" -ForegroundColor Green
+
+      # ============================================================
+      # RESTART SERVICE
+      # ============================================================
+      - name: Restart Service
+        if: ${{ github.event.inputs.action == 'restart_service' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "🔄 Restarting VIKING PRO Bridge..." -ForegroundColor Cyan
+            
+            # Stop any running Python processes for viking_pro
+            Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {
+                $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                if ($cmdLine -match "viking_pro") {
+                    Write-Host "  Stopping PID: $($_.Id)" -ForegroundColor Yellow
+                    Stop-Process -Id $_.Id -Force
+                }
+            }
+            
+            Start-Sleep -Seconds 2
+            
+            # Start scheduled task
+            Start-ScheduledTask -TaskName "VIKING_PRO_Bridge"
+            
+            Start-Sleep -Seconds 5
+            
+            # Verify
+            $task = Get-ScheduledTask -TaskName "VIKING_PRO_Bridge" -ErrorAction SilentlyContinue
+            if ($task) {
+                Write-Host "✅ Task State: $($task.State)" -ForegroundColor Green
+            }
+
+      # ============================================================
+      # CHECK STATUS
+      # ============================================================
       - name: Check Status
-        if: ${{ github.event.inputs.action == 'status' }}
-        run: |
-          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -Command 'Get-ScheduledTask -TaskName VIKING_PRO_Bridge | Select-Object TaskName, State'"
+        if: ${{ github.event.inputs.action == 'check_status' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "VIKING PRO Bridge Status Check" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            # Check scheduled task
+            Write-Host ""
+            Write-Host "📋 Scheduled Task:" -ForegroundColor White
+            $task = Get-ScheduledTask -TaskName "VIKING_PRO_Bridge" -ErrorAction SilentlyContinue
+            if ($task) {
+                Write-Host "   Name: $($task.TaskName)" -ForegroundColor Gray
+                Write-Host "   State: $($task.State)" -ForegroundColor $(if ($task.State -eq 'Running') { 'Green' } else { 'Yellow' })
+            } else {
+                Write-Host "   ❌ Task not found" -ForegroundColor Red
+            }
+            
+            # Check Python process
+            Write-Host ""
+            Write-Host "🐍 Python Process:" -ForegroundColor White
+            $pythonProc = Get-Process python* -ErrorAction SilentlyContinue | Where-Object {
+                (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine -match "viking_pro"
+            }
+            if ($pythonProc) {
+                Write-Host "   ✅ Running (PID: $($pythonProc.Id))" -ForegroundColor Green
+            } else {
+                Write-Host "   ⚠️  Not running" -ForegroundColor Yellow
+            }
+            
+            # Check files
+            Write-Host ""
+            Write-Host "📁 Bridge Files:" -ForegroundColor White
+            $bridgePath = "C:\viking_bridge_pro"
+            if (Test-Path $bridgePath) {
+                Get-ChildItem $bridgePath | ForEach-Object {
+                    Write-Host "   $($_.Name) ($($_.Length) bytes)" -ForegroundColor Gray
+                }
+            } else {
+                Write-Host "   ❌ Directory not found" -ForegroundColor Red
+            }
+            
+            # Check for JSON data file
+            Write-Host ""
+            Write-Host "📊 Data File Status:" -ForegroundColor White
+            $commonFiles = "C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
+            $dataFile = "$commonFiles\viking_account_1309411_data.json"
+            if (Test-Path $dataFile) {
+                $fileInfo = Get-Item $dataFile
+                Write-Host "   ✅ Found: $dataFile" -ForegroundColor Green
+                Write-Host "   Last Modified: $($fileInfo.LastWriteTime)" -ForegroundColor Gray
+                Write-Host "   Size: $($fileInfo.Length) bytes" -ForegroundColor Gray
+            } else {
+                Write-Host "   ⚠️  JSON file not found (EA may not be running)" -ForegroundColor Yellow
+            }
 
+      # ============================================================
+      # VIEW LOGS
+      # ============================================================
       - name: View Logs
-        if: ${{ github.event.inputs.action == 'logs' }}
+        if: ${{ github.event.inputs.action == 'view_logs' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "📜 VIKING PRO Bridge Logs (last 50 lines)" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            $logFile = "C:\viking_bridge_pro\viking_sync.log"
+            
+            if (Test-Path $logFile) {
+                Get-Content $logFile -Tail 50
+            } else {
+                Write-Host "⚠️  Log file not found at: $logFile" -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "Checking for console output..." -ForegroundColor Gray
+            }
+
+      # ============================================================
+      # TEST SYNC
+      # ============================================================
+      - name: Test Sync
+        if: ${{ github.event.inputs.action == 'test_sync' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          password: ${{ env.VPS_PASSWORD }}
+          port: ${{ env.VPS_SSH_PORT }}
+          timeout: 120s
+          script: |
+            Write-Host "🧪 Testing VIKING PRO Sync..." -ForegroundColor Cyan
+            
+            # Check for JSON data file
+            $commonFiles = "C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
+            $dataFile = "$commonFiles\viking_account_1309411_data.json"
+            
+            if (Test-Path $dataFile) {
+                Write-Host "✅ JSON data file found" -ForegroundColor Green
+                Write-Host ""
+                Write-Host "📊 File Contents:" -ForegroundColor Cyan
+                
+                $content = Get-Content $dataFile -Raw | ConvertFrom-Json
+                
+                Write-Host "   Account: $($content.account)" -ForegroundColor Gray
+                Write-Host "   Strategy: $($content.strategy)" -ForegroundColor Gray
+                Write-Host "   Broker: $($content.broker)" -ForegroundColor Gray
+                Write-Host "   Balance: `$$($content.balance)" -ForegroundColor Green
+                Write-Host "   Equity: `$$($content.equity)" -ForegroundColor Green
+                Write-Host "   Profit: `$$($content.profit)" -ForegroundColor $(if ($content.profit -ge 0) { 'Green' } else { 'Red' })
+                Write-Host "   Positions: $($content.positions_count)" -ForegroundColor Gray
+                Write-Host "   Closed Trades: $($content.closed_trades_count)" -ForegroundColor Gray
+                Write-Host "   Timestamp: $($content.timestamp)" -ForegroundColor Gray
+            } else {
+                Write-Host "❌ JSON data file not found" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "This means the MT4 EA is not running or hasn't written data yet." -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "To fix:" -ForegroundColor White
+                Write-Host "1. Open Traders Trust MT4 terminal" -ForegroundColor Gray
+                Write-Host "2. Compile VIKING_PRO_Account_Data_Writer.mq4 in MetaEditor" -ForegroundColor Gray
+                Write-Host "3. Attach EA to any chart on account 1309411" -ForegroundColor Gray
+                Write-Host "4. Wait 2-5 minutes for first data write" -ForegroundColor Gray
+            }
+
+      # ============================================================
+      # DEPLOYMENT SUMMARY
+      # ============================================================
+      - name: Final Summary
         run: |
-          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -Command 'Get-Content C:\viking_bridge_pro\viking_sync.log -Tail 50'"
+          echo "## 🚀 VIKING PRO Bridge - ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Account Details" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Account | 1309411 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Strategy | PRO |" >> $GITHUB_STEP_SUMMARY
+          echo "| Broker | Traders Trust |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | MT4 |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- \`C:\\viking_bridge_pro\\viking_pro_file_monitor.py\` - Python sync service" >> $GITHUB_STEP_SUMMARY
+          echo "- \`C:\\viking_bridge_pro\\VIKING_PRO_Account_Data_Writer.mq4\` - MT4 EA" >> $GITHUB_STEP_SUMMARY
+          echo "- \`C:\\viking_bridge_pro\\start_viking_pro_bridge.bat\` - Manual start script" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Open Traders Trust MT4 terminal" >> $GITHUB_STEP_SUMMARY
+          echo "2. Open MetaEditor (F4) and compile the EA" >> $GITHUB_STEP_SUMMARY
+          echo "3. Go to Tools > Options > Expert Advisors" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check 'Allow DLL imports' and 'Allow automated trading'" >> $GITHUB_STEP_SUMMARY
+          echo "5. Attach EA to any chart on account 1309411" >> $GITHUB_STEP_SUMMARY
+          echo "6. Wait 2-5 minutes for data to appear on dashboard" >> $GITHUB_STEP_SUMMARY
