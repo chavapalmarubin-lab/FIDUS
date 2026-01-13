@@ -32,6 +32,12 @@ function App() {
   const isProspectsRoute = window.location.pathname.startsWith('/prospects');
   const isVikingRoute = window.location.pathname.startsWith('/viking');
   
+  // Handle typo: /vikin -> /viking
+  if (window.location.pathname === '/vikin' || window.location.pathname.startsWith('/vikin/')) {
+    window.location.href = window.location.href.replace('/vikin', '/viking');
+    return null;
+  }
+  
   // DEBUG: Log route detection
   console.log('🛡️ APP INIT - pathname:', window.location.pathname);
   console.log('🛡️ isVikingRoute:', isVikingRoute);
