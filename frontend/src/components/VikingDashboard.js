@@ -107,7 +107,8 @@ const COLORS = {
   pink: '#E621A4'        // VKNG Pink
 };
 
-const SYMBOL_COLORS = ['#9B27FF', '#A239EA', '#22c55e', '#E621A4', '#06b6d4', '#ec4899'];
+// Distinct colors for symbol distribution pie chart
+const SYMBOL_COLORS = ['#9B27FF', '#22c55e', '#3B82F6', '#F59E0B', '#EC4899', '#06B6D4', '#EF4444', '#8B5CF6'];
 
 // Strategy colors
 const STRATEGY_COLORS = {
