@@ -127,9 +127,9 @@ const VikingApp = () => {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
                 style={{ backgroundColor: VKNG_COLORS.mediumGray }}
               >
-                <TrendingUp className="w-4 h-4" style={{ color: VKNG_COLORS.purple }} />
+                <TrendingUp className="w-4 h-4" style={{ color: activeAccount.strategy === 'PRO' ? VKNG_COLORS.purple : '#3B82F6' }} />
                 <span className="text-xs" style={{ color: VKNG_COLORS.textSecondary }}>
-                  Account 33627673
+                  {activeAccount.strategy} • {activeAccount.account}
                 </span>
               </div>
             </div>
