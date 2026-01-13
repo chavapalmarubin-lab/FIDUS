@@ -34,6 +34,13 @@ const VikingApp = () => {
   const [user, setUser] = useState(() => {
     return localStorage.getItem('viking_user') || null;
   });
+  
+  // Track active account info from dashboard
+  const [activeAccount, setActiveAccount] = useState({
+    account: '33627673',
+    broker: 'MEXAtlantic',
+    strategy: 'CORE'
+  });
 
   const handleLogin = (success) => {
     if (success) {
