@@ -329,36 +329,6 @@ const VikingDashboard = ({ onAccountChange }) => {
   const totalProfit = (coreAccount?.profit || 0) + (proAccount?.profit || 0);
   const totalPositions = (coreAccount?.positions_count || 0) + (proAccount?.positions_count || 0);
 
-  // Update header with active account info when strategy or accounts change
-  // Using a separate variable to track changes
-  const coreAccountNum = coreAccount?.account;
-  const proAccountNum = proAccount?.account;
-  
-  useEffect(() => {
-    if (onAccountChange) {
-      if (selectedStrategy === 'ALL') {
-        onAccountChange({
-          account: 'ALL',
-          broker: 'Combined',
-          strategy: 'ALL'
-        });
-      } else if (selectedStrategy === 'CORE') {
-        onAccountChange({
-          account: coreAccountNum || '33627673',
-          broker: coreAccount?.broker || 'MEXAtlantic',
-          strategy: 'CORE'
-        });
-      } else if (selectedStrategy === 'PRO') {
-        onAccountChange({
-          account: proAccountNum || '1309411',
-          broker: proAccount?.broker || 'Traders Trust',
-          strategy: 'PRO'
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStrategy, coreAccountNum, proAccountNum]);
-
   return (
     <div className="space-y-6" data-testid="viking-dashboard">
       {/* Header with Strategy Selector */}
