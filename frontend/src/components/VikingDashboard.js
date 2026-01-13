@@ -299,7 +299,7 @@ const VikingDashboard = () => {
         <div className="text-center">
           <Loader2 
             className="w-12 h-12 animate-spin mx-auto mb-4" 
-            style={{ color: VKNG_COLORS.gold }}
+            style={{ color: VKNG_COLORS.purple }}
           />
           <p style={{ color: VKNG_COLORS.textSecondary }}>Loading VKNG AI data...</p>
         </div>
@@ -307,14 +307,20 @@ const VikingDashboard = () => {
     );
   }
 
-  // Get CORE account data
+  // Get account data
   const coreAccount = summary?.strategies?.find(s => s.strategy === 'CORE');
   const proAccount = summary?.strategies?.find(s => s.strategy === 'PRO');
+  
+  // Calculate combined totals
+  const totalBalance = (coreAccount?.balance || 0) + (proAccount?.balance || 0);
+  const totalEquity = (coreAccount?.equity || 0) + (proAccount?.equity || 0);
+  const totalProfit = (coreAccount?.profit || 0) + (proAccount?.profit || 0);
+  const totalPositions = (coreAccount?.positions_count || 0) + (proAccount?.positions_count || 0);
 
   return (
     <div className="space-y-6" data-testid="viking-dashboard">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header with Strategy Selector */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>
             Trading Operations
@@ -323,6 +329,32 @@ const VikingDashboard = () => {
             Real-time MT4 Performance Analytics
           </p>
         </div>
+        
+        {/* Strategy Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>Strategy:</span>
+          <div className="flex rounded-lg overflow-hidden" style={{ backgroundColor: VKNG_COLORS.darkGray, border: `1px solid ${VKNG_COLORS.mediumGray}` }}>
+            {['ALL', 'CORE', 'PRO'].map((strategy) => (
+              <button
+                key={strategy}
+                onClick={() => setSelectedStrategy(strategy)}
+                className={`px-4 py-2 text-sm font-medium transition-all ${
+                  selectedStrategy === strategy ? 'text-white' : ''
+                }`}
+                style={{
+                  backgroundColor: selectedStrategy === strategy 
+                    ? (strategy === 'PRO' ? VKNG_COLORS.purple : strategy === 'CORE' ? '#3B82F6' : VKNG_COLORS.pink)
+                    : 'transparent',
+                  color: selectedStrategy === strategy ? '#fff' : VKNG_COLORS.textSecondary
+                }}
+                data-testid={`strategy-${strategy.toLowerCase()}-btn`}
+              >
+                {strategy}
+              </button>
+            ))}
+          </div>
+        </div>
+        
         <div className="flex items-center gap-3">
           {lastUpdate && (
             <span className="text-xs" style={{ color: `${VKNG_COLORS.textSecondary}80` }}>
