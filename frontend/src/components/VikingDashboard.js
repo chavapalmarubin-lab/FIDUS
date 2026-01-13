@@ -434,21 +434,63 @@ const VikingDashboard = () => {
 
         {/* OVERVIEW TAB */}
         <TabsContent value="overview" className="mt-6 space-y-6">
-          {/* Strategy Cards Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* VIKING CORE Strategy Card */}
+          {/* Combined Summary Row (Only show when ALL is selected) */}
+          {selectedStrategy === 'ALL' && (coreAccount || proAccount) && (
             <Card 
               className="border"
               style={{ 
                 backgroundColor: `${VKNG_COLORS.darkGray}`,
-                borderColor: `${VKNG_COLORS.purple}30`
+                borderColor: `${VKNG_COLORS.pink}40`,
+                boxShadow: `0 4px 20px ${VKNG_COLORS.purple}15`
+              }}
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
+                  <span style={{ color: VKNG_COLORS.pink }}>📊</span>
+                  Combined Portfolio
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Total Balance</p>
+                    <p className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>{formatCurrency(totalBalance)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Total Equity</p>
+                    <p className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>{formatCurrency(totalEquity)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Total Floating P/L</p>
+                    <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(totalProfit)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Total Positions</p>
+                    <p className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>{totalPositions}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Strategy Cards Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* VIKING CORE Strategy Card */}
+            {(selectedStrategy === 'ALL' || selectedStrategy === 'CORE') && (
+            <Card 
+              className="border"
+              style={{ 
+                backgroundColor: `${VKNG_COLORS.darkGray}`,
+                borderColor: '#3B82F630'
               }}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
-                    <span style={{ color: VKNG_COLORS.purple }}>⚡</span>
-                    VIKING CORE Strategy
+                    <span style={{ color: '#3B82F6' }}>⚡</span>
+                    VIKING CORE
                   </CardTitle>
                   <Badge className={`${getStatusColor(coreAccount?.status)} border`}>
                     {getStatusIcon(coreAccount?.status)}
@@ -471,52 +513,93 @@ const VikingDashboard = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Floating P/L</p>
-                    <p className={`text-lg font-semibold ${(coreAccount?.floating_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {formatCurrency(coreAccount?.floating_pnl)}
+                    <p className={`text-lg font-semibold ${(coreAccount?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(coreAccount?.profit)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Free Margin</p>
-                    <p className="text-lg font-semibold text-gray-300">{formatCurrency(coreAccount?.free_margin)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Margin In Use</p>
-                    <p className="text-lg font-semibold text-gray-300">{formatCurrency(coreAccount?.margin_in_use)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Margin Level</p>
-                    <p className="text-lg font-semibold text-gray-300">
-                      {coreAccount?.margin_level ? `${coreAccount.margin_level.toFixed(1)}%` : '--'}
-                    </p>
+                    <p className="text-xs text-gray-500">Positions</p>
+                    <p className="text-lg font-semibold text-gray-300">{coreAccount?.positions_count || 0}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-gray-800">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    <span className="text-xs text-gray-400">Real Account</span>
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span className="text-xs text-gray-400">MEXAtlantic</span>
                   </div>
                   <span className="text-xs text-gray-500">
-                    Last Update: {coreAccount?.last_update ? new Date(coreAccount.last_update).toLocaleDateString() : '--'}
+                    Last Sync: {coreAccount?.last_update ? new Date(coreAccount.last_update).toLocaleString() : '--'}
                   </span>
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {/* VIKING PRO Strategy Card */}
-            <Card className="bg-gray-900/50 border-gray-800">
+            {(selectedStrategy === 'ALL' || selectedStrategy === 'PRO') && (
+            <Card 
+              className="border"
+              style={{ 
+                backgroundColor: `${VKNG_COLORS.darkGray}`,
+                borderColor: `${VKNG_COLORS.purple}30`
+              }}
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg text-white flex items-center gap-2">
-                    <span className="text-2xl">⚔️</span>
-                    VIKING PRO Strategy
+                  <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
+                    <span style={{ color: VKNG_COLORS.purple }}>⚔️</span>
+                    VIKING PRO
                   </CardTitle>
                   <Badge className={`${getStatusColor(proAccount?.status)} border`}>
                     {getStatusIcon(proAccount?.status)}
-                    <span className="ml-1 capitalize">{proAccount?.status?.replace('_', ' ') || 'Unknown'}</span>
+                    <span className="ml-1 capitalize">{proAccount?.status?.replace('_', ' ') || 'Pending Setup'}</span>
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>
                   Account: {proAccount?.account || '1309411'} | {proAccount?.broker || 'Traders Trust'}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {proAccount?.status === 'active' ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Balance</p>
+                      <p className="text-xl font-bold text-white">{formatCurrency(proAccount?.balance)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Equity</p>
+                      <p className="text-xl font-bold text-white">{formatCurrency(proAccount?.equity)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Floating P/L</p>
+                      <p className={`text-lg font-semibold ${(proAccount?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatCurrency(proAccount?.profit)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Positions</p>
+                      <p className="text-lg font-semibold text-gray-300">{proAccount?.positions_count || 0}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <AlertTriangle className="w-10 h-10 mx-auto mb-2" style={{ color: VKNG_COLORS.purple }} />
+                    <p className="text-gray-400 text-sm">PRO account pending setup</p>
+                    <p className="text-gray-500 text-xs mt-1">Connect MT4 EA to start syncing</p>
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: VKNG_COLORS.purple }}></div>
+                    <span className="text-xs text-gray-400">Traders Trust</span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {proAccount?.last_update ? `Last Sync: ${new Date(proAccount.last_update).toLocaleString()}` : 'Not synced'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+            )}
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
