@@ -276,7 +276,7 @@ const VikingDashboard = () => {
         const dealsData = await dealsRes.json();
         if (dealsData.success) {
           setDeals(dealsData.deals || []);
-          setTotalDeals(dealsData.total || dealsData.deals?.length || 0);
+          setTotalDeals(dealsData.pagination?.total || dealsData.deals?.length || 0);
         }
       };
       fetchDeals();
