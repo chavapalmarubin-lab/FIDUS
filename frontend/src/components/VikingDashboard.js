@@ -177,35 +177,53 @@ const VikingDashboard = () => {
       
       if (summaryData.success) {
         setSummary(summaryData);
+        setAccounts(summaryData.strategies || []);
         setLastUpdate(new Date().toLocaleTimeString());
       }
       
       // Fetch analytics for CORE strategy
-      const analyticsRes = await fetch(`${BACKEND_URL}/api/viking/analytics/CORE`);
-      const analyticsData = await analyticsRes.json();
+      try {
+        const coreAnalyticsRes = await fetch(`${BACKEND_URL}/api/viking/analytics/CORE`);
+        const coreAnalyticsData = await coreAnalyticsRes.json();
+        if (coreAnalyticsData.success) {
+          setCoreAnalytics(coreAnalyticsData.analytics);
+          if (selectedStrategy === 'ALL' || selectedStrategy === 'CORE') {
+            setAnalytics(coreAnalyticsData.analytics);
+          }
+        }
+      } catch (e) { console.log("CORE analytics not available"); }
       
-      if (analyticsData.success) {
-        setAnalytics(analyticsData.analytics);
-      }
+      // Fetch analytics for PRO strategy
+      try {
+        const proAnalyticsRes = await fetch(`${BACKEND_URL}/api/viking/analytics/PRO`);
+        const proAnalyticsData = await proAnalyticsRes.json();
+        if (proAnalyticsData.success) {
+          setProAnalytics(proAnalyticsData.analytics);
+          if (selectedStrategy === 'PRO') {
+            setAnalytics(proAnalyticsData.analytics);
+          }
+        }
+      } catch (e) { console.log("PRO analytics not available yet"); }
       
-      // Fetch deals for CORE strategy
-      const dealsRes = await fetch(`${BACKEND_URL}/api/viking/deals/CORE?limit=50`);
+      // Fetch deals based on selected strategy
+      const strategy = selectedStrategy === 'ALL' ? 'CORE' : selectedStrategy;
+      const dealsRes = await fetch(`${BACKEND_URL}/api/viking/deals/${strategy}?limit=50`);
       const dealsData = await dealsRes.json();
       
       if (dealsData.success) {
         setDeals(dealsData.deals || []);
       }
       
-      // Fetch symbol distribution
-      const symbolsRes = await fetch(`${BACKEND_URL}/api/viking/symbols/CORE`);
+      // Fetch symbol distribution for selected strategy
+      const symbolsRes = await fetch(`${BACKEND_URL}/api/viking/symbols/${strategy}`);
       const symbolsData = await symbolsRes.json();
       
       if (symbolsData.success) {
         setSymbolDistribution(symbolsData.distribution || []);
       }
       
-      // Fetch risk analysis
-      const riskRes = await fetch(`${BACKEND_URL}/api/viking/risk/CORE`);
+      // Fetch risk analysis for selected strategy
+      const riskRes = await fetch(`${BACKEND_URL}/api/viking/risk/${strategy}`);
       const riskDataRes = await riskRes.json();
       
       if (riskDataRes.success) {
@@ -213,7 +231,7 @@ const VikingDashboard = () => {
       }
 
       // Fetch balance history for charts
-      const balanceRes = await fetch(`${BACKEND_URL}/api/viking/balance-snapshots/CORE`);
+      const balanceRes = await fetch(`${BACKEND_URL}/api/viking/balance-snapshots/${strategy}`);
       const balanceData = await balanceRes.json();
       
       if (balanceData.success && balanceData.snapshots) {
@@ -230,7 +248,7 @@ const VikingDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedStrategy]);
 
   useEffect(() => {
     fetchData();
