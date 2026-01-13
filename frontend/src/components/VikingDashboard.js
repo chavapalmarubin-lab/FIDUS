@@ -600,24 +600,7 @@ const VikingDashboard = () => {
               </CardContent>
             </Card>
             )}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {proAccount?.status === 'pending_setup' ? (
-                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className="w-5 h-5 text-orange-400" />
-                      <span className="text-orange-400 font-medium">Setup Required</span>
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      {proAccount?.error_message || 'This account needs MT4 terminal login on VPS'}
-                    </p>
-                    <div className="mt-3 text-xs text-gray-500">
-                      <p>Server: {proAccount?.server || 'TTCM'}</p>
-                      <p>Platform: MT4</p>
-                    </div>
-                  </div>
-                ) : (
+          </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-gray-500">Balance</p>
