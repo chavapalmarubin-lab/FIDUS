@@ -116,7 +116,7 @@ const STRATEGY_COLORS = {
   PRO: { primary: '#9B27FF', secondary: '#A239EA', bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' }
 };
 
-const VikingDashboard = () => {
+const VikingDashboard = ({ onAccountChange }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeSubTab, setActiveSubTab] = useState("overview");
