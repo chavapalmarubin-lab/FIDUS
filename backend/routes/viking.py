@@ -1107,15 +1107,76 @@ async def get_balance_snapshots(strategy: str, days: int = 120):
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
+        account_num = str(account["account"])
         start_date = datetime.now(timezone.utc) - timedelta(days=days)
         
+        # Try to get actual balance snapshots first
         snapshots = await db.viking_balance_history.find(
             {
-                "account": account["account"],
+                "$or": [{"account": account_num}, {"account": int(account_num) if account_num.isdigit() else account_num}],
                 "timestamp": {"$gte": start_date}
             },
             {"_id": 0}
         ).sort("timestamp", 1).to_list(None)
+        
+        # If no snapshots, reconstruct from deals history
+        if not snapshots:
+            logger.info(f"No balance snapshots for {strategy}, reconstructing from deals...")
+            
+            # Get all closed deals sorted by close time
+            deals = await db.viking_deals_history.find(
+                {"$or": [{"account": account_num}, {"account": int(account_num) if account_num.isdigit() else account_num}]},
+                {"_id": 0, "close_time": 1, "profit": 1, "commission": 1, "swap": 1}
+            ).sort("close_time", 1).to_list(None)
+            
+            if deals:
+                current_balance = float(account.get("balance", 0))
+                
+                # Calculate total profit from all deals
+                total_profit = sum(
+                    float(d.get("profit", 0)) + float(d.get("commission", 0)) + float(d.get("swap", 0))
+                    for d in deals
+                )
+                
+                # Estimate starting balance (current - total profit)
+                starting_balance = current_balance - total_profit
+                
+                # Build balance history from deals
+                running_balance = starting_balance
+                snapshots = []
+                
+                for deal in deals:
+                    deal_profit = float(deal.get("profit", 0)) + float(deal.get("commission", 0)) + float(deal.get("swap", 0))
+                    running_balance += deal_profit
+                    
+                    close_time = deal.get("close_time")
+                    if close_time:
+                        # Handle different date formats
+                        if isinstance(close_time, str):
+                            try:
+                                close_time = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
+                            except:
+                                try:
+                                    close_time = datetime.strptime(close_time, "%Y.%m.%d %H:%M:%S")
+                                except:
+                                    continue
+                        
+                        snapshots.append({
+                            "account": account_num,
+                            "strategy": strategy,
+                            "balance": round(running_balance, 2),
+                            "equity": round(running_balance, 2),
+                            "timestamp": close_time.isoformat() if hasattr(close_time, 'isoformat') else str(close_time)
+                        })
+                
+                # Add current balance as final point
+                snapshots.append({
+                    "account": account_num,
+                    "strategy": strategy,
+                    "balance": current_balance,
+                    "equity": float(account.get("equity", current_balance)),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
         
         return {
             "success": True,
