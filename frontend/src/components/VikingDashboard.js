@@ -210,13 +210,14 @@ const VikingDashboard = () => {
         }
       } catch (e) { console.log("PRO analytics not available yet"); }
       
-      // Fetch deals based on selected strategy
+      // Fetch deals based on selected strategy WITH PAGINATION
       const strategy = selectedStrategy === 'ALL' ? 'CORE' : selectedStrategy;
-      const dealsRes = await fetch(`${BACKEND_URL}/api/viking/deals/${strategy}?limit=50`);
+      const dealsRes = await fetch(`${BACKEND_URL}/api/viking/deals/${strategy}?limit=${ordersPerPage}&skip=${(ordersPage - 1) * ordersPerPage}`);
       const dealsData = await dealsRes.json();
       
       if (dealsData.success) {
         setDeals(dealsData.deals || []);
+        setTotalDeals(dealsData.total || dealsData.deals?.length || 0);
       }
       
       // Fetch symbol distribution for selected strategy
