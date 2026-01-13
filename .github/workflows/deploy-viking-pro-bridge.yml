@@ -1,0 +1,107 @@
+name: Deploy VIKING PRO MT4 Bridge
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - restart
+          - status
+          - logs
+
+env:
+  VPS_HOST: ${{ secrets.VPS_HOST }}
+  VPS_USER: ${{ secrets.VPS_USER }}
+  VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+
+jobs:
+  deploy-viking-pro-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy VIKING PRO Bridge
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        run: |
+          # Create deployment script
+          cat > deploy_pro.ps1 << 'DEPLOY_SCRIPT'
+          # VIKING PRO Bridge Deployment Script
+          Write-Host "=========================================="
+          Write-Host "VIKING PRO MT4 Bridge Deployment"
+          Write-Host "=========================================="
+          
+          # Create bridge directory
+          $bridgeDir = "C:\viking_bridge_pro"
+          if (-not (Test-Path $bridgeDir)) {
+              New-Item -ItemType Directory -Path $bridgeDir -Force
+              Write-Host "Created directory: $bridgeDir"
+          }
+          
+          # Download Python service
+          Write-Host "Downloading Python service..."
+          $pythonServiceUrl = "https://raw.githubusercontent.com/${{ github.repository }}/main/vps-scripts/viking_pro_file_monitor.py"
+          Invoke-WebRequest -Uri $pythonServiceUrl -OutFile "$bridgeDir\viking_pro_file_monitor.py"
+          
+          # Install dependencies
+          Write-Host "Installing Python dependencies..."
+          pip install pymongo --quiet
+          
+          # Create Windows service wrapper batch file
+          $batchContent = @"
+          @echo off
+          cd /d C:\viking_bridge_pro
+          python viking_pro_file_monitor.py
+          "@
+          Set-Content -Path "$bridgeDir\start_viking_pro_bridge.bat" -Value $batchContent
+          
+          # Create scheduled task for auto-start
+          Write-Host "Setting up auto-start task..."
+          $taskName = "VIKING_PRO_Bridge"
+          $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+          if ($existingTask) {
+              Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+          }
+          
+          $action = New-ScheduledTaskAction -Execute "python" -Argument "C:\viking_bridge_pro\viking_pro_file_monitor.py" -WorkingDirectory "C:\viking_bridge_pro"
+          $trigger = New-ScheduledTaskTrigger -AtStartup
+          $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+          Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -User "SYSTEM" -RunLevel Highest
+          
+          Write-Host "=========================================="
+          Write-Host "Deployment complete!"
+          Write-Host "Task '$taskName' created for auto-start"
+          Write-Host "=========================================="
+          DEPLOY_SCRIPT
+          
+          # Copy and execute on VPS
+          sshpass -p "${{ env.VPS_PASSWORD }}" scp deploy_pro.ps1 ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:C:/temp/
+          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -ExecutionPolicy Bypass -File C:/temp/deploy_pro.ps1"
+
+      - name: Restart VIKING PRO Bridge
+        if: ${{ github.event.inputs.action == 'restart' }}
+        run: |
+          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -Command 'Stop-ScheduledTask -TaskName VIKING_PRO_Bridge; Start-ScheduledTask -TaskName VIKING_PRO_Bridge'"
+          echo "✅ VIKING PRO Bridge restarted"
+
+      - name: Check Status
+        if: ${{ github.event.inputs.action == 'status' }}
+        run: |
+          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -Command 'Get-ScheduledTask -TaskName VIKING_PRO_Bridge | Select-Object TaskName, State'"
+
+      - name: View Logs
+        if: ${{ github.event.inputs.action == 'logs' }}
+        run: |
+          sshpass -p "${{ env.VPS_PASSWORD }}" ssh ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "powershell -Command 'Get-Content C:\viking_bridge_pro\viking_sync.log -Tail 50'"
