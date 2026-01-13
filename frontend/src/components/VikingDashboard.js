@@ -109,14 +109,24 @@ const COLORS = {
 
 const SYMBOL_COLORS = ['#9B27FF', '#A239EA', '#22c55e', '#E621A4', '#06b6d4', '#ec4899'];
 
+// Strategy colors
+const STRATEGY_COLORS = {
+  CORE: { primary: '#3B82F6', secondary: '#60A5FA', bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
+  PRO: { primary: '#9B27FF', secondary: '#A239EA', bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' }
+};
+
 const VikingDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeSubTab, setActiveSubTab] = useState("overview");
+  const [selectedStrategy, setSelectedStrategy] = useState("ALL"); // ALL, CORE, PRO
   
   // Data state
   const [summary, setSummary] = useState(null);
+  const [accounts, setAccounts] = useState([]); // Array of all accounts
   const [analytics, setAnalytics] = useState(null);
+  const [coreAnalytics, setCoreAnalytics] = useState(null);
+  const [proAnalytics, setProAnalytics] = useState(null);
   const [deals, setDeals] = useState([]);
   const [symbolDistribution, setSymbolDistribution] = useState([]);
   const [riskData, setRiskData] = useState(null);
@@ -124,17 +134,28 @@ const VikingDashboard = () => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [calculating, setCalculating] = useState(false);
 
-  // Calculate analytics
+  // Get current strategy for API calls
+  const getActiveStrategy = () => selectedStrategy === 'ALL' ? 'CORE' : selectedStrategy;
+
+  // Calculate analytics for selected strategy
   const calculateAnalytics = async () => {
     try {
       setCalculating(true);
-      const res = await fetch(`${BACKEND_URL}/api/viking/calculate-analytics/CORE`, {
-        method: 'POST'
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAnalytics(data.analytics);
+      
+      // Calculate for CORE
+      const coreRes = await fetch(`${BACKEND_URL}/api/viking/calculate-analytics/CORE`, { method: 'POST' });
+      const coreData = await coreRes.json();
+      if (coreData.success) setCoreAnalytics(coreData.analytics);
+      
+      // Calculate for PRO if it exists
+      try {
+        const proRes = await fetch(`${BACKEND_URL}/api/viking/calculate-analytics/PRO`, { method: 'POST' });
+        const proData = await proRes.json();
+        if (proData.success) setProAnalytics(proData.analytics);
+      } catch (e) {
+        console.log("PRO account not yet available");
       }
+      
       // Refresh all data
       await fetchData();
     } catch (err) {
