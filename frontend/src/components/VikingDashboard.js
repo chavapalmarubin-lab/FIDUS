@@ -1436,6 +1436,30 @@ const VikingDashboard = () => {
                   </div>
                 </div>
               )}
+              
+              {/* Bottom Pagination Summary */}
+              {deals.length > 0 && totalDeals > 0 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-800">
+                  <span className="text-xs text-gray-500">
+                    Showing {((ordersPage - 1) * ordersPerPage) + 1} - {Math.min(ordersPage * ordersPerPage, totalDeals)} of {totalDeals} trades
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Jump to page:</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={Math.ceil(totalDeals / ordersPerPage)}
+                      value={ordersPage}
+                      onChange={(e) => {
+                        const page = Math.max(1, Math.min(Math.ceil(totalDeals / ordersPerPage), Number(e.target.value) || 1));
+                        setOrdersPage(page);
+                      }}
+                      className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-purple-500"
+                      data-testid="orders-jump-to-page"
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
