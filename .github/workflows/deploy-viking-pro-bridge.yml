@@ -89,7 +89,7 @@ jobs:
             Write-Host "============================================" -ForegroundColor Cyan
             
             # Create bridge directory
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             if (-not (Test-Path $bridgePath)) {
                 New-Item -ItemType Directory -Path $bridgePath -Force | Out-Null
                 Write-Host "✅ Created: $bridgePath" -ForegroundColor Green
@@ -129,7 +129,7 @@ jobs:
             $repo = "${{ github.repository }}"
             $branch = "${{ github.ref_name }}"
             $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             
             Write-Host "📥 Downloading files from GitHub..." -ForegroundColor Cyan
             
@@ -153,7 +153,7 @@ jobs:
           port: ${{ env.VPS_SSH_PORT }}
           timeout: 60s
           script: |
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             
             Write-Host "📝 Creating configuration files..." -ForegroundColor Cyan
             
@@ -176,7 +176,7 @@ jobs:
             echo VIKING PRO File Monitor Service
             echo Account: 1309411 (Traders Trust)
             echo ==========================================
-            cd /d C:\viking_bridge_pro
+            cd /d C:\viking_bridge
             python viking_pro_file_monitor.py
             pause
             "@
@@ -215,7 +215,7 @@ jobs:
             Write-Host "⏰ Setting up Windows Scheduled Task..." -ForegroundColor Cyan
             
             $taskName = "VIKING_PRO_Bridge"
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             
             # Remove existing task
             $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
@@ -246,7 +246,7 @@ jobs:
           script: |
             Write-Host "📋 Copying EA to Traders Trust MT4..." -ForegroundColor Cyan
             
-            $eaSource = "C:\viking_bridge_pro\VIKING_PRO_Account_Data_Writer.mq4"
+            $eaSource = "C:\viking_bridge\VIKING_PRO_Account_Data_Writer.mq4"
             
             # Try multiple MT4 paths for Traders Trust
             $mt4Paths = @(
@@ -329,7 +329,7 @@ jobs:
             Write-Host "📥 Downloading EA file..." -ForegroundColor Cyan
             
             # Ensure directory exists
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             if (-not (Test-Path $bridgePath)) {
                 New-Item -ItemType Directory -Path $bridgePath -Force | Out-Null
             }
@@ -370,7 +370,7 @@ jobs:
             $repo = "${{ github.repository }}"
             $branch = "${{ github.ref_name }}"
             $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             
             Write-Host "📥 Downloading Python service..." -ForegroundColor Cyan
             
@@ -471,7 +471,7 @@ jobs:
             # Check files
             Write-Host ""
             Write-Host "📁 Bridge Files:" -ForegroundColor White
-            $bridgePath = "C:\viking_bridge_pro"
+            $bridgePath = "C:\viking_bridge"
             if (Test-Path $bridgePath) {
                 Get-ChildItem $bridgePath | ForEach-Object {
                     Write-Host "   $($_.Name) ($($_.Length) bytes)" -ForegroundColor Gray
@@ -510,7 +510,7 @@ jobs:
             Write-Host "📜 VIKING PRO Bridge Logs (last 50 lines)" -ForegroundColor Cyan
             Write-Host "============================================" -ForegroundColor Cyan
             
-            $logFile = "C:\viking_bridge_pro\viking_sync.log"
+            $logFile = "C:\viking_bridge\viking_sync.log"
             
             if (Test-Path $logFile) {
                 Get-Content $logFile -Tail 50
@@ -583,9 +583,9 @@ jobs:
           echo "| Platform | MT4 |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "- \`C:\\viking_bridge_pro\\viking_pro_file_monitor.py\` - Python sync service" >> $GITHUB_STEP_SUMMARY
-          echo "- \`C:\\viking_bridge_pro\\VIKING_PRO_Account_Data_Writer.mq4\` - MT4 EA" >> $GITHUB_STEP_SUMMARY
-          echo "- \`C:\\viking_bridge_pro\\start_viking_pro_bridge.bat\` - Manual start script" >> $GITHUB_STEP_SUMMARY
+          echo "- \`C:\\viking_bridge\\viking_pro_file_monitor.py\` - Python sync service" >> $GITHUB_STEP_SUMMARY
+          echo "- \`C:\\viking_bridge\\VIKING_PRO_Account_Data_Writer.mq4\` - MT4 EA" >> $GITHUB_STEP_SUMMARY
+          echo "- \`C:\\viking_bridge\\start_viking_pro_bridge.bat\` - Manual start script" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Open Traders Trust MT4 terminal" >> $GITHUB_STEP_SUMMARY
