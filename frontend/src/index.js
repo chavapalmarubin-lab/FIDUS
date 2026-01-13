@@ -7,6 +7,11 @@ import "./i18n/config"; // Initialize i18n
 
 // Check if we're on a public route
 const isPublicRoute = window.location.pathname.startsWith('/prospects');
+const isVikingRoute = window.location.pathname.startsWith('/viking');
+
+// Debug logging
+console.log('🚀 INDEX.JS - pathname:', window.location.pathname);
+console.log('🚀 INDEX.JS - isVikingRoute:', isVikingRoute);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
