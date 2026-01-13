@@ -329,6 +329,31 @@ const VikingDashboard = ({ onAccountChange }) => {
   const totalProfit = (coreAccount?.profit || 0) + (proAccount?.profit || 0);
   const totalPositions = (coreAccount?.positions_count || 0) + (proAccount?.positions_count || 0);
 
+  // Update header with active account info when strategy or accounts change
+  useEffect(() => {
+    if (onAccountChange) {
+      if (selectedStrategy === 'ALL') {
+        onAccountChange({
+          account: 'ALL',
+          broker: 'Combined',
+          strategy: 'ALL'
+        });
+      } else if (selectedStrategy === 'CORE') {
+        onAccountChange({
+          account: coreAccount?.account || '33627673',
+          broker: coreAccount?.broker || 'MEXAtlantic',
+          strategy: 'CORE'
+        });
+      } else if (selectedStrategy === 'PRO') {
+        onAccountChange({
+          account: proAccount?.account || '1309411',
+          broker: proAccount?.broker || 'Traders Trust',
+          strategy: 'PRO'
+        });
+      }
+    }
+  }, [selectedStrategy, coreAccount, proAccount, onAccountChange]);
+
   return (
     <div className="space-y-6" data-testid="viking-dashboard">
       {/* Header with Strategy Selector */}
