@@ -29,23 +29,24 @@ import "./styles/dashboard-responsive.css";
 
 function App() {
   // CRITICAL: Check if we're on a public route BEFORE any auth logic
-  const isProspectsRoute = window.location.pathname.startsWith('/prospects');
-  const isVikingRoute = window.location.pathname.startsWith('/viking');
+  const pathname = window.location.pathname;
+  const isProspectsRoute = pathname.startsWith('/prospects');
+  const isVikingRoute = pathname.startsWith('/viking');
   
   // Handle typo: /vikin -> /viking
-  if (window.location.pathname === '/vikin' || window.location.pathname.startsWith('/vikin/')) {
+  if (pathname === '/vikin' || pathname.startsWith('/vikin/')) {
     window.location.href = window.location.href.replace('/vikin', '/viking');
     return null;
   }
   
   // DEBUG: Log route detection
-  console.log('🛡️ APP INIT - pathname:', window.location.pathname);
+  console.log('🛡️ APP.JS INIT');
+  console.log('🛡️ pathname:', pathname);
   console.log('🛡️ isVikingRoute:', isVikingRoute);
-  console.log('🛡️ isProspectsRoute:', isProspectsRoute);
   
-  // VIKING ROUTE: Return early BEFORE any state initialization
+  // VIKING ROUTE: Return early BEFORE any state initialization - COMPLETELY SEPARATE APP
   if (isVikingRoute) {
-    console.log('🚀 VIKING ROUTE DETECTED - Rendering VikingApp directly');
+    console.log('🚀 VIKING ROUTE - Rendering VikingApp ONLY');
     return (
       <BrowserRouter>
         <ToastProvider>
