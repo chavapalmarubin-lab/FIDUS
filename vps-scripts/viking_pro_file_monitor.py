@@ -94,6 +94,9 @@ def parse_mt4_datetime(dt_str):
 def upload_account_data(db, account_data):
     """Upload account data to MongoDB viking_accounts collection"""
     try:
+        balance = float(account_data.get("balance", 0))
+        equity = float(account_data.get("equity", 0))
+        
         doc = {
             "_id": ACCOUNT_ID,
             "account": ACCOUNT_NUMBER,
@@ -101,8 +104,8 @@ def upload_account_data(db, account_data):
             "broker": account_data.get("broker", BROKER),
             "server": account_data.get("server"),
             "platform": "MT4",
-            "balance": float(account_data.get("balance", 0)),
-            "equity": float(account_data.get("equity", 0)),
+            "balance": balance,
+            "equity": equity,
             "margin": float(account_data.get("margin", 0)),
             "free_margin": float(account_data.get("free_margin", 0)),
             "margin_level": float(account_data.get("margin_level", 0)),
@@ -126,10 +129,28 @@ def upload_account_data(db, account_data):
             upsert=True
         )
         
+        # Save balance snapshot for charts (every sync)
+        save_balance_snapshot(db, balance, equity)
+        
         return True
     except Exception as e:
         print(f"❌ Account upload error: {e}")
         return False
+
+def save_balance_snapshot(db, balance, equity):
+    """Save balance snapshot for historical charts"""
+    try:
+        now = datetime.now(timezone.utc)
+        snapshot = {
+            "account": ACCOUNT_NUMBER,
+            "strategy": STRATEGY,
+            "balance": balance,
+            "equity": equity,
+            "timestamp": now
+        }
+        db.viking_balance_history.insert_one(snapshot)
+    except Exception as e:
+        print(f"⚠️ Balance snapshot error: {e}")
 
 def upload_closed_trades(db, closed_trades):
     """Upload closed trades to MongoDB viking_deals_history collection"""
