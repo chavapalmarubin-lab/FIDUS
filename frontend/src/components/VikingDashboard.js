@@ -217,7 +217,7 @@ const VikingDashboard = () => {
       
       if (dealsData.success) {
         setDeals(dealsData.deals || []);
-        setTotalDeals(dealsData.total || dealsData.deals?.length || 0);
+        setTotalDeals(dealsData.pagination?.total || dealsData.deals?.length || 0);
       }
       
       // Fetch symbol distribution for selected strategy
