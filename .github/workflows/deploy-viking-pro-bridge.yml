@@ -20,6 +20,7 @@ on:
           - restart_service
           - check_status
           - view_logs
+          - diagnose
 
 jobs:
   deploy-viking-pro:
