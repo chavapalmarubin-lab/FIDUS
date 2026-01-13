@@ -222,3 +222,82 @@ jobs:
           echo "| Broker | Traders Trust |" >> $GITHUB_STEP_SUMMARY
           echo "| Directory | C:\\viking_bridge |" >> $GITHUB_STEP_SUMMARY
           echo "| Task Name | VIKING_PRO_File_Monitor |" >> $GITHUB_STEP_SUMMARY
+
+      # ============================================================
+      # DIAGNOSE SYNC ISSUE
+      # ============================================================
+      - name: Diagnose Sync Issue
+        if: ${{ github.event.inputs.action == 'diagnose' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 120s
+          script: |
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "VIKING PRO SYNC DIAGNOSTICS" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
+            
+            # 1. Check scheduled task
+            Write-Host "`n1. SCHEDULED TASK STATUS:" -ForegroundColor Yellow
+            $task = Get-ScheduledTask -TaskName "VIKING_PRO_File_Monitor" -ErrorAction SilentlyContinue
+            if ($task) {
+                Write-Host "   State: $($task.State)" -ForegroundColor $(if ($task.State -eq 'Running') { 'Green' } else { 'Red' })
+                $taskInfo = Get-ScheduledTaskInfo -TaskName "VIKING_PRO_File_Monitor"
+                Write-Host "   Last Run: $($taskInfo.LastRunTime)" -ForegroundColor Gray
+                Write-Host "   Last Result: $($taskInfo.LastTaskResult)" -ForegroundColor Gray
+            } else {
+                Write-Host "   Task NOT FOUND!" -ForegroundColor Red
+            }
+            
+            # 2. Check JSON file
+            Write-Host "`n2. JSON FILE STATUS:" -ForegroundColor Yellow
+            $jsonPath = "C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files\viking_account_1309411_data.json"
+            if (Test-Path $jsonPath) {
+                $file = Get-Item $jsonPath
+                Write-Host "   Path: $jsonPath" -ForegroundColor Green
+                Write-Host "   Size: $($file.Length) bytes" -ForegroundColor Gray
+                Write-Host "   Last Modified: $($file.LastWriteTime)" -ForegroundColor Gray
+                Write-Host "`n   Content Preview:" -ForegroundColor Cyan
+                $content = Get-Content $jsonPath | ConvertFrom-Json
+                Write-Host "   Account: $($content.account)"
+                Write-Host "   Balance: $($content.balance)"
+                Write-Host "   Equity: $($content.equity)"
+                Write-Host "   Timestamp: $($content.timestamp)"
+            } else {
+                Write-Host "   FILE NOT FOUND!" -ForegroundColor Red
+            }
+            
+            # 3. Check Python files
+            Write-Host "`n3. PYTHON FILES:" -ForegroundColor Yellow
+            $pyFile = "C:\viking_bridge\viking_pro_file_monitor.py"
+            if (Test-Path $pyFile) {
+                $py = Get-Item $pyFile
+                Write-Host "   $pyFile" -ForegroundColor Green
+                Write-Host "   Size: $($py.Length) bytes, Modified: $($py.LastWriteTime)" -ForegroundColor Gray
+            } else {
+                Write-Host "   Python file NOT FOUND!" -ForegroundColor Red
+            }
+            
+            # 4. Check Python processes
+            Write-Host "`n4. PYTHON PROCESSES:" -ForegroundColor Yellow
+            Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {
+                $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)").CommandLine
+                Write-Host "   PID $($_.Id): $cmdLine" -ForegroundColor Gray
+            }
+            
+            # 5. Try to restart
+            Write-Host "`n5. RESTARTING SERVICE..." -ForegroundColor Yellow
+            Stop-ScheduledTask -TaskName "VIKING_PRO_File_Monitor" -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            Start-ScheduledTask -TaskName "VIKING_PRO_File_Monitor"
+            Start-Sleep -Seconds 5
+            
+            $task = Get-ScheduledTask -TaskName "VIKING_PRO_File_Monitor"
+            Write-Host "   New State: $($task.State)" -ForegroundColor $(if ($task.State -eq 'Running') { 'Green' } else { 'Red' })
+            
+            Write-Host "`n========================================" -ForegroundColor Cyan
+            Write-Host "DIAGNOSTICS COMPLETE" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
