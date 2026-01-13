@@ -268,27 +268,6 @@ const VikingDashboard = ({ onAccountChange }) => {
     setOrdersPage(1);
   }, [selectedStrategy]);
 
-  // Update header with active account info when strategy or accounts change
-  useEffect(() => {
-    if (onAccountChange) {
-      if (selectedStrategy === 'ALL' || selectedStrategy === 'CORE') {
-        const core = coreAccount || { account: '33627673', broker: 'MEXAtlantic' };
-        onAccountChange({
-          account: core.account || '33627673',
-          broker: core.broker || 'MEXAtlantic',
-          strategy: selectedStrategy === 'ALL' ? 'ALL' : 'CORE'
-        });
-      } else if (selectedStrategy === 'PRO') {
-        const pro = proAccount || { account: '1309411', broker: 'Traders Trust' };
-        onAccountChange({
-          account: pro.account || '1309411',
-          broker: pro.broker || 'Traders Trust',
-          strategy: 'PRO'
-        });
-      }
-    }
-  }, [selectedStrategy, coreAccount, proAccount, onAccountChange]);
-
   // Helper functions
   const formatCurrency = (value) => {
     if (value === null || value === undefined) return '$0.00';
