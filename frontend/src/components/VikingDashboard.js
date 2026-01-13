@@ -1296,11 +1296,91 @@ const VikingDashboard = () => {
         <TabsContent value="orders" className="mt-6">
           <Card className="bg-gray-900/50 border-gray-800">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-gray-400">Trade History</CardTitle>
-                <Badge variant="outline" className="border-gray-600">
-                  {deals.length} trades loaded
-                </Badge>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-sm text-gray-400">Trade History</CardTitle>
+                  <Badge variant="outline" className="border-gray-600">
+                    {totalDeals > 0 ? `${totalDeals} total trades` : `${deals.length} trades loaded`}
+                  </Badge>
+                </div>
+                
+                {/* Pagination Controls - Top */}
+                {deals.length > 0 && (
+                  <div className="flex items-center gap-4">
+                    {/* Per page selector */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">Show:</span>
+                      <select 
+                        value={ordersPerPage}
+                        onChange={(e) => {
+                          setOrdersPerPage(Number(e.target.value));
+                          setOrdersPage(1);
+                        }}
+                        className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-purple-500"
+                        data-testid="orders-per-page-select"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                    
+                    {/* Page navigation */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrdersPage(1)}
+                        disabled={ordersPage === 1}
+                        className="h-7 px-2 text-xs"
+                        style={{ borderColor: '#374151', color: ordersPage === 1 ? '#6b7280' : '#d1d5db' }}
+                        data-testid="orders-first-page-btn"
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrdersPage(p => Math.max(1, p - 1))}
+                        disabled={ordersPage === 1}
+                        className="h-7 px-2 text-xs"
+                        style={{ borderColor: '#374151', color: ordersPage === 1 ? '#6b7280' : '#d1d5db' }}
+                        data-testid="orders-prev-page-btn"
+                      >
+                        ← Prev
+                      </Button>
+                      
+                      <span className="text-xs text-gray-400 px-2">
+                        Page <span className="text-white font-medium">{ordersPage}</span> of{' '}
+                        <span className="text-white font-medium">{Math.max(1, Math.ceil(totalDeals / ordersPerPage))}</span>
+                      </span>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrdersPage(p => Math.min(Math.ceil(totalDeals / ordersPerPage), p + 1))}
+                        disabled={ordersPage >= Math.ceil(totalDeals / ordersPerPage)}
+                        className="h-7 px-2 text-xs"
+                        style={{ borderColor: '#374151', color: ordersPage >= Math.ceil(totalDeals / ordersPerPage) ? '#6b7280' : '#d1d5db' }}
+                        data-testid="orders-next-page-btn"
+                      >
+                        Next →
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrdersPage(Math.ceil(totalDeals / ordersPerPage))}
+                        disabled={ordersPage >= Math.ceil(totalDeals / ordersPerPage)}
+                        className="h-7 px-2 text-xs"
+                        style={{ borderColor: '#374151', color: ordersPage >= Math.ceil(totalDeals / ordersPerPage) ? '#6b7280' : '#d1d5db' }}
+                        data-testid="orders-last-page-btn"
+                      >
+                        Last
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>
