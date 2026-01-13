@@ -39,24 +39,9 @@ function App() {
     return null;
   }
   
-  // DEBUG: Log route detection
-  console.log('🛡️ APP.JS INIT');
-  console.log('🛡️ pathname:', pathname);
-  console.log('🛡️ isVikingRoute:', isVikingRoute);
-  
-  // VIKING ROUTE: Return early BEFORE any state initialization - COMPLETELY SEPARATE APP
+  // VIKING ROUTE: Return VikingApp directly - COMPLETELY SEPARATE from FIDUS
   if (isVikingRoute) {
-    console.log('🚀 VIKING ROUTE - Rendering VikingApp ONLY');
-    return (
-      <BrowserRouter>
-        <ToastProvider>
-          <Routes>
-            <Route path="/viking" element={<VikingApp />} />
-            <Route path="/viking/*" element={<VikingApp />} />
-          </Routes>
-        </ToastProvider>
-      </BrowserRouter>
-    );
+    return <VikingApp />;
   }
   
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
