@@ -205,7 +205,7 @@ def main():
     
     # Connect to MongoDB
     db = connect_mongodb()
-    if not db:
+    if db is None:
         print("❌ Cannot start without MongoDB connection")
         sys.exit(1)
     
