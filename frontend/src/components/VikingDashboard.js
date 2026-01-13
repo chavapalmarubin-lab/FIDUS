@@ -133,6 +133,11 @@ const VikingDashboard = () => {
   const [balanceHistory, setBalanceHistory] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [calculating, setCalculating] = useState(false);
+  
+  // Pagination state for Orders tab
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersPerPage, setOrdersPerPage] = useState(25);
+  const [totalDeals, setTotalDeals] = useState(0);
 
   // Get current strategy for API calls
   const getActiveStrategy = () => selectedStrategy === 'ALL' ? 'CORE' : selectedStrategy;
