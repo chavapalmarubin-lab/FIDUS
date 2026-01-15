@@ -27,7 +27,22 @@ import "./styles/animations.css";
 import "./styles/mobile-responsive.css";
 import "./styles/dashboard-responsive.css";
 
-function App() {
+// Check route BEFORE component renders - this determines which app to show
+const pathname = window.location.pathname;
+const IS_VIKING_ROUTE = pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
+
+// Handle /vikin typo -> redirect to /viking
+if (pathname === '/vikin' || pathname.startsWith('/vikin/')) {
+  window.location.href = window.location.href.replace('/vikin', '/viking');
+}
+
+// VIKING App - Completely separate from FIDUS
+function VikingAppWrapper() {
+  return <VikingApp />;
+}
+
+// FIDUS App - The main investment platform
+function FidusApp() {
   // CRITICAL: Check if we're on a public route BEFORE any auth logic
   const pathname = window.location.pathname;
   const isProspectsRoute = pathname.startsWith('/prospects');
