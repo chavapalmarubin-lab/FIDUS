@@ -43,21 +43,7 @@ function VikingAppWrapper() {
 
 // FIDUS App - The main investment platform
 function FidusApp() {
-  // CRITICAL: Check if we're on a public route BEFORE any auth logic
-  const pathname = window.location.pathname;
-  const isProspectsRoute = pathname.startsWith('/prospects');
-  const isVikingRoute = pathname.startsWith('/viking');
-  
-  // Handle typo: /vikin -> /viking
-  if (pathname === '/vikin' || pathname.startsWith('/vikin/')) {
-    window.location.href = window.location.href.replace('/vikin', '/viking');
-    return null;
-  }
-  
-  // VIKING ROUTE: Return VikingApp directly - COMPLETELY SEPARATE from FIDUS
-  if (isVikingRoute) {
-    return <VikingApp />;
-  }
+  const isProspectsRoute = window.location.pathname.startsWith('/prospects');
   
   const [currentView, setCurrentView] = useState("login"); // DEMO FIX: Skip animation
   const [user, setUser] = useState(null);
