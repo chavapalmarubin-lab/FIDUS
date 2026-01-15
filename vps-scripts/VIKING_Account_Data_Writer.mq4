@@ -10,7 +10,7 @@
 
 // Input parameters
 input int SyncIntervalSeconds = 120;  // Sync interval in seconds
-input int MaxClosedTrades = 100;      // Max closed trades to export
+input int MaxClosedTrades = 10000;    // Export ALL trades (increased from 100)
 
 // Global variables
 string DataFilePath = "viking_account_33627673_data.json";
