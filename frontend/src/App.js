@@ -51,8 +51,8 @@ function FidusApp() {
 
   useEffect(() => {
     // Skip all auth logic for public routes
-    if (isProspectsRoute || isVikingRoute) {
-      console.log('📍 Public/VIKING route detected - skipping auth check');
+    if (isProspectsRoute) {
+      console.log('📍 Public route detected - skipping auth check');
       return;
     }
     
