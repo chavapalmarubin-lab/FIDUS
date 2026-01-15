@@ -569,4 +569,15 @@ function FidusApp() {
   );
 }
 
+// Main App - Routes to VIKING or FIDUS based on URL
+function App() {
+  // VIKING route - completely separate application
+  if (IS_VIKING_ROUTE) {
+    return <VikingAppWrapper />;
+  }
+  
+  // FIDUS route - the investment management platform
+  return <FidusApp />;
+}
+
 export default App;
