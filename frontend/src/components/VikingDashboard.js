@@ -723,8 +723,9 @@ const VikingDashboard = ({ onAccountChange }) => {
                       <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} />
                       <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }}
                         labelStyle={{ color: '#fff' }}
+                        itemStyle={{ color: '#fff' }}
                         formatter={(value) => [formatCurrency(value), '']}
                       />
                       <Area 
