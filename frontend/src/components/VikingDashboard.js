@@ -1061,13 +1061,25 @@ const VikingDashboard = ({ onAccountChange }) => {
                       tickLine={{ stroke: '#374151' }}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }}
-                      formatter={(value, name, props) => [
-                        `${value.toFixed(2)}% (${formatCurrency(props.payload.profit)})`, 
-                        'Return'
-                      ]}
-                      labelStyle={{ color: '#fff' }}
-                      itemStyle={{ color: '#fff' }}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div style={{
+                              backgroundColor: '#1f2937',
+                              border: '1px solid #374151',
+                              borderRadius: '8px',
+                              padding: '10px 14px'
+                            }}>
+                              <p style={{ color: '#ffffff', marginBottom: '4px', fontWeight: 'bold' }}>{label}</p>
+                              <p style={{ color: '#ffffff', margin: 0 }}>
+                                Return: {data.return?.toFixed(2)}% ({formatCurrency(data.profit)})
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                       cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     />
                     <Bar dataKey="return" radius={[2, 2, 0, 0]}>
