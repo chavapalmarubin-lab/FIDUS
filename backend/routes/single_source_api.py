@@ -257,26 +257,32 @@ async def get_money_managers_derived():
         
         for manager in managers:
             manager_name = manager['_id']
+            
+            # Skip if manager_name is None or empty
+            if not manager_name:
+                logger.warning(f"Skipping account group with no manager_name: {manager}")
+                continue
+                
             metadata = manager.get('manager_metadata', {})
-            allocation = manager.get('total_allocation', 0)
-            balance = manager['total_balance']
-            equity = manager['total_equity']
+            allocation = manager.get('total_allocation', 0) or 0
+            balance = manager.get('total_balance', 0) or 0
+            equity = manager.get('total_equity', 0) or 0
             pnl = balance - allocation
             
             # Format account details with proper structure for frontend
             account_details = []
             for acc in manager['accounts']:
                 account_details.append({
-                    "account": acc['account'],
-                    "name": f"{acc['fund_type']} - {acc['broker']}",
-                    "allocation": acc['initial_allocation'],
-                    "balance": acc['balance'],
-                    "equity": acc['equity']
+                    "account": acc.get('account'),
+                    "name": f"{acc.get('fund_type', 'Unknown')} - {acc.get('broker', 'Unknown')}",
+                    "allocation": acc.get('initial_allocation', 0) or 0,
+                    "balance": acc.get('balance', 0) or 0,
+                    "equity": acc.get('equity', 0) or 0
                 })
             
             manager_data[manager_name] = {
                 "manager_name": manager_name,
-                "manager_id": manager_name.lower().replace(' ', '_'),  # Frontend expects this
+                "manager_id": str(manager_name).lower().replace(' ', '_'),  # Frontend expects this
                 "display_name": manager_name,
                 "account_count": manager['account_count'],
                 "active_accounts": manager['active_accounts'],
