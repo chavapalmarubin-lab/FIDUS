@@ -206,6 +206,38 @@ void WriteAccountData()
    
    FileWriteString(fileHandle, "\n  ],\n");
    
+   // ============================================
+   // BALANCE OPERATIONS (Deposits/Withdrawals)
+   // ============================================
+   FileWriteString(fileHandle, "  \"balance_operations\": [\n");
+   
+   int balanceCount = 0;
+   
+   for(i = historyTotal - 1; i >= 0; i--)
+   {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY))
+      {
+         // Balance operations have OrderType() == 6 and no symbol
+         if(OrderType() == 6)
+         {
+            if(balanceCount > 0)
+               FileWriteString(fileHandle, ",\n");
+            
+            FileWriteString(fileHandle, "    {\n");
+            FileWriteString(fileHandle, "      \"ticket\": " + IntegerToString(OrderTicket()) + ",\n");
+            FileWriteString(fileHandle, "      \"type\": \"" + (OrderProfit() >= 0 ? "DEPOSIT" : "WITHDRAWAL") + "\",\n");
+            FileWriteString(fileHandle, "      \"amount\": " + DoubleToString(OrderProfit(), 2) + ",\n");
+            FileWriteString(fileHandle, "      \"time\": \"" + TimeToString(OrderCloseTime(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\",\n");
+            FileWriteString(fileHandle, "      \"comment\": \"" + OrderComment() + "\"\n");
+            FileWriteString(fileHandle, "    }");
+            
+            balanceCount++;
+         }
+      }
+   }
+   
+   FileWriteString(fileHandle, "\n  ],\n");
+   
    // Statistics
    FileWriteString(fileHandle, "  \"positions_count\": " + IntegerToString(positionCount) + ",\n");
    FileWriteString(fileHandle, "  \"orders_count\": " + IntegerToString(orderCount) + ",\n");
