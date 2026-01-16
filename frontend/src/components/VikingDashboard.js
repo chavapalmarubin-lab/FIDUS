@@ -966,6 +966,85 @@ const VikingDashboard = ({ onAccountChange }) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Monthly Returns Chart */}
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader>
+              <div>
+                <CardTitle className="text-sm text-white">Monthly</CardTitle>
+                <p className="text-xs text-gray-500 mt-1">Returns of account by month</p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Summary Metrics Row */}
+              <div className="grid grid-cols-5 gap-4 mb-6 pb-4 border-b border-gray-700">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">{monthlyReturns.metrics?.avgWeekly || 0}%</p>
+                  <p className="text-xs text-gray-500">Average return (Weekly)</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">{monthlyReturns.metrics?.avgMonthly || 0}%</p>
+                  <p className="text-xs text-gray-500">Average return (Monthly)</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">{monthlyReturns.metrics?.devDaily || 0}%</p>
+                  <p className="text-xs text-gray-500">Return deviation (Daily)</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">{monthlyReturns.metrics?.devMonthly || 0}%</p>
+                  <p className="text-xs text-gray-500">Return deviation (Monthly)</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">{monthlyReturns.metrics?.devYearly || 0}%</p>
+                  <p className="text-xs text-gray-500">Return deviation (Yearly)</p>
+                </div>
+              </div>
+              
+              {/* Bar Chart */}
+              {monthlyReturns.data && monthlyReturns.data.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={monthlyReturns.data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fill: '#9ca3af', fontSize: 10 }} 
+                      axisLine={{ stroke: '#374151' }}
+                      tickLine={{ stroke: '#374151' }}
+                    />
+                    <YAxis 
+                      tick={{ fill: '#9ca3af', fontSize: 10 }} 
+                      tickFormatter={(v) => `${v}%`}
+                      axisLine={{ stroke: '#374151' }}
+                      tickLine={{ stroke: '#374151' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                      formatter={(value, name, props) => [
+                        `${value.toFixed(2)}% (${formatCurrency(props.payload.profit)})`, 
+                        'Return'
+                      ]}
+                      labelStyle={{ color: '#fff' }}
+                    />
+                    <Bar dataKey="return" radius={[2, 2, 0, 0]}>
+                      {monthlyReturns.data.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.return >= 0 ? '#00BCD4' : '#FF5722'} 
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex items-center justify-center border border-dashed border-gray-700 rounded-lg">
+                  <div className="text-center text-gray-500">
+                    <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Monthly return data loading...</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* STATS TAB */}
