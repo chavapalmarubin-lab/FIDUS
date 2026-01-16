@@ -1016,12 +1016,14 @@ const VikingDashboard = ({ onAccountChange }) => {
                       tickLine={{ stroke: '#374151' }}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                      contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }}
                       formatter={(value, name, props) => [
                         `${value.toFixed(2)}% (${formatCurrency(props.payload.profit)})`, 
                         'Return'
                       ]}
                       labelStyle={{ color: '#fff' }}
+                      itemStyle={{ color: '#fff' }}
+                      cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     />
                     <Bar dataKey="return" radius={[2, 2, 0, 0]}>
                       {monthlyReturns.data.map((entry, index) => (
