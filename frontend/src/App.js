@@ -584,16 +584,20 @@ function FidusApp() {
   );
 }
 
-// Main App - Routes to VIKING or FIDUS based on URL
+// =============================================================================
+// FIDUS Application Only - VIKING is handled separately in index.js
+// =============================================================================
+
+// Main App - ONLY renders FidusApp now (VIKING is handled by index.js)
 function App() {
-  // CRITICAL: Check VIKING route again at render time
-  // This is a safety check in case module-level check missed it
-  if (isVikingRoute()) {
-    console.log('🟣 VIKING App rendering - completely isolated from FIDUS');
-    return <VikingApp />;
+  // Double-check: If somehow we're on a viking route, redirect
+  const pathname = window.location.pathname.toLowerCase();
+  if (pathname.startsWith('/viking')) {
+    console.error('⚠️ App.js should not be loaded on /viking route! Redirecting...');
+    window.location.reload();
+    return null;
   }
   
-  // FIDUS route - the investment management platform
   console.log('🔵 FIDUS App rendering');
   return <FidusApp />;
 }
