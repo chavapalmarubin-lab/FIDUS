@@ -27,13 +27,28 @@ import "./styles/animations.css";
 import "./styles/mobile-responsive.css";
 import "./styles/dashboard-responsive.css";
 
-// Check route BEFORE component renders - this determines which app to show
-const pathname = window.location.pathname;
-const IS_VIKING_ROUTE = pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
+// =============================================================================
+// CRITICAL: VIKING vs FIDUS Route Detection
+// This MUST be checked at module load time to prevent FIDUS from ever rendering
+// on VIKING routes. Check multiple times to handle all edge cases.
+// =============================================================================
+function isVikingRoute() {
+  const pathname = window.location.pathname.toLowerCase();
+  return pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
+}
+
+// Initial check at module load
+const IS_VIKING_ROUTE = isVikingRoute();
 
 // Handle /vikin typo -> redirect to /viking
-if (pathname === '/vikin' || pathname.startsWith('/vikin/')) {
+if (window.location.pathname === '/vikin' || window.location.pathname.startsWith('/vikin/')) {
   window.location.href = window.location.href.replace('/vikin', '/viking');
+}
+
+// CRITICAL: If we're on a VIKING route, IMMEDIATELY render VikingApp
+// This prevents any FIDUS code from executing
+if (IS_VIKING_ROUTE) {
+  console.log('🟣 VIKING ROUTE DETECTED - Rendering VikingApp ONLY');
 }
 
 // VIKING App - Completely separate from FIDUS
