@@ -5,13 +5,15 @@ import "./i18n/config"; // Initialize i18n
 
 // =============================================================================
 // CRITICAL: ROUTE DETECTION - Check HOSTNAME and PATH
-// If hostname contains "viking" OR path starts with "/viking" -> Show VIKING
+// VIKING if: hostname contains "viking" OR "vkng" OR path starts with "/viking"
 // =============================================================================
 const hostname = window.location.hostname.toLowerCase();
 const pathname = window.location.pathname.toLowerCase();
 
-// VIKING if: hostname contains "viking" OR path starts with "/viking"
-const IS_VIKING = hostname.includes('viking') || pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
+// VIKING detection - check multiple patterns
+const hostnameHasViking = hostname.includes('viking') || hostname.includes('vkng');
+const pathHasViking = pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
+const IS_VIKING = hostnameHasViking || pathHasViking;
 const IS_PUBLIC = pathname.startsWith('/prospects');
 
 // Debug logging
@@ -19,7 +21,9 @@ console.log('='.repeat(60));
 console.log('🚀 INDEX.JS INITIALIZATION');
 console.log('🌐 Hostname:', hostname);
 console.log('📍 Pathname:', pathname);
-console.log('🟣 IS_VIKING:', IS_VIKING, `(hostname has viking: ${hostname.includes('viking')}, path: ${pathname.startsWith('/viking')})`);
+console.log('🔍 Hostname has viking/vkng:', hostnameHasViking);
+console.log('🔍 Path has viking:', pathHasViking);
+console.log('🟣 IS_VIKING:', IS_VIKING);
 console.log('🟢 IS_PUBLIC:', IS_PUBLIC);
 console.log('='.repeat(60));
 
@@ -35,8 +39,8 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 // CONDITIONAL IMPORTS - Only load what's needed
 // =============================================================================
 if (IS_VIKING) {
-  // VIKING - Load VikingApp directly, bypass everything else
-  console.log('🟣 Loading VIKING Application (hostname or path match)...');
+  // VIKING - Load VikingApp directly
+  console.log('🟣 Loading VIKING Application...');
   import('./components/VikingApp').then(({ default: VikingApp }) => {
     console.log('🟣 VIKING App loaded, rendering...');
     root.render(
