@@ -137,6 +137,9 @@ const VikingDashboard = ({ onAccountChange }) => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [calculating, setCalculating] = useState(false);
   
+  // Monthly returns data
+  const [monthlyReturns, setMonthlyReturns] = useState({ metrics: {}, data: [] });
+  
   // Pagination state for Orders tab
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersPerPage, setOrdersPerPage] = useState(25);
