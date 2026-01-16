@@ -11,7 +11,7 @@ from datetime import datetime
 
 class MoneyManagersDebugger:
     def __init__(self):
-        self.base_url = "https://quant-viking.preview.emergentagent.com/api"
+        self.base_url = "https://vkng-dashboard.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         

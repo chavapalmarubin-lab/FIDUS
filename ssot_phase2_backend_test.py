@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials

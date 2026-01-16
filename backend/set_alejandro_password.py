@@ -33,7 +33,7 @@ async def set_password():
     print(f"Username: alejandro_mariscal")
     print(f"Password: Alejandro123")
     print()
-    print("Login URL: https://quant-viking.preview.emergentagent.com")
+    print("Login URL: https://vkng-dashboard.preview.emergentagent.com")
     print()
     
     client.close()

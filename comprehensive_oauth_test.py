@@ -27,8 +27,8 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
-FRONTEND_URL = "https://quant-viking.preview.emergentagent.com"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
+FRONTEND_URL = "https://vkng-dashboard.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

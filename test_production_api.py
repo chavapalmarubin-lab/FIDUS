@@ -5,7 +5,7 @@ import json
 
 # Try both possible URLs
 URLS = [
-    "https://quant-viking.preview.emergentagent.com",
+    "https://vkng-dashboard.preview.emergentagent.com",
     "https://fidus-investment-platform.onrender.com"
 ]
 

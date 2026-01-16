@@ -26,7 +26,7 @@ import os
 from collections import defaultdict
 
 # Backend URL from environment
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

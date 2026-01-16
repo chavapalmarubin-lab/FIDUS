@@ -4,65 +4,75 @@ The user's initial request was to fix a failing MT4 account connection. This qui
 PRODUCT REQUIREMENTS:
 -   **Separate Application:** VIKING is a distinct application at the  URL with its own login, completely isolated from FIDUS.
 -   **MT4 Integration:** The dashboard must sync real-time data from a VIKING CORE MT4 account (33627673) and a VIKING PRO account (1309411).
--   **UI/UX:** The UI must follow the format of an FXBlue analytics page, with multiple tabs (Overview, Analysis, Stats, Risk, Orders).
+-   **UI/UX:** The UI must follow the format of an FXBlue analytics page, with multiple tabs (Overview, Analysis, Stats, Risk, Orders). The latest request was to add a monthly returns bar chart to the analysis tab.
 -   **Branding:** The application must use a dark theme with purple/magenta accents and the official logo from .
--   **Backend:** New API endpoints and MongoDB collections have been created to support the VIKING dashboard and calculate a comprehensive set of trading metrics from real trade history.
--   **Data Sync:** The data sync from MT4 to MongoDB is achieved via a JSON-file-based method. An MQL4 Expert Advisor writes account data to a JSON file on the VPS, and a Python service reads this file and updates MongoDB.
+-   **Backend:** New API endpoints and MongoDB collections have been created to support the VIKING dashboard. It must calculate a comprehensive set of trading metrics from the *full* trade history.
+-   **Data Sync:** Data sync from MT4 to MongoDB is achieved via a JSON-file-based method. An MQL4 Expert Advisor (EA) writes account data to a JSON file, which a Python service then reads and updates MongoDB.
+-   **Accurate Analytics:** A critical requirement is that all analytics, especially monthly returns, must accurately reflect trading performance by **excluding deposits and withdrawals** from profit calculations.
 
 **User's preferred language**: English
 
 **what currently exists?**
 A full-stack application (React + FastAPI + MongoDB) serving two separate apps: the original FIDUS app at the root URL () and the new VIKING trading dashboard at .
--   **VIKING Frontend:** A standalone application with its own login page and a multi-tab dashboard. The UI has been fully branded with the correct purple/magenta theme and displays real, calculated analytics from the MT4 accounts.
--   **VIKING Backend:** API endpoints under  serve data for multiple trading strategies (CORE and PRO) and include a robust analytics calculation engine that processes real trade history.
--   **MT4 Data Bridge:** The architecture for syncing data from MT4 to MongoDB is established and working for the CORE account. It uses an MQL4 EA to write data to a JSON file, which is then processed by a Python service on the user's VPS. The necessary files for the PRO account have also been created and provided to the user.
--   **Multi-Account Support:** The dashboard is fully implemented to display data from both CORE and PRO accounts, including a strategy selector (ALL/CORE/PRO), combined portfolio totals, and individual account cards.
+-   **VIKING Frontend:** A standalone application with its own login page and a multi-tab dashboard. The UI is branded, displays data for both CORE and PRO accounts, and includes a Balance Over Time chart, Symbol Distribution pie chart, and a new Monthly Returns bar chart.
+-   **VIKING Backend:** API endpoints under  serve data for multiple strategies and include an analytics engine that processes the full trade history (over 2,700 combined trades).
+-   **MT4 Data Bridge:** The architecture for syncing data from MT4 to MongoDB is established for both accounts. The full trade history has been successfully imported.
+-   **Multi-Account Support:** The dashboard is implemented to display data from both CORE and PRO accounts, including a strategy selector (ALL/CORE/PRO) and combined portfolio totals.
 
 **Last working item**:
--   **Last item agent was working:** The agent finished creating all the necessary files (, , and a GitHub Action workflow) to integrate the **VIKING PRO** account (1309411). The dashboard UI was also updated to handle data from both accounts. The agent provided all file contents and setup instructions to the user.
--   **Status:** USER VERIFICATION PENDING
--   **Agent Testing Done:** Y
--   **Which testing method agent to use?** Manual verification by user. The user needs to set up the provided scripts on their VPS. After user confirmation, the agent should use the  to visually verify that data from the PRO account is correctly displayed on the dashboard.
+-   **Last item agent was working:** The agent was addressing a critical bug where monthly return calculations were inaccurate because they did not account for deposits/withdrawals. The user confirmed that this information must be available in the trade history. The agent identified that the MQL4 Expert Advisor (EA) files were explicitly filtering out non-trade balance operations (like deposits). The agent was in the process of modifying the EAs to include this crucial data in the JSON export.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Both.
+    1.  **Backend:** After the user deploys the updated EAs, the agent must query the  collection to confirm deposit/withdrawal records are being synced. Then, use  to test the  endpoint to verify the calculations are correct.
+    2.  **Frontend:** Use the  to visually confirm the Monthly Returns chart on the dashboard displays the corrected, more realistic percentages for the PRO account.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   There are no blocking issues.
+-   **Issue 1: Inaccurate Monthly Return Calculation Due to Missing Deposit Data (P0)**
+    -   **Description:** The monthly return percentages for the PRO account are misleadingly high. The root cause is that deposits and withdrawals are not being exported by the MQL4 EA, so the backend analytics engine cannot exclude them from performance calculations.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+-   **Issue 2: FIDUS Branding Appears on VIKING Route (P2)**
+    -   **Description:** The user has repeatedly reported seeing the FIDUS login page on the  URL. The agent has implemented multiple code fixes which appear correct on the agent's preview URL, but the user may be seeing a cached version or a different deployment.
+    -   **Status:** USER VERIFICATION PENDING
+    -   **Is recurring issue?** Y
 
 **In progress Task List**:
--   **Task 1: Verify VIKING PRO Account Integration (P0)**
-    -   **Where to resume:** The agent is waiting for the user to deploy the provided MQL4 EA and Python sync service on their VPS for the PRO account (1309411).
-    -   **What will be achieved with this?** The dashboard will display live data and analytics for both CORE and PRO strategies, with combined totals and filtering capabilities.
-    -   **Status:** USER VERIFICATION PENDING
+-   **Task 1: Capture and Process Deposits/Withdrawals for Accurate Analytics (P0)**
+    -   **Where to resume:** Modify the MQL4 EA files ( and ). The current code explicitly filters for trades (). A new section must be added to loop through the history and export balance operations (deposits, withdrawals), which have different  values.
+    -   **What will be achieved with this?** The analytics will be accurate and reflect true trading performance, not capital injections or withdrawals.
+    -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** User action (VPS setup).
+    -   **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Add Pagination to Orders Tab:** Implement pagination or infinite scroll controls for the trade history table to handle a large number of trades.
+    -   **(P1) Verify Pagination on Orders Tab:** The UI for pagination was added, but it needs to be thoroughly checked now that the database contains thousands of historical trades for both accounts.
 -   **Future Tasks:**
     -   **(P2) Refactor VIKING Components:** Break down the large  component into smaller, more manageable sub-components (e.g., , , ).
     -   **(P2) Refactor Backend Analytics:** Move the analytics calculation logic from  into a separate  module.
     -   **(P2) Address FIDUS backlog:** Address older, low-priority tasks related to the FIDUS part of the application, such as fixing the Lucrum MT5 Bridge Has Duplicate Key Errors.
 
 **Completed work in this session**
--   **Corrected VIKING Branding:** Fixed the app's color scheme from gold to the correct purple/magenta theme based on user feedback.
--   **Fixed MT4 Data Sync:** Re-architected the data bridge from a failing HTTP POST method to a reliable JSON file-based approach, enabling real-time data flow for account balance and trade history.
--   **Implemented Real Analytics:** Replaced all hardcoded placeholder data on the dashboard with real, backend-calculated metrics based on the synced MT4 trade history.
--   **Fixed Logout Redirect Bug:** Solved an issue where logging out from the VIKING app would incorrectly redirect to the FIDUS login page.
--   **Fixed Routing Issue:** Resolved a bug that caused the FIDUS login page to sometimes appear on the  route.
--   **Integrated VIKING PRO Account:**
-    -   Created a new MT4 EA and Python sync service for the PRO account (1309411).
-    -   Created a GitHub Actions workflow to automate the deployment of the PRO sync service.
-    -   Updated the frontend () to display data from both CORE and PRO accounts, adding a strategy selector and combined portfolio summary.
+-   **Imported Full Trade History:** Updated the MT4 EAs to export the complete trade history (up to 10,000 trades) and successfully guided the user to import over 2,700 trades into MongoDB.
+-   **Implemented Monthly Returns Chart:** Added a new backend endpoint () and a frontend bar chart component to the 'Analysis' tab to display monthly performance, as requested by the user.
+-   **Corrected Initial Return Calculation Logic:** Refined the backend calculation for monthly returns to be based on the initial deposit, making the percentages more stable after a large drawdown and recovery cycle. This was an intermediate fix before discovering deposits were missing entirely.
+-   **Fixed FIDUS Branding on VIKING Route:** Restructured  to create a hard separation between the FIDUS and VIKING applications, preventing the FIDUS login from appearing on .
+-   **Fixed Incorrect Account Number in Header:** Modified the VIKING header to dynamically display the correct account number (CORE or PRO) based on the selected strategy.
+-   **Updated Meta Tags:** Changed the  meta title and description from FIDUS to VKNG AI so link previews in Slack and other platforms show the correct branding.
+-   **Fixed VIKING PRO Sync Service:** Debugged and fixed a  compatibility issue that was preventing the PRO account monitor from syncing data.
+-   **Fixed Balance Over Time Chart:** Implemented a backend mechanism to reconstruct balance history from trade deals. Updated the Python monitors to save balance snapshots going forward.
+-   **Fixed Symbol Distribution Chart Colors:** Updated the color palette to provide better contrast between symbols in the pie chart.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Lucrum MT5 Bridge Has Duplicate Key Errors (P2)**
-    -   **Debug checklist:** Investigate  to find the cause of  failures.
+    -   **Debug checklist:** Investigate  logic in .
     -   **Why to solve this issue and what will be achieved with this?** Ensures complete historical deal data for Lucrum accounts.
     -   **Should Test frontend/backend/both after fix:** Backend.
     -   **Is recurring issue?** Y
 -   **Issue 2: Failing logins for three specific referral agents (P2)**
-    -   **Debug checklist:** Check  and  collections in the database.
+    -   **Debug checklist:** Check the  and  collections in the database for these specific users.
     -   **Why to solve this issue and what will be achieved with this?** Ensures all referral agents can access their dashboards.
     -   **Should Test frontend/backend/both after fix:** Both.
     -   **Is recurring issue?** N
@@ -74,60 +84,63 @@ A full-stack application (React + FastAPI + MongoDB) serving two separate apps: 
 
 
 **Key Technical Concepts**
--   **MT4 Data Sync (JSON File Method):** An MQL4 EA writes account/trade data to a JSON file. A separate Python service on the VPS polls this file, parses it, and upserts the data into MongoDB. This is the standard, reliable pattern for this project.
--   **Multi-Strategy Dashboard:** The React frontend was refactored to handle data from multiple accounts (CORE and PRO). It uses a  state to filter and display combined or individual analytics on the client-side.
--   **Backend Analytics Engine:** The FastAPI backend calculates complex trading metrics on-demand from the  collection, handling data inconsistencies like string vs. integer account numbers and different date formats.
+-   **MQL4 Data Export:** The core mechanism for extracting data from MT4. The immediate task is to expand its scope to include non-trade balance operations (deposits/withdrawals) by looking for different  values in the history.
+-   **Time Series Analytics:** The backend calculates trading metrics from the full trade history. The monthly return calculation is the most complex and currently inaccurate because it lacks deposit/withdrawal data.
+-   **React State Management:** The agent used state lifting and prop drilling (passing callbacks) to update the parent component () from the child (). While effective, this indicates  is a candidate for refactoring.
+-   **Recharts Library:** Used for all data visualizations, including the new Monthly Returns bar chart.
 
 **key DB schema**
--   : {  (e.g., VIKING_33627673),  (string),  (CORE or PRO), ,  }
--   : { ,  (string), , , ,  }
 -   : { , , , ,  }
+-   : { , , , , ,  }
+-   : { , , , ,  }
+-   : { , , , ,  }
+-   **Note:** The schema for  will likely need to accommodate deposit/withdrawal records, which may lack fields like , , etc., but will have a  value representing the deposit/withdrawal amount.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : Heavily modified to support multiple accounts, a strategy selector, and display real, calculated analytics across all tabs.
--   : Updated all endpoints and analytics functions to handle multiple accounts and fix data type/format issues.
--   : New EA created for the VIKING PRO account (1309411).
--   : New Python sync service created for the VIKING PRO account.
--   : New GitHub Action to automate the deployment of the PRO sync service.
+-   : Needs to be modified to export balance operations.
+-   : Needs to be modified to export balance operations.
+-   : The  endpoint logic must be updated to correctly parse and exclude deposits/withdrawals from profit calculations once the data is available.
+-   : The primary UI component for the VIKING app.
+-   : Contains the critical routing logic that separates the VIKING and FIDUS applications.
 
 **Areas that need refactoring**:
--    is now over 1000 lines and handles all UI logic for every tab and strategy. It should be broken down into smaller, single-responsibility components.
--   The analytics calculation logic within  could be abstracted into a separate  module.
+-    is a monolithic component (over 1000 lines) and should be broken down into smaller, specialized components.
+-   The analytics calculation logic in  could be abstracted into a separate  or  module for better separation of concerns.
 
 **key api endpoints**
--   : Returns combined data for all active strategies.
--   : Returns trade history, can be filtered by strategy.
--   : Triggers an on-demand calculation of all trading metrics for a specific strategy.
+-   : Triggers an on-demand calculation of all trading metrics.
+-   : Returns data for the balance-over-time chart.
+-   : **(Needs Fix)** Returns data for the monthly returns chart. Must be updated to handle deposit data.
 
 **Critical Info for New Agent**
--   The immediate task is to support the user in deploying the sync scripts for the **VIKING PRO** account on their VPS. The agent has already provided all necessary files and instructions. Wait for the user's confirmation or questions before proceeding.
--   The standard data sync architecture is: **MT4 EA -> JSON file -> Python service -> MongoDB**. Do not attempt other methods.
--   The VIKING app is the sole focus. Do not work on FIDUS-related features unless explicitly requested.
--   The dashboard is designed to be data-driven. Once the PRO account data starts flowing into MongoDB, the UI should automatically update to show it.
--   The user has provided the password for the PRO MT4 account (1309411): .
+-   The immediate, highest-priority task is to fix the inaccurate monthly return calculation. This is a multi-step process:
+    1.  Modify both MQL4 EA files to export deposit/withdrawal history in addition to trades.
+    2.  Provide the updated  file contents to the user so they can deploy them.
+    3.  Once the user confirms deployment and data resync, update the backend logic in  to correctly identify these new records and exclude them from profit/loss calculations.
+-   The user is technically proficient and understands that the issue lies in identifying deposits within the trade history. You must deliver a solution that correctly parses this data.
+-   Be prepared to address the recurring FIDUS branding issue. The code appears correct, so the problem might be related to caching or the user's specific deployment environment.
 
 **documents and test reports created in this job**
--    (updated with completed tasks)
--    (new file)
+-    was updated with completed tasks.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** give me all the files so i can copy and paste including and create a github action to run - **COMPLETED**. Agent provided all necessary files and a GitHub Action for the VIKING PRO account setup.
-2.  **User:** Provided VIKING PRO account password. - **ACKNOWLEDGED**.
-3.  **User:** Provided a detailed brief to integrate the VIKING PRO account. - **COMPLETED**.
-4.  **User:** dont know why it goes back to FIDUS log screen when logged out please fix it - **COMPLETED**.
-5.  **User:** continue with next actions 1-2 pending PRO account - **COMPLETED**.
-6.  **User:** Confirmed a previous routing fix worked (all set). - **ACKNOWLEDGED**.
-7.  **User:** Reported seeing the FIDUS login page on the VIKING URL. - **COMPLETED**.
-8.  **User:** Asked to remove a FIDUS reference from the login page subtitle. - **COMPLETED**.
-9.  **User:** Pointed out that the dashboard was using hardcoded template data, not real data. - **COMPLETED**.
-10. **User:** Confirmed that 77 trades were synced for the CORE account and instructed the agent to update the dashboard. - **COMPLETED**.
+1.  **User:** Everything is in the trade history. You have to be able to identify all the movements within the trade history. They have to be labeled as trade or deposits. - **IN PROGRESS**. This is the core of the current task. The agent found the EAs were not exporting this data.
+2.  **User:** I still think that pro is not correctly calculated...deposits cannot count as profits. We have to exclude deposits. - **IN PROGRESS**. This message initiated the current debugging effort.
+3.  **User:** done. please check again (re: trade history import) - **COMPLETED**.
+4.  **User:** i changed the properties in both mt4 accounts they were set to 100. changed to 10000 - **COMPLETED**. This fixed the trade history import limit.
+5.  **User:** all done. please check mongoDB files for history - **COMPLETED**.
+6.  **User:** awesome so we need to be able to run analytics from all history. - **COMPLETED**.
+7.  **User:** Provided detailed requirements for the monthly returns chart. - **COMPLETED**.
+8.  **User:** when I add the link in slack FIDUS MANAGEMENT comes up. can we change that ? - **COMPLETED**.
+9.  **User:** top of PRO account has the wrong account number. it has CORE next to LIVE - **COMPLETED**.
+10. **User:** NO there is something WRONG about this link FIDUS is not related to this. we have to fix this - **COMPLETED**.
 
 **Project Health Check:**
--   **Broken**: None.
--   **Mocked**: The VIKING PRO account card on the dashboard displays a Pending Setup status. It is waiting for the user to deploy the sync service on their VPS to populate it with live data.
+-   **Broken**: The monthly return calculation is fundamentally incorrect as it doesn't account for deposits/withdrawals, which is a critical flaw for a financial analytics dashboard.
+-   **Mocked**: None.
 
 **3rd Party Integrations**
 -   **Render:** Used for hosting and deployment.
@@ -137,12 +150,11 @@ A full-stack application (React + FastAPI + MongoDB) serving two separate apps: 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** VPS deployment scripts were created instead of local test files.
+-   **Test files created:** None. Testing is performed manually via  for the backend and  for the frontend.
 -   **Known regressions:** None.
 
 **Credentials to test flow:**
 -   **VIKING Admin:**  / 
--   **VIKING PRO MT4 Account:**  / 
 
 **What agent forgot to execute**
--   The agent has successfully addressed all user requests in this session, including major architectural changes, bug fixes, and new feature implementations. No tasks appear to have been overlooked.</analysis>
+-   The agent correctly identified the root cause of the analytics issue (EAs not exporting deposits) but had not yet implemented the fix in the MQL4 code before the session ended. The next agent must start by writing that code.</analysis>

@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
 
 class AlejandroDataCleanup:
     def __init__(self):

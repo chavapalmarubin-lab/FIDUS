@@ -14,7 +14,7 @@ import requests
 import json
 
 def analyze_salvador_data():
-    base_url = "https://quant-viking.preview.emergentagent.com"
+    base_url = "https://vkng-dashboard.preview.emergentagent.com"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/api/auth/login", json={

@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://quant-viking.preview.emergentagent.com`
+`https://vkng-dashboard.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

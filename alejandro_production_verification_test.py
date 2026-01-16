@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
 
 class AlejandroProductionVerifier:
     def __init__(self):

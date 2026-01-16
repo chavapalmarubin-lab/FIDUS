@@ -11,7 +11,7 @@ import json
 import uuid
 
 class FidusProductionTester:
-    def __init__(self, base_url="https://quant-viking.preview.emergentagent.com"):
+    def __init__(self, base_url="https://vkng-dashboard.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

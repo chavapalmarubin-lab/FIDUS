@@ -8,7 +8,7 @@ import requests
 import json
 
 def create_salvador_investments():
-    base_url = "https://quant-viking.preview.emergentagent.com"
+    base_url = "https://vkng-dashboard.preview.emergentagent.com"
     
     # Authenticate as admin
     auth_response = requests.post(f"{base_url}/api/auth/login", json={

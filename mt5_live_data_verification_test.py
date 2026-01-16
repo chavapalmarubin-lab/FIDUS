@@ -4,7 +4,7 @@ URGENT LIVE DATA VERIFICATION: MT5 System Complete Testing
 Testing all endpoints to verify live MT5 data is flowing correctly from the complete MT5 system.
 
 **Authentication**: admin/password123
-**Backend**: https://quant-viking.preview.emergentagent.com/api
+**Backend**: https://vkng-dashboard.preview.emergentagent.com/api
 
 **LIVE DATA VERIFICATION TESTS**:
 1. MT5 Dashboard Overview (Should show LIVE data)
@@ -27,7 +27,7 @@ from datetime import datetime, timezone, timedelta
 import time
 
 # Use the correct backend URL from frontend/.env
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
 
 class MT5LiveDataVerificationTester:
     def __init__(self):

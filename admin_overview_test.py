@@ -10,7 +10,7 @@ Expected Results:
 - Should show Alejandro in clients array
 
 Authentication: admin/password123
-Backend: https://quant-viking.preview.emergentagent.com/api
+Backend: https://vkng-dashboard.preview.emergentagent.com/api
 """
 
 import requests
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from the review request
-BACKEND_URL = "https://quant-viking.preview.emergentagent.com/api"
+BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
 
 class AdminOverviewTester:
     def __init__(self):
