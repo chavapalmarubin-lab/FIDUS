@@ -923,6 +923,8 @@ async def calculate_viking_analytics(strategy: str):
     """
     Calculate and store analytics from deal history
     Call this periodically to update analytics metrics
+    
+    IMPORTANT: Separates trading P&L from deposits/withdrawals
     """
     try:
         strategy = strategy.upper()
@@ -935,25 +937,53 @@ async def calculate_viking_analytics(strategy: str):
         
         account_num = account["account"]
         
-        # Get all closed deals - handle both string and int account numbers
-        deals = await db.viking_deals_history.find(
+        # Get all records - handle both string and int account numbers
+        all_records = await db.viking_deals_history.find(
             {"$or": [
                 {"account": account_num},
                 {"account": str(account_num)}
             ], "close_time": {"$ne": None}}
         ).to_list(None)
         
-        if not deals:
+        if not all_records:
             return {
                 "success": True,
-                "message": "No closed deals found to calculate analytics",
+                "message": "No records found to calculate analytics",
                 "account": account_num
             }
         
-        # Calculate metrics
-        total_trades = len(deals)
-        winning_trades = [d for d in deals if d.get("profit", 0) > 0]
-        losing_trades = [d for d in deals if d.get("profit", 0) < 0]
+        # Separate trades from balance operations
+        trades = []
+        total_deposits = 0
+        total_withdrawals = 0
+        
+        for record in all_records:
+            record_type = record.get("type", "").upper()
+            is_balance_op = record.get("is_balance_operation", False)
+            symbol = record.get("symbol")
+            
+            if is_balance_op or record_type in ["DEPOSIT", "WITHDRAWAL"] or (symbol is None and record_type not in ["BUY", "SELL"]):
+                amount = float(record.get("profit", 0))
+                if amount >= 0 or record_type == "DEPOSIT":
+                    total_deposits += amount
+                else:
+                    total_withdrawals += abs(amount)
+            else:
+                trades.append(record)
+        
+        if not trades:
+            return {
+                "success": True,
+                "message": "No actual trades found to calculate analytics (only balance operations)",
+                "account": account_num,
+                "deposits": total_deposits,
+                "withdrawals": total_withdrawals
+            }
+        
+        # Calculate metrics from TRADES ONLY
+        total_trades = len(trades)
+        winning_trades = [d for d in trades if d.get("profit", 0) > 0]
+        losing_trades = [d for d in trades if d.get("profit", 0) < 0]
         
         gross_profit = sum(d.get("profit", 0) for d in winning_trades)
         gross_loss = abs(sum(d.get("profit", 0) for d in losing_trades))
@@ -973,27 +1003,22 @@ async def calculate_viking_analytics(strategy: str):
         risk_reward = (avg_win / avg_loss) if avg_loss > 0 else 0
         
         # Calculate history days from first to last trade
-        if deals:
-            dates = [parse_mt4_datetime(d.get("close_time")) for d in deals if d.get("close_time")]
-            dates = [d for d in dates if d is not None]  # Filter out None values
-            if dates:
-                first_date = min(dates)
-                last_date = max(dates)
-                history_days = (last_date - first_date).days + 1
-            else:
-                history_days = 0
+        dates = [parse_mt4_datetime(d.get("close_time")) for d in trades if d.get("close_time")]
+        dates = [d for d in dates if d is not None]
+        if dates:
+            first_date = min(dates)
+            last_date = max(dates)
+            history_days = (last_date - first_date).days + 1
         else:
             history_days = 0
         
         # Trades per day
         trades_per_day = (total_trades / history_days) if history_days > 0 else 0
         
-        # Calculate returns based on account data
-        balance = account.get("balance", 0)
-        # Calculate initial deposit from balance minus net profit
-        initial_deposit = balance - net_profit if balance > 0 else 0
+        # Calculate returns based on deposits (actual capital invested)
+        initial_deposit = total_deposits if total_deposits > 0 else 10000
         
-        # Calculate returns as percentage gain
+        # Calculate returns as percentage gain on invested capital
         total_return = (net_profit / initial_deposit * 100) if initial_deposit > 0 else 0
         monthly_return = (total_return / max(history_days / 30, 1)) if history_days > 0 else 0
         weekly_return = (total_return / max(history_days / 7, 1)) if history_days > 0 else 0
@@ -1001,7 +1026,7 @@ async def calculate_viking_analytics(strategy: str):
         
         # Average trade length (in hours)
         trade_lengths = []
-        for d in deals:
+        for d in trades:
             open_time = parse_mt4_datetime(d.get("open_time"))
             close_time = parse_mt4_datetime(d.get("close_time"))
             if open_time and close_time:
@@ -1031,21 +1056,21 @@ async def calculate_viking_analytics(strategy: str):
             "losing_trades": len(losing_trades),
             "avg_trade_length_hours": round(avg_trade_length, 1),
             "trades_per_day": round(trades_per_day, 1),
-            "deposits": initial_deposit,
-            "withdrawals": 0,
-            "net_deposits": initial_deposit,
+            "deposits": round(total_deposits, 2),
+            "withdrawals": round(total_withdrawals, 2),
+            "net_deposits": round(total_deposits - total_withdrawals, 2),
             "banked_profit": round(gross_profit, 2),
             "loss": round(-gross_loss, 2),
             "net_profit": round(net_profit, 2),
-            "best_trade": round(max((d.get("profit", 0) for d in deals), default=0), 2),
-            "worst_trade": round(min((d.get("profit", 0) for d in deals), default=0), 2),
+            "best_trade": round(max((d.get("profit", 0) for d in trades), default=0), 2),
+            "worst_trade": round(min((d.get("profit", 0) for d in trades), default=0), 2),
             "avg_trade": round(net_profit / total_trades, 2) if total_trades > 0 else 0
         }
         
         # Store analytics
         await db.viking_analytics.insert_one(analytics_doc)
         
-        logger.info(f"✅ Calculated analytics for VIKING {strategy}: {total_trades} trades, {win_rate:.1f}% win rate")
+        logger.info(f"✅ Calculated analytics for VIKING {strategy}: {total_trades} trades, {win_rate:.1f}% win rate, deposits=${total_deposits:,.2f}")
         
         return {
             "success": True,
