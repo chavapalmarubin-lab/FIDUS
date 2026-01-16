@@ -176,6 +176,7 @@ def upload_closed_trades(db, closed_trades):
                 "profit": float(trade.get("profit", 0)),
                 "swap": float(trade.get("swap", 0)),
                 "commission": float(trade.get("commission", 0)),
+                "is_balance_operation": False,
                 "updated_at": datetime.now(timezone.utc)
             }
             
@@ -195,6 +196,59 @@ def upload_closed_trades(db, closed_trades):
         return 0
     except Exception as e:
         print(f"❌ Closed trades upload error: {e}")
+        return 0
+
+
+def upload_balance_operations(db, balance_operations):
+    """Upload balance operations (deposits/withdrawals) to MongoDB viking_deals_history collection"""
+    if not balance_operations:
+        return 0
+    
+    try:
+        operations = []
+        
+        for op in balance_operations:
+            ticket = op.get("ticket")
+            if not ticket:
+                continue
+            
+            amount = float(op.get("amount", 0))
+            op_type = op.get("type", "DEPOSIT" if amount >= 0 else "WITHDRAWAL")
+            
+            doc = {
+                "ticket": ticket,
+                "account": ACCOUNT_NUMBER,
+                "strategy": "CORE",
+                "symbol": None,
+                "type": op_type,
+                "volume": 0,
+                "open_price": 0,
+                "close_price": 0,
+                "open_time": parse_mt4_datetime(op.get("time")),
+                "close_time": parse_mt4_datetime(op.get("time")),
+                "profit": amount,
+                "swap": 0,
+                "commission": 0,
+                "is_balance_operation": True,
+                "comment": op.get("comment", ""),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            
+            operations.append(
+                UpdateOne(
+                    {"ticket": ticket, "account": ACCOUNT_NUMBER},
+                    {"$set": doc, "$setOnInsert": {"created_at": datetime.now(timezone.utc)}},
+                    upsert=True
+                )
+            )
+        
+        if operations:
+            result = db.viking_deals_history.bulk_write(operations, ordered=False)
+            return result.upserted_count + result.modified_count
+        
+        return 0
+    except Exception as e:
+        print(f"❌ Balance operations upload error: {e}")
         return 0
 
 def main():
@@ -267,6 +321,14 @@ def main():
                         print(f"✅ Closed trades synced: {trades_synced} (from {len(closed_trades)} in file)")
                     else:
                         print("ℹ️  No closed trades in file")
+                    
+                    # Upload balance operations (deposits/withdrawals)
+                    balance_ops = account_data.get("balance_operations", [])
+                    if balance_ops:
+                        ops_synced = upload_balance_operations(db, balance_ops)
+                        print(f"✅ Balance operations synced: {ops_synced} (from {len(balance_ops)} in file)")
+                    else:
+                        print("ℹ️  No balance operations in file")
                     
                     last_modified = current_modified
                     error_count = 0
