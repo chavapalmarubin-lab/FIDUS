@@ -586,12 +586,15 @@ function FidusApp() {
 
 // Main App - Routes to VIKING or FIDUS based on URL
 function App() {
-  // VIKING route - completely separate application
-  if (IS_VIKING_ROUTE) {
-    return <VikingAppWrapper />;
+  // CRITICAL: Check VIKING route again at render time
+  // This is a safety check in case module-level check missed it
+  if (isVikingRoute()) {
+    console.log('🟣 VIKING App rendering - completely isolated from FIDUS');
+    return <VikingApp />;
   }
   
   // FIDUS route - the investment management platform
+  console.log('🔵 FIDUS App rendering');
   return <FidusApp />;
 }
 
