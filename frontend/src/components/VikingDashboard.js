@@ -254,6 +254,17 @@ const VikingDashboard = ({ onAccountChange }) => {
         })));
       }
       
+      // Fetch monthly returns data
+      const monthlyRes = await fetch(`${BACKEND_URL}/api/viking/monthly-returns/${strategy}`);
+      const monthlyData = await monthlyRes.json();
+      
+      if (monthlyData.success) {
+        setMonthlyReturns({
+          metrics: monthlyData.metrics || {},
+          data: monthlyData.data || []
+        });
+      }
+      
     } catch (err) {
       console.error("Error fetching VIKING data:", err);
       setError("Failed to load VIKING data. Please try again.");
