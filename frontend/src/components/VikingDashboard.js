@@ -98,6 +98,43 @@ const VKNG_COLORS = {
 // Colors for charts
 const COLORS = {
   primary: '#9B27FF',    // VKNG Purple
+
+// Custom Tooltip Component for consistent white text
+const CustomTooltip = ({ active, payload, label, formatter }) => {
+  if (active && payload && payload.length) {
+    const value = payload[0].value;
+    const data = payload[0].payload;
+    
+    let displayValue = value;
+    let displayLabel = 'Value';
+    
+    if (formatter) {
+      const formatted = formatter(value, 'value', { payload: data });
+      if (Array.isArray(formatted)) {
+        displayValue = formatted[0];
+        displayLabel = formatted[1] || 'Value';
+      } else {
+        displayValue = formatted;
+      }
+    }
+    
+    return (
+      <div style={{
+        backgroundColor: '#1f2937',
+        border: '1px solid #374151',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        color: '#ffffff'
+      }}>
+        <p style={{ color: '#ffffff', marginBottom: '4px', fontWeight: 'bold' }}>{label}</p>
+        <p style={{ color: '#ffffff', margin: 0 }}>
+          {displayLabel}: {displayValue}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
   secondary: '#A239EA',  // Light Purple
   success: '#22c55e',    // Green
   danger: '#ef4444',     // Red
