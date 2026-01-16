@@ -1068,6 +1068,10 @@ async def get_monthly_returns(strategy: str):
     """
     Calculate monthly returns for a strategy
     Returns data for the Monthly Returns bar chart
+    
+    IMPORTANT: Excludes deposits/withdrawals from profit calculations
+    Monthly Return % = Trading Profit / Starting Balance × 100
+    Where Trading Profit = Sum of actual trade profits (not deposits/withdrawals)
     """
     try:
         strategy = strategy.upper()
@@ -1081,16 +1085,17 @@ async def get_monthly_returns(strategy: str):
         account_num = str(account["account"])
         current_balance = float(account.get("balance", 0))
         
-        # Get all closed deals sorted by close time
-        deals = await db.viking_deals_history.find(
+        # Get all records from deal history (trades AND balance operations)
+        all_records = await db.viking_deals_history.find(
             {"$or": [
                 {"account": account_num},
                 {"account": int(account_num) if account_num.isdigit() else account_num}
             ], "close_time": {"$ne": None}},
-            {"_id": 0, "close_time": 1, "profit": 1, "commission": 1, "swap": 1}
+            {"_id": 0, "close_time": 1, "profit": 1, "commission": 1, "swap": 1, 
+             "type": 1, "is_balance_operation": 1, "symbol": 1}
         ).sort("close_time", 1).to_list(None)
         
-        if not deals:
+        if not all_records:
             return {
                 "success": True,
                 "strategy": strategy,
@@ -1102,29 +1107,83 @@ async def get_monthly_returns(strategy: str):
                     "devMonthly": 0,
                     "devYearly": 0
                 },
-                "data": []
+                "data": [],
+                "deposits_info": {
+                    "total_deposits": 0,
+                    "total_withdrawals": 0,
+                    "net_deposits": 0
+                }
             }
         
-        # Group deals by month
+        # Separate trades from balance operations
+        trades = []
+        deposits = []
+        withdrawals = []
+        
+        for record in all_records:
+            record_type = record.get("type", "").upper()
+            is_balance_op = record.get("is_balance_operation", False)
+            symbol = record.get("symbol")
+            
+            # Identify balance operations by:
+            # 1. Explicit is_balance_operation flag
+            # 2. Type is DEPOSIT or WITHDRAWAL
+            # 3. No symbol (balance operations don't have symbols)
+            if is_balance_op or record_type in ["DEPOSIT", "WITHDRAWAL"] or (symbol is None and record_type not in ["BUY", "SELL"]):
+                amount = float(record.get("profit", 0))
+                if amount >= 0 or record_type == "DEPOSIT":
+                    deposits.append(record)
+                else:
+                    withdrawals.append(record)
+            else:
+                trades.append(record)
+        
+        # Calculate total deposits and withdrawals
+        total_deposits = sum(float(d.get("profit", 0)) for d in deposits)
+        total_withdrawals = abs(sum(float(w.get("profit", 0)) for w in withdrawals))
+        net_deposits = total_deposits - total_withdrawals
+        
+        logger.info(f"[{strategy}] Found {len(trades)} trades, {len(deposits)} deposits (${total_deposits:,.2f}), {len(withdrawals)} withdrawals (${total_withdrawals:,.2f})")
+        
+        # If no actual trades, return empty
+        if not trades:
+            return {
+                "success": True,
+                "strategy": strategy,
+                "account": account_num,
+                "metrics": {
+                    "avgWeekly": 0,
+                    "avgMonthly": 0,
+                    "devDaily": 0,
+                    "devMonthly": 0,
+                    "devYearly": 0
+                },
+                "data": [],
+                "deposits_info": {
+                    "total_deposits": round(total_deposits, 2),
+                    "total_withdrawals": round(total_withdrawals, 2),
+                    "net_deposits": round(net_deposits, 2)
+                }
+            }
+        
+        # Group TRADES ONLY by month (exclude balance operations)
         monthly_profits = {}
         daily_profits = {}
         weekly_profits = {}
         
-        for deal in deals:
+        for deal in trades:
             close_time = deal.get("close_time")
+            # Only count actual trading P&L
             profit = float(deal.get("profit", 0)) + float(deal.get("commission", 0)) + float(deal.get("swap", 0))
             
             if close_time:
                 # Parse date
                 if isinstance(close_time, str):
-                    # Handle different formats
                     try:
-                        if '.' in close_time:  # "2025.11.20" format
+                        if '.' in close_time:
                             dt = datetime.strptime(close_time[:10], "%Y.%m.%d")
-                        else:  # "2025-11-20" format
+                        else:
                             dt = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
-                            if hasattr(dt, 'date'):
-                                dt = dt
                     except:
                         continue
                 elif isinstance(close_time, datetime):
@@ -1150,20 +1209,25 @@ async def get_monthly_returns(strategy: str):
                     weekly_profits[week_key] = 0
                 weekly_profits[week_key] += profit
         
-        # Calculate total profit to estimate initial balance
-        total_profit = sum(monthly_profits.values())
-        initial_balance = current_balance - total_profit if current_balance > 0 else 10000
-        if initial_balance <= 0:
-            initial_balance = 10000  # Default if calculation fails
+        # Calculate total TRADING profit (excludes deposits/withdrawals)
+        total_trading_profit = sum(monthly_profits.values())
+        
+        # Calculate initial balance:
+        # current_balance = initial_deposit + trading_profit + net_deposits
+        # So: initial_deposit = current_balance - trading_profit - (deposits - withdrawals)
+        # But actually the simplest: initial balance is total deposits
+        # since withdrawals reduce balance but not the base we're measuring from
+        initial_balance = total_deposits if total_deposits > 0 else 10000
+        
+        logger.info(f"[{strategy}] Total trading profit: ${total_trading_profit:,.2f}, Initial balance (from deposits): ${initial_balance:,.2f}")
         
         # Calculate monthly returns as percentages
-        # Using INITIAL BALANCE as base for all months (consistent measurement)
         monthly_returns = []
         sorted_months = sorted(monthly_profits.keys())
         
         for month in sorted_months:
             profit = monthly_profits[month]
-            # Calculate return as % of INITIAL balance (not running balance)
+            # Calculate return as % of initial deposits (the actual capital invested)
             return_pct = (profit / initial_balance) * 100 if initial_balance > 0 else 0
             
             # Format month label (e.g., "Nov'24")
@@ -1180,14 +1244,14 @@ async def get_monthly_returns(strategy: str):
                 "profit": round(profit, 2)
             })
         
-        # Calculate weekly returns (using initial balance as base)
+        # Calculate weekly returns
         weekly_returns_list = []
         for week in sorted(weekly_profits.keys()):
             profit = weekly_profits[week]
             return_pct = (profit / initial_balance) * 100 if initial_balance > 0 else 0
             weekly_returns_list.append(return_pct)
         
-        # Calculate daily returns (using initial balance as base)
+        # Calculate daily returns
         daily_returns_list = []
         for day in sorted(daily_profits.keys()):
             profit = daily_profits[day]
@@ -1219,7 +1283,13 @@ async def get_monthly_returns(strategy: str):
                 "devMonthly": round(dev_monthly, 2),
                 "devYearly": round(dev_yearly, 2)
             },
-            "data": monthly_returns
+            "data": monthly_returns,
+            "deposits_info": {
+                "total_deposits": round(total_deposits, 2),
+                "total_withdrawals": round(total_withdrawals, 2),
+                "net_deposits": round(net_deposits, 2),
+                "total_trading_profit": round(total_trading_profit, 2)
+            }
         }
         
     except HTTPException:
