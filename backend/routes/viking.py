@@ -1157,13 +1157,14 @@ async def get_monthly_returns(strategy: str):
             initial_balance = 10000  # Default if calculation fails
         
         # Calculate monthly returns as percentages
+        # Using INITIAL BALANCE as base for all months (consistent measurement)
         monthly_returns = []
-        running_balance = initial_balance
         sorted_months = sorted(monthly_profits.keys())
         
         for month in sorted_months:
             profit = monthly_profits[month]
-            return_pct = (profit / running_balance) * 100 if running_balance > 0 else 0
+            # Calculate return as % of INITIAL balance (not running balance)
+            return_pct = (profit / initial_balance) * 100 if initial_balance > 0 else 0
             
             # Format month label (e.g., "Nov'24")
             try:
@@ -1178,17 +1179,13 @@ async def get_monthly_returns(strategy: str):
                 "return": round(return_pct, 2),
                 "profit": round(profit, 2)
             })
-            
-            running_balance += profit
         
-        # Calculate weekly returns
+        # Calculate weekly returns (using initial balance as base)
         weekly_returns_list = []
-        running_balance = initial_balance
         for week in sorted(weekly_profits.keys()):
             profit = weekly_profits[week]
-            return_pct = (profit / running_balance) * 100 if running_balance > 0 else 0
+            return_pct = (profit / initial_balance) * 100 if initial_balance > 0 else 0
             weekly_returns_list.append(return_pct)
-            running_balance += profit
         
         # Calculate daily returns
         daily_returns_list = []
