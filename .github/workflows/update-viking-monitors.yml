@@ -1,0 +1,372 @@
+# ============================================================
+# Update VIKING Python Monitors (Balance Operations Support)
+# ============================================================
+# Deploys updated Python file monitors with balance operations
+# support to enable accurate monthly return calculations
+# ============================================================
+
+name: Update VIKING Monitors (Balance Ops)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which monitor to update'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - core_only
+          - pro_only
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'update_and_restart'
+        type: choice
+        options:
+          - update_and_restart
+          - update_only
+          - restart_only
+          - check_status
+          - view_json_files
+
+jobs:
+  update-monitors:
+    runs-on: ubuntu-latest
+    name: Update VIKING Monitors (${{ github.event.inputs.target }})
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # UPDATE CORE MONITOR
+      # ============================================================
+      - name: Update CORE Monitor
+        if: ${{ github.event.inputs.target == 'both' || github.event.inputs.target == 'core_only' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 180s
+          command_timeout: 300s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "Updating VIKING CORE Monitor (v3.0)" -ForegroundColor Cyan
+            Write-Host "Account: 33627673 | MEXAtlantic" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            $bridgePath = "C:\viking_bridge"
+            
+            # Ensure directory exists
+            if (-not (Test-Path $bridgePath)) {
+                New-Item -ItemType Directory -Path $bridgePath -Force | Out-Null
+                Write-Host "Created: $bridgePath" -ForegroundColor Green
+            }
+            
+            # Stop existing service
+            Write-Host "Stopping CORE monitor..." -ForegroundColor Yellow
+            Stop-ScheduledTask -TaskName "VIKING_CORE_File_Monitor" -ErrorAction SilentlyContinue
+            Stop-ScheduledTask -TaskName "VIKING_File_Monitor" -ErrorAction SilentlyContinue
+            
+            # Kill any running python processes for this monitor
+            Get-Process python -ErrorAction SilentlyContinue | Where-Object {
+                $_.Path -like "*viking*" -or $_.CommandLine -like "*viking_file_monitor*"
+            } | Stop-Process -Force -ErrorAction SilentlyContinue
+            
+            Start-Sleep -Seconds 2
+            
+            # Download updated files from GitHub
+            Write-Host "Downloading updated CORE monitor..." -ForegroundColor Cyan
+            $repo = "${{ github.repository }}"
+            $branch = "${{ github.ref_name }}"
+            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
+            
+            Invoke-WebRequest -Uri "$baseUrl/viking_file_monitor.py" -OutFile "$bridgePath\viking_file_monitor.py" -UseBasicParsing
+            Write-Host "  Downloaded: viking_file_monitor.py (v3.0 with Balance Ops)" -ForegroundColor Green
+            
+            # Verify file was updated
+            $content = Get-Content "$bridgePath\viking_file_monitor.py" -Raw
+            if ($content -match "upload_balance_operations") {
+                Write-Host "  Verified: Balance operations function present" -ForegroundColor Green
+            } else {
+                Write-Host "  WARNING: Balance operations function NOT found!" -ForegroundColor Red
+            }
+
+      # ============================================================
+      # UPDATE PRO MONITOR
+      # ============================================================
+      - name: Update PRO Monitor
+        if: ${{ github.event.inputs.target == 'both' || github.event.inputs.target == 'pro_only' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 180s
+          command_timeout: 300s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "Updating VIKING PRO Monitor (v3.0)" -ForegroundColor Cyan
+            Write-Host "Account: 1309411 | Traders Trust" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            $bridgePath = "C:\viking_bridge"
+            
+            # Stop existing service
+            Write-Host "Stopping PRO monitor..." -ForegroundColor Yellow
+            Stop-ScheduledTask -TaskName "VIKING_PRO_File_Monitor" -ErrorAction SilentlyContinue
+            
+            Start-Sleep -Seconds 2
+            
+            # Download updated files from GitHub
+            Write-Host "Downloading updated PRO monitor..." -ForegroundColor Cyan
+            $repo = "${{ github.repository }}"
+            $branch = "${{ github.ref_name }}"
+            $baseUrl = "https://raw.githubusercontent.com/$repo/$branch/vps-scripts"
+            
+            Invoke-WebRequest -Uri "$baseUrl/viking_pro_file_monitor.py" -OutFile "$bridgePath\viking_pro_file_monitor.py" -UseBasicParsing
+            Write-Host "  Downloaded: viking_pro_file_monitor.py (v3.0 with Balance Ops)" -ForegroundColor Green
+            
+            # Verify file was updated
+            $content = Get-Content "$bridgePath\viking_pro_file_monitor.py" -Raw
+            if ($content -match "upload_balance_operations") {
+                Write-Host "  Verified: Balance operations function present" -ForegroundColor Green
+            } else {
+                Write-Host "  WARNING: Balance operations function NOT found!" -ForegroundColor Red
+            }
+
+      # ============================================================
+      # RESTART SERVICES
+      # ============================================================
+      - name: Restart CORE Service
+        if: ${{ (github.event.inputs.target == 'both' || github.event.inputs.target == 'core_only') && (github.event.inputs.action == 'update_and_restart' || github.event.inputs.action == 'restart_only') }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "Starting VIKING CORE monitor..." -ForegroundColor Cyan
+            
+            # Try both possible task names
+            $taskName = "VIKING_CORE_File_Monitor"
+            $altTaskName = "VIKING_File_Monitor"
+            
+            $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+            if (-not $task) {
+                $task = Get-ScheduledTask -TaskName $altTaskName -ErrorAction SilentlyContinue
+                if ($task) { $taskName = $altTaskName }
+            }
+            
+            if ($task) {
+                Start-ScheduledTask -TaskName $taskName
+                Start-Sleep -Seconds 3
+                $task = Get-ScheduledTask -TaskName $taskName
+                Write-Host "CORE Task State: $($task.State)" -ForegroundColor Green
+            } else {
+                Write-Host "No scheduled task found. Starting manually..." -ForegroundColor Yellow
+                Start-Process python -ArgumentList "C:\viking_bridge\viking_file_monitor.py" -WorkingDirectory "C:\viking_bridge" -WindowStyle Hidden
+                Write-Host "Started manually" -ForegroundColor Green
+            }
+
+      - name: Restart PRO Service
+        if: ${{ (github.event.inputs.target == 'both' || github.event.inputs.target == 'pro_only') && (github.event.inputs.action == 'update_and_restart' || github.event.inputs.action == 'restart_only') }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "Starting VIKING PRO monitor..." -ForegroundColor Cyan
+            
+            $taskName = "VIKING_PRO_File_Monitor"
+            $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+            
+            if ($task) {
+                Start-ScheduledTask -TaskName $taskName
+                Start-Sleep -Seconds 3
+                $task = Get-ScheduledTask -TaskName $taskName
+                Write-Host "PRO Task State: $($task.State)" -ForegroundColor Green
+            } else {
+                Write-Host "No scheduled task found. Starting manually..." -ForegroundColor Yellow
+                Start-Process python -ArgumentList "C:\viking_bridge\viking_pro_file_monitor.py" -WorkingDirectory "C:\viking_bridge" -WindowStyle Hidden
+                Write-Host "Started manually" -ForegroundColor Green
+            }
+
+      # ============================================================
+      # CHECK STATUS
+      # ============================================================
+      - name: Check Status
+        if: ${{ github.event.inputs.action == 'check_status' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "VIKING Monitors Status" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            # Check CORE task
+            Write-Host ""
+            Write-Host "CORE Monitor:" -ForegroundColor Yellow
+            $coreTask = Get-ScheduledTask -TaskName "VIKING_CORE_File_Monitor" -ErrorAction SilentlyContinue
+            if (-not $coreTask) {
+                $coreTask = Get-ScheduledTask -TaskName "VIKING_File_Monitor" -ErrorAction SilentlyContinue
+            }
+            if ($coreTask) {
+                Write-Host "  Task State: $($coreTask.State)" -ForegroundColor Green
+            } else {
+                Write-Host "  Task State: NOT FOUND" -ForegroundColor Red
+            }
+            
+            # Check PRO task
+            Write-Host ""
+            Write-Host "PRO Monitor:" -ForegroundColor Yellow
+            $proTask = Get-ScheduledTask -TaskName "VIKING_PRO_File_Monitor" -ErrorAction SilentlyContinue
+            if ($proTask) {
+                Write-Host "  Task State: $($proTask.State)" -ForegroundColor Green
+            } else {
+                Write-Host "  Task State: NOT FOUND" -ForegroundColor Red
+            }
+            
+            # Check Python files
+            Write-Host ""
+            Write-Host "Python Monitor Files:" -ForegroundColor Yellow
+            $bridgePath = "C:\viking_bridge"
+            
+            $coreFile = "$bridgePath\viking_file_monitor.py"
+            $proFile = "$bridgePath\viking_pro_file_monitor.py"
+            
+            if (Test-Path $coreFile) {
+                $content = Get-Content $coreFile -Raw
+                $hasBalanceOps = $content -match "upload_balance_operations"
+                Write-Host "  CORE: EXISTS (Balance Ops: $hasBalanceOps)" -ForegroundColor $(if ($hasBalanceOps) { "Green" } else { "Red" })
+            } else {
+                Write-Host "  CORE: NOT FOUND" -ForegroundColor Red
+            }
+            
+            if (Test-Path $proFile) {
+                $content = Get-Content $proFile -Raw
+                $hasBalanceOps = $content -match "upload_balance_operations"
+                Write-Host "  PRO: EXISTS (Balance Ops: $hasBalanceOps)" -ForegroundColor $(if ($hasBalanceOps) { "Green" } else { "Red" })
+            } else {
+                Write-Host "  PRO: NOT FOUND" -ForegroundColor Red
+            }
+            
+            # Check running Python processes
+            Write-Host ""
+            Write-Host "Running Python Processes:" -ForegroundColor Yellow
+            Get-Process python -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "  PID: $($_.Id) | CPU: $($_.CPU)s" -ForegroundColor Gray
+            }
+
+      # ============================================================
+      # VIEW JSON FILES
+      # ============================================================
+      - name: View JSON Files
+        if: ${{ github.event.inputs.action == 'view_json_files' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host "============================================" -ForegroundColor Cyan
+            Write-Host "VIKING JSON Files Status" -ForegroundColor Cyan
+            Write-Host "============================================" -ForegroundColor Cyan
+            
+            $commonFiles = "C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
+            
+            # CORE JSON
+            Write-Host ""
+            Write-Host "CORE Account (33627673):" -ForegroundColor Yellow
+            $coreJson = "$commonFiles\viking_account_33627673_data.json"
+            if (Test-Path $coreJson) {
+                $fileInfo = Get-Item $coreJson
+                Write-Host "  File: EXISTS" -ForegroundColor Green
+                Write-Host "  Last Modified: $($fileInfo.LastWriteTime)" -ForegroundColor Gray
+                Write-Host "  Size: $($fileInfo.Length) bytes" -ForegroundColor Gray
+                
+                $content = Get-Content $coreJson -Raw | ConvertFrom-Json
+                Write-Host "  Balance: $($content.balance)" -ForegroundColor Cyan
+                Write-Host "  Closed Trades: $($content.closed_trades_count)" -ForegroundColor Cyan
+                Write-Host "  Balance Operations: $($content.balance_operations_count)" -ForegroundColor $(if ($content.balance_operations_count -gt 0) { "Green" } else { "Yellow" })
+                
+                if ($content.balance_operations -and $content.balance_operations.Count -gt 0) {
+                    Write-Host "  Sample Balance Ops:" -ForegroundColor Cyan
+                    $content.balance_operations | Select-Object -First 3 | ForEach-Object {
+                        Write-Host "    - $($_.type): $($_.amount) @ $($_.time)" -ForegroundColor Gray
+                    }
+                }
+            } else {
+                Write-Host "  File: NOT FOUND" -ForegroundColor Red
+            }
+            
+            # PRO JSON
+            Write-Host ""
+            Write-Host "PRO Account (1309411):" -ForegroundColor Yellow
+            $proJson = "$commonFiles\viking_account_1309411_data.json"
+            if (Test-Path $proJson) {
+                $fileInfo = Get-Item $proJson
+                Write-Host "  File: EXISTS" -ForegroundColor Green
+                Write-Host "  Last Modified: $($fileInfo.LastWriteTime)" -ForegroundColor Gray
+                Write-Host "  Size: $($fileInfo.Length) bytes" -ForegroundColor Gray
+                
+                $content = Get-Content $proJson -Raw | ConvertFrom-Json
+                Write-Host "  Balance: $($content.balance)" -ForegroundColor Cyan
+                Write-Host "  Closed Trades: $($content.closed_trades_count)" -ForegroundColor Cyan
+                Write-Host "  Balance Operations: $($content.balance_operations_count)" -ForegroundColor $(if ($content.balance_operations_count -gt 0) { "Green" } else { "Yellow" })
+                
+                if ($content.balance_operations -and $content.balance_operations.Count -gt 0) {
+                    Write-Host "  Sample Balance Ops:" -ForegroundColor Cyan
+                    $content.balance_operations | Select-Object -First 3 | ForEach-Object {
+                        Write-Host "    - $($_.type): $($_.amount) @ $($_.time)" -ForegroundColor Gray
+                    }
+                }
+            } else {
+                Write-Host "  File: NOT FOUND" -ForegroundColor Red
+            }
+
+      # ============================================================
+      # SUMMARY
+      # ============================================================
+      - name: Deployment Summary
+        if: ${{ github.event.inputs.action == 'update_and_restart' || github.event.inputs.action == 'update_only' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          timeout: 60s
+          script: |
+            Write-Host ""
+            Write-Host "============================================" -ForegroundColor Green
+            Write-Host "DEPLOYMENT COMPLETE" -ForegroundColor Green
+            Write-Host "============================================" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "Updated monitors now include:" -ForegroundColor Cyan
+            Write-Host "  - upload_balance_operations() function" -ForegroundColor Gray
+            Write-Host "  - is_balance_operation flag on records" -ForegroundColor Gray
+            Write-Host "  - Support for DEPOSIT/WITHDRAWAL types" -ForegroundColor Gray
+            Write-Host ""
+            Write-Host "Next steps:" -ForegroundColor Yellow
+            Write-Host "  1. Wait 2-3 minutes for next sync cycle" -ForegroundColor Gray
+            Write-Host "  2. Check MongoDB for balance_operations" -ForegroundColor Gray
+            Write-Host "  3. Verify monthly returns chart accuracy" -ForegroundColor Gray
