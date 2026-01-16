@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright "VKNG AI Platform"
 #property link      ""
-#property version   "2.00"
+#property version   "3.00"
 #property strict
 
 // Input parameters
@@ -21,7 +21,7 @@ datetime LastSyncTime = 0;
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   Print("VIKING PRO Account Data Writer EA Started (v2.0 with History)");
+   Print("VIKING PRO Account Data Writer EA Started (v3.0 with Balance Operations)");
    Print("Account: ", AccountNumber());
    Print("Server: ", AccountServer());
    Print("Broker: ", AccountCompany());
@@ -242,6 +242,7 @@ void WriteAccountData()
    FileWriteString(fileHandle, "  \"positions_count\": " + IntegerToString(positionCount) + ",\n");
    FileWriteString(fileHandle, "  \"orders_count\": " + IntegerToString(orderCount) + ",\n");
    FileWriteString(fileHandle, "  \"closed_trades_count\": " + IntegerToString(historyCount) + ",\n");
+   FileWriteString(fileHandle, "  \"balance_operations_count\": " + IntegerToString(balanceCount) + ",\n");
    FileWriteString(fileHandle, "  \"history_total\": " + IntegerToString(historyTotal) + "\n");
    
    // End JSON
@@ -253,7 +254,8 @@ void WriteAccountData()
          ", Equity=", DoubleToString(AccountEquity(), 2),
          ", Positions=", positionCount,
          ", Orders=", orderCount,
-         ", ClosedTrades=", historyCount);
+         ", ClosedTrades=", historyCount,
+         ", BalanceOps=", balanceCount);
 }
 
 //+------------------------------------------------------------------+

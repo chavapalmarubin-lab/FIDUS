@@ -1,11 +1,11 @@
 //+------------------------------------------------------------------+
 //|                                    VIKING_Account_Data_Writer.mq4 |
 //|                                  Copyright 2025, VKNG AI Platform |
-//|                                                                  |
+//|                                  Version 3.0 - With Balance Ops   |
 //+------------------------------------------------------------------+
 #property copyright "VKNG AI Platform"
 #property link      ""
-#property version   "2.00"
+#property version   "3.00"
 #property strict
 
 // Input parameters
@@ -21,7 +21,7 @@ datetime LastSyncTime = 0;
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   Print("VIKING Account Data Writer EA Started (v2.0 with History)");
+   Print("VIKING Account Data Writer EA Started (v3.0 with Balance Operations)");
    Print("Account: ", AccountNumber());
    Print("Server: ", AccountServer());
    Print("Data File: ", DataFilePath);
@@ -75,6 +75,7 @@ void WriteAccountData()
    
    // Account information
    FileWriteString(fileHandle, "  \"account\": " + IntegerToString(AccountNumber()) + ",\n");
+   FileWriteString(fileHandle, "  \"strategy\": \"CORE\",\n");
    FileWriteString(fileHandle, "  \"server\": \"" + AccountServer() + "\",\n");
    FileWriteString(fileHandle, "  \"balance\": " + DoubleToString(AccountBalance(), 2) + ",\n");
    FileWriteString(fileHandle, "  \"equity\": " + DoubleToString(AccountEquity(), 2) + ",\n");
@@ -203,10 +204,50 @@ void WriteAccountData()
    
    FileWriteString(fileHandle, "\n  ],\n");
    
+   // ============================================
+   // BALANCE OPERATIONS (Deposits/Withdrawals)
+   // OrderType() == 6 is OP_BALANCE
+   // ============================================
+   FileWriteString(fileHandle, "  \"balance_operations\": [\n");
+   
+   int balanceCount = 0;
+   
+   for(i = historyTotal - 1; i >= 0; i--)
+   {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY))
+      {
+         // Balance operations have OrderType() == 6 (OP_BALANCE)
+         // No symbol, profit field contains the deposit/withdrawal amount
+         if(OrderType() == 6)
+         {
+            if(balanceCount > 0)
+               FileWriteString(fileHandle, ",\n");
+            
+            // Determine type based on profit sign
+            string opType = "DEPOSIT";
+            if(OrderProfit() < 0)
+               opType = "WITHDRAWAL";
+            
+            FileWriteString(fileHandle, "    {\n");
+            FileWriteString(fileHandle, "      \"ticket\": " + IntegerToString(OrderTicket()) + ",\n");
+            FileWriteString(fileHandle, "      \"type\": \"" + opType + "\",\n");
+            FileWriteString(fileHandle, "      \"amount\": " + DoubleToString(OrderProfit(), 2) + ",\n");
+            FileWriteString(fileHandle, "      \"time\": \"" + TimeToString(OrderCloseTime(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\",\n");
+            FileWriteString(fileHandle, "      \"comment\": \"" + OrderComment() + "\"\n");
+            FileWriteString(fileHandle, "    }");
+            
+            balanceCount++;
+         }
+      }
+   }
+   
+   FileWriteString(fileHandle, "\n  ],\n");
+   
    // Statistics
    FileWriteString(fileHandle, "  \"positions_count\": " + IntegerToString(positionCount) + ",\n");
    FileWriteString(fileHandle, "  \"orders_count\": " + IntegerToString(orderCount) + ",\n");
    FileWriteString(fileHandle, "  \"closed_trades_count\": " + IntegerToString(historyCount) + ",\n");
+   FileWriteString(fileHandle, "  \"balance_operations_count\": " + IntegerToString(balanceCount) + ",\n");
    FileWriteString(fileHandle, "  \"history_total\": " + IntegerToString(historyTotal) + "\n");
    
    // End JSON
@@ -218,7 +259,8 @@ void WriteAccountData()
          ", Equity=", DoubleToString(AccountEquity(), 2),
          ", Positions=", positionCount,
          ", Orders=", orderCount,
-         ", ClosedTrades=", historyCount);
+         ", ClosedTrades=", historyCount,
+         ", BalanceOps=", balanceCount);
 }
 
 //+------------------------------------------------------------------+
