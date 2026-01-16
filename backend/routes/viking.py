@@ -1060,6 +1060,181 @@ async def calculate_viking_analytics(strategy: str):
 
 
 # ============================================================================
+# MONTHLY RETURNS ANALYTICS
+# ============================================================================
+
+@router.get("/monthly-returns/{strategy}")
+async def get_monthly_returns(strategy: str):
+    """
+    Calculate monthly returns for a strategy
+    Returns data for the Monthly Returns bar chart
+    """
+    try:
+        strategy = strategy.upper()
+        if strategy not in ["CORE", "PRO"]:
+            raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
+        
+        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        
+        account_num = str(account["account"])
+        current_balance = float(account.get("balance", 0))
+        
+        # Get all closed deals sorted by close time
+        deals = await db.viking_deals_history.find(
+            {"$or": [
+                {"account": account_num},
+                {"account": int(account_num) if account_num.isdigit() else account_num}
+            ], "close_time": {"$ne": None}},
+            {"_id": 0, "close_time": 1, "profit": 1, "commission": 1, "swap": 1}
+        ).sort("close_time", 1).to_list(None)
+        
+        if not deals:
+            return {
+                "success": True,
+                "strategy": strategy,
+                "account": account_num,
+                "metrics": {
+                    "avgWeekly": 0,
+                    "avgMonthly": 0,
+                    "devDaily": 0,
+                    "devMonthly": 0,
+                    "devYearly": 0
+                },
+                "data": []
+            }
+        
+        # Group deals by month
+        monthly_profits = {}
+        daily_profits = {}
+        weekly_profits = {}
+        
+        for deal in deals:
+            close_time = deal.get("close_time")
+            profit = float(deal.get("profit", 0)) + float(deal.get("commission", 0)) + float(deal.get("swap", 0))
+            
+            if close_time:
+                # Parse date
+                if isinstance(close_time, str):
+                    # Handle different formats
+                    try:
+                        if '.' in close_time:  # "2025.11.20" format
+                            dt = datetime.strptime(close_time[:10], "%Y.%m.%d")
+                        else:  # "2025-11-20" format
+                            dt = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
+                            if hasattr(dt, 'date'):
+                                dt = dt
+                    except:
+                        continue
+                elif isinstance(close_time, datetime):
+                    dt = close_time
+                else:
+                    continue
+                
+                # Group by month (YYYY-MM)
+                month_key = dt.strftime("%Y-%m")
+                if month_key not in monthly_profits:
+                    monthly_profits[month_key] = 0
+                monthly_profits[month_key] += profit
+                
+                # Group by day
+                day_key = dt.strftime("%Y-%m-%d")
+                if day_key not in daily_profits:
+                    daily_profits[day_key] = 0
+                daily_profits[day_key] += profit
+                
+                # Group by week
+                week_key = dt.strftime("%Y-W%W")
+                if week_key not in weekly_profits:
+                    weekly_profits[week_key] = 0
+                weekly_profits[week_key] += profit
+        
+        # Calculate total profit to estimate initial balance
+        total_profit = sum(monthly_profits.values())
+        initial_balance = current_balance - total_profit if current_balance > 0 else 10000
+        if initial_balance <= 0:
+            initial_balance = 10000  # Default if calculation fails
+        
+        # Calculate monthly returns as percentages
+        monthly_returns = []
+        running_balance = initial_balance
+        sorted_months = sorted(monthly_profits.keys())
+        
+        for month in sorted_months:
+            profit = monthly_profits[month]
+            return_pct = (profit / running_balance) * 100 if running_balance > 0 else 0
+            
+            # Format month label (e.g., "Nov'24")
+            try:
+                dt = datetime.strptime(month, "%Y-%m")
+                month_label = dt.strftime("%b'%y")
+            except:
+                month_label = month
+            
+            monthly_returns.append({
+                "month": month_label,
+                "monthKey": month,
+                "return": round(return_pct, 2),
+                "profit": round(profit, 2)
+            })
+            
+            running_balance += profit
+        
+        # Calculate weekly returns
+        weekly_returns_list = []
+        running_balance = initial_balance
+        for week in sorted(weekly_profits.keys()):
+            profit = weekly_profits[week]
+            return_pct = (profit / running_balance) * 100 if running_balance > 0 else 0
+            weekly_returns_list.append(return_pct)
+            running_balance += profit
+        
+        # Calculate daily returns
+        daily_returns_list = []
+        running_balance = initial_balance
+        for day in sorted(daily_profits.keys()):
+            profit = daily_profits[day]
+            return_pct = (profit / running_balance) * 100 if running_balance > 0 else 0
+            daily_returns_list.append(return_pct)
+            running_balance += profit
+        
+        # Calculate standard deviations
+        import statistics
+        
+        monthly_return_values = [m["return"] for m in monthly_returns]
+        
+        avg_weekly = statistics.mean(weekly_returns_list) if weekly_returns_list else 0
+        avg_monthly = statistics.mean(monthly_return_values) if monthly_return_values else 0
+        
+        dev_daily = statistics.stdev(daily_returns_list) if len(daily_returns_list) > 1 else 0
+        dev_monthly = statistics.stdev(monthly_return_values) if len(monthly_return_values) > 1 else 0
+        
+        # Yearly deviation - estimate from monthly
+        dev_yearly = dev_monthly * (12 ** 0.5) if dev_monthly > 0 else 0
+        
+        return {
+            "success": True,
+            "strategy": strategy,
+            "account": account_num,
+            "metrics": {
+                "avgWeekly": round(avg_weekly, 2),
+                "avgMonthly": round(avg_monthly, 2),
+                "devDaily": round(dev_daily, 2),
+                "devMonthly": round(dev_monthly, 2),
+                "devYearly": round(dev_yearly, 2)
+            },
+            "data": monthly_returns
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error calculating monthly returns: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # BALANCE SNAPSHOTS FOR CHARTS
 # ============================================================================
 
