@@ -144,6 +144,33 @@ Applied official getvkng.com branding to entire VIKING portal:
 - ✅ "Jump to page" input for direct navigation
 - ✅ Backend pagination API already supported (`skip` and `limit` params)
 
+### Phase 10 - Accurate Monthly Returns (Deposits/Withdrawals) ✅ IMPLEMENTED (Dec 2025)
+**Problem:** Monthly return percentages were inaccurate because deposits/withdrawals were counted as trading profit.
+
+**Solution:** Updated the complete data pipeline:
+1. ✅ **MQL4 EAs Updated** (v3.0) - Now export `balance_operations` array with deposits/withdrawals
+   - `VIKING_Account_Data_Writer.mq4` - Added balance operations export (OrderType() == 6)
+   - `VIKING_PRO_Account_Data_Writer.mq4` - Already had balance operations, version bumped
+2. ✅ **Python File Monitors Updated** - Process `balance_operations` array from JSON
+   - `viking_file_monitor.py` - Added `upload_balance_operations()` function
+   - `viking_pro_file_monitor.py` - Added `upload_balance_operations()` function
+3. ✅ **Backend Analytics Updated** - Separates trading P&L from balance operations
+   - `/api/viking/monthly-returns/{strategy}` - Excludes deposits from profit calculations
+   - `/api/viking/calculate-analytics/{strategy}` - Properly tracks deposits vs trading profit
+   - Returns `deposits_info` object with: `total_deposits`, `total_withdrawals`, `net_deposits`, `total_trading_profit`
+
+**Formula Used:**
+```
+Monthly Return % = Trading Profit / Total Deposits × 100
+Where: Trading Profit = Sum of actual trade profits (BUY/SELL only, no DEPOSIT/WITHDRAWAL)
+```
+
+**⏳ PENDING USER ACTION:** 
+- Deploy updated EAs to VPS (both CORE and PRO accounts)
+- Restart MT4 terminals to load v3.0 EAs
+- Wait for next sync cycle to import balance operations
+- Verify balance operations appear in MongoDB
+
 **PRO Account Credentials:**
 - Account: 1309411
 - Broker: Traders Trust
