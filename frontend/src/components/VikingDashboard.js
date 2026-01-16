@@ -53,9 +53,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  Bar,
-  BarChart
+  Cell
 } from 'recharts';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
