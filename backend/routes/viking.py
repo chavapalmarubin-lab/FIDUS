@@ -1187,14 +1187,12 @@ async def get_monthly_returns(strategy: str):
             return_pct = (profit / initial_balance) * 100 if initial_balance > 0 else 0
             weekly_returns_list.append(return_pct)
         
-        # Calculate daily returns
+        # Calculate daily returns (using initial balance as base)
         daily_returns_list = []
-        running_balance = initial_balance
         for day in sorted(daily_profits.keys()):
             profit = daily_profits[day]
-            return_pct = (profit / running_balance) * 100 if running_balance > 0 else 0
+            return_pct = (profit / initial_balance) * 100 if initial_balance > 0 else 0
             daily_returns_list.append(return_pct)
-            running_balance += profit
         
         # Calculate standard deviations
         import statistics
