@@ -197,8 +197,12 @@ Where: Trading Profit = Sum of actual trade profits (BUY/SELL only, no DEPOSIT/W
 ## Files of Reference
 
 ### VIKING Implementation
-- `/app/backend/routes/viking.py` - VIKING API routes
+- `/app/backend/routes/viking.py` - VIKING API routes (updated with balance operations logic)
 - `/app/frontend/src/components/VikingDashboard.js` - VIKING UI component
+- `/app/vps-scripts/VIKING_Account_Data_Writer.mq4` - CORE account EA (v3.0 with balance ops)
+- `/app/vps-scripts/VIKING_PRO_Account_Data_Writer.mq4` - PRO account EA (v3.0 with balance ops)
+- `/app/vps-scripts/viking_file_monitor.py` - CORE Python sync service
+- `/app/vps-scripts/viking_pro_file_monitor.py` - PRO Python sync service
 
 ### Core Platform
 - `/app/backend/server.py` - Main FastAPI application
