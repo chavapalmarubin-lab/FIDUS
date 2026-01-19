@@ -192,6 +192,40 @@ async def get_fund_portfolio_derived():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/managers/rename")
+async def rename_manager(old_name: str, new_name: str):
+    """
+    Rename a money manager across all accounts.
+    Updates manager_name in mt5_accounts collection.
+    """
+    try:
+        db = await get_database()
+        
+        # Update all accounts with the old manager name
+        result = await db.mt5_accounts.update_many(
+            {"manager_name": old_name},
+            {"$set": {"manager_name": new_name, "last_updated": datetime.now(timezone.utc)}}
+        )
+        
+        # Also update money_managers collection if exists
+        await db.money_managers.update_many(
+            {"name": old_name},
+            {"$set": {"name": new_name, "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        logger.info(f"✅ Renamed manager '{old_name}' to '{new_name}' - {result.modified_count} accounts updated")
+        
+        return {
+            "success": True,
+            "message": f"Renamed '{old_name}' to '{new_name}'",
+            "accounts_updated": result.modified_count
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error renaming manager: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/derived/money-managers")
 async def get_money_managers_derived():
     """
