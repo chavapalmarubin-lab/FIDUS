@@ -25356,25 +25356,11 @@ async def get_all_client_wallets(current_user: dict = Depends(get_current_admin_
         raise HTTPException(status_code=500, detail="Failed to fetch client wallets")
 
 # CORS Configuration - Allow requests from frontend domains
-cors_origins = os.environ.get('CORS_ORIGINS', '')
-if not cors_origins or cors_origins == '*':
-    # Default allowed origins if not specified
-    cors_origins = [
-        "https://fidus-investment-platform.onrender.com",
-        "https://vkng-dashboard.preview.emergentagent.com",
-        "https://vkng-dashboard.preview.static.emergentagent.com",
-        "https://quant-viking.preview.emergentagent.com",
-        "https://quant-viking.preview.static.emergentagent.com",
-        "http://localhost:3000",
-        "http://localhost:3001"
-    ]
-else:
-    cors_origins = cors_origins.split(',')
-
+# Using wildcard to allow all preview domains
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=cors_origins,
+    allow_origins=["*"],  # Allow all origins for preview environments
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
