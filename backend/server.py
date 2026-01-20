@@ -25362,6 +25362,9 @@ if not cors_origins or cors_origins == '*':
     cors_origins = [
         "https://fidus-investment-platform.onrender.com",
         "https://vkng-dashboard.preview.emergentagent.com",
+        "https://vkng-dashboard.preview.static.emergentagent.com",
+        "https://quant-viking.preview.emergentagent.com",
+        "https://quant-viking.preview.static.emergentagent.com",
         "http://localhost:3000",
         "http://localhost:3001"
     ]
