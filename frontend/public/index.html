@@ -1,6 +1,28 @@
 <!doctype html>
 <html lang="en">
     <head>
+        <script>
+            // =================================================================
+            // CRITICAL: VIKING/FIDUS ROUTE GUARD - Runs BEFORE anything else
+            // This ensures FIDUS content NEVER loads on VIKING domains
+            // =================================================================
+            (function() {
+                var hostname = window.location.hostname.toLowerCase();
+                var pathname = window.location.pathname.toLowerCase();
+                var isViking = hostname.includes('viking') || hostname.includes('vkng') || pathname.startsWith('/viking');
+                
+                // Store flag for React to use
+                window.__IS_VIKING_APP__ = isViking;
+                
+                // Set document title immediately
+                if (isViking) {
+                    document.title = 'VKNG AI | Trading Operations Portal';
+                }
+                
+                console.log('[ROUTE GUARD] Hostname:', hostname);
+                console.log('[ROUTE GUARD] Is VIKING:', isViking);
+            })();
+        </script>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         <meta name="theme-color" content="#0A112B" />
