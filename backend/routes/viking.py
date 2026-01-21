@@ -442,20 +442,14 @@ async def get_viking_analytics(strategy: str):
     """Get analytics for CORE or PRO strategy"""
     try:
         strategy = strategy.upper()
-        if strategy not in ["CORE", "PRO"]:
+        if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get ACTIVE account for this strategy (not archived/legacy)
-        account = await db.viking_accounts.find_one(
-            {"strategy": strategy, "status": {"$ne": "archived"}}, 
-            {"_id": 0}
-        )
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        account_num = VIKING_ACCOUNTS[strategy]["account"]
         
         # Get latest analytics
         analytics = await db.viking_analytics.find_one(
-            {"account": account["account"]},
+            {"account": account_num},
             {"_id": 0},
             sort=[("calculated_at", -1)]
         )
@@ -463,7 +457,7 @@ async def get_viking_analytics(strategy: str):
         if not analytics:
             # Return default analytics structure
             analytics = {
-                "account": account["account"],
+                "account": account_num,
                 "strategy": strategy,
                 "calculated_at": datetime.now(timezone.utc).isoformat(),
                 "total_return": 0.0,
@@ -504,14 +498,19 @@ async def get_viking_analytics(strategy: str):
 async def save_viking_analytics(account_number: int, analytics: VikingAnalytics):
     """Save calculated analytics for a VIKING account (used by analytics engine)"""
     try:
-        # Get account info
-        account = await db.viking_accounts.find_one({"account": account_number}, {"_id": 0})
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
+        # Verify this is a VIKING account
+        strategy_name = None
+        for name, config in VIKING_ACCOUNTS.items():
+            if config["account"] == account_number:
+                strategy_name = name
+                break
+        
+        if not strategy_name:
+            raise HTTPException(status_code=404, detail=f"Account {account_number} is not a VIKING account")
         
         doc = {
             "account": account_number,
-            "strategy": account.get("strategy"),
+            "strategy": strategy_name,
             "calculated_at": datetime.now(timezone.utc),
             **analytics.dict()
         }
