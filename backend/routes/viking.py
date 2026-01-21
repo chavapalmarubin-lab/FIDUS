@@ -780,74 +780,35 @@ async def trigger_viking_sync():
     except Exception as e:
         logger.error(f"Error in VIKING sync: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-                    "margin": mt5_core.get("margin", 0.0),
-                    "free_margin": mt5_core.get("margin_free", 0.0),
-                    "profit": mt5_core.get("profit", 0.0),
-                    "leverage": mt5_core.get("leverage", 500),
-                    "updated_at": datetime.now(timezone.utc),
-                    "last_sync_source": "mt5_accounts",
-                    "status": "active"
-                }}
-            )
-            results.append({
-                "account": 885822,
-                "platform": "MT5",
-                "synced": update_result.modified_count > 0 or update_result.matched_count > 0,
-                "balance": mt5_core.get("balance", 0.0)
-            })
-        
-        # Mark sync requested for MT4 accounts (PRO)
-        await db.viking_accounts.update_many(
-            {"platform": "MT4", "status": {"$ne": "archived"}},
-            {"$set": {"sync_requested": True, "sync_requested_at": datetime.now(timezone.utc)}}
-        )
-        
-        return {
-            "success": True,
-            "message": "Sync completed for MT5 accounts. MT4 sync requested via VPS bridge.",
-            "results": results,
-            "note": "MT5 CORE (885822) synced from FIDUS data. MT4 PRO requires VPS bridge."
-        }
-    except Exception as e:
-        logger.error(f"Error triggering VIKING sync: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
 # SYMBOL DISTRIBUTION ENDPOINT
+# Using SSOT - data from mt5_deals
 # ============================================================================
 
 @router.get("/symbols/{strategy}")
 async def get_viking_symbol_distribution(strategy: str):
-    """Get symbol distribution for a strategy (for pie charts)"""
+    """Get symbol distribution for a strategy (for pie charts) from mt5_deals (SSOT)"""
     try:
         strategy = strategy.upper()
-        if strategy not in ["CORE", "PRO"]:
+        if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get ACTIVE account for this strategy
-        account = await db.viking_accounts.find_one(
-            {"strategy": strategy, "status": {"$ne": "archived"}}, 
-            {"_id": 0}
-        )
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        config = VIKING_ACCOUNTS[strategy]
+        account_num = config["account"]
         
-        platform = account.get("platform", "MT4")
-        account_num = account["account"]
-        
-        # Choose collection and field based on platform
-        if platform == "MT5":
-            pipeline = [
-                {"$match": {"$or": [
-                    {"login": account_num},
-                    {"login": str(account_num)}
-                ]}},
-                {"$group": {
-                    "_id": "$symbol",
-                    "count": {"$sum": 1},
-                    "total_profit": {"$sum": "$profit"},
-                    "total_volume": {"$sum": "$volume"}
+        # Aggregate from mt5_deals
+        pipeline = [
+            {"$match": {"$or": [
+                {"login": account_num},
+                {"login": str(account_num)}
+            ]}},
+            {"$group": {
+                "_id": "$symbol",
+                "count": {"$sum": 1},
+                "total_profit": {"$sum": "$profit"},
+                "total_volume": {"$sum": "$volume"}
                 }},
                 {"$sort": {"count": -1}}
             ]
