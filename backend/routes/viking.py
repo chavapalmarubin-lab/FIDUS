@@ -210,36 +210,89 @@ async def ensure_collections_exist():
 
 
 async def seed_viking_core_account():
-    """Seed the VIKING CORE account (33627673) if not exists"""
+    """
+    Seed VIKING accounts:
+    - CORE: MT5 #885822 (MexAtlantic) - Active from Jan 20th 2026
+    - CORE Legacy: MT4 #33627673 - Archived (historical data preserved)
+    - PRO: MT4 #1309411 (Traders Trust)
+    """
     if db is None:
         return
     
     try:
-        existing = await db.viking_accounts.find_one({"account": 33627673})
-        if not existing:
-            viking_core = {
-                "_id": "VIKING_33627673",
-                "account": 33627673,
+        # ========== NEW CORE ACCOUNT: MT5 #885822 ==========
+        existing_new_core = await db.viking_accounts.find_one({"account": 885822})
+        if not existing_new_core:
+            # Pull latest data from mt5_accounts (FIDUS data source)
+            mt5_data = await db.mt5_accounts.find_one({"account": 885822})
+            
+            viking_core_new = {
+                "_id": "VIKING_885822",
+                "account": 885822,
                 "strategy": "CORE",
-                "broker": "MEXAtlantic",
-                "server": "MEXAtlantic-Real-2",
-                "platform": "MT4",
-                "balance": 0.0,
-                "equity": 0.0,
-                "margin": 0.0,
-                "free_margin": 0.0,
-                "profit": 0.0,
-                "currency": "USD",
-                "leverage": 0,
-                "status": "pending_sync",
+                "broker": "MexAtlantic",
+                "server": "MexAtlantic-MT5",
+                "platform": "MT5",
+                "balance": mt5_data.get("balance", 0.0) if mt5_data else 0.0,
+                "equity": mt5_data.get("equity", 0.0) if mt5_data else 0.0,
+                "margin": mt5_data.get("margin", 0.0) if mt5_data else 0.0,
+                "free_margin": mt5_data.get("margin_free", 0.0) if mt5_data else 0.0,
+                "profit": mt5_data.get("profit", 0.0) if mt5_data else 0.0,
+                "currency": mt5_data.get("currency", "USD") if mt5_data else "USD",
+                "leverage": mt5_data.get("leverage", 500) if mt5_data else 500,
+                "status": "active",
                 "error_message": None,
+                "replaces_account": 33627673,  # Links to archived MT4 account
+                "migration_date": "2026-01-20",
                 "created_at": datetime.now(timezone.utc),
                 "updated_at": datetime.now(timezone.utc)
             }
-            await db.viking_accounts.insert_one(viking_core)
-            logger.info("✅ Seeded VIKING CORE account 33627673")
+            await db.viking_accounts.insert_one(viking_core_new)
+            logger.info("✅ Seeded VIKING CORE account 885822 (MT5 - Active)")
         
-        # Also check for PRO account
+        # ========== ARCHIVED CORE ACCOUNT: MT4 #33627673 ==========
+        existing_old_core = await db.viking_accounts.find_one({"account": 33627673})
+        if not existing_old_core:
+            viking_core_archived = {
+                "_id": "VIKING_33627673",
+                "account": 33627673,
+                "strategy": "CORE_LEGACY",
+                "broker": "MEXAtlantic",
+                "server": "MEXAtlantic-Real-2",
+                "platform": "MT4",
+                "balance": 25250.98,  # Last known balance
+                "equity": 22074.71,
+                "margin": 0.0,
+                "free_margin": 22074.71,
+                "profit": -3176.27,
+                "currency": "USD",
+                "leverage": 500,
+                "status": "archived",
+                "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
+                "replaced_by": 885822,
+                "archive_date": "2026-01-20",
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            await db.viking_accounts.insert_one(viking_core_archived)
+            logger.info("✅ Seeded VIKING CORE LEGACY account 33627673 (MT4 - Archived)")
+        else:
+            # Update existing to archived status if not already
+            if existing_old_core.get("status") != "archived":
+                await db.viking_accounts.update_one(
+                    {"account": 33627673},
+                    {"$set": {
+                        "strategy": "CORE_LEGACY",
+                        "status": "archived",
+                        "replaced_by": 885822,
+                        "archive_date": "2026-01-20",
+                        "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
+                        "updated_at": datetime.now(timezone.utc)
+                    }}
+                )
+                logger.info("✅ Updated VIKING CORE 33627673 to archived status")
+        
+        # ========== PRO ACCOUNT: MT4 #1309411 ==========
         existing_pro = await db.viking_accounts.find_one({"account": 1309411})
         if not existing_pro:
             viking_pro = {
