@@ -343,21 +343,18 @@ async def get_viking_account(account_number: int):
         # Verify this is a VIKING account
         strategy_name = None
         for name, config in VIKING_ACCOUNTS.items():
-            if config["account"] == account_number:
+            if config["current_account"] == account_number or config.get("historical_account") == account_number:
                 strategy_name = name
                 break
         
         if not strategy_name:
             raise HTTPException(status_code=404, detail=f"Account {account_number} is not a VIKING account")
         
-        # Query from mt5_accounts (SSOT)
-        account = await db.mt5_accounts.find_one(
-            {"account": account_number},
-            {"_id": 0}
-        )
+        # Get account data using helper
+        account_data = await get_viking_account_data(strategy_name)
         
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Account {account_number} not found in mt5_accounts")
+        if not account_data:
+            raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
         
         config = VIKING_ACCOUNTS[strategy_name]
         
