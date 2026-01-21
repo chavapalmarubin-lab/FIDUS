@@ -181,6 +181,47 @@ Where: Trading Profit = Sum of actual trade profits (BUY/SELL only, no DEPOSIT/W
 
 ---
 
+### Phase 11 - VIKING Historical Data Continuity ✅ COMPLETE (Jan 21, 2026)
+
+**Problem:** VIKING PRO strategy (account #1309411) was showing 0 deals because the API queried `mt5_deals` collection which didn't have PRO data. All PRO historical deals (1152 trades) were stored in `viking_deals_history`.
+
+**Solution:** Updated `/app/backend/routes/viking.py` with:
+
+1. **Updated VIKING_ACCOUNTS Configuration:**
+   - PRO now has `historical_account: 1309411` (same as current - history is in viking_deals_history)
+   - Added `deals_collection` and `historical_collection` config for each strategy
+
+2. **New Helper Functions:**
+   - `get_pro_deals_count()` - Counts PRO deals from viking_deals_history
+   - `get_strategy_deals_count(strategy)` - Unified helper for any strategy
+
+3. **Updated Endpoints to Handle PRO Historical Data:**
+   - `GET /api/viking/deals/{strategy}` - PRO now queries viking_deals_history
+   - `GET /api/viking/accounts` - Uses unified deal count helper
+   - `GET /api/viking/summary` - Uses unified deal count helper
+   - `GET /api/viking/symbols/{strategy}` - PRO queries viking_deals_history for distribution
+
+4. **Bug Fix - DateTime Comparison:**
+   - Fixed sorting error in CORE deals endpoint where string dates were compared with datetime objects
+   - Added `get_sort_key()` helper using existing `parse_mt4_datetime()` function
+
+**Results:**
+| Strategy | Account | Total Deals | Source |
+|----------|---------|-------------|--------|
+| **CORE** | 885822 + 33627673 | 4143 | 590 MT5 + 3553 MT4 historical |
+| **PRO** | 1309411 | 1152 | viking_deals_history |
+
+**Verified Endpoints:**
+- ✅ `GET /api/viking/deals/PRO` - Returns 1152 deals with pagination
+- ✅ `GET /api/viking/deals/CORE` - Returns 4143 deals (combined MT4+MT5)
+- ✅ `GET /api/viking/accounts` - Shows correct deal counts
+- ✅ `GET /api/viking/summary` - Shows correct deal counts
+- ✅ `GET /api/viking/symbols/PRO` - Shows 1152 total trades
+- ✅ `GET /api/viking/symbols/CORE` - Shows 4143 total trades
+- ✅ `GET /api/viking/monthly-returns/PRO` - Returns 18 months of data
+
+---
+
 ## Core Architecture
 
 ### Single Source of Truth (SSOT)
