@@ -345,11 +345,6 @@ async def get_viking_accounts():
         
         all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
         
-        # Debug: log what we got from database
-        logger.info(f"[VIKING] Found {len(all_accounts)} accounts in database")
-        for acc in all_accounts:
-            logger.info(f"[VIKING] Account {acc.get('account')}: strategy={acc.get('strategy')}, status={acc.get('status')}")
-        
         # Separate active and archived accounts
         active_accounts = []
         archived_accounts = []
@@ -367,8 +362,6 @@ async def get_viking_accounts():
                 archived_accounts.append(account)
             else:
                 active_accounts.append(account)
-        
-        logger.info(f"[VIKING] Returning {len(active_accounts)} active, {len(archived_accounts)} archived")
         
         # Calculate combined totals (only from active accounts)
         total_balance = sum(a.get("balance", 0) for a in active_accounts)
