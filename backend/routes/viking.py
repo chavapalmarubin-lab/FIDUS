@@ -627,40 +627,28 @@ async def save_viking_deals_batch(deals: List[Dict[str, Any]]):
 
 # ============================================================================
 # ORDERS (OPEN TRADES) ENDPOINTS
+# Using SSOT - open positions from mt5_accounts
 # ============================================================================
 
 @router.get("/orders/{strategy}")
 async def get_viking_orders(strategy: str):
-    """Get open orders/trades for CORE or PRO strategy"""
+    """Get open orders/trades for CORE or PRO strategy from mt5_accounts (SSOT)"""
     try:
         strategy = strategy.upper()
-        if strategy not in ["CORE", "PRO"]:
+        if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get ACTIVE account for this strategy
-        account = await db.viking_accounts.find_one(
-            {"strategy": strategy, "status": {"$ne": "archived"}}, 
-            {"_id": 0}
+        config = VIKING_ACCOUNTS[strategy]
+        account_num = config["account"]
+        platform = config["platform"]
+        
+        # Get open positions from mt5_accounts (SSOT)
+        account = await db.mt5_accounts.find_one(
+            {"account": account_num},
+            {"_id": 0, "open_positions": 1, "open_positions_count": 1}
         )
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
-        platform = account.get("platform", "MT4")
-        account_num = account["account"]
-        
-        # Open orders have no close_time
-        if platform == "MT5":
-            # For MT5, open positions would be in a different structure
-            # Return positions from the account data if available
-            orders = account.get("positions", [])
-        else:
-            orders = await db.viking_deals_history.find(
-                {
-                    "account": account_num,
-                    "close_time": None
-                },
-                {"_id": 0}
-            ).sort("open_time", -1).to_list(None)
+        orders = account.get("open_positions", []) if account else []
         
         return {
             "success": True,
@@ -668,7 +656,8 @@ async def get_viking_orders(strategy: str):
             "account": account_num,
             "platform": platform,
             "orders": serialize_doc(orders),
-            "count": len(orders)
+            "count": len(orders),
+            "source": "mt5_accounts (SSOT)"
         }
     except HTTPException:
         raise
@@ -679,25 +668,26 @@ async def get_viking_orders(strategy: str):
 
 # ============================================================================
 # SUMMARY ENDPOINT
+# Using SSOT - combines data from mt5_accounts
 # ============================================================================
 
 @router.get("/summary")
 async def get_viking_summary():
-    """Get combined VIKING summary with all strategies"""
+    """Get combined VIKING summary with all strategies from mt5_accounts (SSOT)"""
     try:
-        await ensure_collections_exist()
-        await seed_viking_core_account()
-        
-        # Get all accounts but filter archived ones from main display
-        accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
-        
         strategies = []
-        archived_strategies = []
         
-        for account in accounts:
-            platform = account.get("platform", "MT4")
-            account_num = account["account"]
-            is_archived = account.get("status") == "archived"
+        for strategy_name, config in VIKING_ACCOUNTS.items():
+            account_num = config["account"]
+            
+            # Get account data from mt5_accounts (SSOT)
+            account = await db.mt5_accounts.find_one(
+                {"account": account_num},
+                {"_id": 0}
+            )
+            
+            if not account:
+                continue
             
             # Get latest analytics
             analytics = await db.viking_analytics.find_one(
@@ -706,18 +696,51 @@ async def get_viking_summary():
                 sort=[("calculated_at", -1)]
             )
             
-            # Get trade counts based on platform
-            if platform == "MT5":
-                total_deals = await db.mt5_deals.count_documents(
-                    {"$or": [{"login": account_num}, {"login": str(account_num)}]}
-                )
-                open_orders = 0  # MT5 open orders come from account data
-            else:
-                total_deals = await db.viking_deals_history.count_documents(
-                    {"$or": [
-                        {"account": account_num},
-                        {"account": str(account_num)}
-                    ]}
+            # Get deal count from mt5_deals
+            total_deals = await db.mt5_deals.count_documents(
+                {"$or": [{"login": account_num}, {"login": str(account_num)}]}
+            )
+            
+            strategy_data = {
+                "strategy": strategy_name,
+                "account": account_num,
+                "broker": config["broker"],
+                "platform": config["platform"],
+                "description": config["description"],
+                "balance": account.get("balance", 0),
+                "equity": account.get("equity", 0),
+                "floating_pnl": account.get("equity", 0) - account.get("balance", 0),
+                "free_margin": account.get("margin_free", 0),
+                "margin_in_use": account.get("margin", 0),
+                "margin_level": (account.get("equity", 0) / account.get("margin", 1) * 100) if account.get("margin", 0) > 0 else 0,
+                "status": "active",
+                "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
+                "total_deals": total_deals,
+                "open_orders": account.get("open_positions_count", 0),
+                "analytics": analytics or {}
+            }
+            strategies.append(strategy_data)
+        
+        # Combined totals
+        total_balance = sum(s["balance"] for s in strategies)
+        total_equity = sum(s["equity"] for s in strategies)
+        
+        return {
+            "success": True,
+            "strategies": serialize_doc(strategies),
+            "combined": {
+                "total_balance": total_balance,
+                "total_equity": total_equity,
+                "total_floating_pnl": total_equity - total_balance,
+                "total_strategies": len(strategies),
+                "active_strategies": len(strategies)
+            },
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "source": "mt5_accounts (SSOT)"
+        }
+    except Exception as e:
+        logger.error(f"Error fetching VIKING summary: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
                 )
                 open_orders = await db.viking_deals_history.count_documents(
                     {"$or": [
