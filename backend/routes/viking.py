@@ -340,7 +340,10 @@ async def seed_viking_core_account():
 async def get_viking_accounts():
     """Get all VIKING accounts with their latest data"""
     try:
-        all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
+        # Force fresh query with explicit read preference
+        collection = db.viking_accounts
+        cursor = collection.find({}, {"_id": 0})
+        all_accounts = await cursor.to_list(length=100)
         
         # Separate active and archived accounts
         active_accounts = []
