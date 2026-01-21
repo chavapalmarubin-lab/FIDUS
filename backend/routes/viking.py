@@ -366,6 +366,8 @@ async def get_viking_accounts():
             else:
                 active_accounts.append(account)
         
+        print(f"[DEBUG] Active: {len(active_accounts)}, Archived: {len(archived_accounts)}")
+        
         # Calculate combined totals (only from active accounts)
         total_balance = sum(a.get("balance", 0) for a in active_accounts)
         total_equity = sum(a.get("equity", 0) for a in active_accounts)
