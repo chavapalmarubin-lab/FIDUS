@@ -430,6 +430,16 @@ async def create_viking_account(account_data: VikingAccountCreate):
 async def update_viking_account(account_number: int, update_data: VikingAccountUpdate):
     """Update VIKING account data (used by MT4 bridge for syncing)"""
     try:
+        # Check if account is archived - don't allow updates to archived accounts
+        existing = await db.viking_accounts.find_one({"account": account_number}, {"status": 1})
+        if existing and existing.get("status") == "archived":
+            logger.warning(f"Rejected update for archived VIKING account {account_number}")
+            return {
+                "success": False,
+                "message": f"Account {account_number} is archived and cannot be updated",
+                "account_number": account_number
+            }
+        
         update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
         update_dict["updated_at"] = datetime.now(timezone.utc)
         
