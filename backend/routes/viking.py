@@ -531,44 +531,98 @@ async def get_viking_deals(
     skip: int = 0,
     symbol: Optional[str] = None
 ):
-    """Get deal history for CORE or PRO strategy from mt5_deals (SSOT)"""
+    """
+    Get deal history for CORE or PRO strategy
+    CORE returns combined history from MT4 (33627673) + MT5 (885822)
+    """
     try:
         strategy = strategy.upper()
         if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
         config = VIKING_ACCOUNTS[strategy]
-        account_num = config["account"]
+        current_account = config["current_account"]
+        historical_account = config.get("historical_account")
         platform = config["platform"]
         
-        # Query from mt5_deals for MT5 accounts, mt5_deals with login field
-        query = {"$or": [
-            {"login": account_num},
-            {"login": str(account_num)}
-        ]}
-        if symbol:
-            query["symbol"] = {"$regex": symbol, "$options": "i"}
+        all_deals = []
         
-        deals = await db.mt5_deals.find(
-            query,
-            {"_id": 0}
-        ).sort("time", -1).skip(skip).limit(limit).to_list(None)
-        
-        total = await db.mt5_deals.count_documents(query)
+        # For CORE: Get deals from BOTH MT4 historical and MT5 current accounts
+        if strategy == "CORE" and historical_account:
+            # Get MT4 historical deals (pre-migration)
+            mt4_query = {"$or": [
+                {"account": historical_account},
+                {"account": str(historical_account)}
+            ]}
+            if symbol:
+                mt4_query["symbol"] = {"$regex": symbol, "$options": "i"}
+            
+            mt4_deals = await db.viking_deals_history.find(
+                mt4_query,
+                {"_id": 0}
+            ).sort("close_time", -1).to_list(None)
+            
+            # Mark as historical
+            for deal in mt4_deals:
+                deal["source"] = "MT4_historical"
+                deal["account"] = historical_account
+            
+            # Get MT5 current deals (post-migration)
+            mt5_query = {"$or": [
+                {"login": current_account},
+                {"login": str(current_account)}
+            ]}
+            if symbol:
+                mt5_query["symbol"] = {"$regex": symbol, "$options": "i"}
+            
+            mt5_deals = await db.mt5_deals.find(
+                mt5_query,
+                {"_id": 0}
+            ).sort("time", -1).to_list(None)
+            
+            # Mark as current
+            for deal in mt5_deals:
+                deal["source"] = "MT5_current"
+                deal["account"] = current_account
+            
+            # Combine and sort by time (most recent first)
+            all_deals = mt5_deals + mt4_deals
+            # Sort by close_time or time field
+            all_deals.sort(key=lambda x: x.get("close_time") or x.get("time") or datetime.min, reverse=True)
+            
+            total = len(all_deals)
+            # Apply pagination
+            all_deals = all_deals[skip:skip + limit]
+            
+        else:
+            # For PRO or other strategies - single account query
+            query = {"$or": [
+                {"login": current_account},
+                {"login": str(current_account)}
+            ]}
+            if symbol:
+                query["symbol"] = {"$regex": symbol, "$options": "i"}
+            
+            all_deals = await db.mt5_deals.find(
+                query,
+                {"_id": 0}
+            ).sort("time", -1).skip(skip).limit(limit).to_list(None)
+            
+            total = await db.mt5_deals.count_documents(query)
         
         return {
             "success": True,
             "strategy": strategy,
-            "account": account_num,
+            "current_account": current_account,
+            "historical_account": historical_account,
             "platform": platform,
-            "deals": serialize_doc(deals),
+            "deals": serialize_doc(all_deals),
             "pagination": {
-                "total": total,
+                "total": total if strategy != "CORE" else len(mt5_deals) + len(mt4_deals) if historical_account else total,
                 "limit": limit,
                 "skip": skip,
                 "has_more": skip + limit < total
-            },
-            "source": "mt5_deals (SSOT)"
+            }
         }
     except HTTPException:
         raise
