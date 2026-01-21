@@ -340,14 +340,16 @@ async def seed_viking_core_account():
 async def get_viking_accounts():
     """Get all VIKING accounts with their latest data"""
     try:
-        # TEMPORARILY DISABLED seed to debug
-        # await ensure_collections_exist()
-        # await seed_viking_core_account()
+        # DEBUG: Print database info
+        print(f"[DEBUG] db type: {type(db)}")
+        print(f"[DEBUG] db name: {db.name if hasattr(db, 'name') else 'unknown'}")
         
         all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
         
         # Debug: log count
         print(f"[DEBUG] viking_accounts query returned {len(all_accounts)} documents")
+        for acc in all_accounts:
+            print(f"[DEBUG]   {acc.get('account')}: {acc.get('strategy')}, {acc.get('status')}")
         
         # Separate active and archived accounts
         active_accounts = []
