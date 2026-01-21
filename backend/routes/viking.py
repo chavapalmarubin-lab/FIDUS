@@ -375,42 +375,14 @@ async def create_viking_account(account_data: VikingAccountCreate):
 
 @router.put("/accounts/{account_number}")
 async def update_viking_account(account_number: int, update_data: VikingAccountUpdate):
-    """Update VIKING account data (used by MT4 bridge for syncing)"""
-    try:
-        # Check if account is archived - don't allow updates to archived accounts
-        existing = await db.viking_accounts.find_one({"account": account_number}, {"status": 1})
-        if existing and existing.get("status") == "archived":
-            logger.warning(f"Rejected update for archived VIKING account {account_number}")
-            return {
-                "success": False,
-                "message": f"Account {account_number} is archived and cannot be updated",
-                "account_number": account_number
-            }
-        
-        update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
-        update_dict["updated_at"] = datetime.now(timezone.utc)
-        
-        result = await db.viking_accounts.update_one(
-            {"account": account_number},
-            {"$set": update_dict}
-        )
-        
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail=f"VIKING account {account_number} not found")
-        
-        # Fetch updated account
-        account = await db.viking_accounts.find_one({"account": account_number}, {"_id": 0})
-        
-        return {
-            "success": True,
-            "message": f"VIKING account {account_number} updated",
-            "account": serialize_doc(account)
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating VIKING account {account_number}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    """
+    Update VIKING account data - DEPRECATED
+    VIKING now uses SSOT pattern - mt5_accounts is synced by FIDUS VPS bridge
+    """
+    return {
+        "success": False,
+        "message": "VIKING uses SSOT pattern - account data is synced from mt5_accounts by FIDUS VPS bridge"
+    }
 
 
 # ============================================================================
