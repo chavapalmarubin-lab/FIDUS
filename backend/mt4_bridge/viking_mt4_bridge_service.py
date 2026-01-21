@@ -107,6 +107,12 @@ def sync_account(data: AccountSync):
     try:
         logger.info(f"📥 Sync from account {data.account}: Balance=${data.balance:,.2f}, Equity=${data.equity:,.2f}")
         
+        # Check if account is archived - REJECT updates for archived accounts
+        existing = db.viking_accounts.find_one({"account": data.account}, {"status": 1})
+        if existing and existing.get("status") == "archived":
+            logger.warning(f"⚠️ Rejected sync for ARCHIVED account {data.account}")
+            return {"success": False, "message": f"Account {data.account} is archived and cannot be updated"}
+        
         doc = {
             "_id": f"VIKING_{data.account}",
             "account": data.account,
