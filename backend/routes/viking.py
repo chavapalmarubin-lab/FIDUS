@@ -134,22 +134,26 @@ class VikingAnalytics(BaseModel):
 
 # ============================================================================
 # VIKING ACCOUNT CONFIGURATION
-# Per SYSTEM_MASTER.md SSOT pattern - VIKING uses mt5_accounts as source of truth
+# Per SYSTEM_MASTER.md SSOT pattern - VIKING uses mt5_accounts as primary source
+# Falls back to viking_accounts for MT4 accounts not yet migrated
 # ============================================================================
 
-# VIKING strategies map to specific MT5 accounts in the shared database
+# VIKING strategies map to specific accounts
 VIKING_ACCOUNTS = {
     "CORE": {
         "account": 885822,
         "platform": "MT5",
         "broker": "MEXAtlantic", 
-        "description": "VIKING CORE Strategy - CP Strategy Provider"
+        "description": "VIKING CORE Strategy - CP Strategy Provider",
+        "primary_collection": "mt5_accounts"  # SSOT
     },
     "PRO": {
         "account": 1309411,
         "platform": "MT4",
         "broker": "Traders Trust",
-        "description": "VIKING PRO Strategy"
+        "description": "VIKING PRO Strategy",
+        "primary_collection": "mt5_accounts",  # Try SSOT first
+        "fallback_collection": "viking_accounts"  # Fall back to legacy
     }
 }
 
@@ -198,8 +202,8 @@ def serialize_doc(doc):
 
 async def get_viking_account_data(strategy: str):
     """
-    Get VIKING account data from mt5_accounts (SSOT)
-    Returns the account data with VIKING-specific metadata
+    Get VIKING account data - tries mt5_accounts first (SSOT), then viking_accounts
+    Returns the account data with VIKING-specific metadata and source info
     """
     if strategy not in VIKING_ACCOUNTS:
         return None
@@ -207,17 +211,31 @@ async def get_viking_account_data(strategy: str):
     config = VIKING_ACCOUNTS[strategy]
     account_num = config["account"]
     
-    # Query from mt5_accounts (Single Source of Truth)
+    # Try primary collection first (mt5_accounts - SSOT)
     account = await db.mt5_accounts.find_one(
         {"account": account_num},
         {"_id": 0}
     )
+    source = "mt5_accounts"
+    
+    # Fall back to viking_accounts if not found and fallback is defined
+    if not account and config.get("fallback_collection"):
+        account = await db.viking_accounts.find_one(
+            {"account": account_num},
+            {"_id": 0}
+        )
+        source = "viking_accounts"
     
     if account:
-        # Add VIKING-specific metadata
+        # Normalize field names between MT4 and MT5 data
         account["strategy"] = strategy
         account["viking_broker"] = config["broker"]
         account["viking_description"] = config["description"]
+        account["data_source"] = source
+        
+        # Normalize margin_free to free_margin for consistency
+        if "margin_free" in account and "free_margin" not in account:
+            account["free_margin"] = account["margin_free"]
     
     return account
 
