@@ -968,7 +968,11 @@ async def get_viking_balance_history(strategy: str, days: int = 114):
         if strategy not in ["CORE", "PRO"]:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        # Get ACTIVE account for this strategy
+        account = await db.viking_accounts.find_one(
+            {"strategy": strategy, "status": {"$ne": "archived"}}, 
+            {"_id": 0}
+        )
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
