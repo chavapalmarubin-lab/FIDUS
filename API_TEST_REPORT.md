@@ -2,7 +2,7 @@
 
 **Test Date:** November 10, 2025  
 **Environment:** Production (Render)  
-**API URL:** https://viking-trade-dash.preview.emergentagent.com  
+**API URL:** https://analytics-hub-248.preview.emergentagent.com  
 **Status:** ✅ ALL SYSTEMS OPERATIONAL
 
 ---

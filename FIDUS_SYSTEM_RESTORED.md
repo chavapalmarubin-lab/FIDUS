@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://viking-trade-dash.preview.emergentagent.com`
+`https://analytics-hub-248.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

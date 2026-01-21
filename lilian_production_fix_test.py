@@ -23,7 +23,7 @@ import time
 
 # Configuration
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://viking-trade-dash.preview.emergentagent.com/api"
+PREVIEW_URL = "https://analytics-hub-248.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

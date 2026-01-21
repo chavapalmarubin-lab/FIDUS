@@ -4,7 +4,7 @@ import requests
 import json
 
 class AUMFieldMismatchTester:
-    def __init__(self, base_url="https://viking-trade-dash.preview.emergentagent.com"):
+    def __init__(self, base_url="https://analytics-hub-248.preview.emergentagent.com"):
         self.base_url = base_url
         
     def test_aum_field_mismatch_issue(self):

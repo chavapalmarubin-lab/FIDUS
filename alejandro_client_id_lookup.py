@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://viking-trade-dash.preview.emergentagent.com"
+BACKEND_URL = "https://analytics-hub-248.preview.emergentagent.com"
 
 # Load environment variables
 from dotenv import load_dotenv

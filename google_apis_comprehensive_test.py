@@ -33,7 +33,7 @@ import base64
 import tempfile
 
 # Configuration
-BACKEND_URL = "https://viking-trade-dash.preview.emergentagent.com/api"
+BACKEND_URL = "https://analytics-hub-248.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 def debug_endpoints():
-    base_url = "https://viking-trade-dash.preview.emergentagent.com/api"
+    base_url = "https://analytics-hub-248.preview.emergentagent.com/api"
     session = requests.Session()
     
     # Authenticate

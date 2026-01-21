@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://viking-trade-dash.preview.emergentagent.com/api'
+BACKEND_URL = 'https://analytics-hub-248.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():
