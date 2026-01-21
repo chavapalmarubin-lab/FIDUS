@@ -352,12 +352,21 @@ async def get_viking_accounts():
                     strategy_data["migration_date"] = config.get("migration_date")
                     strategy_data["historical_continuity"] = True
                 
-                # Get analytics if available
+                # Get analytics if available - check both current and historical accounts
                 analytics = await db.viking_analytics.find_one(
                     {"account": current_account},
                     {"_id": 0},
                     sort=[("calculated_at", -1)]
                 )
+                
+                # If no analytics for current account, try historical account
+                if not analytics and historical_account and historical_account != current_account:
+                    analytics = await db.viking_analytics.find_one(
+                        {"account": historical_account},
+                        {"_id": 0},
+                        sort=[("calculated_at", -1)]
+                    )
+                
                 strategy_data["analytics"] = analytics or {}
                 
                 strategies.append(strategy_data)
