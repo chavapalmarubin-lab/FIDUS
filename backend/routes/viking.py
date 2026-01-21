@@ -490,7 +490,7 @@ async def save_viking_analytics(account_number: int, analytics: VikingAnalytics)
         # Verify this is a VIKING account
         strategy_name = None
         for name, config in VIKING_ACCOUNTS.items():
-            if config["account"] == account_number:
+            if config["current_account"] == account_number:
                 strategy_name = name
                 break
         
