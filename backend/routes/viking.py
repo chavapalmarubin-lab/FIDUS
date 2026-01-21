@@ -134,36 +134,28 @@ class VikingAnalytics(BaseModel):
 
 # ============================================================================
 # VIKING ACCOUNT CONFIGURATION
-# Per SYSTEM_MASTER.md SSOT pattern - VIKING uses mt5_accounts as primary source
-# Falls back to viking_accounts for MT4 accounts not yet migrated
+# CORE strategy has historical continuity: MT4 33627673 (pre-Jan 20) + MT5 885822 (Jan 20+)
 # ============================================================================
 
 # VIKING strategies map to specific accounts
 VIKING_ACCOUNTS = {
     "CORE": {
-        "account": 885822,
+        "current_account": 885822,  # Active MT5 account from Jan 20, 2026
+        "historical_account": 33627673,  # Archived MT4 account (pre-Jan 20)
         "platform": "MT5",
         "broker": "MEXAtlantic", 
-        "description": "VIKING CORE Strategy - CP Strategy Provider",
-        "primary_collection": "mt5_accounts"  # SSOT
+        "description": "VIKING CORE Strategy - Full History",
+        "migration_date": "2026-01-20",
+        "primary_collection": "mt5_accounts"
     },
     "PRO": {
-        "account": 1309411,
+        "current_account": 1309411,
+        "historical_account": None,  # No historical account
         "platform": "MT4",
         "broker": "Traders Trust",
         "description": "VIKING PRO Strategy",
-        "primary_collection": "mt5_accounts",  # Try SSOT first
-        "fallback_collection": "viking_accounts"  # Fall back to legacy
-    }
-}
-
-# Legacy MT4 account for historical reference (no longer synced)
-VIKING_LEGACY_ACCOUNTS = {
-    "CORE_LEGACY": {
-        "account": 33627673,
-        "platform": "MT4",
-        "broker": "MEXAtlantic",
-        "description": "Archived - Replaced by MT5 #885822 on 2026-01-20"
+        "primary_collection": "mt5_accounts",
+        "fallback_collection": "viking_accounts"
     }
 }
 
@@ -202,42 +194,62 @@ def serialize_doc(doc):
 
 async def get_viking_account_data(strategy: str):
     """
-    Get VIKING account data - tries mt5_accounts first (SSOT), then viking_accounts
-    Returns the account data with VIKING-specific metadata and source info
+    Get VIKING account data with full historical context
+    For CORE: Returns current MT5 data but tracks both current and historical accounts
     """
     if strategy not in VIKING_ACCOUNTS:
         return None
     
     config = VIKING_ACCOUNTS[strategy]
-    account_num = config["account"]
+    current_account = config["current_account"]
     
-    # Try primary collection first (mt5_accounts - SSOT)
+    # Try primary collection first (mt5_accounts)
     account = await db.mt5_accounts.find_one(
-        {"account": account_num},
+        {"account": current_account},
         {"_id": 0}
     )
     source = "mt5_accounts"
     
-    # Fall back to viking_accounts if not found and fallback is defined
+    # Fall back to viking_accounts if not found
     if not account and config.get("fallback_collection"):
         account = await db.viking_accounts.find_one(
-            {"account": account_num},
+            {"account": current_account},
             {"_id": 0}
         )
         source = "viking_accounts"
     
     if account:
-        # Normalize field names between MT4 and MT5 data
         account["strategy"] = strategy
         account["viking_broker"] = config["broker"]
         account["viking_description"] = config["description"]
         account["data_source"] = source
+        account["current_account"] = current_account
+        account["historical_account"] = config.get("historical_account")
         
-        # Normalize margin_free to free_margin for consistency
+        # Normalize field names
         if "margin_free" in account and "free_margin" not in account:
             account["free_margin"] = account["margin_free"]
     
     return account
+
+
+async def get_core_combined_deals_count():
+    """Get total deals count for CORE strategy (MT4 + MT5 combined)"""
+    config = VIKING_ACCOUNTS["CORE"]
+    current = config["current_account"]
+    historical = config["historical_account"]
+    
+    # Count MT5 deals (current account)
+    mt5_count = await db.mt5_deals.count_documents(
+        {"$or": [{"login": current}, {"login": str(current)}]}
+    )
+    
+    # Count MT4 deals (historical account) from viking_deals_history
+    mt4_count = await db.viking_deals_history.count_documents(
+        {"$or": [{"account": historical}, {"account": str(historical)}]}
+    )
+    
+    return mt5_count + mt4_count
 
 
 # ============================================================================
