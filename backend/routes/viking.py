@@ -750,7 +750,7 @@ async def get_viking_orders(strategy: str):
 
 @router.get("/summary")
 async def get_viking_summary():
-    """Get combined VIKING summary with all strategies - CORE includes full history"""
+    """Get combined VIKING summary with all strategies - includes full history for both"""
     try:
         strategies = []
         
@@ -770,13 +770,8 @@ async def get_viking_summary():
                 sort=[("calculated_at", -1)]
             )
             
-            # Get deal count (combined for CORE)
-            if strategy_name == "CORE" and historical_account:
-                total_deals = await get_core_combined_deals_count()
-            else:
-                total_deals = await db.mt5_deals.count_documents(
-                    {"$or": [{"login": current_account}, {"login": str(current_account)}]}
-                )
+            # Get deal count using unified helper
+            total_deals = await get_strategy_deals_count(strategy_name)
             
             strategy_data = {
                 "strategy": strategy_name,
@@ -799,7 +794,7 @@ async def get_viking_summary():
                 "data_source": account_data.get("data_source", "unknown")
             }
             
-            # Add historical info for CORE
+            # Add historical info
             if historical_account:
                 strategy_data["historical_continuity"] = True
                 strategy_data["migration_date"] = config.get("migration_date")
