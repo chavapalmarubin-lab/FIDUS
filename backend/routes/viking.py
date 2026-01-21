@@ -638,21 +638,17 @@ async def get_viking_orders(strategy: str):
 
 @router.get("/summary")
 async def get_viking_summary():
-    """Get combined VIKING summary with all strategies from mt5_accounts (SSOT)"""
+    """Get combined VIKING summary with all strategies"""
     try:
         strategies = []
         
         for strategy_name, config in VIKING_ACCOUNTS.items():
-            account_num = config["account"]
+            account_data = await get_viking_account_data(strategy_name)
             
-            # Get account data from mt5_accounts (SSOT)
-            account = await db.mt5_accounts.find_one(
-                {"account": account_num},
-                {"_id": 0}
-            )
-            
-            if not account:
+            if not account_data:
                 continue
+            
+            account_num = config["account"]
             
             # Get latest analytics
             analytics = await db.viking_analytics.find_one(
@@ -672,17 +668,18 @@ async def get_viking_summary():
                 "broker": config["broker"],
                 "platform": config["platform"],
                 "description": config["description"],
-                "balance": account.get("balance", 0),
-                "equity": account.get("equity", 0),
-                "floating_pnl": account.get("equity", 0) - account.get("balance", 0),
-                "free_margin": account.get("margin_free", 0),
-                "margin_in_use": account.get("margin", 0),
-                "margin_level": (account.get("equity", 0) / account.get("margin", 1) * 100) if account.get("margin", 0) > 0 else 0,
-                "status": "active",
-                "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
+                "balance": account_data.get("balance", 0),
+                "equity": account_data.get("equity", 0),
+                "floating_pnl": account_data.get("equity", 0) - account_data.get("balance", 0),
+                "free_margin": account_data.get("margin_free") or account_data.get("free_margin", 0),
+                "margin_in_use": account_data.get("margin", 0),
+                "margin_level": (account_data.get("equity", 0) / account_data.get("margin", 1) * 100) if account_data.get("margin", 0) > 0 else 0,
+                "status": account_data.get("status", "active"),
+                "last_sync": account_data.get("last_sync_timestamp") or account_data.get("updated_at") or account_data.get("last_sync"),
                 "total_deals": total_deals,
-                "open_orders": account.get("open_positions_count", 0),
-                "analytics": analytics or {}
+                "open_orders": account_data.get("open_positions_count", 0),
+                "analytics": analytics or {},
+                "data_source": account_data.get("data_source", "unknown")
             }
             strategies.append(strategy_data)
         
@@ -700,8 +697,7 @@ async def get_viking_summary():
                 "total_strategies": len(strategies),
                 "active_strategies": len(strategies)
             },
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "source": "mt5_accounts (SSOT)"
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
         logger.error(f"Error fetching VIKING summary: {e}")
