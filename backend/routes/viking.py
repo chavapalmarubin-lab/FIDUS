@@ -682,12 +682,12 @@ async def get_viking_orders(strategy: str):
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
         config = VIKING_ACCOUNTS[strategy]
-        account_num = config["account"]
+        current_account = config["current_account"]
         platform = config["platform"]
         
-        # Get open positions from mt5_accounts (SSOT)
+        # Get open positions from mt5_accounts
         account = await db.mt5_accounts.find_one(
-            {"account": account_num},
+            {"account": current_account},
             {"_id": 0, "open_positions": 1, "open_positions_count": 1}
         )
         
@@ -696,7 +696,7 @@ async def get_viking_orders(strategy: str):
         return {
             "success": True,
             "strategy": strategy,
-            "account": account_num,
+            "account": current_account,
             "platform": platform,
             "orders": serialize_doc(orders),
             "count": len(orders),
