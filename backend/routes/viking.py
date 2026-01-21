@@ -804,12 +804,20 @@ async def get_viking_summary():
             current_account = config["current_account"]
             historical_account = config.get("historical_account")
             
-            # Get latest analytics
+            # Get latest analytics - check both current and historical accounts
             analytics = await db.viking_analytics.find_one(
                 {"account": current_account},
                 {"_id": 0},
                 sort=[("calculated_at", -1)]
             )
+            
+            # If no analytics for current account, try historical account
+            if not analytics and historical_account and historical_account != current_account:
+                analytics = await db.viking_analytics.find_one(
+                    {"account": historical_account},
+                    {"_id": 0},
+                    sort=[("calculated_at", -1)]
+                )
             
             # Get deal count using unified helper
             total_deals = await get_strategy_deals_count(strategy_name)
