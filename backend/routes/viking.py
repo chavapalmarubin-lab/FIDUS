@@ -898,20 +898,14 @@ async def get_viking_risk_analysis(strategy: str):
     """Get risk analysis data for the Risk tab"""
     try:
         strategy = strategy.upper()
-        if strategy not in ["CORE", "PRO"]:
+        if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get ACTIVE account for this strategy
-        account = await db.viking_accounts.find_one(
-            {"strategy": strategy, "status": {"$ne": "archived"}}, 
-            {"_id": 0}
-        )
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        account_num = VIKING_ACCOUNTS[strategy]["account"]
         
         # Get latest analytics for risk metrics
         analytics = await db.viking_analytics.find_one(
-            {"account": account["account"]},
+            {"account": account_num},
             {"_id": 0},
             sort=[("calculated_at", -1)]
         )
@@ -919,7 +913,7 @@ async def get_viking_risk_analysis(strategy: str):
         # Default risk metrics if no analytics
         risk_data = {
             "strategy": strategy,
-            "account": account["account"],
+            "account": account_num,
             "monthly_return": analytics.get("monthly_return", 0) if analytics else 0,
             "avg_trade_length": analytics.get("avg_trade_length_hours", 0) if analytics else 0,
             "trades_per_day": analytics.get("trades_per_day", 0) if analytics else 0,
