@@ -202,6 +202,7 @@ async def get_viking_account_data(strategy: str):
     """
     Get VIKING account data with full historical context
     For CORE: Returns current MT5 data but tracks both current and historical accounts
+    For PRO: Returns data from viking_accounts (with active status preferred)
     """
     if strategy not in VIKING_ACCOUNTS:
         return None
@@ -218,10 +219,29 @@ async def get_viking_account_data(strategy: str):
     
     # Fall back to viking_accounts if not found
     if not account and config.get("fallback_collection"):
-        account = await db.viking_accounts.find_one(
-            {"account": current_account},
+        # Query with preference for active status and non-zero balance
+        # Sort by status (active first) and balance (highest first)
+        accounts_cursor = db.viking_accounts.find(
+            {"$or": [
+                {"account": current_account},
+                {"account": str(current_account)}
+            ]},
             {"_id": 0}
-        )
+        ).sort([("status", 1), ("balance", -1)])  # 'active' sorts before 'pending_setup'
+        
+        accounts_list = await accounts_cursor.to_list(None)
+        
+        # Pick the best account: prefer active status with balance > 0
+        if accounts_list:
+            # First try to find active account with balance
+            for acc in accounts_list:
+                if acc.get("status") == "active" and acc.get("balance", 0) > 0:
+                    account = acc
+                    break
+            # If not found, just take the first one
+            if not account:
+                account = accounts_list[0]
+        
         source = "viking_accounts"
     
     if account:
