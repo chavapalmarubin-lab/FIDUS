@@ -734,37 +734,50 @@ async def get_viking_summary():
         await ensure_collections_exist()
         await seed_viking_core_account()
         
+        # Get all accounts but filter archived ones from main display
         accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
         
         strategies = []
+        archived_strategies = []
+        
         for account in accounts:
+            platform = account.get("platform", "MT4")
+            account_num = account["account"]
+            is_archived = account.get("status") == "archived"
+            
             # Get latest analytics
             analytics = await db.viking_analytics.find_one(
-                {"account": account["account"]},
+                {"account": account_num},
                 {"_id": 0},
                 sort=[("calculated_at", -1)]
             )
             
-            # Get trade counts - handle both string and int account numbers
-            total_deals = await db.viking_deals_history.count_documents(
-                {"$or": [
-                    {"account": account["account"]},
-                    {"account": str(account["account"])}
-                ]}
-            )
-            open_orders = await db.viking_deals_history.count_documents(
-                {"$or": [
-                    {"account": account["account"]},
-                    {"account": str(account["account"])}
-                ], "close_time": None}
-            )
+            # Get trade counts based on platform
+            if platform == "MT5":
+                total_deals = await db.mt5_deals.count_documents(
+                    {"$or": [{"login": account_num}, {"login": str(account_num)}]}
+                )
+                open_orders = 0  # MT5 open orders come from account data
+            else:
+                total_deals = await db.viking_deals_history.count_documents(
+                    {"$or": [
+                        {"account": account_num},
+                        {"account": str(account_num)}
+                    ]}
+                )
+                open_orders = await db.viking_deals_history.count_documents(
+                    {"$or": [
+                        {"account": account_num},
+                        {"account": str(account_num)}
+                    ], "close_time": None}
+                )
             
             strategy_data = {
                 "strategy": account["strategy"],
-                "account": account["account"],
-                "broker": account["broker"],
-                "server": account["server"],
-                "platform": account["platform"],
+                "account": account_num,
+                "broker": account.get("broker", "Unknown"),
+                "server": account.get("server", ""),
+                "platform": platform,
                 "balance": account.get("balance", 0),
                 "equity": account.get("equity", 0),
                 "floating_pnl": account.get("equity", 0) - account.get("balance", 0),
@@ -778,7 +791,13 @@ async def get_viking_summary():
                 "open_orders": open_orders,
                 "analytics": analytics or {}
             }
-            strategies.append(strategy_data)
+            
+            if is_archived:
+                strategy_data["archived_date"] = account.get("archive_date")
+                strategy_data["replaced_by"] = account.get("replaced_by")
+                archived_strategies.append(strategy_data)
+            else:
+                strategies.append(strategy_data)
         
         # Combined totals (only from active accounts)
         active_accounts = [s for s in strategies if s["status"] == "active"]
@@ -788,12 +807,14 @@ async def get_viking_summary():
         return {
             "success": True,
             "strategies": serialize_doc(strategies),
+            "archived_strategies": serialize_doc(archived_strategies),
             "combined": {
                 "total_balance": total_balance,
                 "total_equity": total_equity,
                 "total_floating_pnl": total_equity - total_balance,
                 "total_strategies": len(strategies),
-                "active_strategies": len(active_accounts)
+                "active_strategies": len(active_accounts),
+                "archived_count": len(archived_strategies)
             },
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
