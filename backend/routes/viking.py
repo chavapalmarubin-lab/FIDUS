@@ -291,6 +291,7 @@ async def get_viking_accounts():
     """
     Get VIKING accounts data
     CORE strategy includes historical continuity (MT4 + MT5 combined)
+    PRO strategy shows all historical deals from viking_deals_history
     """
     try:
         strategies = []
@@ -301,13 +302,8 @@ async def get_viking_accounts():
             historical_account = config.get("historical_account")
             
             if account_data:
-                # Get total deals count (combined for CORE)
-                if strategy_name == "CORE" and historical_account:
-                    total_deals = await get_core_combined_deals_count()
-                else:
-                    total_deals = await db.mt5_deals.count_documents(
-                        {"$or": [{"login": current_account}, {"login": str(current_account)}]}
-                    )
+                # Get total deals count using the unified helper
+                total_deals = await get_strategy_deals_count(strategy_name)
                 
                 strategy_data = {
                     "strategy": strategy_name,
@@ -331,7 +327,7 @@ async def get_viking_accounts():
                     "data_source": account_data.get("data_source", "unknown")
                 }
                 
-                # Add migration info for CORE
+                # Add historical info
                 if historical_account:
                     strategy_data["migration_date"] = config.get("migration_date")
                     strategy_data["historical_continuity"] = True
