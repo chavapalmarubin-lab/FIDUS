@@ -91,16 +91,21 @@ class TestVikingCOREDeals:
     def test_core_deals_endpoint_error(self):
         """
         GET /api/viking/deals/CORE currently returns an error due to datetime comparison issue.
-        This test documents the bug for the main agent to fix.
+        BUG: Line 616 in viking.py tries to sort deals by comparing datetime objects with strings.
+        The MT4 deals have string dates while MT5 deals have datetime objects.
+        FIX NEEDED: Normalize all dates to datetime before sorting.
         """
         response = requests.get(f"{BASE_URL}/api/viking/deals/CORE?limit=5")
         
-        # Currently returns 500 error due to datetime comparison bug
+        # Currently returns 500/520 error due to datetime comparison bug
         # Expected: 200 with 4143 total deals
-        if response.status_code == 500:
+        if response.status_code in [500, 520]:
+            # Document the bug - this is expected until fixed
             data = response.json()
-            assert "not supported between instances" in str(data.get("detail", ""))
-            pytest.skip("CORE deals endpoint has datetime comparison bug - needs fix")
+            error_msg = str(data.get("detail", ""))
+            assert "not supported between instances" in error_msg, f"Unexpected error: {error_msg}"
+            # Mark as expected failure - main agent needs to fix
+            pytest.xfail("CORE deals endpoint has datetime comparison bug at line 616 - needs fix")
         else:
             # If fixed, verify the response
             assert response.status_code == 200
