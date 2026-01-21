@@ -612,8 +612,20 @@ async def get_viking_deals(
                 deal["account"] = current_account
             
             # Combine and sort by time (most recent first)
+            # Normalize dates before sorting - MT4 deals have string dates, MT5 has datetime
             all_deals = mt5_deals + mt4_deals
-            all_deals.sort(key=lambda x: x.get("close_time") or x.get("time") or datetime.min, reverse=True)
+            
+            def get_sort_key(deal):
+                """Get datetime sort key, normalizing string dates"""
+                dt = deal.get("close_time") or deal.get("time")
+                if dt is None:
+                    return datetime.min
+                if isinstance(dt, str):
+                    parsed = parse_mt4_datetime(dt)
+                    return parsed if parsed else datetime.min
+                return dt
+            
+            all_deals.sort(key=get_sort_key, reverse=True)
             
             total = len(all_deals)
             # Apply pagination
