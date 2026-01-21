@@ -841,51 +841,112 @@ async def trigger_viking_sync():
 
 @router.get("/symbols/{strategy}")
 async def get_viking_symbol_distribution(strategy: str):
-    """Get symbol distribution for a strategy (for pie charts) from mt5_deals (SSOT)"""
+    """
+    Get symbol distribution for a strategy (for pie charts)
+    CORE returns combined distribution from MT4 + MT5 history
+    """
     try:
         strategy = strategy.upper()
         if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
         config = VIKING_ACCOUNTS[strategy]
-        account_num = config["account"]
+        current_account = config["current_account"]
+        historical_account = config.get("historical_account")
         
-        # Aggregate from mt5_deals
-        pipeline = [
-            {"$match": {"$or": [
-                {"login": account_num},
-                {"login": str(account_num)}
-            ]}},
-            {"$group": {
-                "_id": "$symbol",
-                "count": {"$sum": 1},
-                "total_profit": {"$sum": "$profit"},
-                "total_volume": {"$sum": "$volume"}
-            }},
-            {"$sort": {"count": -1}}
-        ]
-        results = await db.mt5_deals.aggregate(pipeline).to_list(None)
+        distribution_map = {}
+        
+        # For CORE: Combine MT4 and MT5 data
+        if strategy == "CORE" and historical_account:
+            # MT4 historical deals
+            mt4_pipeline = [
+                {"$match": {"$or": [
+                    {"account": historical_account},
+                    {"account": str(historical_account)}
+                ]}},
+                {"$group": {
+                    "_id": "$symbol",
+                    "count": {"$sum": 1},
+                    "total_profit": {"$sum": "$profit"},
+                    "total_volume": {"$sum": "$volume"}
+                }}
+            ]
+            mt4_results = await db.viking_deals_history.aggregate(mt4_pipeline).to_list(None)
+            
+            for r in mt4_results:
+                symbol = r["_id"]
+                if symbol not in distribution_map:
+                    distribution_map[symbol] = {"count": 0, "total_profit": 0, "total_volume": 0}
+                distribution_map[symbol]["count"] += r["count"]
+                distribution_map[symbol]["total_profit"] += r.get("total_profit", 0) or 0
+                distribution_map[symbol]["total_volume"] += r.get("total_volume", 0) or 0
+            
+            # MT5 current deals
+            mt5_pipeline = [
+                {"$match": {"$or": [
+                    {"login": current_account},
+                    {"login": str(current_account)}
+                ]}},
+                {"$group": {
+                    "_id": "$symbol",
+                    "count": {"$sum": 1},
+                    "total_profit": {"$sum": "$profit"},
+                    "total_volume": {"$sum": "$volume"}
+                }}
+            ]
+            mt5_results = await db.mt5_deals.aggregate(mt5_pipeline).to_list(None)
+            
+            for r in mt5_results:
+                symbol = r["_id"]
+                if symbol not in distribution_map:
+                    distribution_map[symbol] = {"count": 0, "total_profit": 0, "total_volume": 0}
+                distribution_map[symbol]["count"] += r["count"]
+                distribution_map[symbol]["total_profit"] += r.get("total_profit", 0) or 0
+                distribution_map[symbol]["total_volume"] += r.get("total_volume", 0) or 0
+        else:
+            # Single account query
+            pipeline = [
+                {"$match": {"$or": [
+                    {"login": current_account},
+                    {"login": str(current_account)}
+                ]}},
+                {"$group": {
+                    "_id": "$symbol",
+                    "count": {"$sum": 1},
+                    "total_profit": {"$sum": "$profit"},
+                    "total_volume": {"$sum": "$volume"}
+                }},
+                {"$sort": {"count": -1}}
+            ]
+            results = await db.mt5_deals.aggregate(pipeline).to_list(None)
+            
+            for r in results:
+                distribution_map[r["_id"]] = {
+                    "count": r["count"],
+                    "total_profit": r.get("total_profit", 0) or 0,
+                    "total_volume": r.get("total_volume", 0) or 0
+                }
         
         # Calculate percentages
-        total_trades = sum(r["count"] for r in results)
+        total_trades = sum(d["count"] for d in distribution_map.values())
         distribution = []
-        for r in results:
+        for symbol, data in sorted(distribution_map.items(), key=lambda x: x[1]["count"], reverse=True):
             distribution.append({
-                "symbol": r["_id"],
-                "trades": r["count"],
-                "percentage": round(r["count"] / total_trades * 100, 1) if total_trades > 0 else 0,
-                "total_profit": round(r["total_profit"], 2),
-                "total_volume": round(r["total_volume"], 2)
+                "symbol": symbol,
+                "trades": data["count"],
+                "percentage": round(data["count"] / total_trades * 100, 1) if total_trades > 0 else 0,
+                "total_profit": round(data["total_profit"], 2),
+                "total_volume": round(data["total_volume"], 2)
             })
         
         return {
             "success": True,
             "strategy": strategy,
-            "account": account_num,
+            "current_account": current_account,
+            "historical_account": historical_account,
             "platform": config["platform"],
             "distribution": distribution,
-            "total_trades": total_trades,
-            "source": "mt5_deals (SSOT)"
+            "total_trades": total_trades
         }
     except HTTPException:
         raise
