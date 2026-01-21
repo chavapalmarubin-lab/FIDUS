@@ -569,31 +569,54 @@ async def get_viking_deals(
         if strategy not in ["CORE", "PRO"]:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get account for this strategy
-        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        # Get ACTIVE account for this strategy (not archived)
+        account = await db.viking_accounts.find_one(
+            {"strategy": strategy, "status": {"$ne": "archived"}}, 
+            {"_id": 0}
+        )
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
-        # Handle both string and int account numbers
-        account_query = {"$or": [
-            {"account": account["account"]},
-            {"account": str(account["account"])}
-        ]}
-        query = {**account_query}
-        if symbol:
-            query["symbol"] = {"$regex": symbol, "$options": "i"}
+        platform = account.get("platform", "MT4")
+        account_num = account["account"]
         
-        # Get deals with pagination
-        deals = await db.viking_deals_history.find(
-            query,
-            {"_id": 0}
-        ).sort("close_time", -1).skip(skip).limit(limit).to_list(None)
-        
-        total = await db.viking_deals_history.count_documents(query)
+        # Choose collection based on platform
+        if platform == "MT5":
+            # For MT5 accounts, use mt5_deals collection with 'login' field
+            query = {"$or": [
+                {"login": account_num},
+                {"login": str(account_num)}
+            ]}
+            if symbol:
+                query["symbol"] = {"$regex": symbol, "$options": "i"}
+            
+            deals = await db.mt5_deals.find(
+                query,
+                {"_id": 0}
+            ).sort("time", -1).skip(skip).limit(limit).to_list(None)
+            
+            total = await db.mt5_deals.count_documents(query)
+        else:
+            # For MT4 accounts, use viking_deals_history with 'account' field
+            query = {"$or": [
+                {"account": account_num},
+                {"account": str(account_num)}
+            ]}
+            if symbol:
+                query["symbol"] = {"$regex": symbol, "$options": "i"}
+            
+            deals = await db.viking_deals_history.find(
+                query,
+                {"_id": 0}
+            ).sort("close_time", -1).skip(skip).limit(limit).to_list(None)
+            
+            total = await db.viking_deals_history.count_documents(query)
         
         return {
             "success": True,
             "strategy": strategy,
+            "account": account_num,
+            "platform": platform,
             "deals": serialize_doc(deals),
             "pagination": {
                 "total": total,
