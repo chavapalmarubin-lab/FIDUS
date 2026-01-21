@@ -886,26 +886,48 @@ async def get_viking_symbol_distribution(strategy: str):
         if strategy not in ["CORE", "PRO"]:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        # Get ACTIVE account for this strategy
+        account = await db.viking_accounts.find_one(
+            {"strategy": strategy, "status": {"$ne": "archived"}}, 
+            {"_id": 0}
+        )
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
-        # Aggregate trades by symbol - handle both string and int account numbers
-        pipeline = [
-            {"$match": {"$or": [
-                {"account": account["account"]},
-                {"account": str(account["account"])}
-            ]}},
-            {"$group": {
-                "_id": "$symbol",
-                "count": {"$sum": 1},
-                "total_profit": {"$sum": "$profit"},
-                "total_volume": {"$sum": "$volume"}
-            }},
-            {"$sort": {"count": -1}}
-        ]
+        platform = account.get("platform", "MT4")
+        account_num = account["account"]
         
-        results = await db.viking_deals_history.aggregate(pipeline).to_list(None)
+        # Choose collection and field based on platform
+        if platform == "MT5":
+            pipeline = [
+                {"$match": {"$or": [
+                    {"login": account_num},
+                    {"login": str(account_num)}
+                ]}},
+                {"$group": {
+                    "_id": "$symbol",
+                    "count": {"$sum": 1},
+                    "total_profit": {"$sum": "$profit"},
+                    "total_volume": {"$sum": "$volume"}
+                }},
+                {"$sort": {"count": -1}}
+            ]
+            results = await db.mt5_deals.aggregate(pipeline).to_list(None)
+        else:
+            pipeline = [
+                {"$match": {"$or": [
+                    {"account": account_num},
+                    {"account": str(account_num)}
+                ]}},
+                {"$group": {
+                    "_id": "$symbol",
+                    "count": {"$sum": 1},
+                    "total_profit": {"$sum": "$profit"},
+                    "total_volume": {"$sum": "$volume"}
+                }},
+                {"$sort": {"count": -1}}
+            ]
+            results = await db.viking_deals_history.aggregate(pipeline).to_list(None)
         
         # Calculate percentages
         total_trades = sum(r["count"] for r in results)
@@ -922,6 +944,8 @@ async def get_viking_symbol_distribution(strategy: str):
         return {
             "success": True,
             "strategy": strategy,
+            "account": account_num,
+            "platform": platform,
             "distribution": distribution,
             "total_trades": total_trades
         }
