@@ -557,6 +557,7 @@ async def get_viking_deals(
     """
     Get deal history for CORE or PRO strategy
     CORE returns combined history from MT4 (33627673) + MT5 (885822)
+    PRO returns all deals from viking_deals_history (account 1309411)
     """
     try:
         strategy = strategy.upper()
@@ -569,9 +570,11 @@ async def get_viking_deals(
         platform = config["platform"]
         
         all_deals = []
+        total = 0
         
-        # For CORE: Get deals from BOTH MT4 historical and MT5 current accounts
-        if strategy == "CORE" and historical_account:
+        if strategy == "CORE":
+            # CORE: Combine MT4 historical (33627673) + MT5 current (885822) deals
+            
             # Get MT4 historical deals (pre-migration)
             mt4_query = {"$or": [
                 {"account": historical_account},
@@ -590,10 +593,10 @@ async def get_viking_deals(
                 deal["source"] = "MT4_historical"
                 deal["account"] = historical_account
             
-            # Get MT5 current deals (post-migration)
+            # Get MT5 current deals (post-migration) - uses 'account' field
             mt5_query = {"$or": [
-                {"login": current_account},
-                {"login": str(current_account)}
+                {"account": current_account},
+                {"account": str(current_account)}
             ]}
             if symbol:
                 mt5_query["symbol"] = {"$regex": symbol, "$options": "i"}
@@ -610,28 +613,34 @@ async def get_viking_deals(
             
             # Combine and sort by time (most recent first)
             all_deals = mt5_deals + mt4_deals
-            # Sort by close_time or time field
             all_deals.sort(key=lambda x: x.get("close_time") or x.get("time") or datetime.min, reverse=True)
             
             total = len(all_deals)
             # Apply pagination
             all_deals = all_deals[skip:skip + limit]
             
-        else:
-            # For PRO or other strategies - single account query
+        elif strategy == "PRO":
+            # PRO: All deals are in viking_deals_history
             query = {"$or": [
-                {"login": current_account},
-                {"login": str(current_account)}
+                {"account": current_account},
+                {"account": str(current_account)}
             ]}
             if symbol:
                 query["symbol"] = {"$regex": symbol, "$options": "i"}
             
-            all_deals = await db.mt5_deals.find(
+            # Get total count first
+            total = await db.viking_deals_history.count_documents(query)
+            
+            # Get paginated deals
+            all_deals = await db.viking_deals_history.find(
                 query,
                 {"_id": 0}
-            ).sort("time", -1).skip(skip).limit(limit).to_list(None)
+            ).sort("close_time", -1).skip(skip).limit(limit).to_list(None)
             
-            total = await db.mt5_deals.count_documents(query)
+            # Mark as PRO historical
+            for deal in all_deals:
+                deal["source"] = "MT4_historical"
+                deal["account"] = current_account
         
         return {
             "success": True,
@@ -641,7 +650,7 @@ async def get_viking_deals(
             "platform": platform,
             "deals": serialize_doc(all_deals),
             "pagination": {
-                "total": total if strategy != "CORE" else len(mt5_deals) + len(mt4_deals) if historical_account else total,
+                "total": total,
                 "limit": limit,
                 "skip": skip,
                 "has_more": skip + limit < total
