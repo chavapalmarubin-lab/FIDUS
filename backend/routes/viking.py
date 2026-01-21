@@ -741,83 +741,45 @@ async def get_viking_summary():
     except Exception as e:
         logger.error(f"Error fetching VIKING summary: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-                )
-                open_orders = await db.viking_deals_history.count_documents(
-                    {"$or": [
-                        {"account": account_num},
-                        {"account": str(account_num)}
-                    ], "close_time": None}
-                )
-            
-            strategy_data = {
-                "strategy": account["strategy"],
-                "account": account_num,
-                "broker": account.get("broker", "Unknown"),
-                "server": account.get("server", ""),
-                "platform": platform,
-                "balance": account.get("balance", 0),
-                "equity": account.get("equity", 0),
-                "floating_pnl": account.get("equity", 0) - account.get("balance", 0),
-                "free_margin": account.get("free_margin", 0),
-                "margin_in_use": account.get("margin", 0),
-                "margin_level": (account.get("equity", 0) / account.get("margin", 1) * 100) if account.get("margin", 0) > 0 else 0,
-                "status": account.get("status", "unknown"),
-                "error_message": account.get("error_message"),
-                "last_update": account.get("updated_at"),
-                "total_deals": total_deals,
-                "open_orders": open_orders,
-                "analytics": analytics or {}
-            }
-            
-            if is_archived:
-                strategy_data["archived_date"] = account.get("archive_date")
-                strategy_data["replaced_by"] = account.get("replaced_by")
-                archived_strategies.append(strategy_data)
-            else:
-                strategies.append(strategy_data)
-        
-        # Combined totals (only from active accounts)
-        active_accounts = [s for s in strategies if s["status"] == "active"]
-        total_balance = sum(s["balance"] for s in active_accounts)
-        total_equity = sum(s["equity"] for s in active_accounts)
-        
-        return {
-            "success": True,
-            "strategies": serialize_doc(strategies),
-            "archived_strategies": serialize_doc(archived_strategies),
-            "combined": {
-                "total_balance": total_balance,
-                "total_equity": total_equity,
-                "total_floating_pnl": total_equity - total_balance,
-                "total_strategies": len(strategies),
-                "active_strategies": len(active_accounts),
-                "archived_count": len(archived_strategies)
-            },
-            "generated_at": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Error fetching VIKING summary: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
-# SYNC ENDPOINT (FOR MT4 BRIDGE)
+# SYNC ENDPOINT - No longer needed for SSOT pattern
+# VIKING data comes directly from mt5_accounts which is synced by FIDUS VPS bridge
 # ============================================================================
 
 @router.post("/sync")
 async def trigger_viking_sync():
-    """Sync VIKING accounts data from their respective sources"""
+    """
+    Sync endpoint - now just returns current state
+    VIKING uses SSOT pattern - data comes from mt5_accounts synced by FIDUS VPS bridge
+    """
     try:
         results = []
         
-        # Sync MT5 CORE account (885822) from FIDUS mt5_accounts
-        mt5_core = await db.mt5_accounts.find_one({"account": 885822})
-        if mt5_core:
-            update_result = await db.viking_accounts.update_one(
-                {"account": 885822},
-                {"$set": {
-                    "balance": mt5_core.get("balance", 0.0),
-                    "equity": mt5_core.get("equity", 0.0),
+        for strategy_name, config in VIKING_ACCOUNTS.items():
+            account_num = config["account"]
+            account = await db.mt5_accounts.find_one({"account": account_num}, {"_id": 0})
+            
+            if account:
+                results.append({
+                    "strategy": strategy_name,
+                    "account": account_num,
+                    "balance": account.get("balance", 0),
+                    "equity": account.get("equity", 0),
+                    "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
+                    "status": "synced_via_fidus_bridge"
+                })
+        
+        return {
+            "success": True,
+            "message": "VIKING uses SSOT pattern - data synced via FIDUS VPS bridge",
+            "results": serialize_doc(results),
+            "note": "No separate sync needed - VIKING reads from mt5_accounts (SSOT)"
+        }
+    except Exception as e:
+        logger.error(f"Error in VIKING sync: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
                     "margin": mt5_core.get("margin", 0.0),
                     "free_margin": mt5_core.get("margin_free", 0.0),
                     "profit": mt5_core.get("profit", 0.0),
