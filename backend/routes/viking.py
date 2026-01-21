@@ -340,8 +340,9 @@ async def seed_viking_core_account():
 async def get_viking_accounts():
     """Get all VIKING accounts with their latest data"""
     try:
-        await ensure_collections_exist()
-        await seed_viking_core_account()
+        # TEMPORARILY DISABLED seed to debug
+        # await ensure_collections_exist()
+        # await seed_viking_core_account()
         
         all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
         
