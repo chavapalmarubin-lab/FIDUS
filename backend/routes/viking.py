@@ -683,23 +683,36 @@ async def get_viking_orders(strategy: str):
         if strategy not in ["CORE", "PRO"]:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get account for this strategy
-        account = await db.viking_accounts.find_one({"strategy": strategy}, {"_id": 0})
+        # Get ACTIVE account for this strategy
+        account = await db.viking_accounts.find_one(
+            {"strategy": strategy, "status": {"$ne": "archived"}}, 
+            {"_id": 0}
+        )
         if not account:
             raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
         
+        platform = account.get("platform", "MT4")
+        account_num = account["account"]
+        
         # Open orders have no close_time
-        orders = await db.viking_deals_history.find(
-            {
-                "account": account["account"],
-                "close_time": None
-            },
-            {"_id": 0}
-        ).sort("open_time", -1).to_list(None)
+        if platform == "MT5":
+            # For MT5, open positions would be in a different structure
+            # Return positions from the account data if available
+            orders = account.get("positions", [])
+        else:
+            orders = await db.viking_deals_history.find(
+                {
+                    "account": account_num,
+                    "close_time": None
+                },
+                {"_id": 0}
+            ).sort("open_time", -1).to_list(None)
         
         return {
             "success": True,
             "strategy": strategy,
+            "account": account_num,
+            "platform": platform,
             "orders": serialize_doc(orders),
             "count": len(orders)
         }
