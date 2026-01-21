@@ -348,11 +348,11 @@ async def get_viking_account(account_number: int):
             {"_id": 0},
             sort=[("calculated_at", -1)]
         )
-        account["analytics"] = analytics or {}
+        result["analytics"] = analytics or {}
         
         return {
             "success": True,
-            "account": serialize_doc(account)
+            "account": serialize_doc(result)
         }
     except HTTPException:
         raise
