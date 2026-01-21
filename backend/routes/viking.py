@@ -809,25 +809,10 @@ async def get_viking_symbol_distribution(strategy: str):
                 "count": {"$sum": 1},
                 "total_profit": {"$sum": "$profit"},
                 "total_volume": {"$sum": "$volume"}
-                }},
-                {"$sort": {"count": -1}}
-            ]
-            results = await db.mt5_deals.aggregate(pipeline).to_list(None)
-        else:
-            pipeline = [
-                {"$match": {"$or": [
-                    {"account": account_num},
-                    {"account": str(account_num)}
-                ]}},
-                {"$group": {
-                    "_id": "$symbol",
-                    "count": {"$sum": 1},
-                    "total_profit": {"$sum": "$profit"},
-                    "total_volume": {"$sum": "$volume"}
-                }},
-                {"$sort": {"count": -1}}
-            ]
-            results = await db.viking_deals_history.aggregate(pipeline).to_list(None)
+            }},
+            {"$sort": {"count": -1}}
+        ]
+        results = await db.mt5_deals.aggregate(pipeline).to_list(None)
         
         # Calculate percentages
         total_trades = sum(r["count"] for r in results)
@@ -845,9 +830,10 @@ async def get_viking_symbol_distribution(strategy: str):
             "success": True,
             "strategy": strategy,
             "account": account_num,
-            "platform": platform,
+            "platform": config["platform"],
             "distribution": distribution,
-            "total_trades": total_trades
+            "total_trades": total_trades,
+            "source": "mt5_deals (SSOT)"
         }
     except HTTPException:
         raise
@@ -865,23 +851,17 @@ async def get_viking_balance_history(strategy: str, days: int = 114):
     """Get balance history for charts"""
     try:
         strategy = strategy.upper()
-        if strategy not in ["CORE", "PRO"]:
+        if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get ACTIVE account for this strategy
-        account = await db.viking_accounts.find_one(
-            {"strategy": strategy, "status": {"$ne": "archived"}}, 
-            {"_id": 0}
-        )
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        account_num = VIKING_ACCOUNTS[strategy]["account"]
         
         # Get historical analytics snapshots
         start_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         history = await db.viking_analytics.find(
             {
-                "account": account["account"],
+                "account": account_num,
                 "calculated_at": {"$gte": start_date}
             },
             {"_id": 0, "calculated_at": 1, "net_deposits": 1, "net_profit": 1}
@@ -893,7 +873,7 @@ async def get_viking_balance_history(strategy: str, days: int = 114):
                 "success": True,
                 "strategy": strategy,
                 "history": [],
-                "message": "No historical data available yet. Data will populate as MT4 bridge syncs."
+                "message": "No historical data available yet."
             }
         
         return {
