@@ -332,30 +332,40 @@ async def get_viking_accounts():
         await ensure_collections_exist()
         await seed_viking_core_account()
         
-        accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
+        all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
         
-        # Get latest analytics for each account
-        for account in accounts:
+        # Separate active and archived accounts
+        active_accounts = []
+        archived_accounts = []
+        
+        for account in all_accounts:
+            # Get latest analytics for each account
             analytics = await db.viking_analytics.find_one(
                 {"account": account["account"]},
                 {"_id": 0},
                 sort=[("calculated_at", -1)]
             )
             account["analytics"] = analytics or {}
+            
+            if account.get("status") == "archived":
+                archived_accounts.append(account)
+            else:
+                active_accounts.append(account)
         
-        # Calculate combined totals
-        total_balance = sum(a.get("balance", 0) for a in accounts if a.get("status") == "active")
-        total_equity = sum(a.get("equity", 0) for a in accounts if a.get("status") == "active")
-        active_count = sum(1 for a in accounts if a.get("status") == "active")
+        # Calculate combined totals (only from active accounts)
+        total_balance = sum(a.get("balance", 0) for a in active_accounts)
+        total_equity = sum(a.get("equity", 0) for a in active_accounts)
         
         return {
             "success": True,
-            "strategies": serialize_doc(accounts),
+            "strategies": serialize_doc(active_accounts),
+            "archived_strategies": serialize_doc(archived_accounts),
             "combined": {
                 "total_balance": total_balance,
                 "total_equity": total_equity,
-                "total_strategies": len(accounts),
-                "active_strategies": active_count
+                "total_strategies": len(active_accounts),
+                "active_strategies": len(active_accounts),
+                "archived_count": len(archived_accounts)
             }
         }
     except Exception as e:
