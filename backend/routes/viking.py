@@ -215,11 +215,15 @@ async def seed_viking_core_account():
     - CORE: MT5 #885822 (MexAtlantic) - Active from Jan 20th 2026
     - CORE Legacy: MT4 #33627673 - Archived (historical data preserved)
     - PRO: MT4 #1309411 (Traders Trust)
+    
+    Uses update_one with upsert to avoid duplicate key errors from _id conflicts
     """
     if db is None:
         return
     
     try:
+        now = datetime.now(timezone.utc)
+        
         # ========== NEW CORE ACCOUNT: MT5 #885822 ==========
         existing_new_core = await db.viking_accounts.find_one({"account": 885822})
         if not existing_new_core:
@@ -227,7 +231,6 @@ async def seed_viking_core_account():
             mt5_data = await db.mt5_accounts.find_one({"account": 885822})
             
             viking_core_new = {
-                "_id": "VIKING_885822",
                 "account": 885822,
                 "strategy": "CORE",
                 "broker": "MexAtlantic",
@@ -242,25 +245,43 @@ async def seed_viking_core_account():
                 "leverage": mt5_data.get("leverage", 500) if mt5_data else 500,
                 "status": "active",
                 "error_message": None,
-                "replaces_account": 33627673,  # Links to archived MT4 account
+                "replaces_account": 33627673,
                 "migration_date": "2026-01-20",
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc)
+                "updated_at": now
             }
-            await db.viking_accounts.insert_one(viking_core_new)
+            await db.viking_accounts.update_one(
+                {"account": 885822},
+                {"$set": viking_core_new, "$setOnInsert": {"created_at": now}},
+                upsert=True
+            )
             logger.info("✅ Seeded VIKING CORE account 885822 (MT5 - Active)")
         
         # ========== ARCHIVED CORE ACCOUNT: MT4 #33627673 ==========
         existing_old_core = await db.viking_accounts.find_one({"account": 33627673})
-        if not existing_old_core:
+        if existing_old_core:
+            # Ensure it stays archived - do NOT overwrite if VPS sync changed it
+            if existing_old_core.get("status") != "archived":
+                await db.viking_accounts.update_one(
+                    {"account": 33627673},
+                    {"$set": {
+                        "strategy": "CORE_LEGACY",
+                        "status": "archived",
+                        "replaced_by": 885822,
+                        "archive_date": "2026-01-20",
+                        "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
+                        "updated_at": now
+                    }}
+                )
+                logger.info("✅ Re-archived VIKING CORE 33627673 (MT4)")
+        else:
+            # Create archived record if it doesn't exist
             viking_core_archived = {
-                "_id": "VIKING_33627673",
                 "account": 33627673,
                 "strategy": "CORE_LEGACY",
                 "broker": "MEXAtlantic",
                 "server": "MEXAtlantic-Real-2",
                 "platform": "MT4",
-                "balance": 25250.98,  # Last known balance
+                "balance": 25250.98,
                 "equity": 22074.71,
                 "margin": 0.0,
                 "free_margin": 22074.71,
@@ -271,32 +292,19 @@ async def seed_viking_core_account():
                 "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
                 "replaced_by": 885822,
                 "archive_date": "2026-01-20",
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc)
+                "updated_at": now
             }
-            await db.viking_accounts.insert_one(viking_core_archived)
+            await db.viking_accounts.update_one(
+                {"account": 33627673},
+                {"$set": viking_core_archived, "$setOnInsert": {"created_at": now}},
+                upsert=True
+            )
             logger.info("✅ Seeded VIKING CORE LEGACY account 33627673 (MT4 - Archived)")
-        else:
-            # Update existing to archived status if not already
-            if existing_old_core.get("status") != "archived":
-                await db.viking_accounts.update_one(
-                    {"account": 33627673},
-                    {"$set": {
-                        "strategy": "CORE_LEGACY",
-                        "status": "archived",
-                        "replaced_by": 885822,
-                        "archive_date": "2026-01-20",
-                        "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
-                        "updated_at": datetime.now(timezone.utc)
-                    }}
-                )
-                logger.info("✅ Updated VIKING CORE 33627673 to archived status")
         
         # ========== PRO ACCOUNT: MT4 #1309411 ==========
         existing_pro = await db.viking_accounts.find_one({"account": 1309411})
         if not existing_pro:
             viking_pro = {
-                "_id": "VIKING_1309411",
                 "account": 1309411,
                 "strategy": "PRO",
                 "broker": "Traders Trust",
@@ -311,10 +319,13 @@ async def seed_viking_core_account():
                 "leverage": 0,
                 "status": "pending_setup",
                 "error_message": "Needs MT4 terminal login",
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc)
+                "updated_at": now
             }
-            await db.viking_accounts.insert_one(viking_pro)
+            await db.viking_accounts.update_one(
+                {"account": 1309411},
+                {"$set": viking_pro, "$setOnInsert": {"created_at": now}},
+                upsert=True
+            )
             logger.info("✅ Seeded VIKING PRO account 1309411")
             
     except Exception as e:
