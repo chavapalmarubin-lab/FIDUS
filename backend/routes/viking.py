@@ -345,6 +345,9 @@ async def get_viking_accounts():
         
         all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(None)
         
+        # Debug: log count
+        print(f"[DEBUG] viking_accounts query returned {len(all_accounts)} documents")
+        
         # Separate active and archived accounts
         active_accounts = []
         archived_accounts = []
