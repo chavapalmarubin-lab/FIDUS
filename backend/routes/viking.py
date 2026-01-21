@@ -361,26 +361,27 @@ async def get_viking_account(account_number: int):
         # Build response with VIKING metadata
         result = {
             "strategy": strategy_name,
-            "account": account_number,
+            "account": config["current_account"],
+            "historical_account": config.get("historical_account"),
             "platform": config["platform"],
             "broker": config["broker"],
             "description": config["description"],
-            "balance": account.get("balance", 0),
-            "equity": account.get("equity", 0),
-            "margin": account.get("margin", 0),
-            "free_margin": account.get("margin_free", 0),
-            "profit": account.get("profit", 0),
-            "leverage": account.get("leverage", 0),
-            "currency": account.get("currency", "USD"),
-            "status": "active",
-            "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
-            "open_positions": account.get("open_positions", []),
-            "open_positions_count": account.get("open_positions_count", 0)
+            "balance": account_data.get("balance", 0),
+            "equity": account_data.get("equity", 0),
+            "margin": account_data.get("margin", 0),
+            "free_margin": account_data.get("margin_free") or account_data.get("free_margin", 0),
+            "profit": account_data.get("profit", 0),
+            "leverage": account_data.get("leverage", 0),
+            "currency": account_data.get("currency", "USD"),
+            "status": account_data.get("status", "active"),
+            "last_sync": account_data.get("last_sync_timestamp") or account_data.get("updated_at"),
+            "open_positions": account_data.get("open_positions", []),
+            "open_positions_count": account_data.get("open_positions_count", 0)
         }
         
         # Get latest analytics
         analytics = await db.viking_analytics.find_one(
-            {"account": account_number},
+            {"account": config["current_account"]},
             {"_id": 0},
             sort=[("calculated_at", -1)]
         )
