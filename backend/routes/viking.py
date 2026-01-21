@@ -245,9 +245,9 @@ async def get_core_combined_deals_count():
     current = config["current_account"]
     historical = config["historical_account"]
     
-    # Count MT5 deals (current account)
+    # Count MT5 deals (current account) - uses 'account' field
     mt5_count = await db.mt5_deals.count_documents(
-        {"$or": [{"login": current}, {"login": str(current)}]}
+        {"$or": [{"account": current}, {"account": str(current)}]}
     )
     
     # Count MT4 deals (historical account) from viking_deals_history
@@ -256,6 +256,29 @@ async def get_core_combined_deals_count():
     )
     
     return mt5_count + mt4_count
+
+
+async def get_pro_deals_count():
+    """Get total deals count for PRO strategy from viking_deals_history"""
+    config = VIKING_ACCOUNTS["PRO"]
+    account = config["current_account"]
+    
+    # PRO deals are all in viking_deals_history
+    count = await db.viking_deals_history.count_documents(
+        {"$or": [{"account": account}, {"account": str(account)}]}
+    )
+    
+    return count
+
+
+async def get_strategy_deals_count(strategy: str):
+    """Get total deals count for any strategy"""
+    strategy = strategy.upper()
+    if strategy == "CORE":
+        return await get_core_combined_deals_count()
+    elif strategy == "PRO":
+        return await get_pro_deals_count()
+    return 0
 
 
 # ============================================================================
