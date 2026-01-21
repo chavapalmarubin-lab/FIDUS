@@ -816,8 +816,9 @@ async def get_viking_summary():
             historical_account = config.get("historical_account")
             
             # Get latest analytics - check both current and historical accounts
+            # Note: analytics may have account as int or string, so check both
             analytics = await db.viking_analytics.find_one(
-                {"account": current_account},
+                {"$or": [{"account": current_account}, {"account": str(current_account)}]},
                 {"_id": 0},
                 sort=[("calculated_at", -1)]
             )
@@ -825,7 +826,7 @@ async def get_viking_summary():
             # If no analytics for current account, try historical account
             if not analytics and historical_account and historical_account != current_account:
                 analytics = await db.viking_analytics.find_one(
-                    {"account": historical_account},
+                    {"$or": [{"account": historical_account}, {"account": str(historical_account)}]},
                     {"_id": 0},
                     sort=[("calculated_at", -1)]
                 )
