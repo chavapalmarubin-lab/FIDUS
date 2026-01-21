@@ -530,6 +530,7 @@ async def save_viking_analytics(account_number: int, analytics: VikingAnalytics)
 
 # ============================================================================
 # DEALS ENDPOINTS
+# Using SSOT - deals come from mt5_deals collection for MT5 accounts
 # ============================================================================
 
 @router.get("/deals/{strategy}")
@@ -539,54 +540,30 @@ async def get_viking_deals(
     skip: int = 0,
     symbol: Optional[str] = None
 ):
-    """Get deal history for CORE or PRO strategy"""
+    """Get deal history for CORE or PRO strategy from mt5_deals (SSOT)"""
     try:
         strategy = strategy.upper()
-        if strategy not in ["CORE", "PRO"]:
+        if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        # Get ACTIVE account for this strategy (not archived)
-        account = await db.viking_accounts.find_one(
-            {"strategy": strategy, "status": {"$ne": "archived"}}, 
+        config = VIKING_ACCOUNTS[strategy]
+        account_num = config["account"]
+        platform = config["platform"]
+        
+        # Query from mt5_deals for MT5 accounts, mt5_deals with login field
+        query = {"$or": [
+            {"login": account_num},
+            {"login": str(account_num)}
+        ]}
+        if symbol:
+            query["symbol"] = {"$regex": symbol, "$options": "i"}
+        
+        deals = await db.mt5_deals.find(
+            query,
             {"_id": 0}
-        )
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Strategy {strategy} not found")
+        ).sort("time", -1).skip(skip).limit(limit).to_list(None)
         
-        platform = account.get("platform", "MT4")
-        account_num = account["account"]
-        
-        # Choose collection based on platform
-        if platform == "MT5":
-            # For MT5 accounts, use mt5_deals collection with 'login' field
-            query = {"$or": [
-                {"login": account_num},
-                {"login": str(account_num)}
-            ]}
-            if symbol:
-                query["symbol"] = {"$regex": symbol, "$options": "i"}
-            
-            deals = await db.mt5_deals.find(
-                query,
-                {"_id": 0}
-            ).sort("time", -1).skip(skip).limit(limit).to_list(None)
-            
-            total = await db.mt5_deals.count_documents(query)
-        else:
-            # For MT4 accounts, use viking_deals_history with 'account' field
-            query = {"$or": [
-                {"account": account_num},
-                {"account": str(account_num)}
-            ]}
-            if symbol:
-                query["symbol"] = {"$regex": symbol, "$options": "i"}
-            
-            deals = await db.viking_deals_history.find(
-                query,
-                {"_id": 0}
-            ).sort("close_time", -1).skip(skip).limit(limit).to_list(None)
-            
-            total = await db.viking_deals_history.count_documents(query)
+        total = await db.mt5_deals.count_documents(query)
         
         return {
             "success": True,
@@ -599,7 +576,8 @@ async def get_viking_deals(
                 "limit": limit,
                 "skip": skip,
                 "has_more": skip + limit < total
-            }
+            },
+            "source": "mt5_deals (SSOT)"
         }
     except HTTPException:
         raise
