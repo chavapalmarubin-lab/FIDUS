@@ -224,51 +224,74 @@ async def get_viking_account_data(strategy: str):
 
 # ============================================================================
 # ACCOUNT ENDPOINTS
+# Using SSOT pattern - query from mt5_accounts (shared with FIDUS)
 # ============================================================================
 
 @router.get("/accounts")
 async def get_viking_accounts():
-    """Get all VIKING accounts with their latest data"""
+    """
+    Get VIKING accounts data from mt5_accounts (Single Source of Truth)
+    VIKING strategies map to specific accounts in the shared database
+    """
     try:
-        all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(length=100)
+        strategies = []
         
-        # Separate active and archived accounts
-        active_accounts = []
-        archived_accounts = []
-        
-        for account in all_accounts:
-            # Get latest analytics for each account
-            analytics = await db.viking_analytics.find_one(
-                {"account": account["account"]},
-                {"_id": 0},
-                sort=[("calculated_at", -1)]
-            )
-            account["analytics"] = analytics or {}
+        # Get data for each VIKING strategy from mt5_accounts
+        for strategy_name, config in VIKING_ACCOUNTS.items():
+            account_num = config["account"]
             
-            if account.get("status") == "archived":
-                archived_accounts.append(account)
-            else:
-                active_accounts.append(account)
+            # Query from mt5_accounts (SSOT)
+            account = await db.mt5_accounts.find_one(
+                {"account": account_num},
+                {"_id": 0}
+            )
+            
+            if account:
+                # Build VIKING strategy view
+                strategy_data = {
+                    "strategy": strategy_name,
+                    "account": account_num,
+                    "platform": config["platform"],
+                    "broker": config["broker"],
+                    "description": config["description"],
+                    "balance": account.get("balance", 0),
+                    "equity": account.get("equity", 0),
+                    "margin": account.get("margin", 0),
+                    "free_margin": account.get("margin_free", 0),
+                    "profit": account.get("profit", 0),
+                    "leverage": account.get("leverage", 0),
+                    "currency": account.get("currency", "USD"),
+                    "status": "active",
+                    "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
+                    "open_positions": account.get("open_positions", []),
+                    "open_positions_count": account.get("open_positions_count", 0)
+                }
+                
+                # Get analytics if available
+                analytics = await db.viking_analytics.find_one(
+                    {"account": account_num},
+                    {"_id": 0},
+                    sort=[("calculated_at", -1)]
+                )
+                strategy_data["analytics"] = analytics or {}
+                
+                strategies.append(strategy_data)
         
-        # Calculate combined totals (only from active accounts)
-        total_balance = sum(a.get("balance", 0) for a in active_accounts)
-        total_equity = sum(a.get("equity", 0) for a in active_accounts)
+        # Calculate combined totals
+        total_balance = sum(s.get("balance", 0) for s in strategies)
+        total_equity = sum(s.get("equity", 0) for s in strategies)
         
         return {
             "success": True,
-            "strategies": serialize_doc(active_accounts),
-            "archived_strategies": serialize_doc(archived_accounts),
+            "strategies": serialize_doc(strategies),
             "combined": {
                 "total_balance": total_balance,
                 "total_equity": total_equity,
-                "total_strategies": len(active_accounts),
-                "active_strategies": len(active_accounts),
-                "archived_count": len(archived_accounts)
-            }
+                "total_strategies": len(strategies),
+                "active_strategies": len(strategies)
+            },
+            "source": "mt5_accounts (SSOT)"
         }
-    except Exception as e:
-        logger.error(f"Error fetching VIKING accounts: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         logger.error(f"Error fetching VIKING accounts: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -276,15 +299,48 @@ async def get_viking_accounts():
 
 @router.get("/accounts/{account_number}")
 async def get_viking_account(account_number: int):
-    """Get specific VIKING account by account number"""
+    """Get specific VIKING account by account number from mt5_accounts (SSOT)"""
     try:
-        account = await db.viking_accounts.find_one(
+        # Verify this is a VIKING account
+        strategy_name = None
+        for name, config in VIKING_ACCOUNTS.items():
+            if config["account"] == account_number:
+                strategy_name = name
+                break
+        
+        if not strategy_name:
+            raise HTTPException(status_code=404, detail=f"Account {account_number} is not a VIKING account")
+        
+        # Query from mt5_accounts (SSOT)
+        account = await db.mt5_accounts.find_one(
             {"account": account_number},
             {"_id": 0}
         )
         
         if not account:
-            raise HTTPException(status_code=404, detail=f"VIKING account {account_number} not found")
+            raise HTTPException(status_code=404, detail=f"Account {account_number} not found in mt5_accounts")
+        
+        config = VIKING_ACCOUNTS[strategy_name]
+        
+        # Build response with VIKING metadata
+        result = {
+            "strategy": strategy_name,
+            "account": account_number,
+            "platform": config["platform"],
+            "broker": config["broker"],
+            "description": config["description"],
+            "balance": account.get("balance", 0),
+            "equity": account.get("equity", 0),
+            "margin": account.get("margin", 0),
+            "free_margin": account.get("margin_free", 0),
+            "profit": account.get("profit", 0),
+            "leverage": account.get("leverage", 0),
+            "currency": account.get("currency", "USD"),
+            "status": "active",
+            "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
+            "open_positions": account.get("open_positions", []),
+            "open_positions_count": account.get("open_positions_count", 0)
+        }
         
         # Get latest analytics
         analytics = await db.viking_analytics.find_one(
