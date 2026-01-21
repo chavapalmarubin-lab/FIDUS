@@ -248,46 +248,41 @@ async def get_viking_account_data(strategy: str):
 @router.get("/accounts")
 async def get_viking_accounts():
     """
-    Get VIKING accounts data from mt5_accounts (Single Source of Truth)
-    VIKING strategies map to specific accounts in the shared database
+    Get VIKING accounts data
+    Uses SSOT pattern - tries mt5_accounts first, falls back to viking_accounts for MT4
     """
     try:
         strategies = []
         
-        # Get data for each VIKING strategy from mt5_accounts
+        # Get data for each VIKING strategy
         for strategy_name, config in VIKING_ACCOUNTS.items():
-            account_num = config["account"]
+            account_data = await get_viking_account_data(strategy_name)
             
-            # Query from mt5_accounts (SSOT)
-            account = await db.mt5_accounts.find_one(
-                {"account": account_num},
-                {"_id": 0}
-            )
-            
-            if account:
+            if account_data:
                 # Build VIKING strategy view
                 strategy_data = {
                     "strategy": strategy_name,
-                    "account": account_num,
+                    "account": config["account"],
                     "platform": config["platform"],
                     "broker": config["broker"],
                     "description": config["description"],
-                    "balance": account.get("balance", 0),
-                    "equity": account.get("equity", 0),
-                    "margin": account.get("margin", 0),
-                    "free_margin": account.get("margin_free", 0),
-                    "profit": account.get("profit", 0),
-                    "leverage": account.get("leverage", 0),
-                    "currency": account.get("currency", "USD"),
-                    "status": "active",
-                    "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
-                    "open_positions": account.get("open_positions", []),
-                    "open_positions_count": account.get("open_positions_count", 0)
+                    "balance": account_data.get("balance", 0),
+                    "equity": account_data.get("equity", 0),
+                    "margin": account_data.get("margin", 0),
+                    "free_margin": account_data.get("margin_free") or account_data.get("free_margin", 0),
+                    "profit": account_data.get("profit", 0),
+                    "leverage": account_data.get("leverage", 0),
+                    "currency": account_data.get("currency", "USD"),
+                    "status": account_data.get("status", "active"),
+                    "last_sync": account_data.get("last_sync_timestamp") or account_data.get("updated_at") or account_data.get("last_sync"),
+                    "open_positions": account_data.get("open_positions") or account_data.get("positions", []),
+                    "open_positions_count": account_data.get("open_positions_count", 0),
+                    "data_source": account_data.get("data_source", "unknown")
                 }
                 
                 # Get analytics if available
                 analytics = await db.viking_analytics.find_one(
-                    {"account": account_num},
+                    {"account": config["account"]},
                     {"_id": 0},
                     sort=[("calculated_at", -1)]
                 )
@@ -308,7 +303,7 @@ async def get_viking_accounts():
                 "total_strategies": len(strategies),
                 "active_strategies": len(strategies)
             },
-            "source": "mt5_accounts (SSOT)"
+            "note": "Data from mt5_accounts (SSOT) with fallback to viking_accounts for MT4"
         }
     except Exception as e:
         logger.error(f"Error fetching VIKING accounts: {e}")
