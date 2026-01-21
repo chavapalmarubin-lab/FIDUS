@@ -336,13 +336,6 @@ async def seed_viking_core_account():
 # ACCOUNT ENDPOINTS
 # ============================================================================
 
-@router.get("/debug-accounts")
-async def debug_viking_accounts():
-    """Debug endpoint to check raw database state"""
-    count = await db.viking_accounts.count_documents({})
-    docs = await db.viking_accounts.find({}, {"_id": 0, "account": 1, "strategy": 1, "status": 1}).to_list(None)
-    return {"count": count, "documents": docs}
-
 @router.get("/accounts")
 async def get_viking_accounts():
     """Get all VIKING accounts with their latest data"""
