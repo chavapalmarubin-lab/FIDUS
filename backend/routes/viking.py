@@ -363,34 +363,14 @@ async def get_viking_account(account_number: int):
 
 @router.post("/accounts")
 async def create_viking_account(account_data: VikingAccountCreate):
-    """Create a new VIKING account"""
-    try:
-        await ensure_collections_exist()
-        
-        # Check if account already exists
-        existing = await db.viking_accounts.find_one({"account": account_data.account})
-        if existing:
-            raise HTTPException(status_code=400, detail=f"Account {account_data.account} already exists")
-        
-        doc = {
-            "_id": f"VIKING_{account_data.account}",
-            **account_data.dict(exclude={"password"}),
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc)
-        }
-        
-        await db.viking_accounts.insert_one(doc)
-        
-        return {
-            "success": True,
-            "message": f"VIKING account {account_data.account} created successfully",
-            "account": serialize_doc(doc)
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error creating VIKING account: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    """
+    Create a new VIKING account - DEPRECATED
+    VIKING now uses SSOT pattern with mt5_accounts
+    """
+    return {
+        "success": False,
+        "message": "VIKING uses SSOT pattern - accounts are managed through mt5_accounts. Contact admin to add new VIKING strategies."
+    }
 
 
 @router.put("/accounts/{account_number}")
