@@ -829,20 +829,45 @@ async def get_viking_summary():
 
 @router.post("/sync")
 async def trigger_viking_sync():
-    """Trigger manual sync from MT4 (placeholder - actual sync is from VPS)"""
+    """Sync VIKING accounts data from their respective sources"""
     try:
-        # This endpoint would be called by the MT4 bridge on the VPS
-        # For now, it returns the current state and marks sync as requested
+        results = []
         
+        # Sync MT5 CORE account (885822) from FIDUS mt5_accounts
+        mt5_core = await db.mt5_accounts.find_one({"account": 885822})
+        if mt5_core:
+            update_result = await db.viking_accounts.update_one(
+                {"account": 885822},
+                {"$set": {
+                    "balance": mt5_core.get("balance", 0.0),
+                    "equity": mt5_core.get("equity", 0.0),
+                    "margin": mt5_core.get("margin", 0.0),
+                    "free_margin": mt5_core.get("margin_free", 0.0),
+                    "profit": mt5_core.get("profit", 0.0),
+                    "leverage": mt5_core.get("leverage", 500),
+                    "updated_at": datetime.now(timezone.utc),
+                    "last_sync_source": "mt5_accounts",
+                    "status": "active"
+                }}
+            )
+            results.append({
+                "account": 885822,
+                "platform": "MT5",
+                "synced": update_result.modified_count > 0 or update_result.matched_count > 0,
+                "balance": mt5_core.get("balance", 0.0)
+            })
+        
+        # Mark sync requested for MT4 accounts (PRO)
         await db.viking_accounts.update_many(
-            {},
+            {"platform": "MT4", "status": {"$ne": "archived"}},
             {"$set": {"sync_requested": True, "sync_requested_at": datetime.now(timezone.utc)}}
         )
         
         return {
             "success": True,
-            "message": "Sync requested. MT4 bridge will sync data on next cycle.",
-            "note": "Ensure MT4 bridge is running on VPS for account 33627673"
+            "message": "Sync completed for MT5 accounts. MT4 sync requested via VPS bridge.",
+            "results": results,
+            "note": "MT5 CORE (885822) synced from FIDUS data. MT4 PRO requires VPS bridge."
         }
     except Exception as e:
         logger.error(f"Error triggering VIKING sync: {e}")
