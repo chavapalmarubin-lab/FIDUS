@@ -133,6 +133,38 @@ class VikingAnalytics(BaseModel):
 
 
 # ============================================================================
+# VIKING ACCOUNT CONFIGURATION
+# Per SYSTEM_MASTER.md SSOT pattern - VIKING uses mt5_accounts as source of truth
+# ============================================================================
+
+# VIKING strategies map to specific MT5 accounts in the shared database
+VIKING_ACCOUNTS = {
+    "CORE": {
+        "account": 885822,
+        "platform": "MT5",
+        "broker": "MEXAtlantic", 
+        "description": "VIKING CORE Strategy - CP Strategy Provider"
+    },
+    "PRO": {
+        "account": 1309411,
+        "platform": "MT4",
+        "broker": "Traders Trust",
+        "description": "VIKING PRO Strategy"
+    }
+}
+
+# Legacy MT4 account for historical reference (no longer synced)
+VIKING_LEGACY_ACCOUNTS = {
+    "CORE_LEGACY": {
+        "account": 33627673,
+        "platform": "MT4",
+        "broker": "MEXAtlantic",
+        "description": "Archived - Replaced by MT5 #885822 on 2026-01-20"
+    }
+}
+
+
+# ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
@@ -164,172 +196,30 @@ def serialize_doc(doc):
     return doc
 
 
-async def ensure_collections_exist():
-    """Ensure VIKING collections exist in the database"""
-    if db is None:
-        logger.error("Database not initialized")
-        return False
-    
-    try:
-        collections = await db.list_collection_names()
-        
-        # Create viking_accounts if not exists
-        if "viking_accounts" not in collections:
-            await db.create_collection("viking_accounts")
-            # Create unique index on account number
-            await db.viking_accounts.create_index("account", unique=True)
-            logger.info("✅ Created viking_accounts collection")
-        
-        # Create viking_deals_history if not exists
-        if "viking_deals_history" not in collections:
-            await db.create_collection("viking_deals_history")
-            # Create compound index for efficient querying
-            await db.viking_deals_history.create_index([
-                ("account", 1),
-                ("ticket", 1)
-            ], unique=True)
-            await db.viking_deals_history.create_index([
-                ("account", 1),
-                ("close_time", -1)
-            ])
-            logger.info("✅ Created viking_deals_history collection")
-        
-        # Create viking_analytics if not exists
-        if "viking_analytics" not in collections:
-            await db.create_collection("viking_analytics")
-            await db.viking_analytics.create_index([
-                ("account", 1),
-                ("calculated_at", -1)
-            ])
-            logger.info("✅ Created viking_analytics collection")
-        
-        return True
-    except Exception as e:
-        logger.error(f"Error ensuring collections: {e}")
-        return False
-
-
-async def seed_viking_core_account():
+async def get_viking_account_data(strategy: str):
     """
-    Seed VIKING accounts:
-    - CORE: MT5 #885822 (MexAtlantic) - Active from Jan 20th 2026
-    - CORE Legacy: MT4 #33627673 - Archived (historical data preserved)
-    - PRO: MT4 #1309411 (Traders Trust)
-    
-    Uses update_one with upsert to avoid duplicate key errors from _id conflicts
+    Get VIKING account data from mt5_accounts (SSOT)
+    Returns the account data with VIKING-specific metadata
     """
-    if db is None:
-        return
+    if strategy not in VIKING_ACCOUNTS:
+        return None
     
-    try:
-        now = datetime.now(timezone.utc)
-        
-        # ========== NEW CORE ACCOUNT: MT5 #885822 ==========
-        existing_new_core = await db.viking_accounts.find_one({"account": 885822})
-        if not existing_new_core:
-            # Pull latest data from mt5_accounts (FIDUS data source)
-            mt5_data = await db.mt5_accounts.find_one({"account": 885822})
-            
-            viking_core_new = {
-                "account": 885822,
-                "strategy": "CORE",
-                "broker": "MexAtlantic",
-                "server": "MexAtlantic-MT5",
-                "platform": "MT5",
-                "balance": mt5_data.get("balance", 0.0) if mt5_data else 0.0,
-                "equity": mt5_data.get("equity", 0.0) if mt5_data else 0.0,
-                "margin": mt5_data.get("margin", 0.0) if mt5_data else 0.0,
-                "free_margin": mt5_data.get("margin_free", 0.0) if mt5_data else 0.0,
-                "profit": mt5_data.get("profit", 0.0) if mt5_data else 0.0,
-                "currency": mt5_data.get("currency", "USD") if mt5_data else "USD",
-                "leverage": mt5_data.get("leverage", 500) if mt5_data else 500,
-                "status": "active",
-                "error_message": None,
-                "replaces_account": 33627673,
-                "migration_date": "2026-01-20",
-                "updated_at": now
-            }
-            await db.viking_accounts.update_one(
-                {"account": 885822},
-                {"$set": viking_core_new, "$setOnInsert": {"created_at": now}},
-                upsert=True
-            )
-            logger.info("✅ Seeded VIKING CORE account 885822 (MT5 - Active)")
-        
-        # ========== ARCHIVED CORE ACCOUNT: MT4 #33627673 ==========
-        existing_old_core = await db.viking_accounts.find_one({"account": 33627673})
-        if existing_old_core:
-            # Ensure it stays archived - do NOT overwrite if VPS sync changed it
-            if existing_old_core.get("status") != "archived":
-                await db.viking_accounts.update_one(
-                    {"account": 33627673},
-                    {"$set": {
-                        "strategy": "CORE_LEGACY",
-                        "status": "archived",
-                        "replaced_by": 885822,
-                        "archive_date": "2026-01-20",
-                        "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
-                        "updated_at": now
-                    }}
-                )
-                logger.info("✅ Re-archived VIKING CORE 33627673 (MT4)")
-        else:
-            # Create archived record if it doesn't exist
-            viking_core_archived = {
-                "account": 33627673,
-                "strategy": "CORE_LEGACY",
-                "broker": "MEXAtlantic",
-                "server": "MEXAtlantic-Real-2",
-                "platform": "MT4",
-                "balance": 25250.98,
-                "equity": 22074.71,
-                "margin": 0.0,
-                "free_margin": 22074.71,
-                "profit": -3176.27,
-                "currency": "USD",
-                "leverage": 500,
-                "status": "archived",
-                "error_message": "Archived - Replaced by MT5 #885822 on 2026-01-20",
-                "replaced_by": 885822,
-                "archive_date": "2026-01-20",
-                "updated_at": now
-            }
-            await db.viking_accounts.update_one(
-                {"account": 33627673},
-                {"$set": viking_core_archived, "$setOnInsert": {"created_at": now}},
-                upsert=True
-            )
-            logger.info("✅ Seeded VIKING CORE LEGACY account 33627673 (MT4 - Archived)")
-        
-        # ========== PRO ACCOUNT: MT4 #1309411 ==========
-        existing_pro = await db.viking_accounts.find_one({"account": 1309411})
-        if not existing_pro:
-            viking_pro = {
-                "account": 1309411,
-                "strategy": "PRO",
-                "broker": "Traders Trust",
-                "server": "TTCM",
-                "platform": "MT4",
-                "balance": 0.0,
-                "equity": 0.0,
-                "margin": 0.0,
-                "free_margin": 0.0,
-                "profit": 0.0,
-                "currency": "USD",
-                "leverage": 0,
-                "status": "pending_setup",
-                "error_message": "Needs MT4 terminal login",
-                "updated_at": now
-            }
-            await db.viking_accounts.update_one(
-                {"account": 1309411},
-                {"$set": viking_pro, "$setOnInsert": {"created_at": now}},
-                upsert=True
-            )
-            logger.info("✅ Seeded VIKING PRO account 1309411")
-            
-    except Exception as e:
-        logger.error(f"Error seeding VIKING accounts: {e}")
+    config = VIKING_ACCOUNTS[strategy]
+    account_num = config["account"]
+    
+    # Query from mt5_accounts (Single Source of Truth)
+    account = await db.mt5_accounts.find_one(
+        {"account": account_num},
+        {"_id": 0}
+    )
+    
+    if account:
+        # Add VIKING-specific metadata
+        account["strategy"] = strategy
+        account["viking_broker"] = config["broker"]
+        account["viking_description"] = config["description"]
+    
+    return account
 
 
 # ============================================================================
