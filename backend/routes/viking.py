@@ -958,26 +958,46 @@ async def get_viking_symbol_distribution(strategy: str):
 
 @router.get("/balance-history/{strategy}")
 async def get_viking_balance_history(strategy: str, days: int = 114):
-    """Get balance history for charts"""
+    """Get balance history for charts - CORE includes full MT4+MT5 history"""
     try:
         strategy = strategy.upper()
         if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        account_num = VIKING_ACCOUNTS[strategy]["account"]
+        config = VIKING_ACCOUNTS[strategy]
+        current_account = config["current_account"]
+        historical_account = config.get("historical_account")
         
         # Get historical analytics snapshots
         start_date = datetime.now(timezone.utc) - timedelta(days=days)
         
-        history = await db.viking_analytics.find(
+        # For CORE: Try to get analytics for both accounts
+        history = []
+        
+        if historical_account:
+            # Get MT4 historical analytics
+            mt4_history = await db.viking_analytics.find(
+                {
+                    "account": historical_account,
+                    "calculated_at": {"$gte": start_date}
+                },
+                {"_id": 0, "calculated_at": 1, "net_deposits": 1, "net_profit": 1}
+            ).sort("calculated_at", 1).to_list(None)
+            history.extend(mt4_history)
+        
+        # Get current account analytics
+        current_history = await db.viking_analytics.find(
             {
-                "account": account_num,
+                "account": current_account,
                 "calculated_at": {"$gte": start_date}
             },
             {"_id": 0, "calculated_at": 1, "net_deposits": 1, "net_profit": 1}
         ).sort("calculated_at", 1).to_list(None)
+        history.extend(current_history)
         
-        # If no history, return empty with account info
+        # Sort combined history by date
+        history.sort(key=lambda x: x.get("calculated_at", datetime.min))
+        
         if not history:
             return {
                 "success": True,
@@ -989,6 +1009,8 @@ async def get_viking_balance_history(strategy: str, days: int = 114):
         return {
             "success": True,
             "strategy": strategy,
+            "current_account": current_account,
+            "historical_account": historical_account,
             "history": serialize_doc(history),
             "days": days
         }
