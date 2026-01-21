@@ -718,7 +718,7 @@ async def get_viking_orders(strategy: str):
 
 @router.get("/summary")
 async def get_viking_summary():
-    """Get combined VIKING summary with all strategies"""
+    """Get combined VIKING summary with all strategies - CORE includes full history"""
     try:
         strategies = []
         
@@ -728,23 +728,28 @@ async def get_viking_summary():
             if not account_data:
                 continue
             
-            account_num = config["account"]
+            current_account = config["current_account"]
+            historical_account = config.get("historical_account")
             
             # Get latest analytics
             analytics = await db.viking_analytics.find_one(
-                {"account": account_num},
+                {"account": current_account},
                 {"_id": 0},
                 sort=[("calculated_at", -1)]
             )
             
-            # Get deal count from mt5_deals
-            total_deals = await db.mt5_deals.count_documents(
-                {"$or": [{"login": account_num}, {"login": str(account_num)}]}
-            )
+            # Get deal count (combined for CORE)
+            if strategy_name == "CORE" and historical_account:
+                total_deals = await get_core_combined_deals_count()
+            else:
+                total_deals = await db.mt5_deals.count_documents(
+                    {"$or": [{"login": current_account}, {"login": str(current_account)}]}
+                )
             
             strategy_data = {
                 "strategy": strategy_name,
-                "account": account_num,
+                "account": current_account,
+                "historical_account": historical_account,
                 "broker": config["broker"],
                 "platform": config["platform"],
                 "description": config["description"],
@@ -761,6 +766,12 @@ async def get_viking_summary():
                 "analytics": analytics or {},
                 "data_source": account_data.get("data_source", "unknown")
             }
+            
+            # Add historical info for CORE
+            if historical_account:
+                strategy_data["historical_continuity"] = True
+                strategy_data["migration_date"] = config.get("migration_date")
+            
             strategies.append(strategy_data)
         
         # Combined totals
