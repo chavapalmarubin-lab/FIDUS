@@ -1,0 +1,50 @@
+{
+  "summary": "Backend testing for VIKING PRO historical data feature. PRO strategy correctly returns 1152 deals from viking_deals_history. CORE strategy shows correct counts (4143) in accounts/summary/symbols endpoints but has a bug in the deals endpoint.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/viking/deals/CORE",
+        "issue": "Returns 500 error due to datetime comparison bug at line 616 in viking.py. Error: '<' not supported between instances of 'datetime.datetime' and 'str'. MT4 deals have string dates while MT5 deals have datetime objects.",
+        "priority": "HIGH",
+        "fix_suggestion": "Normalize all dates to datetime before sorting in line 616. Use parse_mt4_datetime() helper function that already exists in the file."
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_viking_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "FIX REQUIRED: In /app/backend/routes/viking.py line 616, normalize dates before sorting. Change: all_deals.sort(key=lambda x: x.get('close_time') or x.get('time') or datetime.min, reverse=True) to use parse_mt4_datetime() to convert string dates to datetime objects before comparison."
+  ],
+  "critical_code_review_comments": [
+    "Line 616 in viking.py: The sort key function compares datetime objects with strings. MT4 historical deals have string dates (e.g., '2026-01-20T15:50:21') while MT5 deals have datetime objects. Use the existing parse_mt4_datetime() helper to normalize all dates before sorting."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "94% (17/18 tests passed, 1 expected failure documented)"
+  },
+  "test_credentials": "N/A - public API endpoints",
+  "seed_data_creation": "None - using existing production data",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "VIKING PRO strategy (account #1309411) correctly returns 1152 deals from viking_deals_history collection. CORE strategy (accounts #885822 + #33627673) shows correct 4143 deal count in /accounts, /summary, and /symbols endpoints. The /deals/CORE endpoint has a datetime comparison bug that needs fixing. All other endpoints working correctly.",
+  "verified_features": {
+    "PRO_deals": "✅ Returns 1152 total deals with correct pagination",
+    "PRO_accounts": "✅ Shows total_deals = 1152",
+    "PRO_summary": "✅ Shows total_deals = 1152",
+    "PRO_symbols": "✅ Shows 1152 total trades with correct distribution",
+    "PRO_monthly_returns": "✅ Returns monthly data with metrics",
+    "CORE_accounts": "✅ Shows total_deals = 4143",
+    "CORE_summary": "✅ Shows total_deals = 4143",
+    "CORE_symbols": "✅ Shows 4143 total trades with correct distribution",
+    "CORE_monthly_returns": "✅ Returns monthly data",
+    "CORE_deals": "❌ BUG - datetime comparison error"
+  }
+}
