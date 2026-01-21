@@ -488,19 +488,29 @@ async def get_viking_analytics(strategy: str):
         if strategy not in VIKING_ACCOUNTS:
             raise HTTPException(status_code=400, detail="Strategy must be CORE or PRO")
         
-        account_num = VIKING_ACCOUNTS[strategy]["account"]
+        config = VIKING_ACCOUNTS[strategy]
+        current_account = config["current_account"]
+        historical_account = config.get("historical_account")
         
-        # Get latest analytics
+        # Get latest analytics - check both current and historical accounts
         analytics = await db.viking_analytics.find_one(
-            {"account": account_num},
+            {"account": current_account},
             {"_id": 0},
             sort=[("calculated_at", -1)]
         )
         
+        # If no analytics for current account, try historical account
+        if not analytics and historical_account and historical_account != current_account:
+            analytics = await db.viking_analytics.find_one(
+                {"account": historical_account},
+                {"_id": 0},
+                sort=[("calculated_at", -1)]
+            )
+        
         if not analytics:
             # Return default analytics structure
             analytics = {
-                "account": account_num,
+                "account": current_account,
                 "strategy": strategy,
                 "calculated_at": datetime.now(timezone.utc).isoformat(),
                 "total_return": 0.0,
