@@ -261,20 +261,29 @@ async def get_core_combined_deals_count():
 async def get_viking_accounts():
     """
     Get VIKING accounts data
-    Uses SSOT pattern - tries mt5_accounts first, falls back to viking_accounts for MT4
+    CORE strategy includes historical continuity (MT4 + MT5 combined)
     """
     try:
         strategies = []
         
-        # Get data for each VIKING strategy
         for strategy_name, config in VIKING_ACCOUNTS.items():
             account_data = await get_viking_account_data(strategy_name)
+            current_account = config["current_account"]
+            historical_account = config.get("historical_account")
             
             if account_data:
-                # Build VIKING strategy view
+                # Get total deals count (combined for CORE)
+                if strategy_name == "CORE" and historical_account:
+                    total_deals = await get_core_combined_deals_count()
+                else:
+                    total_deals = await db.mt5_deals.count_documents(
+                        {"$or": [{"login": current_account}, {"login": str(current_account)}]}
+                    )
+                
                 strategy_data = {
                     "strategy": strategy_name,
-                    "account": config["account"],
+                    "account": current_account,
+                    "historical_account": historical_account,
                     "platform": config["platform"],
                     "broker": config["broker"],
                     "description": config["description"],
@@ -289,12 +298,18 @@ async def get_viking_accounts():
                     "last_sync": account_data.get("last_sync_timestamp") or account_data.get("updated_at") or account_data.get("last_sync"),
                     "open_positions": account_data.get("open_positions") or account_data.get("positions", []),
                     "open_positions_count": account_data.get("open_positions_count", 0),
+                    "total_deals": total_deals,
                     "data_source": account_data.get("data_source", "unknown")
                 }
                 
+                # Add migration info for CORE
+                if historical_account:
+                    strategy_data["migration_date"] = config.get("migration_date")
+                    strategy_data["historical_continuity"] = True
+                
                 # Get analytics if available
                 analytics = await db.viking_analytics.find_one(
-                    {"account": config["account"]},
+                    {"account": current_account},
                     {"_id": 0},
                     sort=[("calculated_at", -1)]
                 )
@@ -314,8 +329,7 @@ async def get_viking_accounts():
                 "total_equity": total_equity,
                 "total_strategies": len(strategies),
                 "active_strategies": len(strategies)
-            },
-            "note": "Data from mt5_accounts (SSOT) with fallback to viking_accounts for MT4"
+            }
         }
     except Exception as e:
         logger.error(f"Error fetching VIKING accounts: {e}")
