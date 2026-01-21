@@ -440,6 +440,79 @@ Record Structure:
   "created_at": ISODate,
   "updated_at": ISODate
 }
+
+7.5 Creating New Referral Agent
+WORKFLOW FOR ADDING NEW REFERRAL AGENTS:
+
+Step 1: Generate Referral Code
+Format: [INITIALS]-[YEAR]
+Examples:
+•       Salvador Palma → SP-2025
+•       Erick Ahorro → EA-2026
+•       Luis Nicolau → LN-2026
+
+Step 2: Create Database Entries
+Collections to update:
+1. salespeople - Main referral agent record
+2. users - Login account
+
+Required fields for salespeople:
+{
+  "name": "Agent Name",
+  "email": "agent@email.com",
+  "phone": "",
+  "referral_code": "XX-YYYY",
+  "commission_rate": 0.10,
+  "status": "active",
+  "total_referrals": 0,
+  "total_commission_earned": 0,
+  "created_at": ISODate(),
+  "updated_at": ISODate()
+}
+
+Required fields for users:
+{
+  "email": "agent@email.com",
+  "username": "agent@email.com",
+  "password": "<sha256 hash>",
+  "name": "Agent Name",
+  "role": "referral_agent",
+  "referral_code": "XX-YYYY",
+  "status": "active",
+  "created_at": ISODate(),
+  "updated_at": ISODate()
+}
+
+Step 3: Provide Agent Details
+OUTPUT FORMAT (Copy this template):
+
+## ✅ Referral Agent Created
+
+| Field | Value |
+|-------|-------|
+| **Name** | [Agent Name] |
+| **Email** | [agent@email.com] |
+| **Temporary Password** | `Fidus2026!` |
+| **Referral Code** | [XX-YYYY] |
+| **Referral Link** | https://fidus-investment-platform.onrender.com/prospects?ref=[XX-YYYY] |
+
+---
+
+## Login URL
+**Referral Agent Portal:** https://fidus-investment-platform.onrender.com/referral-agent/login
+
+---
+
+## Notes
+- The agent should change their password after first login
+- Prospects using the referral link will be tracked automatically
+
+PRODUCTION URLS (USE THESE ONLY):
+•       Referral Link: https://fidus-investment-platform.onrender.com/prospects?ref=[CODE]
+•       Agent Login: https://fidus-investment-platform.onrender.com/referral-agent/login
+•       Main Platform: https://fidus-investment-platform.onrender.com
+
+❌ NEVER use preview URLs (emergentagent.com) for referral links
  
 8. INVESTMENT PRODUCTS
 8.1 CORE Fund
