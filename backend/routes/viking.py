@@ -870,6 +870,7 @@ async def get_viking_symbol_distribution(strategy: str):
     """
     Get symbol distribution for a strategy (for pie charts)
     CORE returns combined distribution from MT4 + MT5 history
+    PRO returns distribution from viking_deals_history
     """
     try:
         strategy = strategy.upper()
@@ -882,8 +883,8 @@ async def get_viking_symbol_distribution(strategy: str):
         
         distribution_map = {}
         
-        # For CORE: Combine MT4 and MT5 data
-        if strategy == "CORE" and historical_account:
+        if strategy == "CORE":
+            # CORE: Combine MT4 and MT5 data
             # MT4 historical deals
             mt4_pipeline = [
                 {"$match": {"$or": [
@@ -907,11 +908,11 @@ async def get_viking_symbol_distribution(strategy: str):
                 distribution_map[symbol]["total_profit"] += r.get("total_profit", 0) or 0
                 distribution_map[symbol]["total_volume"] += r.get("total_volume", 0) or 0
             
-            # MT5 current deals
+            # MT5 current deals - uses 'account' field
             mt5_pipeline = [
                 {"$match": {"$or": [
-                    {"login": current_account},
-                    {"login": str(current_account)}
+                    {"account": current_account},
+                    {"account": str(current_account)}
                 ]}},
                 {"$group": {
                     "_id": "$symbol",
@@ -929,12 +930,13 @@ async def get_viking_symbol_distribution(strategy: str):
                 distribution_map[symbol]["count"] += r["count"]
                 distribution_map[symbol]["total_profit"] += r.get("total_profit", 0) or 0
                 distribution_map[symbol]["total_volume"] += r.get("total_volume", 0) or 0
-        else:
-            # Single account query
+                
+        elif strategy == "PRO":
+            # PRO: All deals in viking_deals_history
             pipeline = [
                 {"$match": {"$or": [
-                    {"login": current_account},
-                    {"login": str(current_account)}
+                    {"account": current_account},
+                    {"account": str(current_account)}
                 ]}},
                 {"$group": {
                     "_id": "$symbol",
@@ -944,7 +946,7 @@ async def get_viking_symbol_distribution(strategy: str):
                 }},
                 {"$sort": {"count": -1}}
             ]
-            results = await db.mt5_deals.aggregate(pipeline).to_list(None)
+            results = await db.viking_deals_history.aggregate(pipeline).to_list(None)
             
             for r in results:
                 distribution_map[r["_id"]] = {
