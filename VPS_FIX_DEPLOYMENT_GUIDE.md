@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://vkng-dashboard.preview.emergentagent.com/api/system/status
+   curl https://viking-trade-dash.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://vkng-dashboard.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://viking-trade-dash.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

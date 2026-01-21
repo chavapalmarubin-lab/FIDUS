@@ -2,68 +2,510 @@
 The user's initial request was to fix a failing MT4 account connection. This quickly pivoted to a high-priority feature request to create a completely new, standalone VIKING trading analytics dashboard, separate from the existing FIDUS platform.
 
 PRODUCT REQUIREMENTS:
--   **Separate Application:** VIKING is a distinct application at the  URL with its own login, completely isolated from FIDUS.
--   **MT4 Integration:** The dashboard must sync real-time data from a VIKING CORE MT4 account (33627673) and a VIKING PRO account (1309411).
--   **UI/UX:** The UI must follow the format of an FXBlue analytics page, with multiple tabs (Overview, Analysis, Stats, Risk, Orders). The latest request was to add a monthly returns bar chart to the analysis tab.
--   **Branding:** The application must use a dark theme with purple/magenta accents and the official logo from .
--   **Backend:** New API endpoints and MongoDB collections have been created to support the VIKING dashboard. It must calculate a comprehensive set of trading metrics from the *full* trade history.
--   **Data Sync:** Data sync from MT4 to MongoDB is achieved via a JSON-file-based method. An MQL4 Expert Advisor (EA) writes account data to a JSON file, which a Python service then reads and updates MongoDB.
--   **Accurate Analytics:** A critical requirement is that all analytics, especially monthly returns, must accurately reflect trading performance by **excluding deposits and withdrawals** from profit calculations.
+-   **Separate Application:** VIKING is a distinct application at the  URL (and on hostnames containing viking or vkng) with its own login, completely isolated from FIDUS.
+-   **MT4/MT5 Integration:** The dashboard must sync real-time data from a VIKING CORE account (originally MT4 #33627673, now migrating to MT5 #885822) and a VIKING PRO account (MT4 #1309411).
+-   **UI/UX:** The UI must follow the format of an FXBlue analytics page, with multiple tabs. The latest UI fixes involved correcting tooltip text colors to be visible on the dark theme.
+-   **Branding:** The application must use a dark theme with purple/magenta accents and the official VIKING logo. A recurring issue has been the FIDUS branding incorrectly appearing on the VIKING routes.
+-   **Backend:** New API endpoints and MongoDB collections support the VIKING dashboard. It must calculate a comprehensive set of trading metrics from the *full* trade history.
+-   **Data Sync:** Data sync from MT4/MT5 to MongoDB is achieved via a JSON-file-based method. An Expert Advisor (EA) writes account data to a JSON file, which a Python service then reads and updates MongoDB.
+-   **Accurate Analytics:** A critical requirement is that all analytics, especially monthly returns, must accurately reflect trading performance by **excluding deposits and withdrawals** from profit calculations. This was a major focus of the session.
+-   **Account Migration:** The user requested to migrate the VIKING CORE account from MT4 to a new MT5 account, archiving the old data while maintaining reporting continuity.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application (React + FastAPI + MongoDB) serving two separate apps: the original FIDUS app at the root URL () and the new VIKING trading dashboard at .
--   **VIKING Frontend:** A standalone application with its own login page and a multi-tab dashboard. The UI is branded, displays data for both CORE and PRO accounts, and includes a Balance Over Time chart, Symbol Distribution pie chart, and a new Monthly Returns bar chart.
--   **VIKING Backend:** API endpoints under  serve data for multiple strategies and include an analytics engine that processes the full trade history (over 2,700 combined trades).
--   **MT4 Data Bridge:** The architecture for syncing data from MT4 to MongoDB is established for both accounts. The full trade history has been successfully imported.
--   **Multi-Account Support:** The dashboard is implemented to display data from both CORE and PRO accounts, including a strategy selector (ALL/CORE/PRO) and combined portfolio totals.
+A full-stack application (React + FastAPI + MongoDB) serving two separate apps: the original FIDUS app and the new VIKING trading dashboard.
+-   **VIKING Frontend:** A standalone application with its own login page and a multi-tab dashboard. It's designed to show data for multiple accounts/strategies. The frontend routing has been significantly hardened to prevent the FIDUS app from appearing on VIKING hostnames.
+-   **VIKING Backend:** API endpoints under  serve trading analytics. The logic has been updated to correctly handle deposits and withdrawals for accurate return calculations. The backend is currently **down** due to an error during the MT5 migration process.
+-   **Data Sync & Migration:**
+    - The data sync pipeline for the original MT4 accounts (CORE and PRO) is established. The PRO account is syncing correctly.
+    - The original CORE (MT4) account data sync is stale.
+    - A migration to a new MT5 CORE account (#885822) has been initiated. This includes new MQL5 EA and Python monitor scripts, and database schema updates to archive the old account. This migration is the cause of the current backend failure.
+-   **FIDUS Platform:** The agent also fixed a bug on the FIDUS Money Managers tab, renamed a manager, and created two new referral agents.
 
 **Last working item**:
--   **Last item agent was working:** The agent was addressing a critical bug where monthly return calculations were inaccurate because they did not account for deposits/withdrawals. The user confirmed that this information must be available in the trade history. The agent identified that the MQL4 Expert Advisor (EA) files were explicitly filtering out non-trade balance operations (like deposits). The agent was in the process of modifying the EAs to include this crucial data in the JSON export.
--   **Status:** IN PROGRESS
+-   **Last item agent was working:** The agent was executing the migration of the VIKING CORE account from MT4 (#33627673) to a new MT5 account (#885822). After updating database records to archive the old account and activate the new one, the agent attempted to restart the backend service, which failed with a .
+-   **Status:** BLOCKED
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Both.
-    1.  **Backend:** After the user deploys the updated EAs, the agent must query the  collection to confirm deposit/withdrawal records are being synced. Then, use  to test the  endpoint to verify the calculations are correct.
-    2.  **Frontend:** Use the  to visually confirm the Monthly Returns chart on the dashboard displays the corrected, more realistic percentages for the PRO account.
+-   **Which testing method agent to use?** Manual testing. First, the agent must check the backend supervisor logs (==> /var/log/supervisor/backend.err.log <==
+INFO:services.google.oauth:✅ Google OAuth Service initialized
+INFO:services.google.oauth:📍 Redirect URI: https://fidus-api.onrender.com/api/google/callback
+INFO:services.google.gmail:✅ Gmail Service initialized
+INFO:services.google.calendar:✅ Calendar Service initialized
+INFO:services.google.drive:✅ Drive Service initialized
+INFO:services.google.sheets:✅ Sheets Service initialized
+INFO:server:✅ Google Workspace services initialized: OAuth, Gmail, Calendar, Drive, Sheets
+INFO:root:MFA Service initialized
+INFO:root:MetaTrader5 library not available - using advanced simulation
+INFO:root:✅ Scheduled mock allocations initialization as background task
+ERROR:root:Unexpected error importing fund_performance_manager: unterminated string literal (detected at line 79) (fund_performance_manager.py, line 79)
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:root:✅ MT5 Pool router included successfully with prefix /mt5/pool
+INFO:root:✅ MT5 Config Management router included successfully
+INFO:root:✅ MT5 Bridge Proxy router included successfully
+INFO:root:✅ MT5 Health Monitoring router included successfully
+INFO:root:✅ System Test router included successfully
+/root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'fields' has been removed
+  warnings.warn(message, UserWarning)
+INFO:root:✅ Referrals router included successfully
+INFO:root:✅ Investment Committee V2 router included successfully
+INFO:root:✅ Bridge Health Monitoring router included successfully
+INFO:root:✅ Single Source of Truth API router included successfully
+INFO:routes.viking:✅ VIKING routes initialized with database connection
+INFO:root:✅ VIKING Trading router included successfully
+INFO:     Started server process [89]
+INFO:     Waiting for application startup.
+INFO:root:🚀 FIDUS Server starting up...
+INFO:root:📊 Environment: development, Render: False
+INFO:root:✅ Upserted default user: client1 to MongoDB
+INFO:root:✅ Upserted default user: client2 to MongoDB
+INFO:root:✅ Upserted default user: client3 to MongoDB
+INFO:root:✅ Upserted default user: client4 to MongoDB
+INFO:root:✅ Upserted default user: client5 to MongoDB
+INFO:root:✅ Upserted default user: admin to MongoDB
+INFO:root:✅ Upserted default user: alejandro_mariscal to MongoDB
+INFO:root:🎯 PRODUCTION: All users managed via MongoDB (no MOCK data)
+INFO:config.database:Creating MongoDB connection (attempt 1/3)
+INFO:root:✅ Initialized mock allocations for 14 clients
+INFO:config.database:✅ MongoDB connection established successfully
+INFO:services.mt5_service:MT5 Service initialized
+INFO:root:💹 MT5 Service initialized successfully
+INFO:root:✅ Scheduled mock MT5 data initialization as background task
+INFO:root:✅ MockMT5Service initialized successfully
+INFO:root:💹 Mock MT5 Service initialization triggered
+INFO:root:💡 Individual Google OAuth system ready
+INFO:root:ℹ️ MT5 Auto-Sync Service disabled - VPS Sync Service handles account syncing
+INFO:services.mt5_deals_sync_service:✅ MT5 Deals Sync Service initialized
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:root:✅ MT5 Deals Auto-Sync scheduled: Every 30 minutes
+INFO:root:📊 MT5 Deals initial sync scheduled in background
+INFO:apscheduler.scheduler:Added job "automatic_vps_sync" to job store "default"
+INFO:apscheduler.scheduler:Added job "background_health_check" to job store "default"
+INFO:apscheduler.scheduler:Added job "sync_mt5_deals_background" to job store "default"
+INFO:apscheduler.scheduler:Scheduler started
+INFO:root:✅ Automatic VPS sync scheduler started
+INFO:root:   Schedule: Every 5 minutes at :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56
+INFO:root:✅ Automatic health monitoring scheduler started
+INFO:root:   Schedule: Every 5 minutes at :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
+INFO:root:   Email alerts configured: True
+INFO:root:   Alert recipient: chavapalmarubin@gmail.com
+INFO:root:🔄 Scheduling initial VPS→Render sync in background...
+INFO:root:🏥 Health check scheduled to run every 5 minutes via scheduler
+INFO:root:🐕 Initializing MT5 Watchdog and Auto-Healing System...
+INFO:mt5_watchdog:[MT5 WATCHDOG] Initializing MT5 Watchdog and Auto-Healing System...
+INFO:mt5_watchdog:[MT5 WATCHDOG] ✅ MT5 Watchdog initialized and monitoring started
+INFO:root:✅ MT5 Watchdog initialized successfully
+INFO:root:   Monitoring interval: 60 seconds
+INFO:root:   Auto-healing threshold: 3 consecutive failures
+INFO:root:   GitHub token configured: False
+INFO:root:🔌 Initializing Bridge Monitoring Service...
+INFO:services.bridge_monitoring_service:✅ Bridge monitoring service task created
+INFO:root:✅ Bridge Monitoring Service initialized successfully
+INFO:root:   Monitoring: MEXAtlantic MT5 (13 accounts)
+INFO:root:   Monitoring: Lucrum MT5 (1 account)
+INFO:root:   Monitoring: MEXAtlantic MT4 (1 account)
+INFO:root:   Check interval: 60 seconds
+INFO:root:   Alert threshold: 5 minutes
+INFO:root:✅ FIDUS Server startup completed successfully
+INFO:root:🔄 Auto-sync starting at 16:32:14
+INFO:vps_sync_service:🔗 VPS Sync Service initialized with URL: http://92.118.45.135:8000
+INFO:mt5_watchdog:[MT5 WATCHDOG] 🚀 Starting MT5 Watchdog monitoring loop
+INFO:mt5_watchdog:[MT5 WATCHDOG] Check interval: 60s
+INFO:mt5_watchdog:[MT5 WATCHDOG] Data freshness threshold: 15 minutes
+INFO:mt5_watchdog:[MT5 WATCHDOG] Failure threshold for auto-healing: 3 failures
+INFO:services.bridge_monitoring_service:🚀 Bridge Monitoring Service started
+INFO:     Application startup complete.
+INFO:root:✅ Initialized mock MT5 data for 14 clients
+ERROR:vps_sync_service:❌ Error calling VPS Bridge: All connection attempts failed
+ERROR:root:❌ VPS Bridge unhealthy, skipping sync: All connection attempts failed
+WARNING:mt5_watchdog:[MT5 WATCHDOG] Bridge API check failed: All connection attempts failed
+WARNING:mt5_watchdog:[MT5 WATCHDOG] Data stale: 1519.6 minutes since last update
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT5 - Expected 13 accounts, found 15, Data not synced in 1519 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: Lucrum MT5 - Data not synced in 1520 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT4 - Data not synced in 9779 minutes (threshold: 5 minutes)
+WARNING:mt5_watchdog:[MT5 WATCHDOG] Low sync rate: 0/25 accounts (0.0%)
+INFO:mt5_watchdog:[MT5 WATCHDOG] 9/22 active accounts showing $0 balance (normal, SEPARATION excluded)
+WARNING:mt5_watchdog:[MT5 WATCHDOG] ⚠️ MT5 Bridge unhealthy - Consecutive failures: 1/3
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.131.203:45346 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.204:39554 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.26:54304 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.202:49350 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:49350 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.206:46100 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.203:45346 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.205:55588 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:46100 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.137.84:35558 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:39550 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.22:41408 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.94:44058 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.130.204:59634 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.133.14:40882 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52874 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.130.205:53974 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.136.226:52542 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.137.84:42534 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:36658 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.94:43070 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.94:43070 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.94:43070 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:51456 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52874 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.136.226:52542 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.20:56570 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.136.226:52542 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52578 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.137.84:48088 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:39294 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:35960 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.130.205:57728 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.26:45794 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.129.94:49078 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.133.20:58260 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.22:35960 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57956 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:36846 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.20:58260 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.26:45794 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.94:49078 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:36846 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.133.20:46044 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:49766 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.137.84:36332 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.203:36768 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+INFO:     10.64.138.62:56856 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.205:33778 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.202:32826 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.203:37018 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:47858 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.203:37018 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:32826 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:47858 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:47858 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.138.62:56740 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.138.62:56740 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.138.62:56740 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.206:41476 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.202:51870 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.9:44034 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.13:48142 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.7:54180 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.13:48142 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.203:52146 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:41480 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.204:43894 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.202:34206 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.206:41480 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.202:34206 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.126:59584 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.136.245:52204 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.204:36992 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.129.94:48460 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:57468 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.126:59584 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.10:41458 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.7:40242 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.13:46162 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.9:45980 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:59820 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:59820 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.205:48486 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.203:38888 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.204:50430 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.206:58924 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK) to debug the  and get the service running. Once the backend is up,  can be used to test the affected VIKING API endpoints (e.g., ).
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Inaccurate Monthly Return Calculation Due to Missing Deposit Data (P0)**
-    -   **Description:** The monthly return percentages for the PRO account are misleadingly high. The root cause is that deposits and withdrawals are not being exported by the MQL4 EA, so the backend analytics engine cannot exclude them from performance calculations.
+-   **Issue 1: Backend service fails to start (P0)**
+-   **Issue 2: VIKING CORE account data sync is not working (P1)**
+-   **Issue 3: FIDUS Branding Appears on VIKING Route (P2)**
+-   **Issue 4: FIDUS Lucrum MT5 Bridge Has Duplicate Key Errors (P2)**
+-   **Issue 5: Failing logins for three specific referral agents (P2)**
+
+**Issues Detail:**
+-   **Issue 1: Backend service fails to start (P0)**
+    -   **Attempted fixes:** The agent tried to restart the backend via backend                          RUNNING   pid 41, uptime 0:00:19
+code-server                      RUNNING   pid 42, uptime 0:00:19
+frontend                         STOPPED   Jan 21 04:32 PM
+mongodb                          RUNNING   pid 44, uptime 0:00:19
+supervisor> , which failed. No further debugging was done.
+    -   **Next debug checklist:**
+        1.  Examine the backend supervisor logs for the full  traceback: ==> /var/log/supervisor/backend.err.log <==
+INFO:services.google.oauth:✅ Google OAuth Service initialized
+INFO:services.google.oauth:📍 Redirect URI: https://fidus-api.onrender.com/api/google/callback
+INFO:services.google.gmail:✅ Gmail Service initialized
+INFO:services.google.calendar:✅ Calendar Service initialized
+INFO:services.google.drive:✅ Drive Service initialized
+INFO:services.google.sheets:✅ Sheets Service initialized
+INFO:server:✅ Google Workspace services initialized: OAuth, Gmail, Calendar, Drive, Sheets
+INFO:root:MFA Service initialized
+INFO:root:MetaTrader5 library not available - using advanced simulation
+INFO:root:✅ Scheduled mock allocations initialization as background task
+ERROR:root:Unexpected error importing fund_performance_manager: unterminated string literal (detected at line 79) (fund_performance_manager.py, line 79)
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:root:✅ MT5 Pool router included successfully with prefix /mt5/pool
+INFO:root:✅ MT5 Config Management router included successfully
+INFO:root:✅ MT5 Bridge Proxy router included successfully
+INFO:root:✅ MT5 Health Monitoring router included successfully
+INFO:root:✅ System Test router included successfully
+/root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'fields' has been removed
+  warnings.warn(message, UserWarning)
+INFO:root:✅ Referrals router included successfully
+INFO:root:✅ Investment Committee V2 router included successfully
+INFO:root:✅ Bridge Health Monitoring router included successfully
+INFO:root:✅ Single Source of Truth API router included successfully
+INFO:routes.viking:✅ VIKING routes initialized with database connection
+INFO:root:✅ VIKING Trading router included successfully
+INFO:     Started server process [89]
+INFO:     Waiting for application startup.
+INFO:root:🚀 FIDUS Server starting up...
+INFO:root:📊 Environment: development, Render: False
+INFO:root:✅ Upserted default user: client1 to MongoDB
+INFO:root:✅ Upserted default user: client2 to MongoDB
+INFO:root:✅ Upserted default user: client3 to MongoDB
+INFO:root:✅ Upserted default user: client4 to MongoDB
+INFO:root:✅ Upserted default user: client5 to MongoDB
+INFO:root:✅ Upserted default user: admin to MongoDB
+INFO:root:✅ Upserted default user: alejandro_mariscal to MongoDB
+INFO:root:🎯 PRODUCTION: All users managed via MongoDB (no MOCK data)
+INFO:config.database:Creating MongoDB connection (attempt 1/3)
+INFO:root:✅ Initialized mock allocations for 14 clients
+INFO:config.database:✅ MongoDB connection established successfully
+INFO:services.mt5_service:MT5 Service initialized
+INFO:root:💹 MT5 Service initialized successfully
+INFO:root:✅ Scheduled mock MT5 data initialization as background task
+INFO:root:✅ MockMT5Service initialized successfully
+INFO:root:💹 Mock MT5 Service initialization triggered
+INFO:root:💡 Individual Google OAuth system ready
+INFO:root:ℹ️ MT5 Auto-Sync Service disabled - VPS Sync Service handles account syncing
+INFO:services.mt5_deals_sync_service:✅ MT5 Deals Sync Service initialized
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:root:✅ MT5 Deals Auto-Sync scheduled: Every 30 minutes
+INFO:root:📊 MT5 Deals initial sync scheduled in background
+INFO:apscheduler.scheduler:Added job "automatic_vps_sync" to job store "default"
+INFO:apscheduler.scheduler:Added job "background_health_check" to job store "default"
+INFO:apscheduler.scheduler:Added job "sync_mt5_deals_background" to job store "default"
+INFO:apscheduler.scheduler:Scheduler started
+INFO:root:✅ Automatic VPS sync scheduler started
+INFO:root:   Schedule: Every 5 minutes at :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56
+INFO:root:✅ Automatic health monitoring scheduler started
+INFO:root:   Schedule: Every 5 minutes at :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
+INFO:root:   Email alerts configured: True
+INFO:root:   Alert recipient: chavapalmarubin@gmail.com
+INFO:root:🔄 Scheduling initial VPS→Render sync in background...
+INFO:root:🏥 Health check scheduled to run every 5 minutes via scheduler
+INFO:root:🐕 Initializing MT5 Watchdog and Auto-Healing System...
+INFO:mt5_watchdog:[MT5 WATCHDOG] Initializing MT5 Watchdog and Auto-Healing System...
+INFO:mt5_watchdog:[MT5 WATCHDOG] ✅ MT5 Watchdog initialized and monitoring started
+INFO:root:✅ MT5 Watchdog initialized successfully
+INFO:root:   Monitoring interval: 60 seconds
+INFO:root:   Auto-healing threshold: 3 consecutive failures
+INFO:root:   GitHub token configured: False
+INFO:root:🔌 Initializing Bridge Monitoring Service...
+INFO:services.bridge_monitoring_service:✅ Bridge monitoring service task created
+INFO:root:✅ Bridge Monitoring Service initialized successfully
+INFO:root:   Monitoring: MEXAtlantic MT5 (13 accounts)
+INFO:root:   Monitoring: Lucrum MT5 (1 account)
+INFO:root:   Monitoring: MEXAtlantic MT4 (1 account)
+INFO:root:   Check interval: 60 seconds
+INFO:root:   Alert threshold: 5 minutes
+INFO:root:✅ FIDUS Server startup completed successfully
+INFO:root:🔄 Auto-sync starting at 16:32:14
+INFO:vps_sync_service:🔗 VPS Sync Service initialized with URL: http://92.118.45.135:8000
+INFO:mt5_watchdog:[MT5 WATCHDOG] 🚀 Starting MT5 Watchdog monitoring loop
+INFO:mt5_watchdog:[MT5 WATCHDOG] Check interval: 60s
+INFO:mt5_watchdog:[MT5 WATCHDOG] Data freshness threshold: 15 minutes
+INFO:mt5_watchdog:[MT5 WATCHDOG] Failure threshold for auto-healing: 3 failures
+INFO:services.bridge_monitoring_service:🚀 Bridge Monitoring Service started
+INFO:     Application startup complete.
+INFO:root:✅ Initialized mock MT5 data for 14 clients
+ERROR:vps_sync_service:❌ Error calling VPS Bridge: All connection attempts failed
+ERROR:root:❌ VPS Bridge unhealthy, skipping sync: All connection attempts failed
+WARNING:mt5_watchdog:[MT5 WATCHDOG] Bridge API check failed: All connection attempts failed
+WARNING:mt5_watchdog:[MT5 WATCHDOG] Data stale: 1519.6 minutes since last update
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT5 - Expected 13 accounts, found 15, Data not synced in 1519 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: Lucrum MT5 - Data not synced in 1520 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT4 - Data not synced in 9779 minutes (threshold: 5 minutes)
+WARNING:mt5_watchdog:[MT5 WATCHDOG] Low sync rate: 0/25 accounts (0.0%)
+INFO:mt5_watchdog:[MT5 WATCHDOG] 9/22 active accounts showing $0 balance (normal, SEPARATION excluded)
+WARNING:mt5_watchdog:[MT5 WATCHDOG] ⚠️ MT5 Bridge unhealthy - Consecutive failures: 1/3
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.131.203:45346 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.204:39554 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.26:54304 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.202:49350 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:49350 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.206:46100 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.203:45346 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.205:55588 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:46100 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.137.84:35558 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:39550 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.22:41408 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.94:44058 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.130.204:59634 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.133.14:40882 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52874 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.130.205:53974 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.136.226:52542 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.137.84:42534 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:36658 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.94:43070 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.94:43070 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.94:43070 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:51456 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52874 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.136.226:52542 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.20:56570 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.136.226:52542 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52578 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.137.84:48088 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:39294 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:35960 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.130.205:57728 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.26:45794 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.129.94:49078 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.133.20:58260 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.22:35960 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57956 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:36846 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.20:58260 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.26:45794 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.94:49078 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.133.14:36846 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.133.20:46044 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.22:49766 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.137.84:36332 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.203:36768 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+INFO:     10.64.138.62:56856 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.205:33778 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.202:32826 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.203:37018 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:47858 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.203:37018 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:32826 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:47858 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:47858 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.138.62:56740 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.7:39968 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.138.62:56740 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.138.62:56740 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.206:41476 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.131.202:51870 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.9:44034 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.13:48142 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.10:56000 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.7:54180 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.13:48142 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.203:52146 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:41480 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.204:43894 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.202:34206 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.206:41480 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.202:34206 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.126:59584 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.136.245:52204 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.204:36992 - "GET /api/viking/summary HTTP/1.1" 200 OK
+INFO:     10.64.129.94:48460 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.206:57468 - "GET /api/viking/analytics/CORE HTTP/1.1" 200 OK
+INFO:     10.64.129.126:59584 - "GET /api/viking/deals/PRO?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.129.10:41458 - "GET /api/viking/symbols/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.7:40242 - "GET /api/viking/risk/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.13:46162 - "GET /api/viking/balance-snapshots/PRO HTTP/1.1" 200 OK
+INFO:     10.64.129.9:45980 - "GET /api/viking/monthly-returns/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:59820 - "GET /api/viking/analytics/PRO HTTP/1.1" 200 OK
+INFO:     10.64.131.202:59820 - "GET /api/viking/deals/CORE?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     10.64.131.205:48486 - "GET /api/viking/symbols/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.203:38888 - "GET /api/viking/risk/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.204:50430 - "GET /api/viking/balance-snapshots/CORE HTTP/1.1" 200 OK
+INFO:     10.64.131.206:58924 - "GET /api/viking/monthly-returns/CORE HTTP/1.1" 200 OK.
+        2.  Identify the file and line number causing the error. It's likely related to reading a configuration file or parsing an API response that is now empty or malformed due to the migration changes.
+        3.  View the problematic code in  or a related module.
+        4.  Fix the code to handle potential empty/malformed JSON.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a hard blocker. Fixing it will bring the entire backend online, unblocking all other work, including the MT5 migration and all API functionality.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
--   **Issue 2: FIDUS Branding Appears on VIKING Route (P2)**
-    -   **Description:** The user has repeatedly reported seeing the FIDUS login page on the  URL. The agent has implemented multiple code fixes which appear correct on the agent's preview URL, but the user may be seeing a cached version or a different deployment.
+    -   **Should Test frontend/backend/both after fix?** Backend.
+    -   **Blocked on other issue:** No. This is the primary blocker.
+-   **Issue 2: VIKING CORE account data sync is not working (P1)**
+    -   **Attempted fixes:** The agent identified the original MT4 CORE account sync was stale. The user then requested to migrate to a new MT5 account. The agent created the necessary files (, ) and updated database records.
+    -   **Next debug checklist:**
+        1.  Resolve Issue 1 (Backend Down).
+        2.  Provide the user with the contents of the new  and  files.
+        3.  Guide the user to deploy the new EA to their MT5 terminal and the new Python monitor to their VPS.
+        4.  Use the GitHub Actions workflow () or manual checks to verify the new monitor is running and syncing data to MongoDB.
+    -   **Why fix this issue and what will be achieved with the fix?** This will complete the user-requested migration and restore data sync for the CORE strategy, providing up-to-date analytics.
+    -   **Status:** BLOCKED
+    -   **Is recurring issue?** Y (in the sense that the previous CORE sync was also broken)
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Issue 1: Backend service fails to start
+-   **Issue 3: FIDUS Branding Appears on VIKING Route (P2)**
+    -   **Attempted fixes:** Multiple fixes were applied. The latest and most robust fix involves a script in  that checks  for viking or vkng before any React code loads.
+    -   **Next debug checklist:** This is pending user action. The user needs to: 1. Save to GitHub to deploy the latest code. 2. Clear their browser cache or use an incognito window to verify. The agent should re-iterate these steps clearly.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a major source of user frustration and fixing it will provide the required brand separation between the two applications.
     -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+-   **Issue 4 & 5 (P2):** These are low-priority legacy issues related to the FIDUS platform that have not been started.
 
 **In progress Task List**:
--   **Task 1: Capture and Process Deposits/Withdrawals for Accurate Analytics (P0)**
-    -   **Where to resume:** Modify the MQL4 EA files ( and ). The current code explicitly filters for trades (). A new section must be added to loop through the history and export balance operations (deposits, withdrawals), which have different  values.
-    -   **What will be achieved with this?** The analytics will be accurate and reflect true trading performance, not capital injections or withdrawals.
+-   **Task 1: Complete the VIKING CORE account migration from MT4 to MT5 (P0)**
+    -   **Where to resume:** Debugging the backend startup  by checking supervisor logs.
+    -   **What will be achieved with this?** A stable backend that correctly handles the archived MT4 account and the new active MT5 account, paving the way for the new data sync to be established.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** No.
+    -   **Blocked on something:** The backend service failing to start.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Verify Pagination on Orders Tab:** The UI for pagination was added, but it needs to be thoroughly checked now that the database contains thousands of historical trades for both accounts.
+    -   **(P1) Deploy and test new MT5 EA and Monitor:** Guide the user to deploy  and  to their systems to enable data sync for the new CORE account.
+    -   **(P1) Verify Pagination on Orders Tab:** The UI for pagination was added, but it needs to be checked with the large trade history.
 -   **Future Tasks:**
-    -   **(P2) Refactor VIKING Components:** Break down the large  component into smaller, more manageable sub-components (e.g., , , ).
-    -   **(P2) Refactor Backend Analytics:** Move the analytics calculation logic from  into a separate  module.
-    -   **(P2) Address FIDUS backlog:** Address older, low-priority tasks related to the FIDUS part of the application, such as fixing the Lucrum MT5 Bridge Has Duplicate Key Errors.
+    -   **(P2) Refactor :** Break down the large component into smaller sub-components.
+    -   **(P2) Refactor Backend Analytics:** Move analytics logic from  into a separate  module.
+    -   **(P2) Address FIDUS backlog:** Address older, low-priority tasks (Lucrum bridge errors, referral agent logins).
 
 **Completed work in this session**
--   **Imported Full Trade History:** Updated the MT4 EAs to export the complete trade history (up to 10,000 trades) and successfully guided the user to import over 2,700 trades into MongoDB.
--   **Implemented Monthly Returns Chart:** Added a new backend endpoint () and a frontend bar chart component to the 'Analysis' tab to display monthly performance, as requested by the user.
--   **Corrected Initial Return Calculation Logic:** Refined the backend calculation for monthly returns to be based on the initial deposit, making the percentages more stable after a large drawdown and recovery cycle. This was an intermediate fix before discovering deposits were missing entirely.
--   **Fixed FIDUS Branding on VIKING Route:** Restructured  to create a hard separation between the FIDUS and VIKING applications, preventing the FIDUS login from appearing on .
--   **Fixed Incorrect Account Number in Header:** Modified the VIKING header to dynamically display the correct account number (CORE or PRO) based on the selected strategy.
--   **Updated Meta Tags:** Changed the  meta title and description from FIDUS to VKNG AI so link previews in Slack and other platforms show the correct branding.
--   **Fixed VIKING PRO Sync Service:** Debugged and fixed a  compatibility issue that was preventing the PRO account monitor from syncing data.
--   **Fixed Balance Over Time Chart:** Implemented a backend mechanism to reconstruct balance history from trade deals. Updated the Python monitors to save balance snapshots going forward.
--   **Fixed Symbol Distribution Chart Colors:** Updated the color palette to provide better contrast between symbols in the pie chart.
+-   **Fixed Inaccurate Monthly Returns:** Implemented a full-stack fix to export, process, and calculate with deposit/withdrawal data, providing accurate trading performance metrics.
+-   **Created GitHub Actions Workflow:** Built  to simplify updating and restarting the Python monitor services on the user's VPS.
+-   **Fixed FIDUS/VIKING Routing Issue:** Implemented a robust, multi-layered fix using hostname detection in  and  to prevent brand contamination.
+-   **Fixed FIDUS Money Managers Tab:** Resolved a 500 API error caused by a  value.
+-   **Renamed Money Manager:** Added a new API endpoint to allow renaming of money managers and fulfilled the user's request.
+-   **Created Referral Agents:** Successfully created two new referral agents for the FIDUS platform with temporary credentials.
+-   **Fixed VIKING Chart UI:** Corrected the tooltip text color on all Recharts graphs to be white and readable on the dark background.
+-   **Resolved CORS Errors:** Updated the backend CORS policy to allow requests from all required frontend origins.
+-   **Initiated VIKING CORE Migration:** Began the user-requested migration from MT4 to MT5 by creating new EA/monitor files and updating database records.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Lucrum MT5 Bridge Has Duplicate Key Errors (P2)**
@@ -78,83 +520,103 @@ A full-stack application (React + FastAPI + MongoDB) serving two separate apps: 
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   None.
+-   **Issue recurrence in previous fork:** FIDUS Branding Appears on VIKING Route.
+-   **Recurrence count:** High. This was a persistent issue throughout the session.
+-   **Status:** USER VERIFICATION PENDING (A new, more robust fix was implemented but awaits user deployment and confirmation).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **MQL4 Data Export:** The core mechanism for extracting data from MT4. The immediate task is to expand its scope to include non-trade balance operations (deposits/withdrawals) by looking for different  values in the history.
--   **Time Series Analytics:** The backend calculates trading metrics from the full trade history. The monthly return calculation is the most complex and currently inaccurate because it lacks deposit/withdrawal data.
--   **React State Management:** The agent used state lifting and prop drilling (passing callbacks) to update the parent component () from the child (). While effective, this indicates  is a candidate for refactoring.
--   **Recharts Library:** Used for all data visualizations, including the new Monthly Returns bar chart.
+-   **MQL4/MQL5 Data Export:** Using Expert Advisors to write trade and balance history to JSON files.
+-   **Python File Monitoring:** A persistent Python service on a VPS polls for new JSON files and upserts data into MongoDB.
+-   **Hardened Frontend Routing:** Using hostname detection in  (before JS loads) and  (at the React entry point) to strictly separate the FIDUS and VIKING applications.
+-   **GitHub Actions for Remote Management:** A workflow was created to allow the user to check status, update, and restart Python services on their remote VPS via the GitHub UI.
+-   **Database Migration Strategy:** Archiving old account data () and linking it to a new active account via metadata fields (, ) to maintain historical reporting continuity without merging trade histories.
 
 **key DB schema**
--   : { , , , ,  }
--   : { , , , , ,  }
--   : { , , , ,  }
--   : { , , , ,  }
--   **Note:** The schema for  will likely need to accommodate deposit/withdrawal records, which may lack fields like , , etc., but will have a  value representing the deposit/withdrawal amount.
+-   **viking_accounts:**
+    -   : (String) The unique account ID.
+    -   : (String) e.g., CORE, PRO.
+    -   : (String) active or archived.
+    -   : (String) MT4 or MT5.
+    -   : (String, Optional) ID of the account this one replaces.
+    -   : (String, Optional) ID of the account that replaces this one.
+-   **viking_deals_history:**
+    -   Now includes balance operations.
+    -   : (Boolean)  if the record is a deposit/withdrawal.
+    -   : (String) For balance ops, DEPOSIT or WITHDRAWAL.
+    -   : (Float) For balance ops, this holds the amount of the deposit/withdrawal.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : Needs to be modified to export balance operations.
--   : Needs to be modified to export balance operations.
--   : The  endpoint logic must be updated to correctly parse and exclude deposits/withdrawals from profit calculations once the data is available.
--   : The primary UI component for the VIKING app.
--   : Contains the critical routing logic that separates the VIKING and FIDUS applications.
+-   : The likely source of the backend startup error.
+-   : Must be checked to debug the startup error.
+-   : New MQL5 EA for the user to deploy.
+-   : New Python monitor for the user to deploy.
+-   : Contains the latest, most robust routing fix.
+-   : Contains the analytics logic that will need to correctly query the new active/archived CORE accounts.
 
 **Areas that need refactoring**:
--    is a monolithic component (over 1000 lines) and should be broken down into smaller, specialized components.
--   The analytics calculation logic in  could be abstracted into a separate  or  module for better separation of concerns.
+-    is a large monolithic component.
+-   Analytics logic in  should be moved to a dedicated service module.
 
 **key api endpoints**
--   : Triggers an on-demand calculation of all trading metrics.
--   : Returns data for the balance-over-time chart.
--   : **(Needs Fix)** Returns data for the monthly returns chart. Must be updated to handle deposit data.
+-   : Fixed to use deposit/withdrawal data. Needs to be verified post-migration to ensure it combines old and new CORE account data correctly.
+-   : New endpoint created to rename a money manager.
+-   : Endpoint used to create new referral agents.
 
 **Critical Info for New Agent**
--   The immediate, highest-priority task is to fix the inaccurate monthly return calculation. This is a multi-step process:
-    1.  Modify both MQL4 EA files to export deposit/withdrawal history in addition to trades.
-    2.  Provide the updated  file contents to the user so they can deploy them.
-    3.  Once the user confirms deployment and data resync, update the backend logic in  to correctly identify these new records and exclude them from profit/loss calculations.
--   The user is technically proficient and understands that the issue lies in identifying deposits within the trade history. You must deliver a solution that correctly parses this data.
--   Be prepared to address the recurring FIDUS branding issue. The code appears correct, so the problem might be related to caching or the user's specific deployment environment.
+-   **THE BACKEND IS DOWN.** Your first and highest priority is to fix the  that is preventing the backend from starting. Check the supervisor logs for the full traceback. The error was triggered by the recent VIKING CORE account migration work.
+-   The VIKING CORE account migration from MT4 to MT5 is incomplete and blocked by the backend failure. Once the service is running, you must guide the user to deploy the new MT5 EA ( file) and Python monitor script to their systems.
+-   The FIDUS/VIKING routing issue has been a major source of user frustration. The latest fix (hostname check in ) is the most robust yet. Be prepared to calmly explain that the user MUST save to GitHub and clear their browser cache to see the fix on their production URL. Do not implement further routing changes until the user has confirmed the latest one has failed after deployment.
 
 **documents and test reports created in this job**
--    was updated with completed tasks.
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Everything is in the trade history. You have to be able to identify all the movements within the trade history. They have to be labeled as trade or deposits. - **IN PROGRESS**. This is the core of the current task. The agent found the EAs were not exporting this data.
-2.  **User:** I still think that pro is not correctly calculated...deposits cannot count as profits. We have to exclude deposits. - **IN PROGRESS**. This message initiated the current debugging effort.
-3.  **User:** done. please check again (re: trade history import) - **COMPLETED**.
-4.  **User:** i changed the properties in both mt4 accounts they were set to 100. changed to 10000 - **COMPLETED**. This fixed the trade history import limit.
-5.  **User:** all done. please check mongoDB files for history - **COMPLETED**.
-6.  **User:** awesome so we need to be able to run analytics from all history. - **COMPLETED**.
-7.  **User:** Provided detailed requirements for the monthly returns chart. - **COMPLETED**.
-8.  **User:** when I add the link in slack FIDUS MANAGEMENT comes up. can we change that ? - **COMPLETED**.
-9.  **User:** top of PRO account has the wrong account number. it has CORE next to LIVE - **COMPLETED**.
-10. **User:** NO there is something WRONG about this link FIDUS is not related to this. we have to fix this - **COMPLETED**.
+1.  **i am really FED up with this shit !!! VKNG has nothing to do with FIDUS** - User extremely frustrated with the recurring branding issue.
+2.  **luisnicolauh@gmail.com new Referall link for Luis Nicolau for FIDUS** - COMPLETED. New referral agent created.
+3.  **for VKNG not FIDUS ... migration prompt** - User confirming the account migration is for the VIKING CORE account.
+4.  **ran all please check MongoDB** - User confirming they ran VPS monitor restart steps.
+5.  **not working** - Vague report of an issue, likely related to the CORE account sync or CORS errors.
+6.  **use old data for CORE** - User is okay with showing stale data for the CORE account temporarily.
+7.  **what the URL for VKNG** - User asking for the VIKING dashboard URL.
+8.  **again same problem FIDUS logo** - User reporting the branding issue again.
+9.  **cant be incognito it has to work. fix it. should not show FIDUS at any time nor point. no matter what** - User rejecting browser-specific workarounds and demanding a permanent fix for the routing issue.
+10. **damm it i am sick and tired of this shit. fix it [URL]** - User reporting the branding issue persists on their production URL.
 
 **Project Health Check:**
--   **Broken**: The monthly return calculation is fundamentally incorrect as it doesn't account for deposits/withdrawals, which is a critical flaw for a financial analytics dashboard.
+-   **Broken**:
+    -   The entire backend service is down.
+    -   The VIKING CORE account data sync is non-functional pending the MT5 migration.
 -   **Mocked**: None.
 
 **3rd Party Integrations**
 -   **Render:** Used for hosting and deployment.
 -   **MongoDB Atlas:** Production database.
--   **GitHub Actions:** Used for custom deployment workflows for the MT4 bridge services.
+-   **GitHub Actions:** Used for custom deployment workflows for the MT4/MT5 bridge services.
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None. Testing is performed manually via  for the backend and  for the frontend.
--   **Known regressions:** None.
+-   **Test files created:** None.
+-   **Known regressions:** The backend service is non-operational after migration-related changes.
 
 **Credentials to test flow:**
 -   **VIKING Admin:**  / 
+-   **FIDUS Referral Agent (Rodrigo):**  / 
+-   **FIDUS Referral Agent (Luis):**  / 
 
 **What agent forgot to execute**
--   The agent correctly identified the root cause of the analytics issue (EAs not exporting deposits) but had not yet implemented the fix in the MQL4 code before the session ended. The next agent must start by writing that code.</analysis>
+-   The agent failed to investigate the backend startup failure. After the backend: stopped
+backend: started command failed, the immediate next step should have been to inspect the logs (==> /var/log/supervisor/backend.err.log <==
+INFO:     Stopping reloader process [41]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [333] using WatchFiles
+
+==> /var/log/supervisor/backend.out.log <==) to get the full error traceback. This was a critical omission that left the primary issue undiagnosed.</analysis>

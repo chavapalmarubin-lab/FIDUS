@@ -34,7 +34,7 @@ import io
 import os
 
 # Configuration
-BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
+BACKEND_URL = "https://viking-trade-dash.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

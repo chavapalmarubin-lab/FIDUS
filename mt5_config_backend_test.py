@@ -33,7 +33,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com"
+BACKEND_URL = "https://viking-trade-dash.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

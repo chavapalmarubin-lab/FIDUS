@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = "https://vkng-dashboard.preview.emergentagent.com/api"
+BACKEND_URL = "https://viking-trade-dash.preview.emergentagent.com/api"
 
 class SimplifiedPipelineTest:
     def __init__(self):
