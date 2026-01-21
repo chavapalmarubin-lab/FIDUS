@@ -340,14 +340,7 @@ async def seed_viking_core_account():
 async def get_viking_accounts():
     """Get all VIKING accounts with their latest data"""
     try:
-        # Create fresh connection to avoid any caching issues
-        from motor.motor_asyncio import AsyncIOMotorClient
-        import os
-        
-        fresh_client = AsyncIOMotorClient(os.environ.get('MONGO_URL'))
-        fresh_db = fresh_client[os.environ.get('DB_NAME', 'fidus_production')]
-        
-        all_accounts = await fresh_db.viking_accounts.find({}, {"_id": 0}).to_list(length=100)
+        all_accounts = await db.viking_accounts.find({}, {"_id": 0}).to_list(length=100)
         
         # Separate active and archived accounts
         active_accounts = []
@@ -355,7 +348,7 @@ async def get_viking_accounts():
         
         for account in all_accounts:
             # Get latest analytics for each account
-            analytics = await fresh_db.viking_analytics.find_one(
+            analytics = await db.viking_analytics.find_one(
                 {"account": account["account"]},
                 {"_id": 0},
                 sort=[("calculated_at", -1)]
