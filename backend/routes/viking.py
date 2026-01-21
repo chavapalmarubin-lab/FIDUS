@@ -808,24 +808,23 @@ async def trigger_viking_sync():
         results = []
         
         for strategy_name, config in VIKING_ACCOUNTS.items():
-            account_num = config["account"]
-            account = await db.mt5_accounts.find_one({"account": account_num}, {"_id": 0})
+            account_data = await get_viking_account_data(strategy_name)
             
-            if account:
+            if account_data:
                 results.append({
                     "strategy": strategy_name,
-                    "account": account_num,
-                    "balance": account.get("balance", 0),
-                    "equity": account.get("equity", 0),
-                    "last_sync": account.get("last_sync_timestamp") or account.get("updated_at"),
-                    "status": "synced_via_fidus_bridge"
+                    "current_account": config["current_account"],
+                    "historical_account": config.get("historical_account"),
+                    "balance": account_data.get("balance", 0),
+                    "equity": account_data.get("equity", 0),
+                    "last_sync": account_data.get("last_sync_timestamp") or account_data.get("updated_at"),
+                    "data_source": account_data.get("data_source", "unknown")
                 })
         
         return {
             "success": True,
-            "message": "VIKING uses SSOT pattern - data synced via FIDUS VPS bridge",
-            "results": serialize_doc(results),
-            "note": "No separate sync needed - VIKING reads from mt5_accounts (SSOT)"
+            "message": "VIKING account data status",
+            "results": serialize_doc(results)
         }
     except Exception as e:
         logger.error(f"Error in VIKING sync: {e}")
