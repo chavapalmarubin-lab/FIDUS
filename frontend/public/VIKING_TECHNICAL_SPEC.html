@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>VIKING Technical Specification</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">VIKING Technical Specification</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a
+href="#viking-trading-analytics-dashboard---technical-specification">VIKING
+Trading Analytics Dashboard - Technical Specification</a>
+<ul>
+<li><a href="#executive-summary">1. EXECUTIVE SUMMARY</a></li>
+<li><a href="#architecture-overview">2. ARCHITECTURE OVERVIEW</a></li>
+<li><a href="#technology-stack">3. TECHNOLOGY STACK</a>
+<ul>
+<li><a href="#frontend">3.1 Frontend</a></li>
+<li><a href="#backend">3.2 Backend</a></li>
+<li><a href="#database">3.3 Database</a></li>
+</ul></li>
+<li><a href="#hosting-options">4. HOSTING OPTIONS</a>
+<ul>
+<li><a href="#option-a-single-server-recommended-for-simplicity">Option
+A: Single Server (Recommended for Simplicity)</a></li>
+<li><a href="#option-b-separate-services">Option B: Separate
+Services</a></li>
+<li><a href="#option-c-containerized-docker">Option C: Containerized
+(Docker)</a></li>
+</ul></li>
+<li><a href="#dns-configuration-godaddy">5. DNS CONFIGURATION
+(GoDaddy)</a>
+<ul>
+<li><a href="#required-dns-records">Required DNS Records</a></li>
+</ul></li>
+<li><a href="#environment-variables">6. ENVIRONMENT VARIABLES</a>
+<ul>
+<li><a href="#frontend-.env">6.1 Frontend (.env)</a></li>
+<li><a href="#backend-.env">6.2 Backend (.env)</a></li>
+</ul></li>
+<li><a href="#api-endpoints">7. API ENDPOINTS</a>
+<ul>
+<li><a href="#base-url-httpsapi.getvkng.comapiviking">Base URL:
+<code>https://api.getvkng.com/api/viking</code></a></li>
+<li><a href="#authentication">Authentication</a></li>
+</ul></li>
+<li><a href="#database-collections">8. DATABASE COLLECTIONS</a>
+<ul>
+<li><a href="#collections-used-by-viking">Collections Used by
+VIKING</a></li>
+<li><a href="#database-access">Database Access</a></li>
+</ul></li>
+<li><a href="#trading-strategies">9. TRADING STRATEGIES</a>
+<ul>
+<li><a href="#core-strategy">CORE Strategy</a></li>
+<li><a href="#pro-strategy">PRO Strategy</a></li>
+</ul></li>
+<li><a href="#frontend-components">10. FRONTEND COMPONENTS</a>
+<ul>
+<li><a href="#frontend-routes">Frontend Routes</a></li>
+</ul></li>
+<li><a href="#deployment-checklist">11. DEPLOYMENT CHECKLIST</a>
+<ul>
+<li><a href="#pre-deployment">Pre-Deployment</a></li>
+<li><a href="#deployment-steps">Deployment Steps</a></li>
+<li><a href="#post-deployment-verification">Post-Deployment
+Verification</a></li>
+</ul></li>
+<li><a href="#recommended-hosting-providers">12. RECOMMENDED HOSTING
+PROVIDERS</a>
+<ul>
+<li><a href="#budget-option-5-15month">Budget Option
+(~$5-15/month)</a></li>
+<li><a href="#managed-option-20-50month">Managed Option
+(~$20-50/month)</a></li>
+<li><a href="#enterprise-option">Enterprise Option</a></li>
+</ul></li>
+<li><a href="#security-considerations">13. SECURITY CONSIDERATIONS</a>
+<ul>
+<li><a href="#immediate-must-have">Immediate (Must Have)</a></li>
+<li><a href="#recommended">Recommended</a></li>
+<li><a href="#future">Future</a></li>
+</ul></li>
+<li><a href="#monitoring-maintenance">14. MONITORING &amp;
+MAINTENANCE</a>
+<ul>
+<li><a href="#health-check-endpoint">Health Check Endpoint</a></li>
+<li><a href="#recommended-monitoring">Recommended Monitoring</a></li>
+<li><a href="#backup-strategy">Backup Strategy</a></li>
+</ul></li>
+<li><a href="#contact-support">15. CONTACT &amp; SUPPORT</a></li>
+<li><a href="#appendix-a-quick-start-commands">APPENDIX A: Quick Start
+Commands</a></li>
+<li><a href="#appendix-b-docker-compose-optional">APPENDIX B: Docker
+Compose (Optional)</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1
+id="viking-trading-analytics-dashboard---technical-specification">VIKING
+Trading Analytics Dashboard - Technical Specification</h1>
+<p><strong>Document Version:</strong> 1.0<br />
+<strong>Created:</strong> January 21, 2026<br />
+<strong>Purpose:</strong> Technical requirements for hosting VIKING on
+getvkng.com subdomain</p>
+<hr />
+<h2 id="executive-summary">1. EXECUTIVE SUMMARY</h2>
+<p>VIKING is a standalone trading analytics dashboard that displays
+performance metrics for two trading strategies (CORE and PRO). It is
+currently part of the FIDUS platform but is designed to be deployed as a
+separate application.</p>
+<p><strong>Recommended Subdomain:</strong> <code>app.getvkng.com</code>
+or <code>dashboard.getvkng.com</code></p>
+<hr />
+<h2 id="architecture-overview">2. ARCHITECTURE OVERVIEW</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                         VIKING ARCHITECTURE                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────────────┐         ┌─────────────────┐                  │
+│   │   FRONTEND      │  HTTPS  │    BACKEND      │                  │
+│   │   React 19      │◄───────►│    FastAPI      │                  │
+│   │   (Static)      │   API   │    (Python)     │                  │
+│   │                 │         │                 │                  │
+│   │ app.getvkng.com │         │ api.getvkng.com │                  │
+│   │ Port: 443       │         │ Port: 443/8001  │                  │
+│   └─────────────────┘         └────────┬────────┘                  │
+│                                        │                           │
+│                                        │ MongoDB Driver            │
+│                                        ▼                           │
+│                          ┌─────────────────────────┐               │
+│                          │   MongoDB Atlas         │               │
+│                          │   (Cloud Database)      │               │
+│                          │                         │               │
+│                          │   Database:             │               │
+│                          │   fidus_production      │               │
+│                          └─────────────────────────┘               │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 id="technology-stack">3. TECHNOLOGY STACK</h2>
+<h3 id="frontend">3.1 Frontend</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>React</td>
+<td>19.0.0</td>
+<td>Main framework</td>
+</tr>
+<tr class="even">
+<td>Tailwind CSS</td>
+<td>3.x</td>
+<td>Styling</td>
+</tr>
+<tr class="odd">
+<td>Recharts</td>
+<td>Latest</td>
+<td>Charts/graphs</td>
+</tr>
+<tr class="even">
+<td>Lucide React</td>
+<td>Latest</td>
+<td>Icons</td>
+</tr>
+<tr class="odd">
+<td>Axios</td>
+<td>Latest</td>
+<td>HTTP client</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Build Output:</strong> Static files (HTML, JS, CSS)<br />
+<strong>Build Command:</strong> <code>npm run build</code> or
+<code>yarn build</code><br />
+<strong>Output Directory:</strong> <code>/build</code></p>
+<h3 id="backend">3.2 Backend</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Python</td>
+<td>3.11+</td>
+<td>Runtime</td>
+</tr>
+<tr class="even">
+<td>FastAPI</td>
+<td>0.110.1</td>
+<td>Web framework</td>
+</tr>
+<tr class="odd">
+<td>Motor</td>
+<td>Latest</td>
+<td>Async MongoDB driver</td>
+</tr>
+<tr class="even">
+<td>Uvicorn</td>
+<td>Latest</td>
+<td>ASGI server</td>
+</tr>
+<tr class="odd">
+<td>PyJWT</td>
+<td>Latest</td>
+<td>JWT authentication</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Start Command:</strong>
+<code>uvicorn server:app --host 0.0.0.0 --port 8001</code></p>
+<h3 id="database">3.3 Database</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Provider</td>
+<td>MongoDB Atlas</td>
+</tr>
+<tr class="even">
+<td>Database Name</td>
+<td><code>fidus_production</code></td>
+</tr>
+<tr class="odd">
+<td>Connection</td>
+<td>MongoDB SRV (TLS encrypted)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="hosting-options">4. HOSTING OPTIONS</h2>
+<h3 id="option-a-single-server-recommended-for-simplicity">Option A:
+Single Server (Recommended for Simplicity)</h3>
+<pre><code>app.getvkng.com
+├── Frontend (Nginx serving static files)
+├── Backend (Uvicorn/Gunicorn on port 8001)
+└── Nginx reverse proxy for /api/* → localhost:8001</code></pre>
+<h3 id="option-b-separate-services">Option B: Separate Services</h3>
+<pre><code>app.getvkng.com     → Frontend (Static hosting: Netlify, Vercel, Cloudflare Pages)
+api.getvkng.com     → Backend (VPS, Render, Railway, DigitalOcean App Platform)</code></pre>
+<h3 id="option-c-containerized-docker">Option C: Containerized
+(Docker)</h3>
+<pre><code>docker-compose.yml with:
+├── frontend (nginx:alpine)
+├── backend (python:3.11-slim)
+└── nginx (reverse proxy)</code></pre>
+<hr />
+<h2 id="dns-configuration-godaddy">5. DNS CONFIGURATION (GoDaddy)</h2>
+<h3 id="required-dns-records">Required DNS Records</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Name</th>
+<th>Value</th>
+<th>TTL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td>app</td>
+<td>[Server IP]</td>
+<td>600</td>
+</tr>
+<tr class="even">
+<td>A</td>
+<td>api</td>
+<td>[Server IP]</td>
+<td>600</td>
+</tr>
+<tr class="odd">
+<td>CNAME</td>
+<td>www.app</td>
+<td>app.getvkng.com</td>
+<td>600</td>
+</tr>
+</tbody>
+</table>
+<p><strong>If using cloud hosting (Render, Vercel, etc.):</strong> |
+Type | Name | Value | TTL | |——|——|——-|—–| | CNAME | app |
+[provider-domain].com | 600 |</p>
+<hr />
+<h2 id="environment-variables">6. ENVIRONMENT VARIABLES</h2>
+<h3 id="frontend-.env">6.1 Frontend (.env)</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Required</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">REACT_APP_BACKEND_URL</span><span class="op">=</span>https://api.getvkng.com</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="va">REACT_APP_APP_NAME</span><span class="op">=</span>VIKING</span></code></pre></div>
+<h3 id="backend-.env">6.2 Backend (.env)</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Required - Database</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="va">MONGO_URL</span><span class="op">=</span>mongodb+srv://[username]:[password]@[cluster].mongodb.net/fidus_production<span class="pp">?</span>retryWrites=true<span class="kw">&amp;</span><span class="va">w</span><span class="op">=</span>majority</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">DB_NAME</span><span class="op">=</span>fidus_production</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Required - Security</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="va">JWT_SECRET_KEY</span><span class="op">=</span>[generate-secure-random-string]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Required - CORS</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="va">FRONTEND_URL</span><span class="op">=</span>https://app.getvkng.com</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="va">BACKEND_URL</span><span class="op">=</span>https://api.getvkng.com</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional - MT5 Bridge (for live data sync)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="va">MT5_BRIDGE_URL</span><span class="op">=</span>http://[vps-ip]:8000</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="va">MT5_BRIDGE_API_KEY</span><span class="op">=</span>[bridge-api-key]</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="va">MT5_BRIDGE_ACTIVE</span><span class="op">=</span>false</span></code></pre></div>
+<hr />
+<h2 id="api-endpoints">7. API ENDPOINTS</h2>
+<h3 id="base-url-httpsapi.getvkng.comapiviking">Base URL:
+<code>https://api.getvkng.com/api/viking</code></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GET</td>
+<td><code>/accounts</code></td>
+<td>Get all VIKING accounts (CORE &amp; PRO)</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/accounts/{account_number}</code></td>
+<td>Get specific account</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/deals/{strategy}</code></td>
+<td>Get trade history (CORE or PRO)</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/analytics/{strategy}</code></td>
+<td>Get performance analytics</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/summary</code></td>
+<td>Get combined summary</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/symbols/{strategy}</code></td>
+<td>Get symbol distribution</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/balance-history/{strategy}</code></td>
+<td>Get balance chart data</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/monthly-returns/{strategy}</code></td>
+<td>Get monthly returns</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/risk/{strategy}</code></td>
+<td>Get risk analysis</td>
+</tr>
+<tr class="even">
+<td>POST</td>
+<td><code>/calculate-analytics/{strategy}</code></td>
+<td>Recalculate analytics</td>
+</tr>
+</tbody>
+</table>
+<h3 id="authentication">Authentication</h3>
+<p>Currently uses simple username/password authentication: -
+<strong>Username:</strong> <code>admin</code> -
+<strong>Password:</strong> <code>Password123</code></p>
+<p><strong>Recommendation:</strong> Implement proper JWT authentication
+for production.</p>
+<hr />
+<h2 id="database-collections">8. DATABASE COLLECTIONS</h2>
+<h3 id="collections-used-by-viking">Collections Used by VIKING</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Collection</th>
+<th>Purpose</th>
+<th>Records</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>mt5_accounts</code></td>
+<td>Master account data (shared with FIDUS)</td>
+<td>~15</td>
+</tr>
+<tr class="even">
+<td><code>mt5_deals</code></td>
+<td>MT5 trade history</td>
+<td>~3,000+</td>
+</tr>
+<tr class="odd">
+<td><code>viking_accounts</code></td>
+<td>VIKING-specific account metadata</td>
+<td>~3</td>
+</tr>
+<tr class="even">
+<td><code>viking_deals_history</code></td>
+<td>MT4 historical trades</td>
+<td>~4,700</td>
+</tr>
+<tr class="odd">
+<td><code>viking_analytics</code></td>
+<td>Calculated performance metrics</td>
+<td>~4</td>
+</tr>
+<tr class="even">
+<td><code>viking_balance_history</code></td>
+<td>Balance snapshots for charts</td>
+<td>~1,600</td>
+</tr>
+</tbody>
+</table>
+<h3 id="database-access">Database Access</h3>
+<p>VIKING shares the <code>fidus_production</code> database with FIDUS.
+For a completely isolated deployment, you can: 1. Export VIKING
+collections to a new database 2. Update <code>DB_NAME</code> environment
+variable 3. Run initial data seeding</p>
+<hr />
+<h2 id="trading-strategies">9. TRADING STRATEGIES</h2>
+<h3 id="core-strategy">CORE Strategy</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Current Account</td>
+<td>885822 (MT5)</td>
+</tr>
+<tr class="even">
+<td>Historical Account</td>
+<td>33627673 (MT4)</td>
+</tr>
+<tr class="odd">
+<td>Platform</td>
+<td>MT5</td>
+</tr>
+<tr class="even">
+<td>Broker</td>
+<td>MEXAtlantic</td>
+</tr>
+<tr class="odd">
+<td>Total Trades</td>
+<td>~4,143</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pro-strategy">PRO Strategy</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Account</td>
+<td>1309411</td>
+</tr>
+<tr class="even">
+<td>Platform</td>
+<td>MT4</td>
+</tr>
+<tr class="odd">
+<td>Broker</td>
+<td>Traders Trust</td>
+</tr>
+<tr class="even">
+<td>Total Trades</td>
+<td>~1,152</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="frontend-components">10. FRONTEND COMPONENTS</h2>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 31%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>VikingApp.js</code></td>
+<td>214</td>
+<td>Main app wrapper, routing</td>
+</tr>
+<tr class="even">
+<td><code>VikingLogin.js</code></td>
+<td>293</td>
+<td>Authentication page</td>
+</tr>
+<tr class="odd">
+<td><code>VikingDashboard.js</code></td>
+<td>1,609</td>
+<td>Main dashboard (Overview, Orders, Analytics)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-routes">Frontend Routes</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Path</th>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/viking</code></td>
+<td>VikingApp</td>
+<td>Entry point</td>
+</tr>
+<tr class="even">
+<td><code>/viking/login</code></td>
+<td>VikingLogin</td>
+<td>Login page</td>
+</tr>
+<tr class="odd">
+<td><code>/viking/dashboard</code></td>
+<td>VikingDashboard</td>
+<td>Main dashboard</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="deployment-checklist">11. DEPLOYMENT CHECKLIST</h2>
+<h3 id="pre-deployment">Pre-Deployment</h3>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+MongoDB Atlas: Whitelist server IP or allow all (0.0.0.0/0)</li>
+<li><input type="checkbox" disabled="" />
+Generate secure JWT_SECRET_KEY (min 32 characters)</li>
+<li><input type="checkbox" disabled="" />
+SSL certificate for domain (Let’s Encrypt recommended)</li>
+<li><input type="checkbox" disabled="" />
+Configure CORS origins in backend</li>
+</ul>
+<h3 id="deployment-steps">Deployment Steps</h3>
+<ol type="1">
+<li><p><strong>DNS Setup</strong></p>
+<ul>
+<li>Add A/CNAME records in GoDaddy</li>
+<li>Wait for propagation (5-30 minutes)</li>
+</ul></li>
+<li><p><strong>Backend Deployment</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone repository</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone [repo-url]</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> backend</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install dependencies</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Set environment variables</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .env.example .env</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit .env with production values</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Start server</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="ex">uvicorn</span> server:app <span class="at">--host</span> 0.0.0.0 <span class="at">--port</span> 8001</span></code></pre></div></li>
+<li><p><strong>Frontend Deployment</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> frontend</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Set environment variables</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;REACT_APP_BACKEND_URL=https://api.getvkng.com&quot;</span> <span class="op">&gt;</span> .env</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Build</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run build</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy /build folder to web server</span></span></code></pre></div></li>
+<li><p><strong>Nginx Configuration</strong> (if using single server)</p>
+<pre class="nginx"><code>server {
+    listen 443 ssl;
+    server_name app.getvkng.com;
+
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+
+    # Frontend
+    location / {
+        root /var/www/viking/build;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Backend API proxy
+    location /api/ {
+        proxy_pass http://localhost:8001/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}</code></pre></li>
+</ol>
+<h3 id="post-deployment-verification">Post-Deployment Verification</h3>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+Frontend loads at https://app.getvkng.com/viking</li>
+<li><input type="checkbox" disabled="" />
+API responds at https://api.getvkng.com/api/viking/accounts</li>
+<li><input type="checkbox" disabled="" />
+Login works with admin/Password123</li>
+<li><input type="checkbox" disabled="" />
+Both CORE and PRO strategies display data</li>
+<li><input type="checkbox" disabled="" />
+Charts render correctly</li>
+<li><input type="checkbox" disabled="" />
+No console errors in browser</li>
+</ul>
+<hr />
+<h2 id="recommended-hosting-providers">12. RECOMMENDED HOSTING
+PROVIDERS</h2>
+<h3 id="budget-option-5-15month">Budget Option (~$5-15/month)</h3>
+<ul>
+<li><strong>DigitalOcean Droplet</strong> ($6/mo) + Nginx</li>
+<li><strong>Hetzner Cloud</strong> ($4/mo) + Nginx</li>
+<li><strong>Vultr</strong> ($5/mo) + Nginx</li>
+</ul>
+<h3 id="managed-option-20-50month">Managed Option (~$20-50/month)</h3>
+<ul>
+<li><strong>Render.com</strong> - Backend as Web Service, Frontend as
+Static Site</li>
+<li><strong>Railway.app</strong> - Full stack deployment</li>
+<li><strong>DigitalOcean App Platform</strong> - Containerized
+deployment</li>
+</ul>
+<h3 id="enterprise-option">Enterprise Option</h3>
+<ul>
+<li><strong>AWS</strong> - EC2 + CloudFront + RDS (if migrating from
+MongoDB)</li>
+<li><strong>Google Cloud</strong> - Cloud Run + Cloud CDN</li>
+<li><strong>Azure</strong> - App Service + CDN</li>
+</ul>
+<hr />
+<h2 id="security-considerations">13. SECURITY CONSIDERATIONS</h2>
+<h3 id="immediate-must-have">Immediate (Must Have)</h3>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+HTTPS only (redirect HTTP to HTTPS)</li>
+<li><input type="checkbox" disabled="" />
+Strong JWT secret key</li>
+<li><input type="checkbox" disabled="" />
+MongoDB connection via SRV with TLS</li>
+<li><input type="checkbox" disabled="" />
+Rate limiting on API endpoints</li>
+</ul>
+<h3 id="recommended">Recommended</h3>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+Replace hardcoded credentials with proper user management</li>
+<li><input type="checkbox" disabled="" />
+Implement refresh tokens</li>
+<li><input type="checkbox" disabled="" />
+Add API key authentication for sensitive endpoints</li>
+<li><input type="checkbox" disabled="" />
+Enable MongoDB audit logging</li>
+</ul>
+<h3 id="future">Future</h3>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+Two-factor authentication</li>
+<li><input type="checkbox" disabled="" />
+IP whitelisting for admin access</li>
+<li><input type="checkbox" disabled="" />
+Web Application Firewall (WAF)</li>
+</ul>
+<hr />
+<h2 id="monitoring-maintenance">14. MONITORING &amp; MAINTENANCE</h2>
+<h3 id="health-check-endpoint">Health Check Endpoint</h3>
+<pre><code>GET /api/health</code></pre>
+<h3 id="recommended-monitoring">Recommended Monitoring</h3>
+<ul>
+<li><strong>Uptime:</strong> UptimeRobot, Pingdom (free tier
+available)</li>
+<li><strong>Error Tracking:</strong> Sentry (free tier available)</li>
+<li><strong>Logs:</strong> Logtail, Papertrail, or server logs</li>
+</ul>
+<h3 id="backup-strategy">Backup Strategy</h3>
+<ul>
+<li>MongoDB Atlas provides automatic daily backups</li>
+<li>Export critical data weekly to separate storage</li>
+</ul>
+<hr />
+<h2 id="contact-support">15. CONTACT &amp; SUPPORT</h2>
+<p>For technical questions about VIKING implementation: - Review this
+document first - Check MongoDB Atlas connection and IP whitelist -
+Verify environment variables are set correctly</p>
+<hr />
+<h2 id="appendix-a-quick-start-commands">APPENDIX A: Quick Start
+Commands</h2>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Backend</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /app/backend</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">MONGO_URL</span><span class="op">=</span><span class="st">&quot;mongodb+srv://...&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DB_NAME</span><span class="op">=</span><span class="st">&quot;fidus_production&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">JWT_SECRET_KEY</span><span class="op">=</span><span class="st">&quot;your-secret-key&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">FRONTEND_URL</span><span class="op">=</span><span class="st">&quot;https://app.getvkng.com&quot;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">uvicorn</span> server:app <span class="at">--host</span> 0.0.0.0 <span class="at">--port</span> 8001</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Frontend</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /app/frontend</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="va">REACT_APP_BACKEND_URL</span><span class="op">=</span>https://api.getvkng.com <span class="ex">npm</span> run build</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Serve /build folder with any static file server</span></span></code></pre></div>
+<h2 id="appendix-b-docker-compose-optional">APPENDIX B: Docker Compose
+(Optional)</h2>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;3.8&#39;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">frontend</span><span class="kw">:</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./frontend</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;3000:80&quot;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> REACT_APP_BACKEND_URL=http://backend:8001</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> backend</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">backend</span><span class="kw">:</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./backend</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;8001:8001&quot;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> MONGO_URL=${MONGO_URL}</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DB_NAME=fidus_production</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> JWT_SECRET_KEY=${JWT_SECRET_KEY}</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> FRONTEND_URL=https://app.getvkng.com</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> nginx:alpine</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;443:443&quot;</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./nginx.conf:/etc/nginx/nginx.conf</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./certs:/etc/nginx/certs</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> frontend</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> backend</span></span></code></pre></div>
+<hr />
+<p><strong>Document End</strong></p>
+</body>
+</html>
