@@ -649,13 +649,13 @@ const VikingDashboard = ({ onAccountChange }) => {
                   <div className="text-center py-6">
                     <AlertTriangle className="w-10 h-10 mx-auto mb-2" style={{ color: VKNG_COLORS.purple }} />
                     <p className="text-gray-400 text-sm">PRO account pending setup</p>
-                    <p className="text-gray-500 text-xs mt-1">Connect MT4 EA to start syncing</p>
+                    <p className="text-gray-500 text-xs mt-1">Connect MT5 EA to start syncing</p>
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-800">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: VKNG_COLORS.purple }}></div>
-                    <span className="text-xs text-gray-400">Traders Trust</span>
+                    <span className="text-xs text-gray-400">MEXAtlantic</span>
                   </div>
                   <span className="text-xs text-gray-500">
                     {proAccount?.last_update ? `Last Sync: ${new Date(proAccount.last_update).toLocaleString()}` : 'Not synced'}
