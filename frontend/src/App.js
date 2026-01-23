@@ -39,8 +39,14 @@ function isVikingRoute() {
   return pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
 }
 
+function isGetVKNGRoute() {
+  const pathname = window.location.pathname.toLowerCase();
+  return pathname.startsWith('/getvkng');
+}
+
 // Initial check at module load
 const IS_VIKING_ROUTE = isVikingRoute();
+const IS_GETVKNG_ROUTE = isGetVKNGRoute();
 
 // Handle /vikin typo -> redirect to /viking
 if (window.location.pathname === '/vikin' || window.location.pathname.startsWith('/vikin/')) {
@@ -53,9 +59,18 @@ if (IS_VIKING_ROUTE) {
   console.log('🟣 VIKING ROUTE DETECTED - Rendering VikingApp ONLY');
 }
 
+if (IS_GETVKNG_ROUTE) {
+  console.log('🟣 GETVKNG PUBLIC ROUTE DETECTED - Rendering Public Dashboard');
+}
+
 // VIKING App - Completely separate from FIDUS
 function VikingAppWrapper() {
   return <VikingApp />;
+}
+
+// GetVKNG Public App - No authentication required
+function GetVKNGPublicWrapper() {
+  return <GetVKNGPublic />;
 }
 
 // FIDUS App - The main investment platform
