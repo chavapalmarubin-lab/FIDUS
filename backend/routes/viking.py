@@ -138,26 +138,26 @@ class VikingAnalytics(BaseModel):
 # ============================================================================
 
 # VIKING strategies map to specific accounts
-# CORE: Migrated from MT4 (33627673) to MT5 (885822) - needs to combine both accounts' history
-# PRO: MT4 account (1309411) - history stored in viking_deals_history collection
+# PRO: Migrated from MT4 (33627673) to MT5 (885822) - needs to combine both accounts' history
+# CORE: MT4 account (1309411) - history stored in viking_deals_history collection
 VIKING_ACCOUNTS = {
-    "CORE": {
+    "PRO": {
         "current_account": 885822,  # Active MT5 account from Jan 20, 2026
         "historical_account": 33627673,  # Archived MT4 account (pre-Jan 20)
         "platform": "MT5",
         "broker": "MEXAtlantic", 
-        "description": "VIKING CORE Strategy - Full History",
+        "description": "VIKING PRO Strategy - Full History",
         "migration_date": "2026-01-20",
         "primary_collection": "mt5_accounts",
         "deals_collection": "mt5_deals",  # Current deals in mt5_deals
         "historical_collection": "viking_deals_history"  # Historical MT4 deals
     },
-    "PRO": {
+    "CORE": {
         "current_account": 1309411,
         "historical_account": 1309411,  # Same account - history in viking_deals_history
         "platform": "MT4",
         "broker": "Traders Trust",
-        "description": "VIKING PRO Strategy",
+        "description": "VIKING CORE Strategy",
         "primary_collection": "mt5_accounts",
         "fallback_collection": "viking_accounts",
         "deals_collection": "viking_deals_history",  # All deals in viking_deals_history
