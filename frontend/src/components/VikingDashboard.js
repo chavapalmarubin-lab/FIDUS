@@ -589,7 +589,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                 <div className="flex items-center justify-between pt-2 border-t border-gray-800">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span className="text-xs text-gray-400">MEXAtlantic</span>
+                    <span className="text-xs text-gray-400">Traders Trust</span>
                   </div>
                   <span className="text-xs text-gray-500">
                     Last Sync: {coreAccount?.last_update ? new Date(coreAccount.last_update).toLocaleString() : '--'}
