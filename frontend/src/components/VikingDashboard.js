@@ -562,7 +562,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                   </Badge>
                 </div>
                 <p className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>
-                  Account: {coreAccount?.account || '33627673'} | {coreAccount?.broker || 'MEXAtlantic'}
+                  Account: {coreAccount?.account || '1309411'} | {coreAccount?.broker || 'Traders Trust'}
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
