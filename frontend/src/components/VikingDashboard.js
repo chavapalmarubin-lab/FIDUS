@@ -95,6 +95,12 @@ const VKNG_COLORS = {
   textSecondary: '#9CA3AF'
 };
 
+// CORE Strategy Display Multiplier (for display purposes only)
+const CORE_DISPLAY_MULTIPLIER = 1000;
+
+// Minimum percentage threshold for symbol distribution display
+const SYMBOL_MIN_PERCENTAGE = 3;
+
 // Colors for charts
 const COLORS = {
   primary: '#9B27FF',    // VKNG Purple
