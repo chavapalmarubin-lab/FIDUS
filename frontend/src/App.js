@@ -19,6 +19,8 @@ import ReferralAgentProfile from "./pages/referral-agent/Profile";
 import ProtectedRoute from "./components/referral-agent/ProtectedRoute";
 // VIKING Standalone Application
 import VikingApp from "./components/VikingApp";
+// VKNG Public Dashboard (No Login Required)
+import GetVKNGPublic from "./components/GetVKNGPublic";
 // Clean Google integration - removed unused imports
 import { ToastProvider } from "./components/ui/toast";
 import { isAuthenticated, getCurrentUser } from "./utils/auth";
