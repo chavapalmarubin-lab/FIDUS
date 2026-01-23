@@ -372,10 +372,14 @@ const VikingDashboard = ({ onAccountChange }) => {
   const proAccount = summary?.strategies?.find(s => s.strategy === 'PRO');
   
   // Calculate combined totals
-  const totalBalance = (coreAccount?.balance || 0) + (proAccount?.balance || 0);
-  const totalEquity = (coreAccount?.equity || 0) + (proAccount?.equity || 0);
-  const totalProfit = (coreAccount?.profit || 0) + (proAccount?.profit || 0);
+  // Apply CORE multiplier to totals for display
+  const totalBalance = ((coreAccount?.balance || 0) * CORE_DISPLAY_MULTIPLIER) + (proAccount?.balance || 0);
+  const totalEquity = ((coreAccount?.equity || 0) * CORE_DISPLAY_MULTIPLIER) + (proAccount?.equity || 0);
+  const totalProfit = ((coreAccount?.profit || 0) * CORE_DISPLAY_MULTIPLIER) + (proAccount?.profit || 0);
   const totalPositions = (coreAccount?.positions_count || 0) + (proAccount?.positions_count || 0);
+  
+  // Filter symbol distribution to only show symbols >= 3%
+  const filteredSymbolDistribution = symbolDistribution.filter(item => item.percentage >= SYMBOL_MIN_PERCENTAGE);
 
   return (
     <div className="space-y-6" data-testid="viking-dashboard">
