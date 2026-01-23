@@ -44,7 +44,51 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 // CONDITIONAL IMPORTS - Only load what's needed
 // VIKING app loads FIRST if detected - FIDUS code never executes
 // =============================================================================
-if (IS_VIKING) {
+if (IS_GETVKNG) {
+  // GETVKNG - Public dashboard, no login required
+  console.log('🟣 Loading GetVKNG Public Dashboard (No Auth Required)...');
+  import('./components/GetVKNGPublic').then(({ default: GetVKNGPublic }) => {
+    console.log('🟣 GetVKNG Public Dashboard loaded, rendering...');
+    root.render(
+      <React.StrictMode>
+        <GetVKNGPublic />
+      </React.StrictMode>
+    );
+  }).catch(err => {
+    console.error('Failed to load GetVKNGPublic:', err);
+    root.render(
+      <div style={{
+        color: 'white', 
+        padding: '40px', 
+        background: '#0A112B', 
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'system-ui, sans-serif'
+      }}>
+        <h1 style={{color: '#9B27FF', marginBottom: '20px'}}>VKNG AI</h1>
+        <p>Error loading application. Please refresh the page.</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{
+            marginTop: '20px',
+            padding: '10px 24px',
+            background: '#9B27FF',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  });
+} else if (IS_VIKING) {
   // VIKING - Load VikingApp directly, FIDUS code never runs
   console.log('🟣 Loading VIKING Application (FIDUS will NOT load)...');
   import('./components/VikingApp').then(({ default: VikingApp }) => {
