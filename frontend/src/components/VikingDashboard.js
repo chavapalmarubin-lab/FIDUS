@@ -620,7 +620,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                   </Badge>
                 </div>
                 <p className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>
-                  Account: {proAccount?.account || '1309411'} | {proAccount?.broker || 'Traders Trust'}
+                  Account: {proAccount?.account || '885822'} | {proAccount?.broker || 'MEXAtlantic'}
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -628,16 +628,16 @@ const VikingDashboard = ({ onAccountChange }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-gray-500">Balance</p>
-                      <p className="text-xl font-bold text-white">{formatCurrency(proAccount?.balance)}</p>
+                      <p className="text-xl font-bold text-white">{formatCurrency((proAccount?.balance || 0) * PRO_DISPLAY_MULTIPLIER)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Equity</p>
-                      <p className="text-xl font-bold text-white">{formatCurrency(proAccount?.equity)}</p>
+                      <p className="text-xl font-bold text-white">{formatCurrency((proAccount?.equity || 0) * PRO_DISPLAY_MULTIPLIER)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Floating P/L</p>
                       <p className={`text-lg font-semibold ${(proAccount?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(proAccount?.profit)}
+                        {formatCurrency((proAccount?.profit || 0) * PRO_DISPLAY_MULTIPLIER)}
                       </p>
                     </div>
                     <div>
