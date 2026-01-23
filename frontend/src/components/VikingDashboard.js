@@ -95,8 +95,8 @@ const VKNG_COLORS = {
   textSecondary: '#9CA3AF'
 };
 
-// CORE Strategy Display Multiplier (for display purposes only)
-const CORE_DISPLAY_MULTIPLIER = 1000;
+// PRO Strategy Display Multiplier (for display purposes only - account 885822)
+const PRO_DISPLAY_MULTIPLIER = 1000;
 
 // Minimum percentage threshold for symbol distribution display
 const SYMBOL_MIN_PERCENTAGE = 3;
