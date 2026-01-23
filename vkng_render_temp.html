@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>VKNG Render Deployment</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">VKNG Render Deployment</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a
+href="#vkng-ai-public-dashboard---render-deployment-technical-document">VKNG
+AI Public Dashboard - Render Deployment Technical Document</a>
+<ul>
+<li><a href="#deployment-summary">1. DEPLOYMENT SUMMARY</a></li>
+<li><a href="#infrastructure-details">2. INFRASTRUCTURE DETAILS</a>
+<ul>
+<li><a href="#render-services">2.1 Render Services</a></li>
+<li><a href="#ip-addresses">2.2 IP Addresses</a></li>
+</ul></li>
+<li><a href="#routes-endpoints">3. ROUTES &amp; ENDPOINTS</a>
+<ul>
+<li><a href="#frontend-routes">3.1 Frontend Routes</a></li>
+<li><a href="#backend-api-endpoints">3.2 Backend API Endpoints</a></li>
+</ul></li>
+<li><a href="#environment-variables">4. ENVIRONMENT VARIABLES</a>
+<ul>
+<li><a href="#frontend-render---fidus-investment-platform">4.1 Frontend
+(Render - fidus-investment-platform)</a></li>
+<li><a href="#backend-render---fidus-api">4.2 Backend (Render -
+fidus-api)</a></li>
+</ul></li>
+<li><a href="#database-configuration">5. DATABASE CONFIGURATION</a>
+<ul>
+<li><a href="#mongodb-atlas">5.1 MongoDB Atlas</a></li>
+<li><a href="#collections-used-by-vkng">5.2 Collections Used by
+VKNG</a></li>
+</ul></li>
+<li><a href="#trading-strategies-displayed">6. TRADING STRATEGIES
+DISPLAYED</a>
+<ul>
+<li><a href="#core-strategy">6.1 CORE Strategy</a></li>
+<li><a href="#pro-strategy">6.2 PRO Strategy</a></li>
+</ul></li>
+<li><a href="#deployment-workflow">7. DEPLOYMENT WORKFLOW</a>
+<ul>
+<li><a href="#code-changes-to-github">7.1 Code Changes to
+GitHub</a></li>
+<li><a href="#render-auto-deploy">7.2 Render Auto-Deploy</a></li>
+<li><a href="#manual-deploy-render-dashboard">7.3 Manual Deploy (Render
+Dashboard)</a></li>
+</ul></li>
+<li><a href="#monitoring-health">8. MONITORING &amp; HEALTH</a>
+<ul>
+<li><a href="#health-check-endpoints">8.1 Health Check
+Endpoints</a></li>
+<li><a href="#logs-access">8.2 Logs Access</a></li>
+</ul></li>
+<li><a href="#security-notes">9. SECURITY NOTES</a>
+<ul>
+<li><a href="#public-dashboard-getvkng">9.1 Public Dashboard
+(/getvkng)</a></li>
+<li><a href="#admin-dashboard-viking">9.2 Admin Dashboard
+(/viking)</a></li>
+</ul></li>
+<li><a href="#troubleshooting">10. TROUBLESHOOTING</a>
+<ul>
+<li><a href="#common-issues">10.1 Common Issues</a></li>
+<li><a href="#support-contacts">10.2 Support Contacts</a></li>
+</ul></li>
+<li><a href="#quick-reference">11. QUICK REFERENCE</a>
+<ul>
+<li><a href="#production-urls">Production URLs</a></li>
+<li><a href="#admin-credentials-vkng-viking">Admin Credentials (VKNG
+/viking)</a></li>
+</ul></li>
+<li><a href="#render-api-access">12. RENDER API ACCESS</a>
+<ul>
+<li><a href="#get-service-status">Get Service Status</a></li>
+<li><a href="#trigger-deploy">Trigger Deploy</a></li>
+</ul></li>
+<li><a href="#file-structure">13. FILE STRUCTURE</a>
+<ul>
+<li><a href="#frontend-components-vkng">Frontend Components
+(VKNG)</a></li>
+<li><a href="#backend-routes-vkng">Backend Routes (VKNG)</a></li>
+</ul></li>
+<li><a href="#appendix-current-system-status">APPENDIX: Current System
+Status</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1
+id="vkng-ai-public-dashboard---render-deployment-technical-document">VKNG
+AI Public Dashboard - Render Deployment Technical Document</h1>
+<p><strong>Document Version:</strong> 1.0<br />
+<strong>Created:</strong> January 23, 2026<br />
+<strong>Purpose:</strong> Technical specifications for VKNG public
+dashboard hosted on FIDUS Render platform</p>
+<hr />
+<h2 id="deployment-summary">1. DEPLOYMENT SUMMARY</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Public URL</strong></td>
+<td>https://fidus-investment-platform.onrender.com/getvkng</td>
+</tr>
+<tr class="even">
+<td><strong>Authentication</strong></td>
+<td>None required (public access)</td>
+</tr>
+<tr class="odd">
+<td><strong>Platform</strong></td>
+<td>Render.com</td>
+</tr>
+<tr class="even">
+<td><strong>Frontend Service</strong></td>
+<td>fidus-investment-platform</td>
+</tr>
+<tr class="odd">
+<td><strong>Backend Service</strong></td>
+<td>fidus-api</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="infrastructure-details">2. INFRASTRUCTURE DETAILS</h2>
+<h3 id="render-services">2.1 Render Services</h3>
+<p><strong>Frontend Service:</strong> | Field | Value | |——-|——-| |
+Service Name | fidus-investment-platform | | Service Type | Static Site
+| | URL | https://fidus-investment-platform.onrender.com | | Build
+Command | <code>npm run build</code> | | Publish Directory |
+<code>build</code> | | Auto-Deploy | Yes (on GitHub push to main) |</p>
+<p><strong>Backend Service:</strong> | Field | Value | |——-|——-| |
+Service Name | fidus-api | | Service Type | Web Service | | URL |
+https://fidus-api.onrender.com | | Start Command |
+<code>uvicorn server:app --host 0.0.0.0 --port 10000</code> | |
+Auto-Deploy | Yes (on GitHub push to main) |</p>
+<h3 id="ip-addresses">2.2 IP Addresses</h3>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 42%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>IP Address</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Render Outbound</td>
+<td>Dynamic</td>
+<td>Render uses dynamic IPs</td>
+</tr>
+<tr class="even">
+<td>MongoDB Atlas</td>
+<td>Whitelist 0.0.0.0/0</td>
+<td>Or use Render static IPs (paid)</td>
+</tr>
+<tr class="odd">
+<td>Preview Environment</td>
+<td>34.16.56.64</td>
+<td>Current preview instance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Render Static Outbound IPs (if using paid tier):</strong> -
+Refer to Render dashboard for static IP assignment - Required for
+MongoDB Atlas IP whitelisting in production</p>
+<hr />
+<h2 id="routes-endpoints">3. ROUTES &amp; ENDPOINTS</h2>
+<h3 id="frontend-routes">3.1 Frontend Routes</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Route</th>
+<th>Component</th>
+<th>Authentication</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/getvkng</code></td>
+<td>GetVKNGPublic</td>
+<td><strong>None</strong></td>
+<td>Public VKNG dashboard</td>
+</tr>
+<tr class="even">
+<td><code>/viking</code></td>
+<td>VikingApp</td>
+<td>Required</td>
+<td>Admin VKNG dashboard</td>
+</tr>
+<tr class="odd">
+<td><code>/</code></td>
+<td>FidusApp</td>
+<td>Required</td>
+<td>Main FIDUS platform</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-api-endpoints">3.2 Backend API Endpoints</h3>
+<p><strong>Base URL:</strong>
+<code>https://fidus-api.onrender.com/api/viking</code></p>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GET</td>
+<td><code>/accounts</code></td>
+<td>Get all VKNG accounts (CORE &amp; PRO)</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/deals/{strategy}</code></td>
+<td>Get trade history</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/analytics/{strategy}</code></td>
+<td>Get performance analytics</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/summary</code></td>
+<td>Get combined summary</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/symbols/{strategy}</code></td>
+<td>Get symbol distribution</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/balance-history/{strategy}</code></td>
+<td>Get balance chart data</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/monthly-returns/{strategy}</code></td>
+<td>Get monthly returns</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="environment-variables">4. ENVIRONMENT VARIABLES</h2>
+<h3 id="frontend-render---fidus-investment-platform">4.1 Frontend
+(Render - fidus-investment-platform)</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">REACT_APP_BACKEND_URL</span><span class="op">=</span>https://fidus-api.onrender.com</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">NODE_ENV</span><span class="op">=</span>production</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">CI</span><span class="op">=</span>false</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">GENERATE_SOURCEMAP</span><span class="op">=</span>false</span></code></pre></div>
+<h3 id="backend-render---fidus-api">4.2 Backend (Render -
+fidus-api)</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Database</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">MONGO_URL</span><span class="op">=</span>mongodb+srv://[user]:[pass]@fidus.y1p9be2.mongodb.net/fidus_production</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">DB_NAME</span><span class="op">=</span>fidus_production</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Security</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="va">JWT_SECRET_KEY</span><span class="op">=</span>[secure-random-string]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># CORS</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="va">FRONTEND_URL</span><span class="op">=</span>https://fidus-investment-platform.onrender.com</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="va">BACKEND_URL</span><span class="op">=</span>https://fidus-api.onrender.com</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional - MT5 Bridge</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="va">MT5_BRIDGE_URL</span><span class="op">=</span>http://92.118.45.135:8000</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="va">MT5_BRIDGE_ACTIVE</span><span class="op">=</span>true</span></code></pre></div>
+<hr />
+<h2 id="database-configuration">5. DATABASE CONFIGURATION</h2>
+<h3 id="mongodb-atlas">5.1 MongoDB Atlas</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cluster</td>
+<td>FIDUS</td>
+</tr>
+<tr class="even">
+<td>Database</td>
+<td>fidus_production</td>
+</tr>
+<tr class="odd">
+<td>Region</td>
+<td>AWS us-east-1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="collections-used-by-vkng">5.2 Collections Used by VKNG</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Collection</th>
+<th>Purpose</th>
+<th>Records</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>mt5_accounts</code></td>
+<td>Master account data</td>
+<td>~15</td>
+</tr>
+<tr class="even">
+<td><code>mt5_deals</code></td>
+<td>MT5 trade history</td>
+<td>~3,000+</td>
+</tr>
+<tr class="odd">
+<td><code>viking_accounts</code></td>
+<td>VKNG account metadata</td>
+<td>~3</td>
+</tr>
+<tr class="even">
+<td><code>viking_deals_history</code></td>
+<td>MT4 historical trades</td>
+<td>~4,700</td>
+</tr>
+<tr class="odd">
+<td><code>viking_analytics</code></td>
+<td>Performance metrics</td>
+<td>~4</td>
+</tr>
+<tr class="even">
+<td><code>viking_balance_history</code></td>
+<td>Balance snapshots</td>
+<td>~1,600</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="trading-strategies-displayed">6. TRADING STRATEGIES
+DISPLAYED</h2>
+<h3 id="core-strategy">6.1 CORE Strategy</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Current Account</td>
+<td>885822 (MT5)</td>
+</tr>
+<tr class="even">
+<td>Historical Account</td>
+<td>33627673 (MT4)</td>
+</tr>
+<tr class="odd">
+<td>Platform</td>
+<td>MT5</td>
+</tr>
+<tr class="even">
+<td>Broker</td>
+<td>MEXAtlantic</td>
+</tr>
+<tr class="odd">
+<td>Total Trades</td>
+<td>~4,143</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pro-strategy">6.2 PRO Strategy</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Account</td>
+<td>1309411</td>
+</tr>
+<tr class="even">
+<td>Platform</td>
+<td>MT4</td>
+</tr>
+<tr class="odd">
+<td>Broker</td>
+<td>Traders Trust</td>
+</tr>
+<tr class="even">
+<td>Total Trades</td>
+<td>~1,152</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="deployment-workflow">7. DEPLOYMENT WORKFLOW</h2>
+<h3 id="code-changes-to-github">7.1 Code Changes to GitHub</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From local development</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add .</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Update VKNG public dashboard&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span></code></pre></div>
+<h3 id="render-auto-deploy">7.2 Render Auto-Deploy</h3>
+<ol type="1">
+<li>Render detects push to <code>main</code> branch</li>
+<li>Triggers build for both services</li>
+<li>Frontend: <code>npm install &amp;&amp; npm run build</code></li>
+<li>Backend: <code>pip install -r requirements.txt</code></li>
+<li>Health check runs</li>
+<li>Traffic routes to new deployment</li>
+</ol>
+<h3 id="manual-deploy-render-dashboard">7.3 Manual Deploy (Render
+Dashboard)</h3>
+<ol type="1">
+<li>Go to https://dashboard.render.com</li>
+<li>Select service (fidus-investment-platform or fidus-api)</li>
+<li>Click “Manual Deploy” → “Deploy latest commit”</li>
+</ol>
+<hr />
+<h2 id="monitoring-health">8. MONITORING &amp; HEALTH</h2>
+<h3 id="health-check-endpoints">8.1 Health Check Endpoints</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>Endpoint</th>
+<th>Expected Response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Backend</td>
+<td><code>GET /api/health</code></td>
+<td><code>{"status": "healthy"}</code></td>
+</tr>
+<tr class="even">
+<td>Frontend</td>
+<td><code>GET /</code></td>
+<td>200 OK</td>
+</tr>
+</tbody>
+</table>
+<h3 id="logs-access">8.2 Logs Access</h3>
+<p><strong>Render Dashboard:</strong> - https://dashboard.render.com →
+Select Service → Logs</p>
+<p><strong>API:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer rnd_zyltqZyReSorlDoVp4hs8LdmJPo3&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;https://api.render.com/v1/services/[SERVICE_ID]/logs&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="security-notes">9. SECURITY NOTES</h2>
+<h3 id="public-dashboard-getvkng">9.1 Public Dashboard (/getvkng)</h3>
+<ul>
+<li><strong>No authentication required</strong> - Publicly
+accessible</li>
+<li>Read-only data display</li>
+<li>No sensitive operations exposed</li>
+<li>CORS configured for Render domain only</li>
+</ul>
+<h3 id="admin-dashboard-viking">9.2 Admin Dashboard (/viking)</h3>
+<ul>
+<li>Requires username/password authentication</li>
+<li>Admin credentials stored securely</li>
+<li>Session-based access control</li>
+</ul>
+<hr />
+<h2 id="troubleshooting">10. TROUBLESHOOTING</h2>
+<h3 id="common-issues">10.1 Common Issues</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Issue</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>404 on /getvkng</td>
+<td>Ensure frontend is deployed with latest code</td>
+</tr>
+<tr class="even">
+<td>API errors</td>
+<td>Check backend logs in Render dashboard</td>
+</tr>
+<tr class="odd">
+<td>MongoDB connection</td>
+<td>Verify IP whitelist in MongoDB Atlas</td>
+</tr>
+<tr class="even">
+<td>Stale data</td>
+<td>Check MT5 bridge sync status</td>
+</tr>
+</tbody>
+</table>
+<h3 id="support-contacts">10.2 Support Contacts</h3>
+<ul>
+<li><strong>Render Support:</strong> support@render.com</li>
+<li><strong>MongoDB Atlas:</strong> support.mongodb.com</li>
+</ul>
+<hr />
+<h2 id="quick-reference">11. QUICK REFERENCE</h2>
+<h3 id="production-urls">Production URLs</h3>
+<table>
+<colgroup>
+<col style="width: 64%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>VKNG Public Dashboard</strong></td>
+<td>https://fidus-investment-platform.onrender.com/getvkng</td>
+</tr>
+<tr class="even">
+<td><strong>VKNG Admin Dashboard</strong></td>
+<td>https://fidus-investment-platform.onrender.com/viking</td>
+</tr>
+<tr class="odd">
+<td><strong>FIDUS Platform</strong></td>
+<td>https://fidus-investment-platform.onrender.com</td>
+</tr>
+<tr class="even">
+<td><strong>Backend API</strong></td>
+<td>https://fidus-api.onrender.com</td>
+</tr>
+</tbody>
+</table>
+<h3 id="admin-credentials-vkng-viking">Admin Credentials (VKNG
+/viking)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Username</td>
+<td>admin</td>
+</tr>
+<tr class="even">
+<td>Password</td>
+<td>Password123</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="render-api-access">12. RENDER API ACCESS</h2>
+<p><strong>API Key:</strong>
+<code>rnd_zyltqZyReSorlDoVp4hs8LdmJPo3</code></p>
+<h3 id="get-service-status">Get Service Status</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer rnd_zyltqZyReSorlDoVp4hs8LdmJPo3&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;https://api.render.com/v1/services&quot;</span></span></code></pre></div>
+<h3 id="trigger-deploy">Trigger Deploy</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer rnd_zyltqZyReSorlDoVp4hs8LdmJPo3&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;https://api.render.com/v1/services/[SERVICE_ID]/deploys&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="file-structure">13. FILE STRUCTURE</h2>
+<h3 id="frontend-components-vkng">Frontend Components (VKNG)</h3>
+<pre><code>/app/frontend/src/
+├── components/
+│   ├── GetVKNGPublic.js     # Public dashboard (NO AUTH)
+│   ├── VikingApp.js         # Admin dashboard (AUTH)
+│   ├── VikingLogin.js       # Login page
+│   └── VikingDashboard.js   # Main dashboard UI
+├── index.js                 # Route detection &amp; loading
+└── App.js                   # Main app routes</code></pre>
+<h3 id="backend-routes-vkng">Backend Routes (VKNG)</h3>
+<pre><code>/app/backend/
+├── routes/
+│   └── viking.py            # All VKNG API endpoints
+└── server.py                # FastAPI app setup</code></pre>
+<hr />
+<p><strong>Document End</strong></p>
+<hr />
+<h2 id="appendix-current-system-status">APPENDIX: Current System
+Status</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Status</th>
+<th>Last Verified</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Frontend (Render)</td>
+<td>✅ Running</td>
+<td>Jan 23, 2026</td>
+</tr>
+<tr class="even">
+<td>Backend (Render)</td>
+<td>✅ Running</td>
+<td>Jan 23, 2026</td>
+</tr>
+<tr class="odd">
+<td>MongoDB Atlas</td>
+<td>✅ Connected</td>
+<td>Jan 23, 2026</td>
+</tr>
+<tr class="even">
+<td>/getvkng Route</td>
+<td>✅ Working</td>
+<td>Jan 23, 2026</td>
+</tr>
+<tr class="odd">
+<td>CORE Strategy</td>
+<td>✅ Active</td>
+<td>Jan 23, 2026</td>
+</tr>
+<tr class="even">
+<td>PRO Strategy</td>
+<td>✅ Active</td>
+<td>Jan 23, 2026</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
