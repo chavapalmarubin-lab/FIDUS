@@ -13,7 +13,9 @@ const pathname = window.location.pathname.toLowerCase();
 // Check both the pre-set flag AND do our own check for redundancy
 const hostnameHasViking = hostname.includes('viking') || hostname.includes('vkng');
 const pathHasViking = pathname.startsWith('/viking') || pathname === '/vikin' || pathname.startsWith('/vikin/');
+const pathHasGetVKNG = pathname.startsWith('/getvkng');
 const IS_VIKING = window.__IS_VIKING_APP__ === true || hostnameHasViking || pathHasViking;
+const IS_GETVKNG = pathHasGetVKNG;
 const IS_PUBLIC = pathname.startsWith('/prospects');
 
 // Debug logging
@@ -24,7 +26,9 @@ console.log('📍 Pathname:', pathname);
 console.log('🔍 window.__IS_VIKING_APP__:', window.__IS_VIKING_APP__);
 console.log('🔍 Hostname has viking/vkng:', hostnameHasViking);
 console.log('🔍 Path has viking:', pathHasViking);
+console.log('🔍 Path has getvkng:', pathHasGetVKNG);
 console.log('🟣 IS_VIKING (final):', IS_VIKING);
+console.log('🟣 IS_GETVKNG (public):', IS_GETVKNG);
 console.log('🟢 IS_PUBLIC:', IS_PUBLIC);
 console.log('='.repeat(60));
 
