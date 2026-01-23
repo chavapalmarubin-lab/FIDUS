@@ -565,16 +565,16 @@ const VikingDashboard = ({ onAccountChange }) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Balance</p>
-                    <p className="text-xl font-bold text-white">{formatCurrency(coreAccount?.balance)}</p>
+                    <p className="text-xl font-bold text-white">{formatCurrency((coreAccount?.balance || 0) * CORE_DISPLAY_MULTIPLIER)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Equity</p>
-                    <p className="text-xl font-bold text-white">{formatCurrency(coreAccount?.equity)}</p>
+                    <p className="text-xl font-bold text-white">{formatCurrency((coreAccount?.equity || 0) * CORE_DISPLAY_MULTIPLIER)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Floating P/L</p>
                     <p className={`text-lg font-semibold ${(coreAccount?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {formatCurrency(coreAccount?.profit)}
+                      {formatCurrency((coreAccount?.profit || 0) * CORE_DISPLAY_MULTIPLIER)}
                     </p>
                   </div>
                   <div>
