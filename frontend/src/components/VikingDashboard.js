@@ -806,11 +806,11 @@ const VikingDashboard = ({ onAccountChange }) => {
                 <CardTitle className="text-sm text-gray-400">Symbol Distribution</CardTitle>
               </CardHeader>
               <CardContent>
-                {symbolDistribution.length > 0 ? (
+                {filteredSymbolDistribution.length > 0 ? (
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
-                        data={symbolDistribution}
+                        data={filteredSymbolDistribution}
                         dataKey="percentage"
                         nameKey="symbol"
                         cx="50%"
@@ -818,7 +818,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                         outerRadius={70}
                         label={({ symbol, percentage }) => `${percentage}%`}
                       >
-                        {symbolDistribution.map((entry, index) => (
+                        {filteredSymbolDistribution.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={SYMBOL_COLORS[index % SYMBOL_COLORS.length]} />
                         ))}
                       </Pie>
@@ -837,10 +837,10 @@ const VikingDashboard = ({ onAccountChange }) => {
                     </div>
                   </div>
                 )}
-                {/* Legend - only show if we have real data */}
-                {symbolDistribution.length > 0 && (
+                {/* Legend - only show filtered symbols (>= 3%) */}
+                {filteredSymbolDistribution.length > 0 && (
                   <div className="mt-4 space-y-1">
-                    {symbolDistribution.slice(0, 5).map((item, idx) => (
+                    {filteredSymbolDistribution.map((item, idx) => (
                       <div key={item.symbol} className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
                           <div 
@@ -854,7 +854,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                     ))}
                   </div>
                 )}
-                {symbolDistribution.length === 0 && (
+                {filteredSymbolDistribution.length === 0 && symbolDistribution.length === 0 && (
                   <p className="text-xs text-gray-500 text-center mt-4">Trade history required for symbol distribution</p>
                 )}
               </CardContent>
