@@ -176,12 +176,11 @@ async def get_all_accounts_summary(db):
     Used by: Account Management, Investment Committee, Fund Portfolio
     """
     try:
-        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
+        # CRITICAL: Only include accounts from the active allocation
+        active_allocation_accounts = [891215, 20043, 2209, 917105, 917106, 2205, 2206]
+        
         accounts = await db.mt5_accounts.find({
-            "$or": [
-                {"status": "active"},
-                {"status": {"$exists": False}}
-            ]
+            "account": {"$in": active_allocation_accounts}
         }, {"_id": 0}).to_list(length=None)
         
         summary = []
