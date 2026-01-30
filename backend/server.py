@@ -3424,54 +3424,30 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'manager_name': acc.get('investor_name', acc.get('fund', 'Unknown')),
                 'fund_code': acc.get('fund', acc.get('fund_type', 'Unknown'))
             })
-                'corrected_profit_loss': 0,
-                'account_profit_loss': 0,
-                'return_percent': 0,
-                'needs_review': False,
-                'updated_at': sep_acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(sep_acc.get('updated_at'), datetime) else str(sep_acc.get('updated_at', datetime.now(timezone.utc).isoformat())),
-                'synced_at': sep_acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(sep_acc.get('last_sync'), datetime) else str(sep_acc.get('last_sync', datetime.now(timezone.utc).isoformat())),
-                'account_type': 'SEPARATION',  # Mark as separation account
-                'broker_name': sep_acc.get('name', 'MEXAtlantic'),
-                'fund_code': sep_acc.get('fund_type', 'SEPARATION')
-            })
         
-        # ✅ PHASE 1: Calculate overall return percentage (moved from frontend Lines 56-58)
-        total_balance = sum(a.get('balance', 0) for a in trading_accounts)
+        # Calculate overall return percentage
+        total_balance = sum(a.get('balance', 0) or 0 for a in trading_accounts)
         overall_return_percent = (total_true_pnl / total_balance * 100) if total_balance > 0 else 0
-        
-        # ✅ FIX: Include all separation accounts in response
-        separation_accounts_data = []
-        total_separation_balance = 0
-        for sep_acc in separation_accounts:
-            balance = sep_acc.get('balance', 0)
-            total_separation_balance += balance
-            separation_accounts_data.append({
-                'account_number': sep_acc.get('account'),
-                'balance': round(balance, 2),
-                'equity': round(sep_acc.get('equity', 0), 2),
-                'name': sep_acc.get('name', f"Account {sep_acc.get('account')}"),
-                'fund_code': sep_acc.get('fund_type', 'SEPARATION')  # ✅ PHASE 2: Standardized to fund_code
-            })
         
         return {
             'success': True,
-            'accounts': all_formatted_accounts,  # ✅ FIX #2: Now includes ALL 7 accounts (5 trading + 2 separation)
-            'separation_account': {  # Legacy field for backwards compatibility
-                'account_number': 886528,
+            'accounts': all_formatted_accounts,
+            'separation_account': {
+                'account_number': 897591,
                 'balance': round(separation_balance, 2),
                 'name': 'Separation Account'
             },
-            'separation_accounts': separation_accounts_data,  # ✅ NEW: All separation accounts (also in main accounts array)
+            'separation_accounts': [],
             'totals': {
-                'total_balance': round(total_balance, 2),  # ✅ NEW FIELD
+                'total_balance': round(total_balance, 2),
                 'total_equity': round(total_equity, 2),
-                'total_profit_loss': round(total_true_pnl, 2),  # ✅ PHASE 2: Standardized from total_true_pnl
-                'corrected_profit_loss': round(total_true_pnl, 2),  # ✅ PHASE 2: Alias for clarity
+                'total_profit_loss': round(total_true_pnl, 2),
+                'corrected_profit_loss': round(total_true_pnl, 2),
                 'total_profit_withdrawals': round(total_profit_withdrawals, 2),
                 'total_inter_account_transfers': round(total_inter_account, 2),
-                'separation_balance': round(separation_balance, 2),  # Legacy field
-                'total_separation_balance': round(total_separation_balance, 2),  # ✅ NEW: All separation accounts
-                'overall_return_percent': round(overall_return_percent, 2)  # ✅ NEW FIELD
+                'separation_balance': round(separation_balance, 2),
+                'total_separation_balance': 0,
+                'overall_return_percent': round(overall_return_percent, 2)
             },
             'verification': {
                 'total_profit_withdrawals': round(total_profit_withdrawals, 2),
@@ -3480,7 +3456,7 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
                 'match': verification_match,
                 'status': '✅ VERIFIED' if verification_match else '⚠️ MISMATCH'
             },
-            'data_source': 'vps_mt5_bridge_corrected',
+            'data_source': 'fidus_allocation_summary',
             'last_sync': datetime.now(timezone.utc).isoformat()
         }
         
