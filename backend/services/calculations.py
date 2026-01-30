@@ -176,13 +176,19 @@ async def get_all_accounts_summary(db):
     Returns complete account data with P&L calculations
     
     Used by: Account Management, Investment Committee, Fund Portfolio
+    
+    Per SYSTEM_MASTER.md Section 9.3:
+    - mt5_accounts is the SINGLE SOURCE OF TRUTH
+    - All dashboards query this collection
+    - SEPARATION accounts (886528, 897591, 897599) are excluded from totals
     """
     try:
-        # CRITICAL: Only include accounts from the active allocation
-        active_allocation_accounts = [891215, 20043, 2209, 917105, 917106, 2205, 2206]
+        # CRITICAL: Get ALL accounts from mt5_accounts (SSOT)
+        # Exclude SEPARATION accounts per SYSTEM_MASTER.md Section 4.1
+        separation_accounts = [886528, 897591, 897599]
         
         accounts = await db.mt5_accounts.find({
-            "account": {"$in": active_allocation_accounts}
+            "account": {"$nin": separation_accounts}
         }, {"_id": 0}).to_list(length=None)
         
         summary = []
@@ -202,9 +208,9 @@ async def get_all_accounts_summary(db):
             
             summary.append({
                 'account': str(acc.get('account', '')),
-                'manager_name': acc.get('manager_name', ''),
-                'fund_type': acc.get('fund_type', ''),
-                'broker': acc.get('broker', ''),
+                'manager_name': acc.get('manager_name', acc.get('investor_name', '')),
+                'fund_type': acc.get('fund_type', acc.get('fund', '')),
+                'broker': acc.get('broker', acc.get('platform', '')),
                 'platform': acc.get('platform', 'MT5'),
                 'equity': round(equity, 2),
                 'balance': round(balance, 2),
