@@ -221,9 +221,10 @@ async def check_bridge_health(
     except Exception as e:
         logger.error(f"❌ Error checking {bridge_id}: {e}")
         return {
+            "name": config.get("name", bridge_id),
             "status": "error",
             "accounts": 0,
-            "expected_accounts": config["expected_accounts"],
+            "expected_accounts": config.get("expected_accounts", 0),
             "last_sync": None,
             "healthy": False,
             "error": str(e)
