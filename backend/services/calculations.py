@@ -41,21 +41,22 @@ def convert_decimal128(value):
 async def get_total_equity(db):
     """
     SSOT: Total Equity
-    Sum of equity from ALL active MT5/MT4 accounts
+    Sum of equity from ALL active MT5/MT4 accounts in the allocation
     
     Used by: Cash Flow, Fund Portfolio, Money Managers, Trading Analytics
     """
     try:
-        # CRITICAL: Exclude _id to prevent ObjectId serialization errors
+        # CRITICAL: Only include accounts that are part of the active allocation
+        # These are the accounts from the FIDUS Allocation Summary
+        active_allocation_accounts = [891215, 20043, 2209, 917105, 917106, 2205, 2206]
+        
+        # Query for these specific accounts
         accounts = await db.mt5_accounts.find({
-            "$or": [
-                {"status": "active"},
-                {"status": {"$exists": False}}
-            ]
+            "account": {"$in": active_allocation_accounts}
         }, {"_id": 0}).to_list(length=None)
         
         total = sum(convert_decimal128(acc.get('equity', 0)) for acc in accounts)
-        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} accounts")
+        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} active allocation accounts")
         return total
     except Exception as e:
         logger.error(f"Error calculating total equity: {e}")
