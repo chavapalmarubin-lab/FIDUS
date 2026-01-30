@@ -3354,30 +3354,33 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
     every 15 minutes by the VPS MT5 Bridge service with corrected data.
     
     Returns:
-    - All 5 accounts with true_pnl, profit_withdrawals, deal_history
+    - Only active allocation accounts (from FIDUS Allocation Summary)
     - Total fund metrics
     - Verification that profit withdrawals = separation balance
     """
     try:
-        # ✅ FIX ISSUE #1: Get ALL MT5 accounts dynamically (not hardcoded list)
-        # Previously only queried 5 accounts, missing 891215 and 891234
-        accounts = await db.mt5_accounts.find({}).to_list(length=20)
+        # ✅ CRITICAL: Only include accounts from the active allocation
+        # These are the accounts from the FIDUS Allocation Summary (Jan 28, 2026)
+        active_allocation_accounts = [891215, 20043, 2209, 917105, 917106, 2205, 2206]
         
-        # Separate trading accounts from separation accounts
-        # SEPARATION accounts are: 897591, 897599 (per SYSTEM_MASTER.md Section 4.1)
-        # NOTE: 886528 is NO LONGER a separation account
-        separation_account_numbers = [897591, 897599]
-        trading_accounts = [a for a in accounts if a.get('account') not in separation_account_numbers]
-        separation_accounts = [a for a in accounts if a.get('account') in separation_account_numbers]
+        # Get only active allocation accounts
+        accounts = await db.mt5_accounts.find({
+            "account": {"$in": active_allocation_accounts}
+        }).to_list(length=20)
         
-        # Get primary separation account (897591) for reference
-        separation_account = next((a for a in accounts if a.get('account') == 897591), None)
+        # No separation accounts in active allocation
+        separation_account_numbers = []
+        trading_accounts = accounts
+        separation_accounts = []
         
-        # Calculate totals
-        total_true_pnl = sum(a.get('true_pnl', 0) for a in trading_accounts)
-        total_profit_withdrawals = sum(a.get('profit_withdrawals', 0) for a in trading_accounts)
-        total_inter_account = sum(a.get('inter_account_transfers', 0) for a in trading_accounts)
-        total_equity = sum(a.get('equity', 0) for a in trading_accounts)
+        # Get primary separation account (897591) for reference - not in allocation
+        separation_account = await db.mt5_accounts.find_one({"account": 897591})
+        
+        # Calculate totals from ACTIVE ALLOCATION accounts only
+        total_true_pnl = sum(a.get('true_pnl', 0) or 0 for a in trading_accounts)
+        total_profit_withdrawals = sum(a.get('profit_withdrawals', 0) or 0 for a in trading_accounts)
+        total_inter_account = sum(a.get('inter_account_transfers', 0) or 0 for a in trading_accounts)
+        total_equity = sum(a.get('equity', 0) or 0 for a in trading_accounts)
         
         separation_balance = separation_account.get('balance', 0) if separation_account else 0
         
@@ -3385,49 +3388,42 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
         difference = abs(total_profit_withdrawals - separation_balance)
         verification_match = difference < 100  # Allow $100 difference for broker interest
         
-        # Format ALL account data for response (including separation accounts)
+        # Format ALL account data for response
         all_formatted_accounts = []
         
-        # Add trading accounts first
+        # Add trading accounts
         for acc in trading_accounts:
-            balance = acc.get('balance', 0)
-            true_pnl = acc.get('true_pnl', 0)
+            balance = acc.get('balance', 0) or 0
+            true_pnl = acc.get('true_pnl', 0) or 0
+            equity = acc.get('equity', 0) or balance
+            initial_allocation = acc.get('initial_allocation', 0) or 0
             
-            # ✅ PHASE 1: Calculate return percentage (moved from frontend Line 79)
+            # Calculate return percentage
             return_percent = (true_pnl / balance * 100) if balance > 0 else 0
             
             all_formatted_accounts.append({
                 'account_number': acc.get('account'),
+                'account': acc.get('account'),  # Add for compatibility
                 'account_name': f"Account {acc.get('account')}",
                 'balance': round(balance, 2),
-                'equity': round(acc.get('equity', 0), 2),
-                'profit': round(acc.get('profit', 0), 2),  # ✅ PHASE 2: Raw profit
-                'displayed_pnl': round(acc.get('displayed_pnl', 0), 2),
-                'profit_withdrawals': round(acc.get('profit_withdrawals', 0), 2),
-                'inter_account_transfers': round(acc.get('inter_account_transfers', 0), 2),
-                'corrected_profit_loss': round(true_pnl, 2),  # ✅ PHASE 2: Standardized from true_pnl
-                'account_profit_loss': round(true_pnl, 2),    # ✅ PHASE 2: Account-level P&L
-                'return_percent': round(return_percent, 2),  # ✅ NEW FIELD
+                'equity': round(equity, 2),
+                'profit': round(acc.get('profit', 0) or 0, 2),
+                'displayed_pnl': round(acc.get('displayed_pnl', 0) or 0, 2),
+                'profit_withdrawals': round(acc.get('profit_withdrawals', 0) or 0, 2),
+                'inter_account_transfers': round(acc.get('inter_account_transfers', 0) or 0, 2),
+                'corrected_profit_loss': round(true_pnl, 2),
+                'account_profit_loss': round(true_pnl, 2),
+                'return_percent': round(return_percent, 2),
                 'needs_review': acc.get('needs_review', False),
-                'updated_at': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else str(acc.get('updated_at', datetime.now(timezone.utc).isoformat())),  # ✅ PHASE 2 TASK #4: ISO 8601
-                'synced_at': acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('last_sync'), datetime) else str(acc.get('last_sync', datetime.now(timezone.utc).isoformat())),  # ✅ PHASE 2 TASK #4: ISO 8601
-                'account_type': 'TRADING',  # Mark as trading account
-                'broker_name': acc.get('name', 'MEXAtlantic'),
-                'fund_code': acc.get('fund_type', 'Unknown')
+                'initial_allocation': round(initial_allocation, 2),
+                'updated_at': acc.get('updated_at', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('updated_at'), datetime) else str(acc.get('updated_at', datetime.now(timezone.utc).isoformat())),
+                'synced_at': acc.get('last_sync', datetime.now(timezone.utc)).isoformat() if isinstance(acc.get('last_sync'), datetime) else str(acc.get('last_sync', datetime.now(timezone.utc).isoformat())),
+                'account_type': 'TRADING',
+                'broker_name': acc.get('platform', 'Unknown'),
+                'broker': acc.get('platform', 'Unknown'),
+                'manager_name': acc.get('investor_name', acc.get('fund', 'Unknown')),
+                'fund_code': acc.get('fund', acc.get('fund_type', 'Unknown'))
             })
-        
-        # Add separation accounts (891215 and 886528)
-        for sep_acc in separation_accounts:
-            balance = sep_acc.get('balance', 0)
-            all_formatted_accounts.append({
-                'account_number': sep_acc.get('account'),
-                'account_name': sep_acc.get('name', f"Account {sep_acc.get('account')}"),
-                'balance': round(balance, 2),
-                'equity': round(sep_acc.get('equity', 0), 2),
-                'profit': round(sep_acc.get('profit', 0), 2),
-                'displayed_pnl': 0,
-                'profit_withdrawals': 0,
-                'inter_account_transfers': 0,
                 'corrected_profit_loss': 0,
                 'account_profit_loss': 0,
                 'return_percent': 0,
