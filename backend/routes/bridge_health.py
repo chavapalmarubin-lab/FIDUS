@@ -147,32 +147,22 @@ async def check_bridge_health(
         Bridge health status with account count and last sync time
     """
     try:
-        # Build query based on bridge type
-        if bridge_id == "mexatlantic_mt5":
-            # MEXAtlantic MT5: All MT5 accounts except Lucrum
-            query = {
-                "$or": [
-                    {"platform": {"$exists": False}},  # Old accounts without platform field
-                    {"platform": "MT5"}
-                ],
-                "server": config["server"]
-            }
-        elif bridge_id == "lucrum_mt5":
-            # Lucrum MT5: Account 2198
-            query = {
-                "account": {"$in": config["account_numbers"]}
-            }
-        elif bridge_id == "mexatlantic_mt4":
-            # MEXAtlantic MT4: Account 33200931
-            query = {
-                "account": {"$in": config["account_numbers"]},
-                "$or": [
-                    {"platform": "MT4"},
-                    {"data_source": "MT4_FILE_BRIDGE"}
-                ]
-            }
+        # Use account numbers directly for all bridges
+        account_numbers = config.get("account_numbers", [])
+        
+        if account_numbers:
+            query = {"account": {"$in": account_numbers}}
         else:
-            query = {}
+            # No accounts for this bridge
+            return {
+                "name": config["name"],
+                "status": "no_accounts",
+                "accounts": 0,
+                "expected": config.get("expected_accounts", 0),
+                "last_sync": None,
+                "healthy": True,  # No accounts expected means healthy
+                "message": "No accounts in allocation"
+            }
         
         # Get accounts for this bridge
         accounts = await db.mt5_accounts.find(query, {"_id": 0}).to_list(length=100)
