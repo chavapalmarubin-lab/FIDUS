@@ -41,22 +41,24 @@ def convert_decimal128(value):
 async def get_total_equity(db):
     """
     SSOT: Total Equity
-    Sum of equity from ALL active MT5/MT4 accounts in the allocation
+    Sum of equity from ALL active MT5/MT4 accounts (excluding SEPARATION)
     
     Used by: Cash Flow, Fund Portfolio, Money Managers, Trading Analytics
+    
+    Per SYSTEM_MASTER.md Section 4.1:
+    - SEPARATION accounts (886528, 897591, 897599) are EXCLUDED from totals
+    - All other accounts are included regardless of balance
     """
     try:
-        # CRITICAL: Only include accounts that are part of the active allocation
-        # These are the accounts from the FIDUS Allocation Summary
-        active_allocation_accounts = [891215, 20043, 2209, 917105, 917106, 2205, 2206]
+        # CRITICAL: Exclude SEPARATION accounts per SYSTEM_MASTER.md
+        separation_accounts = [886528, 897591, 897599]
         
-        # Query for these specific accounts
         accounts = await db.mt5_accounts.find({
-            "account": {"$in": active_allocation_accounts}
+            "account": {"$nin": separation_accounts}
         }, {"_id": 0}).to_list(length=None)
         
         total = sum(convert_decimal128(acc.get('equity', 0)) for acc in accounts)
-        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} active allocation accounts")
+        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} accounts (excluding SEPARATION)")
         return total
     except Exception as e:
         logger.error(f"Error calculating total equity: {e}")
