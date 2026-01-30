@@ -77,30 +77,29 @@ async def get_bridge_health():
     try:
         db = await get_database()
         
-        # Define the 3 bridges configuration
+        # Define the 3 bridges configuration based on active allocation accounts
+        # FIDUS Allocation Summary (Jan 28, 2026)
         bridges_config = {
             "mexatlantic_mt5": {
                 "name": "MEXAtlantic MT5",
                 "broker": "MEXAtlantic",
                 "platform": "MT5",
-                "expected_accounts": 13,
-                "server": "MEXAtlantic-Real"
+                "expected_accounts": 3,
+                "account_numbers": [891215, 917105, 917106]  # MEXAtlantic MT5 accounts in allocation
             },
             "lucrum_mt5": {
                 "name": "Lucrum MT5",
                 "broker": "Lucrum Capital",
                 "platform": "MT5",
-                "expected_accounts": 1,
-                "server": "LucrumCapital-Trade",
-                "account_numbers": [2198]
+                "expected_accounts": 4,
+                "account_numbers": [20043, 2209, 2205, 2206]  # Lucrum accounts in allocation
             },
             "mexatlantic_mt4": {
                 "name": "MEXAtlantic MT4",
                 "broker": "MEXAtlantic",
                 "platform": "MT4",
-                "expected_accounts": 1,
-                "server": "MEXAtlantic-Real",
-                "account_numbers": [33200931]
+                "expected_accounts": 0,
+                "account_numbers": []  # No MT4 accounts in current allocation
             }
         }
         
