@@ -121,7 +121,7 @@ async def get_bridge_health():
             "status": overall_status,
             "bridges": bridge_status,
             "total_accounts": total_accounts,
-            "expected_total": 15,
+            "expected_total": 7,  # 3 MEX MT5 + 4 Lucrum + 0 MT4
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
