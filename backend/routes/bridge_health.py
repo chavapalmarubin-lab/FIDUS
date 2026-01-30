@@ -208,14 +208,14 @@ async def check_bridge_health(
                 last_sync_str = last_sync.isoformat()
         
         return {
+            "name": config["name"],
             "status": status_message,
             "accounts": len(accounts),
             "expected_accounts": config["expected_accounts"],
             "last_sync": last_sync_str,
-            "healthy": healthy and len(accounts) == config["expected_accounts"],
+            "healthy": healthy and len(accounts) >= config["expected_accounts"],
             "broker": config["broker"],
-            "platform": config["platform"],
-            "server": config["server"]
+            "platform": config["platform"]
         }
         
     except Exception as e:
