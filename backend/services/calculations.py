@@ -180,31 +180,40 @@ async def get_all_accounts_summary(db):
     Per SYSTEM_MASTER.md Section 9.3:
     - mt5_accounts is the SINGLE SOURCE OF TRUTH
     - All dashboards query this collection
-    - SEPARATION accounts (886528, 897591, 897599) are excluded from totals
+    - TOTALS are calculated from ACTIVE accounts only
+    - ALL accounts are returned for display (with status field)
     """
     try:
-        # CRITICAL: Get ALL accounts from mt5_accounts (SSOT)
-        # Exclude SEPARATION accounts per SYSTEM_MASTER.md Section 4.1
-        separation_accounts = [886528, 897591, 897599]
-        
-        accounts = await db.mt5_accounts.find({
-            "account": {"$nin": separation_accounts}
-        }, {"_id": 0}).to_list(length=None)
+        # Get ALL accounts from mt5_accounts (SSOT)
+        accounts = await db.mt5_accounts.find({}, {"_id": 0}).to_list(length=None)
         
         summary = []
-        total_equity = 0.0
-        total_balance = 0.0
-        total_allocation = 0.0
+        # Totals for ACTIVE accounts only
+        active_equity = 0.0
+        active_balance = 0.0
+        active_allocation = 0.0
+        active_count = 0
+        # Totals for ALL accounts (for reference)
+        all_equity = 0.0
+        all_balance = 0.0
         
         for acc in accounts:
             equity = convert_decimal128(acc.get('equity', 0))
             balance = convert_decimal128(acc.get('balance', 0))
             allocation = convert_decimal128(acc.get('initial_allocation', 0))
             pnl = equity - allocation
+            status = acc.get('status', 'unknown')
             
-            total_equity += equity
-            total_balance += balance
-            total_allocation += allocation
+            # Track all accounts totals
+            all_equity += equity
+            all_balance += balance
+            
+            # Only count ACTIVE accounts in the main totals
+            if status == 'active':
+                active_equity += equity
+                active_balance += balance
+                active_allocation += allocation
+                active_count += 1
             
             summary.append({
                 'account': str(acc.get('account', '')),
@@ -216,17 +225,22 @@ async def get_all_accounts_summary(db):
                 'balance': round(balance, 2),
                 'initial_allocation': round(allocation, 2),
                 'pnl': round(pnl, 2),
-                'status': acc.get('status', 'active')
+                'status': status
             })
         
         return {
             'accounts': summary,
             'totals': {
-                'total_equity': round(total_equity, 2),
-                'total_balance': round(total_balance, 2),
-                'total_allocation': round(total_allocation, 2),
-                'total_pnl': round(total_equity - total_allocation, 2),
-                'total_accounts': len(summary)
+                # Primary totals are from ACTIVE accounts only
+                'total_equity': round(active_equity, 2),
+                'total_balance': round(active_balance, 2),
+                'total_allocation': round(active_allocation, 2),
+                'total_pnl': round(active_equity - active_allocation, 2),
+                'total_accounts': len(summary),
+                'active_accounts': active_count,
+                # Include all accounts totals for reference
+                'all_accounts_equity': round(all_equity, 2),
+                'all_accounts_balance': round(all_balance, 2)
             }
         }
     except Exception as e:
