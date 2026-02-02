@@ -70,7 +70,7 @@ curl http://92.118.45.135:8000/api/mt5/account/886602/trades?limit=1
 ## Re-sync Command
 After deployment, trigger re-sync of all trade history:
 ```bash
-curl -X POST https://analytics-hub-248.preview.emergentagent.com/api/admin/mt5-deals/sync-all \
+curl -X POST https://viking-trade-dash-1.preview.emergentagent.com/api/admin/mt5-deals/sync-all \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 

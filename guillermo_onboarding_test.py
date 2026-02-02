@@ -36,7 +36,7 @@ from typing import Dict, Any, List, Optional
 
 class GuillermoOnboardingTester:
     def __init__(self):
-        self.base_url = "https://analytics-hub-248.preview.emergentagent.com/api"
+        self.base_url = "https://viking-trade-dash-1.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []
