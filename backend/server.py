@@ -19985,22 +19985,29 @@ async def get_all_accounts_v2():
     V2 Accounts API - Single Source of Truth (SSoT)
     Returns ALL mt5_accounts data with Decimal128 handling
     Used by Account Management tab - MUST match Fund Portfolio numbers exactly
+    
+    IMPORTANT: Totals are calculated from ACTIVE accounts only to match Fund Portfolio
     """
     try:
         # SSOT: Use central calculation service
         from services.calculations import get_all_accounts_summary
         
         result = await get_all_accounts_summary(db)
+        totals = result.get('totals', {})
         
         return {
             'success': True,
             'accounts': result['accounts'],
             'summary': {
-                'total_accounts': result['totals']['total_accounts'],
-                'active_accounts': result['totals']['total_accounts'],  # All returned are active
-                'total_balance': result['totals']['total_balance'],
-                'total_equity': result['totals']['total_equity'],
-                'total_allocation': result['totals']['total_allocation']
+                'total_accounts': totals.get('total_accounts', 0),
+                'active_accounts': totals.get('active_accounts', 0),
+                'total_balance': totals.get('total_balance', 0),
+                'total_equity': totals.get('total_equity', 0),
+                'total_allocation': totals.get('total_allocation', 0),
+                'total_pnl': totals.get('total_pnl', 0),
+                # Include reference to all accounts totals
+                'all_accounts_balance': totals.get('all_accounts_balance', 0),
+                'all_accounts_equity': totals.get('all_accounts_equity', 0)
             }
         }
     except Exception as e:
