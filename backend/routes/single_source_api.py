@@ -64,24 +64,28 @@ async def get_all_accounts():
             balance = account.get('balance', 0)
             account['pnl'] = balance - initial_allocation
         
-        # Calculate totals
-        total_balance = sum(acc.get('balance', 0) for acc in accounts)
-        total_equity = sum(acc.get('equity', 0) for acc in accounts)
+        # Calculate totals - ACTIVE ACCOUNTS ONLY for main totals
         active_accounts = [acc for acc in accounts if acc.get('status') == 'active']
+        active_balance = sum(acc.get('balance', 0) for acc in active_accounts)
+        active_equity = sum(acc.get('equity', 0) for acc in active_accounts)
         
-        # Platform breakdown
+        # All accounts totals for reference
+        all_balance = sum(acc.get('balance', 0) for acc in accounts)
+        all_equity = sum(acc.get('equity', 0) for acc in accounts)
+        
+        # Platform breakdown (active only)
         platforms = {}
-        for acc in accounts:
+        for acc in active_accounts:
             platform = acc.get('platform', 'MT5')
             if platform not in platforms:
                 platforms[platform] = {'count': 0, 'balance': 0}
             platforms[platform]['count'] += 1
             platforms[platform]['balance'] += acc.get('balance', 0)
         
-        # Broker breakdown
+        # Broker breakdown (active only)
         brokers = {}
-        for acc in accounts:
-            broker = acc.get('broker', 'MEXAtlantic')
+        for acc in active_accounts:
+            broker = acc.get('broker', 'LUCRUM Capital')
             if broker not in brokers:
                 brokers[broker] = {'count': 0, 'balance': 0}
             brokers[broker]['count'] += 1
@@ -93,8 +97,10 @@ async def get_all_accounts():
             "summary": {
                 "total_accounts": len(accounts),
                 "active_accounts": len(active_accounts),
-                "total_balance": total_balance,
-                "total_equity": total_equity,
+                "total_balance": active_balance,  # ACTIVE accounts only
+                "total_equity": active_equity,    # ACTIVE accounts only
+                "all_accounts_balance": all_balance,  # Reference: all accounts
+                "all_accounts_equity": all_equity,    # Reference: all accounts
                 "platforms": platforms,
                 "brokers": brokers,
                 "last_updated": datetime.now(timezone.utc).isoformat()
