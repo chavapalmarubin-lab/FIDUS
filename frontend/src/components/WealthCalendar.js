@@ -402,37 +402,35 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
               <AlertTriangle className="w-6 h-6 text-red-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-400 mb-2">Performance Gap Alert</h3>
+              <h3 className="text-lg font-semibold text-red-400 mb-2">Interest Payment Gap Alert</h3>
               <p className="text-slate-300 mb-4">
-                Based on current projections, the fund is expected to have a shortfall of{' '}
+                Based on current projections, the fund needs to generate an additional{' '}
                 <span className="font-bold text-red-400">{formatCurrency(Math.abs(finalBalance))}</span>{' '}
-                by contract end. The fund needs to generate additional returns to meet all obligations.
+                in trading profits to cover all interest obligations. Client money (principal) cannot be used to pay interest.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Total Obligations</p>
+                  <p className="text-slate-400">Total Interest Obligations</p>
                   <p className="text-white font-bold">{formatCurrency(totalFutureObligations)}</p>
+                  <p className="text-xs text-slate-500">Must be paid from revenue</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Client Money</p>
-                  <p className="text-blue-400 font-bold">{formatCurrency(actualClientMoney)}</p>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Net Revenue (P&L)</p>
+                  <p className="text-slate-400">Available Revenue (P&L)</p>
                   <p className={`font-bold ${current_revenue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {formatCurrency(current_revenue)}
                   </p>
+                  <p className="text-xs text-slate-500">Current trading profits</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Fund Assets</p>
-                  <p className="text-cyan-400 font-bold">{formatCurrency(fundAssets)}</p>
+                  <p className="text-slate-400">Interest Gap</p>
+                  <p className="text-red-400 font-bold">{formatCurrency(Math.abs(finalBalance))}</p>
+                  <p className="text-xs text-slate-500">Additional revenue needed</p>
                 </div>
               </div>
-              <div className="mt-4 bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
-                <p className="text-sm text-orange-300">
-                  <strong>Gap Analysis:</strong> Fund has {formatCurrency(fundAssets)} in assets 
-                  but needs {formatCurrency(totalFutureObligations)} to meet all obligations. 
-                  Required additional return: <span className="font-bold">{formatCurrency(Math.abs(finalBalance))}</span>
+              <div className="mt-4 bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                <p className="text-sm text-blue-300">
+                  <strong>Note:</strong> Client Money ({formatCurrency(actualClientMoney)}) is held as principal and will be returned at contract end. 
+                  It cannot be used to pay interest obligations - only trading revenue can cover those costs.
                 </p>
               </div>
             </div>
