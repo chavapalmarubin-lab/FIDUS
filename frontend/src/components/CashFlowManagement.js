@@ -582,7 +582,9 @@ const CashFlowManagement = () => {
     return {
       required: {
         totalNeeded: totalObligations,
-        alreadyEarned: currentRevenue,
+        alreadyEarned: fundAssets,  // Changed: Now includes Client Money + Revenue
+        clientMoney: clientMoney,   // Added: Client principal
+        netRevenue: currentRevenue, // Added: Net P&L only
         stillNeeded: stillNeeded,
         percentComplete: percentComplete,
         requiredDailyAvg: requiredDailyAvg,
