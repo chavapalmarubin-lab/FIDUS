@@ -528,6 +528,11 @@ const CashFlowManagement = () => {
     // Get current fund data
     const totalObligations = cashFlowCalendar.summary.total_future_obligations || 0;
     const currentRevenue = cashFlowCalendar.current_revenue || fundAccounting.assets.total_inflows || 0;
+    // CRITICAL: Include Client Money in Fund Assets calculation
+    // Fund Assets = Client Money (principal) + Net Revenue (P&L)
+    const clientMoney = cashFlowCalendar.client_money || 380536.05;
+    const fundAssets = cashFlowCalendar.total_equity || (clientMoney + currentRevenue);
+    
     const investmentStartDate = new Date('2025-10-01');
     const contractEndDate = new Date('2026-12-01');
     const today = new Date();
@@ -537,9 +542,10 @@ const CashFlowManagement = () => {
     const daysElapsed = Math.max(1, Math.ceil((today - investmentStartDate) / (1000 * 60 * 60 * 24)));
     const daysRemaining = Math.max(1, Math.ceil((contractEndDate - today) / (1000 * 60 * 60 * 24)));
     
-    // Required Performance Metrics
-    const stillNeeded = Math.max(0, totalObligations - currentRevenue);
-    const percentComplete = totalObligations > 0 ? (currentRevenue / totalObligations) * 100 : 0;
+    // Required Performance Metrics - Use FUND ASSETS (Client Money + Revenue), not just revenue
+    // Because obligations include principal redemptions (returning client money)
+    const stillNeeded = Math.max(0, totalObligations - fundAssets);
+    const percentComplete = totalObligations > 0 ? (fundAssets / totalObligations) * 100 : 0;
     const requiredDailyAvg = stillNeeded / daysRemaining;
     const requiredMonthlyAvg = requiredDailyAvg * 30;
     
