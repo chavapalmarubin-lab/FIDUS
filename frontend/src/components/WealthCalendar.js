@@ -132,21 +132,21 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
         {/* Current Revenue */}
         <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 rounded-xl p-4 border border-emerald-500/20">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-slate-400 text-sm">Current Revenue</span>
+            <span className="text-slate-400 text-sm">Fund Revenue (P&L)</span>
             <Wallet className="w-5 h-5 text-emerald-400" />
           </div>
           <p className="text-2xl font-bold text-emerald-400">{formatCurrency(current_revenue)}</p>
-          <p className="text-xs text-slate-500 mt-1">Available for obligations</p>
+          <p className="text-xs text-slate-500 mt-1">Available to pay interest</p>
         </div>
 
-        {/* Client Money (Obligations) */}
+        {/* Client Money (Principal - Cannot use for interest) */}
         <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl p-4 border border-blue-500/20">
           <div className="flex items-center justify-between mb-2">
             <span className="text-slate-400 text-sm">Client Money</span>
             <PiggyBank className="w-5 h-5 text-blue-400" />
           </div>
           <p className="text-2xl font-bold text-blue-400">{formatCurrency(actualClientMoney)}</p>
-          <p className="text-xs text-slate-500 mt-1">Total principal obligations</p>
+          <p className="text-xs text-slate-500 mt-1">Principal (not for interest)</p>
         </div>
 
         {/* Coverage Ratio */}
