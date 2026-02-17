@@ -16627,7 +16627,8 @@ async def calculate_cash_flow_calendar():
         
         # Calculate total interest obligations (excluding principal redemptions)
         total_interest_obligations = sum(
-            month['interest_payments'] + month['referral_commissions'] 
+            month.get('core_interest', 0) + month.get('balance_interest', 0) + 
+            month.get('dynamic_interest', 0) + month.get('referral_commissions', 0)
             for month in monthly_obligations.values()
         )
         
