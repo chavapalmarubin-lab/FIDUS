@@ -145,7 +145,7 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
             <span className="text-slate-400 text-sm">Client Money</span>
             <PiggyBank className="w-5 h-5 text-blue-400" />
           </div>
-          <p className="text-2xl font-bold text-blue-400">{formatCurrency(clientMoney || 380536.05)}</p>
+          <p className="text-2xl font-bold text-blue-400">{formatCurrency(actualClientMoney)}</p>
           <p className="text-xs text-slate-500 mt-1">Total principal obligations</p>
         </div>
 
