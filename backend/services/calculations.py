@@ -41,24 +41,23 @@ def convert_decimal128(value):
 async def get_total_equity(db):
     """
     SSOT: Total Equity
-    Sum of equity from ALL active MT5/MT4 accounts (excluding SEPARATION)
+    Sum of equity from ALL ACTIVE MT5/MT4 accounts
     
     Used by: Cash Flow, Fund Portfolio, Money Managers, Trading Analytics
     
-    Per SYSTEM_MASTER.md Section 4.1:
-    - SEPARATION accounts (886528, 897591, 897599) are EXCLUDED from totals
-    - All other accounts are included regardless of balance
+    CRITICAL FIX (Feb 2026):
+    - Only sum equity from accounts with status='active'
+    - This ensures consistency across all dashboards
+    - Inactive accounts (MEXAtlantic, SEPARATION) are excluded
     """
     try:
-        # CRITICAL: Exclude SEPARATION accounts per SYSTEM_MASTER.md
-        separation_accounts = [886528, 897591, 897599]
-        
+        # CRITICAL: Only include ACTIVE accounts
         accounts = await db.mt5_accounts.find({
-            "account": {"$nin": separation_accounts}
+            "status": "active"
         }, {"_id": 0}).to_list(length=None)
         
         total = sum(convert_decimal128(acc.get('equity', 0)) for acc in accounts)
-        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} accounts (excluding SEPARATION)")
+        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} ACTIVE accounts")
         return total
     except Exception as e:
         logger.error(f"Error calculating total equity: {e}")
