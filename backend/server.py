@@ -16547,16 +16547,17 @@ async def calculate_cash_flow_calendar():
             # Convert clients_map to array and add to month data
             month_data['clients_breakdown'] = list(clients_map.values())
         
-        # Calculate running balance
-        # CORRECT CALCULATION: Start with TOTAL EQUITY (Client Money + Revenue)
-        # Because obligations include principal redemptions (returning client money)
-        # running_balance = total_equity = CLIENT_MONEY + current_revenue
-        running_balance = total_equity  # This is the actual fund assets
+        # Calculate running balance for INTEREST PAYMENTS
+        # CRITICAL: We can ONLY use FUND REVENUE (P&L) to pay interest obligations
+        # Client Money (principal) CANNOT be used to pay interest - it belongs to clients
+        # 
+        # Formula: Running Balance = Current Revenue - Cumulative Interest Paid
+        running_balance = current_revenue  # Start with ONLY the revenue/profit
         sorted_months = sorted(monthly_obligations.keys())
         
-        logging.info(f"💰 Running Balance Calculation:")
-        logging.info(f"   Starting Balance (Total Equity): ${running_balance:,.2f}")
-        logging.info(f"   = Client Money: ${CLIENT_MONEY:,.2f} + Revenue: ${current_revenue:,.2f}")
+        logging.info(f"💰 Running Balance Calculation (Interest Payments):")
+        logging.info(f"   Starting Balance (Fund Revenue): ${running_balance:,.2f}")
+        logging.info(f"   NOTE: Client Money (${CLIENT_MONEY:,.2f}) is NOT used for interest payments")
         
         for month_key in sorted_months:
             monthly_obligations[month_key]['running_balance_before'] = running_balance
