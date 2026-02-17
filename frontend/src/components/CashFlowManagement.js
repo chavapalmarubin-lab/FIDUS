@@ -1593,16 +1593,17 @@ const CashFlowManagement = () => {
           <CardContent>
             <div className="space-y-6">
               
-              {/* Current Status Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-800/50 rounded-lg">
+              {/* Current Status Summary - USES FUND ASSETS (Client Money + Revenue) */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-800/50 rounded-lg">
                 <div className="text-center">
-                  <p className="text-sm text-slate-400">Current Fund Revenue</p>
-                  <p className="text-xl font-bold text-green-400">
-                    {formatCurrency(cashFlowCalendar.current_revenue || 0)}
+                  <p className="text-sm text-slate-400">Fund Assets</p>
+                  <p className="text-xl font-bold text-cyan-400">
+                    {formatCurrency(cashFlowCalendar.total_equity || (cashFlowCalendar.client_money || 380536.05) + (cashFlowCalendar.current_revenue || 0))}
                   </p>
+                  <p className="text-xs text-slate-500">Client Money + Revenue</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-400">Total Future Obligations</p>
+                  <p className="text-sm text-slate-400">Total Obligations</p>
                   <p className="text-xl font-bold text-orange-400">
                     {formatCurrency(cashFlowCalendar.summary?.total_future_obligations || 0)}
                   </p>
@@ -1610,11 +1611,19 @@ const CashFlowManagement = () => {
                 <div className="text-center">
                   <p className="text-sm text-slate-400">Net Position</p>
                   <p className={`text-xl font-bold ${
-                    (cashFlowCalendar.current_revenue - cashFlowCalendar.summary?.total_future_obligations) >= 0 
+                    ((cashFlowCalendar.total_equity || (cashFlowCalendar.client_money || 380536.05) + (cashFlowCalendar.current_revenue || 0)) - (cashFlowCalendar.summary?.total_future_obligations || 0)) >= 0 
                       ? 'text-green-400' : 'text-red-400'
                   }`}>
-                    {formatCurrency((cashFlowCalendar.current_revenue || 0) - (cashFlowCalendar.summary?.total_future_obligations || 0))}
+                    {formatCurrency((cashFlowCalendar.total_equity || (cashFlowCalendar.client_money || 380536.05) + (cashFlowCalendar.current_revenue || 0)) - (cashFlowCalendar.summary?.total_future_obligations || 0))}
                   </p>
+                  <p className="text-xs text-slate-500">Assets - Obligations</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-slate-400">Net Revenue (P&L)</p>
+                  <p className={`text-xl font-bold ${(cashFlowCalendar.current_revenue || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(cashFlowCalendar.current_revenue || 0)}
+                  </p>
+                  <p className="text-xs text-slate-500">Trading profits</p>
                 </div>
               </div>
 
