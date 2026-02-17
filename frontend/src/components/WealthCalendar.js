@@ -401,21 +401,32 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
                 <span className="font-bold text-red-400">{formatCurrency(Math.abs(finalBalance))}</span>{' '}
                 by contract end. The fund needs to generate additional returns to meet all obligations.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div className="bg-slate-800/50 rounded-lg p-3">
                   <p className="text-slate-400">Total Obligations</p>
                   <p className="text-white font-bold">{formatCurrency(totalFutureObligations)}</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Current Revenue</p>
-                  <p className="text-white font-bold">{formatCurrency(current_revenue)}</p>
+                  <p className="text-slate-400">Client Money</p>
+                  <p className="text-blue-400 font-bold">{formatCurrency(clientMoney || totalEquity - current_revenue)}</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Required Performance</p>
-                  <p className="text-orange-400 font-bold">
-                    {((totalFutureObligations / (clientMoney || 380536.05)) * 100).toFixed(1)}% return
+                  <p className="text-slate-400">Net Revenue (P&L)</p>
+                  <p className={`font-bold ${current_revenue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {formatCurrency(current_revenue)}
                   </p>
                 </div>
+                <div className="bg-slate-800/50 rounded-lg p-3">
+                  <p className="text-slate-400">Fund Assets</p>
+                  <p className="text-cyan-400 font-bold">{formatCurrency(totalEquity || (clientMoney + current_revenue))}</p>
+                </div>
+              </div>
+              <div className="mt-4 bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
+                <p className="text-sm text-orange-300">
+                  <strong>Gap Analysis:</strong> Fund has {formatCurrency(totalEquity || (clientMoney + current_revenue))} in assets 
+                  but needs {formatCurrency(totalFutureObligations)} to meet all obligations. 
+                  Required additional return: <span className="font-bold">{formatCurrency(Math.abs(finalBalance))}</span>
+                </p>
               </div>
             </div>
           </div>
