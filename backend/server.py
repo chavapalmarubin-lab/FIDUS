@@ -16626,6 +16626,8 @@ async def calculate_cash_flow_calendar():
         
         return {
             'current_revenue': current_revenue,
+            'total_equity': total_equity,  # Fund Assets (Client Money + Revenue)
+            'client_money': CLIENT_MONEY,  # Client principal
             'monthly_obligations': monthly_obligations,
             'milestones': {
                 'next_payment': next_payment,
@@ -16635,7 +16637,9 @@ async def calculate_cash_flow_calendar():
             'summary': {
                 'total_future_obligations': sum(month['total_due'] for month in monthly_obligations.values()),
                 'months_until_shortfall': len([m for m in monthly_obligations.values() if m['running_balance_after'] >= 0]),
-                'final_balance': running_balance
+                'final_balance': running_balance,
+                'fund_assets': total_equity,  # Duplicate for clarity
+                'performance_gap': sum(month['total_due'] for month in monthly_obligations.values()) - total_equity
             }
         }
         
