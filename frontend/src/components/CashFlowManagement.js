@@ -677,13 +677,30 @@ const CashFlowManagement = () => {
                 <span className="text-slate-400 text-sm">Total Required:</span>
                 <span className="text-white font-bold">{formatCurrency(metrics.required.totalNeeded)}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-sm">Already Earned:</span>
-                <span className="text-green-400 font-medium">
-                  {formatCurrency(metrics.required.alreadyEarned)}
-                  <span className="text-xs ml-1">({metrics.required.percentComplete.toFixed(1)}%)</span>
-                </span>
+              
+              {/* Fund Assets Breakdown */}
+              <div className="bg-slate-700/30 rounded-lg p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Fund Assets:</span>
+                  <span className="text-cyan-400 font-bold">
+                    {formatCurrency(metrics.required.alreadyEarned)}
+                    <span className="text-xs ml-1">({metrics.required.percentComplete.toFixed(1)}%)</span>
+                  </span>
+                </div>
+                <div className="text-xs space-y-1 pl-2 border-l-2 border-slate-600">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Client Money:</span>
+                    <span className="text-blue-400">{formatCurrency(metrics.required.clientMoney)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Net Revenue:</span>
+                    <span className={metrics.required.netRevenue >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {formatCurrency(metrics.required.netRevenue)}
+                    </span>
+                  </div>
+                </div>
               </div>
+              
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-sm">Still Needed:</span>
                 <span className="text-red-400 font-medium">
