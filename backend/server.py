@@ -16625,10 +16625,16 @@ async def calculate_cash_flow_calendar():
                     'days_away': max(0, month_data['days_away'])
                 }
         
+        # Calculate total interest obligations (excluding principal redemptions)
+        total_interest_obligations = sum(
+            month['interest_payments'] + month['referral_commissions'] 
+            for month in monthly_obligations.values()
+        )
+        
         return {
             'current_revenue': current_revenue,
             'total_equity': total_equity,  # Fund Assets (Client Money + Revenue)
-            'client_money': CLIENT_MONEY,  # Client principal
+            'client_money': CLIENT_MONEY,  # Client principal - NOT used for interest
             'monthly_obligations': monthly_obligations,
             'milestones': {
                 'next_payment': next_payment,
@@ -16637,10 +16643,12 @@ async def calculate_cash_flow_calendar():
             },
             'summary': {
                 'total_future_obligations': sum(month['total_due'] for month in monthly_obligations.values()),
+                'total_interest_obligations': total_interest_obligations,  # Interest only
                 'months_until_shortfall': len([m for m in monthly_obligations.values() if m['running_balance_after'] >= 0]),
-                'final_balance': running_balance,
-                'fund_assets': total_equity,  # Duplicate for clarity
-                'performance_gap': sum(month['total_due'] for month in monthly_obligations.values()) - total_equity
+                'final_balance': running_balance,  # Based on revenue only
+                'fund_assets': total_equity,  # For overall picture
+                'available_for_interest': current_revenue,  # What we can use to pay interest
+                'interest_gap': total_interest_obligations - current_revenue  # Gap for interest payments
             }
         }
         
