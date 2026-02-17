@@ -16548,8 +16548,15 @@ async def calculate_cash_flow_calendar():
             month_data['clients_breakdown'] = list(clients_map.values())
         
         # Calculate running balance
-        running_balance = current_revenue
+        # CORRECT CALCULATION: Start with TOTAL EQUITY (Client Money + Revenue)
+        # Because obligations include principal redemptions (returning client money)
+        # running_balance = total_equity = CLIENT_MONEY + current_revenue
+        running_balance = total_equity  # This is the actual fund assets
         sorted_months = sorted(monthly_obligations.keys())
+        
+        logging.info(f"💰 Running Balance Calculation:")
+        logging.info(f"   Starting Balance (Total Equity): ${running_balance:,.2f}")
+        logging.info(f"   = Client Money: ${CLIENT_MONEY:,.2f} + Revenue: ${current_revenue:,.2f}")
         
         for month_key in sorted_months:
             monthly_obligations[month_key]['running_balance_before'] = running_balance
