@@ -74,10 +74,17 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
 
   const {
     current_revenue = 0,
+    total_equity = 0,
+    client_money = 0,
     monthly_obligations = {},
     milestones = {},
     summary = {}
   } = calendarData;
+
+  // Use values from backend if provided, otherwise use props
+  const actualClientMoney = client_money || clientMoney || 380536.05;
+  const actualTotalEquity = total_equity || totalEquity || (actualClientMoney + current_revenue);
+  const fundAssets = summary.fund_assets || actualTotalEquity;
 
   const sortedMonths = Object.keys(monthly_obligations).sort();
   const displayMonths = showAllMonths ? sortedMonths : sortedMonths.slice(0, 6);
