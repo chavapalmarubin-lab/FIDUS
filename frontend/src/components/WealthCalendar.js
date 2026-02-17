@@ -415,7 +415,7 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
                   <p className="text-slate-400">Client Money</p>
-                  <p className="text-blue-400 font-bold">{formatCurrency(clientMoney || totalEquity - current_revenue)}</p>
+                  <p className="text-blue-400 font-bold">{formatCurrency(actualClientMoney)}</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
                   <p className="text-slate-400">Net Revenue (P&L)</p>
@@ -425,12 +425,12 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
                   <p className="text-slate-400">Fund Assets</p>
-                  <p className="text-cyan-400 font-bold">{formatCurrency(totalEquity || (clientMoney + current_revenue))}</p>
+                  <p className="text-cyan-400 font-bold">{formatCurrency(fundAssets)}</p>
                 </div>
               </div>
               <div className="mt-4 bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
                 <p className="text-sm text-orange-300">
-                  <strong>Gap Analysis:</strong> Fund has {formatCurrency(totalEquity || (clientMoney + current_revenue))} in assets 
+                  <strong>Gap Analysis:</strong> Fund has {formatCurrency(fundAssets)} in assets 
                   but needs {formatCurrency(totalFutureObligations)} to meet all obligations. 
                   Required additional return: <span className="font-bold">{formatCurrency(Math.abs(finalBalance))}</span>
                 </p>
