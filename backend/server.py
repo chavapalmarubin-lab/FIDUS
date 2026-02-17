@@ -16561,8 +16561,17 @@ async def calculate_cash_flow_calendar():
         
         for month_key in sorted_months:
             monthly_obligations[month_key]['running_balance_before'] = running_balance
-            running_balance -= monthly_obligations[month_key]['total_due']
+            # CRITICAL: Only deduct INTEREST from revenue, not principal
+            # Principal is returned from Client Money, not from trading revenue
+            interest_only = (
+                monthly_obligations[month_key].get('core_interest', 0) +
+                monthly_obligations[month_key].get('balance_interest', 0) +
+                monthly_obligations[month_key].get('dynamic_interest', 0) +
+                monthly_obligations[month_key].get('referral_commissions', 0)
+            )
+            running_balance -= interest_only
             monthly_obligations[month_key]['running_balance_after'] = running_balance
+            monthly_obligations[month_key]['interest_only'] = interest_only  # Add for display
             
             # Set status indicators based on running balance and payment size
             if running_balance >= 0:
