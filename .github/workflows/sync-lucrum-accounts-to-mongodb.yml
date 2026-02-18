@@ -9,94 +9,90 @@ jobs:
     timeout-minutes: 15
     
     steps:
-      - name: Sync LUCRUM Accounts via VPS
+      - name: Set MEXAtlantic to Zero and Verify LUCRUM
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
+          port: ${{ secrets.VPS_SSH_PORT }}
           script: |
             Write-Host "=== LUCRUM Account Sync to MongoDB ===" -ForegroundColor Cyan
             Write-Host ""
             
-            # First, get data from MT5 Bridge API
-            Write-Host "Fetching data from MT5 Bridge API..." -ForegroundColor Yellow
+            # First check MT5 Bridge API
+            Write-Host "1. Fetching data from MT5 Bridge API..." -ForegroundColor Yellow
             try {
               $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 30
-              $accounts = $response.accounts
-              Write-Host "Got $($accounts.Count) accounts from MT5 Bridge" -ForegroundColor Green
+              Write-Host "   Got $($response.accounts.Count) accounts from MT5 Bridge" -ForegroundColor Green
               
-              # Show LUCRUM accounts
               Write-Host ""
-              Write-Host "LUCRUM Account Balances from MT5:" -ForegroundColor Cyan
+              Write-Host "   LUCRUM Account Balances:" -ForegroundColor Cyan
               $lucrumAccounts = @(2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067)
-              foreach ($acc in $accounts) {
+              foreach ($acc in $response.accounts) {
                 if ($lucrumAccounts -contains $acc.account) {
-                  Write-Host "  Account $($acc.account): Balance = $($acc.balance), Equity = $($acc.equity)" -ForegroundColor Green
+                  $status = if ($acc.balance -gt 0) { "[ACTIVE]" } else { "[inactive]" }
+                  Write-Host "   $status Account $($acc.account): Balance = $($acc.balance)" -ForegroundColor Green
                 }
               }
             } catch {
-              Write-Host "Error fetching MT5 data: $_" -ForegroundColor Red
-              $accounts = @()
+              Write-Host "   Error: $_" -ForegroundColor Red
             }
             
-            # Now update MongoDB using Python
             Write-Host ""
-            Write-Host "Updating MongoDB..." -ForegroundColor Yellow
+            Write-Host "2. Updating MongoDB - Setting non-LUCRUM accounts to zero..." -ForegroundColor Yellow
             
-            $mongoUrl = (Get-Content "C:\mt5_bridge_service\config.json" | ConvertFrom-Json).mongodb_url
-            
-            $pythonScript = @"
-import json
+            # Read MongoDB URL from config
+            $configPath = "C:\mt5_bridge_service\config.json"
+            if (Test-Path $configPath) {
+              $config = Get-Content $configPath | ConvertFrom-Json
+              $mongoUrl = $config.mongodb_url
+              
+              # Create temp Python script
+              $tempScript = "C:\temp\sync_lucrum.py"
+              @"
 from pymongo import MongoClient
 from datetime import datetime, timezone
 
 mongo_url = '$mongoUrl'
-print(f'Connecting to MongoDB...')
+print('Connecting to MongoDB...')
 client = MongoClient(mongo_url, serverSelectionTimeoutMS=10000)
 db = client['fidus_production']
 print('Connected!')
 
 lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067]
 
-# Set all non-LUCRUM accounts to 0 and inactive
+# Set all non-LUCRUM to zero
 print()
-print('Setting non-LUCRUM accounts to 0...')
+print('Setting non-LUCRUM accounts to zero...')
 result = db.mt5_accounts.update_many(
-    {'account': {'\$nin': lucrum_accounts}},
-    {'\$set': {
-        'balance': 0,
-        'equity': 0,
-        'status': 'inactive',
-        'updated_at': datetime.now(timezone.utc)
-    }}
+    {'account': {'`$nin': lucrum_accounts}},
+    {'`$set': {'balance': 0, 'equity': 0, 'status': 'inactive', 'updated_at': datetime.now(timezone.utc)}}
 )
-print(f'  Updated {result.modified_count} non-LUCRUM accounts')
+print(f'  Updated {result.modified_count} accounts')
 
 # Verify
 print()
 print('=== VERIFICATION ===')
 active = list(db.mt5_accounts.find({'status': 'active'}))
-total_balance = sum(float(a.get('balance', 0) or 0) for a in active)
+total = sum(float(a.get('balance', 0) or 0) for a in active)
 print(f'Active accounts: {len(active)}')
-print(f'Total Balance: \${total_balance:,.2f}')
-
-for acc in sorted(active, key=lambda x: -float(x.get('balance', 0) or 0)):
-    print(f"  - {acc.get('account')}: \${float(acc.get('balance', 0)):,.2f}")
+print(f'Total Balance: `${total:,.2f}')
+for a in sorted(active, key=lambda x: -float(x.get('balance', 0) or 0)):
+    print(f"  - {a.get('account')}: `${float(a.get('balance', 0)):,.2f}")
 
 client.close()
-print()
-print('Sync complete!')
-"@
-            
-            $pythonScript | python -
+print('Done!')
+"@ | Out-File -FilePath $tempScript -Encoding UTF8
+              
+              python $tempScript
+              Remove-Item $tempScript -ErrorAction SilentlyContinue
+            } else {
+              Write-Host "   Config file not found at $configPath" -ForegroundColor Red
+            }
       
       - name: Generate Report
         if: always()
         run: |
-          echo "# LUCRUM Account Sync Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "This workflow syncs LUCRUM account data from the MT5 Bridge to MongoDB." >> $GITHUB_STEP_SUMMARY
+          echo "# LUCRUM Account Sync Complete" >> $GITHUB_STEP_SUMMARY
+          echo "Synced LUCRUM accounts and set MEXAtlantic to zero." >> $GITHUB_STEP_SUMMARY
