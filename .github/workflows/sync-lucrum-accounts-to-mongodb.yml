@@ -21,14 +21,12 @@ jobs:
             Write-Host ""
             
             try {
-              # Get all accounts from MT5 Bridge API
               $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 30
               
               $total = $response.accounts.Count
               Write-Host "Total accounts from MT5 Bridge: $total" -ForegroundColor Green
               Write-Host ""
               
-              # Define LUCRUM accounts
               $lucrumAccounts = @(2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067)
               
               Write-Host "LUCRUM Account Balances:" -ForegroundColor Cyan
@@ -39,7 +37,7 @@ jobs:
               }
               
               Write-Host ""
-              Write-Host "Non-LUCRUM Accounts (should be $0):" -ForegroundColor Yellow
+              Write-Host "Non-LUCRUM Accounts (should be 0):" -ForegroundColor Yellow
               foreach ($acc in $response.accounts) {
                 if ($lucrumAccounts -notcontains $acc.account) {
                   $color = if ($acc.balance -eq 0) { "Gray" } else { "Red" }
@@ -63,100 +61,82 @@ jobs:
             Write-Host "=== Updating MongoDB with LUCRUM Account Data ===" -ForegroundColor Cyan
             Write-Host ""
             
-            # Create Python script to sync data
-            @"
+            $pythonScript = @'
 import json
 import requests
 from pymongo import MongoClient
 from datetime import datetime, timezone
 
-print('Connecting to MongoDB...')
-client = MongoClient('${{ secrets.MONGO_URL }}', serverSelectionTimeoutMS=10000)
-db = client['fidus_production']
+print("Connecting to MongoDB...")
+client = MongoClient("${{ secrets.MONGO_URL }}", serverSelectionTimeoutMS=10000)
+db = client["fidus_production"]
 
-print('Fetching data from MT5 Bridge...')
+print("Fetching data from MT5 Bridge...")
 try:
-    response = requests.get('http://localhost:8000/api/mt5/accounts/summary', timeout=30)
+    response = requests.get("http://localhost:8000/api/mt5/accounts/summary", timeout=30)
     mt5_data = response.json()
-    accounts = mt5_data.get('accounts', [])
-    print(f'Got {len(accounts)} accounts from MT5 Bridge')
+    accounts = mt5_data.get("accounts", [])
+    print(f"Got {len(accounts)} accounts from MT5 Bridge")
 except Exception as e:
-    print(f'Error fetching MT5 data: {e}')
+    print(f"Error fetching MT5 data: {e}")
     accounts = []
 
-# LUCRUM accounts list
 lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067]
 
-# 1. Set ALL non-LUCRUM accounts to $0 and inactive
 print()
-print('Setting non-LUCRUM accounts to $0...')
+print("Setting non-LUCRUM accounts to $0...")
 result = db.mt5_accounts.update_many(
-    {'account': {'$nin': lucrum_accounts}},
-    {'$set': {
-        'balance': 0,
-        'equity': 0,
-        'status': 'inactive',
-        'updated_at': datetime.now(timezone.utc)
+    {"account": {"$nin": lucrum_accounts}},
+    {"$set": {
+        "balance": 0,
+        "equity": 0,
+        "status": "inactive",
+        "updated_at": datetime.now(timezone.utc)
     }}
 )
-print(f'  Updated {result.modified_count} non-LUCRUM accounts to $0')
+print(f"  Updated {result.modified_count} non-LUCRUM accounts to $0")
 
-# 2. Update LUCRUM accounts with MT5 Bridge data
 print()
-print('Updating LUCRUM accounts with MT5 data...')
+print("Updating LUCRUM accounts with MT5 data...")
 for acc_data in accounts:
-    acc_num = acc_data.get('account')
+    acc_num = acc_data.get("account")
     if acc_num in lucrum_accounts:
-        balance = float(acc_data.get('balance', 0) or 0)
-        equity = float(acc_data.get('equity', 0) or 0)
+        balance = float(acc_data.get("balance", 0) or 0)
+        equity = float(acc_data.get("equity", 0) or 0)
         
-        # Determine status based on balance
-        status = 'active' if balance > 0 else 'inactive'
+        status = "active" if balance > 0 else "inactive"
         
         db.mt5_accounts.update_one(
-            {'account': acc_num},
-            {'$set': {
-                'balance': balance,
-                'equity': equity,
-                'status': status,
-                'broker': 'LUCRUM Capital',
-                'last_sync_timestamp': datetime.now(timezone.utc),
-                'updated_at': datetime.now(timezone.utc)
+            {"account": acc_num},
+            {"$set": {
+                "balance": balance,
+                "equity": equity,
+                "status": status,
+                "broker": "LUCRUM Capital",
+                "last_sync_timestamp": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
             }},
             upsert=True
         )
-        indicator = '✅' if status == 'active' else '⚪'
-        print(f'  {indicator} Account {acc_num}: Balance=${balance:,.2f}, Equity=${equity:,.2f}')
+        indicator = "[ACTIVE]" if status == "active" else "[inactive]"
+        print(f"  {indicator} Account {acc_num}: Balance=${balance:,.2f}, Equity=${equity:,.2f}")
 
-# 3. Verify final state
 print()
-print('=== FINAL VERIFICATION ===')
-active = list(db.mt5_accounts.find({'status': 'active'}))
-total_balance = sum(float(a.get('balance', 0) or 0) for a in active)
-total_equity = sum(float(a.get('equity', 0) or 0) for a in active)
+print("=== FINAL VERIFICATION ===")
+active = list(db.mt5_accounts.find({"status": "active"}))
+total_balance = sum(float(a.get("balance", 0) or 0) for a in active)
+total_equity = sum(float(a.get("equity", 0) or 0) for a in active)
 
-print(f'Active accounts: {len(active)}')
-print(f'Total Balance: ${total_balance:,.2f}')
-print(f'Total Equity: ${total_equity:,.2f}')
-
-# Get client money for P&L calc
-investments = list(db.investments.find({'status': 'active'}))
-total_client_money = 0
-for inv in investments:
-    p = inv.get('principal_amount', 0)
-    if hasattr(p, 'to_decimal'):
-        total_client_money += float(p.to_decimal())
-    else:
-        total_client_money += float(p) if p else 0
-
-fund_pnl = total_equity - total_client_money
-print(f'Client Money: ${total_client_money:,.2f}')
-print(f'Fund P&L: ${fund_pnl:,.2f}')
+print(f"Active accounts: {len(active)}")
+print(f"Total Balance: ${total_balance:,.2f}")
+print(f"Total Equity: ${total_equity:,.2f}")
 
 client.close()
 print()
-print('✅ MongoDB sync complete!')
-"@ | python -
+print("MongoDB sync complete!")
+'@
+            
+            $pythonScript | python -
       
       - name: Generate Sync Report
         if: always()
