@@ -102,7 +102,6 @@ const FundPortfolioManagement = () => {
       if (mt5Data.success && mt5Data.accounts) {
         // Calculate total fund assets from ALL accounts (no fund_type filter)
         let totalEquity = 0;
-        let totalPnl = 0;
         
         const accounts = mt5Data.accounts.map(acc => {
           const equity = parseFloat(acc.equity || acc.balance || 0);
@@ -110,7 +109,6 @@ const FundPortfolioManagement = () => {
           const pnl = equity - allocation;
           
           totalEquity += equity;
-          totalPnl += pnl;
           
           return {
             account: acc.account,
@@ -127,7 +125,8 @@ const FundPortfolioManagement = () => {
         
         setMt5Accounts(accounts);
         setTotalFundAssets(totalEquity);
-        setTotalPnL(totalPnl);
+        // NOTE: totalPnL will be calculated after we get client money
+        // Fund P&L = Total Equity - Client Money (NOT sum of individual account P&Ls)
       }
       
       // Fetch Client Obligations (from investments)
