@@ -18,21 +18,23 @@ jobs:
           python-version: '3.11'
       
       - name: Install dependencies
-        run: pip install pymongo requests
+        run: pip install pymongo requests dnspython
       
-      - name: Fetch MT5 Data and Update MongoDB
-        env:
-          MONGO_URL: ${{ secrets.MONGO_URL }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
+      - name: Create sync script
         run: |
-          python3 << 'EOF'
+          cat > sync_lucrum.py << 'ENDSCRIPT'
           import os
+          import sys
           import requests
           from pymongo import MongoClient
           from datetime import datetime, timezone
           
           MONGO_URL = os.environ.get('MONGO_URL')
           VPS_HOST = os.environ.get('VPS_HOST', '92.118.45.135')
+          
+          if not MONGO_URL:
+              print("ERROR: MONGO_URL environment variable not set")
+              sys.exit(1)
           
           print("=" * 60)
           print("LUCRUM ACCOUNT SYNC TO MONGODB")
@@ -41,9 +43,15 @@ jobs:
           
           # Connect to MongoDB
           print("Connecting to MongoDB...")
-          client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=10000)
-          db = client['fidus_production']
-          print("✅ Connected to MongoDB")
+          try:
+              client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=10000)
+              # Test connection
+              client.admin.command('ping')
+              db = client['fidus_production']
+              print("✅ Connected to MongoDB")
+          except Exception as e:
+              print(f"ERROR connecting to MongoDB: {e}")
+              sys.exit(1)
           
           # Try to fetch from VPS MT5 Bridge
           print()
@@ -142,7 +150,13 @@ jobs:
           client.close()
           print()
           print("✅ Sync complete!")
-          EOF
+          ENDSCRIPT
+      
+      - name: Run sync script
+        env:
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: python sync_lucrum.py
       
       - name: Generate Sync Report
         if: always()
@@ -155,6 +169,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "1. Connected to MongoDB fidus_production database" >> $GITHUB_STEP_SUMMARY
           echo "2. Attempted to fetch live data from MT5 Bridge" >> $GITHUB_STEP_SUMMARY
-          echo "3. Set all non-LUCRUM accounts to \$0 and inactive" >> $GITHUB_STEP_SUMMARY
+          echo "3. Set all non-LUCRUM accounts to 0 and inactive" >> $GITHUB_STEP_SUMMARY
           echo "4. Updated LUCRUM accounts with MT5 data (if available)" >> $GITHUB_STEP_SUMMARY
           echo "5. Verified final MongoDB state" >> $GITHUB_STEP_SUMMARY
