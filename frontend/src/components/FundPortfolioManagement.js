@@ -99,6 +99,9 @@ const FundPortfolioManagement = () => {
       const mt5Response = await fetch(`${BACKEND_URL}/api/mt5/accounts/corrected`, { headers });
       const mt5Data = await mt5Response.json();
       
+      // Store equity value for P&L calculation later
+      let fundEquity = 0;
+      
       if (mt5Data.success && mt5Data.accounts) {
         // Calculate total fund assets from ALL accounts (no fund_type filter)
         let totalEquity = 0;
@@ -125,8 +128,7 @@ const FundPortfolioManagement = () => {
         
         setMt5Accounts(accounts);
         setTotalFundAssets(totalEquity);
-        // NOTE: totalPnL will be calculated after we get client money
-        // Fund P&L = Total Equity - Client Money (NOT sum of individual account P&Ls)
+        fundEquity = totalEquity;  // Store for P&L calculation
       }
       
       // Fetch Client Obligations (from investments)
@@ -156,7 +158,7 @@ const FundPortfolioManagement = () => {
         
         // Convert Sets to counts
         const finalObligations = {};
-        let total = 0;
+        let totalClientMoney = 0;
         const allClients = new Set();
         
         Object.entries(obligations).forEach(([product, data]) => {
@@ -166,18 +168,18 @@ const FundPortfolioManagement = () => {
             rate: data.rate,
             frequency: data.frequency
           };
-          total += data.amount;
+          totalClientMoney += data.amount;
           data.clients.forEach(c => allClients.add(c));
         });
         
         setClientObligations(finalObligations);
-        setTotalObligations(total);
+        setTotalObligations(totalClientMoney);
         setTotalClients(allClients.size);
         
         // CORRECT Fund P&L Calculation:
         // Fund P&L = Total Equity (Fund Assets) - Total Client Money (Obligations)
         // This is the TRUE profit/loss for the fund
-        const correctPnL = totalFundAssets - total;
+        const correctPnL = fundEquity - totalClientMoney;
         setTotalPnL(correctPnL);
       }
       
