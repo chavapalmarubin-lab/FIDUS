@@ -9,59 +9,70 @@ jobs:
     timeout-minutes: 15
     
     steps:
-      - name: Set MEXAtlantic to Zero
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          script: |
-            Write-Host "=== Setting MEXAtlantic Accounts to Zero ===" -ForegroundColor Cyan
-            Write-Host ""
-            
-            @"
-from pymongo import MongoClient
-from datetime import datetime, timezone
-
-client = MongoClient('${{ secrets.MONGO_URL }}', serverSelectionTimeoutMS=10000)
-db = client['fidus_production']
-
-# LUCRUM accounts to keep active
-lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067]
-
-# Set all non-LUCRUM accounts to zero and inactive
-print('Setting non-LUCRUM accounts to zero...')
-result = db.mt5_accounts.update_many(
-    {'account': {'`$nin': lucrum_accounts}},
-    {'`$set': {
-        'balance': 0,
-        'equity': 0,
-        'status': 'inactive',
-        'updated_at': datetime.now(timezone.utc)
-    }}
-)
-print(f'Updated {result.modified_count} accounts to zero')
-
-# Verify final state
-print()
-print('=== VERIFICATION ===')
-active = list(db.mt5_accounts.find({'status': 'active'}))
-total = sum(float(a.get('balance', 0) or 0) for a in active)
-print(f'Active accounts: {len(active)}')
-print(f'Total Balance: `${total:,.2f}')
-
-print()
-print('Active account details:')
-for acc in sorted(active, key=lambda x: -float(x.get('balance', 0) or 0)):
-    print(f"  - {acc.get('account')}: `${float(acc.get('balance', 0)):,.2f}")
-
-client.close()
-print()
-print('Done!')
-"@ | python -
+      - name: Install Dependencies
+        run: pip install pymongo
       
-      - name: Verify MT5 Bridge Status
+      - name: Set MEXAtlantic to Zero in MongoDB
+        run: |
+          cat > sync_lucrum.py << 'PYTHON_SCRIPT'
+          from pymongo import MongoClient
+          from datetime import datetime, timezone
+          
+          mongo_uri = "${{ secrets.MONGO_URL }}"
+          client = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
+          db = client.fidus_production
+          
+          # LUCRUM accounts to keep active
+          lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067]
+          
+          print("Setting non-LUCRUM accounts to zero...")
+          result = db.mt5_accounts.update_many(
+              {"account": {"$nin": lucrum_accounts}},
+              {"$set": {
+                  "balance": 0,
+                  "equity": 0,
+                  "status": "inactive",
+                  "updated_at": datetime.now(timezone.utc)
+              }}
+          )
+          print(f"Updated {result.modified_count} accounts to zero")
+          
+          # Verify final state
+          print()
+          print("=== VERIFICATION ===")
+          active = list(db.mt5_accounts.find({"status": "active"}))
+          total = sum(float(a.get("balance", 0) or 0) for a in active)
+          print(f"Active accounts: {len(active)}")
+          print(f"Total Balance: ${total:,.2f}")
+          
+          print()
+          print("Active account details:")
+          for acc in sorted(active, key=lambda x: -float(x.get("balance", 0) or 0)):
+              print(f"  - {acc.get('account')}: ${float(acc.get('balance', 0)):,.2f} ({acc.get('manager_name', 'Unknown')})")
+          
+          # Check for MEXAtlantic with non-zero balance
+          mex_with_balance = list(db.mt5_accounts.find({
+              "broker": {"$in": ["MEXAtlantic", "MEX Atlantic"]},
+              "balance": {"$gt": 0}
+          }))
+          
+          if mex_with_balance:
+              print()
+              print("WARNING: MEXAtlantic accounts still have balance:")
+              for acc in mex_with_balance:
+                  print(f"  - {acc.get('account')}: ${float(acc.get('balance', 0)):,.2f}")
+          else:
+              print()
+              print("All MEXAtlantic accounts have $0 balance")
+          
+          client.close()
+          print()
+          print("Sync complete!")
+          PYTHON_SCRIPT
+          
+          python sync_lucrum.py
+      
+      - name: Check MT5 Bridge via VPS
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -69,9 +80,7 @@ print('Done!')
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            Write-Host ""
             Write-Host "=== MT5 Bridge Status ===" -ForegroundColor Cyan
-            Write-Host ""
             
             try {
               $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 10
@@ -86,7 +95,7 @@ print('Done!')
                 }
               }
             } catch {
-              Write-Host "MT5 Bridge not responding" -ForegroundColor Yellow
+              Write-Host "MT5 Bridge not responding: $_" -ForegroundColor Yellow
             }
       
       - name: Generate Report
@@ -96,5 +105,4 @@ print('Done!')
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Set all non-LUCRUM (MEXAtlantic) accounts to zero and inactive." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**LUCRUM Accounts:**" >> $GITHUB_STEP_SUMMARY
-          echo "- 2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067" >> $GITHUB_STEP_SUMMARY
+          echo "**LUCRUM Accounts:** 2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067" >> $GITHUB_STEP_SUMMARY
