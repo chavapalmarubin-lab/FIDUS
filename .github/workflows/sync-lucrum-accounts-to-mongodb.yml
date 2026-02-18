@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 15
     
     steps:
-      - name: Set MEXAtlantic to Zero and Verify LUCRUM
+      - name: Set MEXAtlantic to Zero via VPS
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -17,82 +17,46 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            Write-Host "=== LUCRUM Account Sync to MongoDB ===" -ForegroundColor Cyan
-            Write-Host ""
+            Write-Host "=== LUCRUM Account Sync ===" -ForegroundColor Cyan
             
-            # First check MT5 Bridge API
-            Write-Host "1. Fetching data from MT5 Bridge API..." -ForegroundColor Yellow
+            Write-Host "Checking MT5 Bridge..." -ForegroundColor Yellow
             try {
               $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 30
-              Write-Host "   Got $($response.accounts.Count) accounts from MT5 Bridge" -ForegroundColor Green
-              
-              Write-Host ""
-              Write-Host "   LUCRUM Account Balances:" -ForegroundColor Cyan
-              $lucrumAccounts = @(2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067)
-              foreach ($acc in $response.accounts) {
-                if ($lucrumAccounts -contains $acc.account) {
-                  $status = if ($acc.balance -gt 0) { "[ACTIVE]" } else { "[inactive]" }
-                  Write-Host "   $status Account $($acc.account): Balance = $($acc.balance)" -ForegroundColor Green
-                }
-              }
+              Write-Host "Got $($response.accounts.Count) accounts" -ForegroundColor Green
             } catch {
-              Write-Host "   Error: $_" -ForegroundColor Red
+              Write-Host "MT5 Bridge error: $_" -ForegroundColor Red
             }
             
             Write-Host ""
-            Write-Host "2. Updating MongoDB - Setting non-LUCRUM accounts to zero..." -ForegroundColor Yellow
+            Write-Host "Running MongoDB sync script..." -ForegroundColor Yellow
             
-            # Read MongoDB URL from config
-            $configPath = "C:\mt5_bridge_service\config.json"
-            if (Test-Path $configPath) {
-              $config = Get-Content $configPath | ConvertFrom-Json
-              $mongoUrl = $config.mongodb_url
-              
-              # Create temp Python script
-              $tempScript = "C:\temp\sync_lucrum.py"
-              @"
-from pymongo import MongoClient
-from datetime import datetime, timezone
-
-mongo_url = '$mongoUrl'
-print('Connecting to MongoDB...')
-client = MongoClient(mongo_url, serverSelectionTimeoutMS=10000)
-db = client['fidus_production']
-print('Connected!')
-
-lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067]
-
-# Set all non-LUCRUM to zero
-print()
-print('Setting non-LUCRUM accounts to zero...')
-result = db.mt5_accounts.update_many(
-    {'account': {'`$nin': lucrum_accounts}},
-    {'`$set': {'balance': 0, 'equity': 0, 'status': 'inactive', 'updated_at': datetime.now(timezone.utc)}}
-)
-print(f'  Updated {result.modified_count} accounts')
-
-# Verify
-print()
-print('=== VERIFICATION ===')
-active = list(db.mt5_accounts.find({'status': 'active'}))
-total = sum(float(a.get('balance', 0) or 0) for a in active)
-print(f'Active accounts: {len(active)}')
-print(f'Total Balance: `${total:,.2f}')
-for a in sorted(active, key=lambda x: -float(x.get('balance', 0) or 0)):
-    print(f"  - {a.get('account')}: `${float(a.get('balance', 0)):,.2f}")
-
-client.close()
-print('Done!')
-"@ | Out-File -FilePath $tempScript -Encoding UTF8
-              
-              python $tempScript
-              Remove-Item $tempScript -ErrorAction SilentlyContinue
-            } else {
-              Write-Host "   Config file not found at $configPath" -ForegroundColor Red
-            }
+            cd C:\mt5_bridge_service
+            python -c "
+            from pymongo import MongoClient
+            from datetime import datetime, timezone
+            import json
+            
+            with open('config.json') as f:
+                config = json.load(f)
+            
+            client = MongoClient(config['mongodb_url'])
+            db = client['fidus_production']
+            
+            lucrum = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067]
+            
+            result = db.mt5_accounts.update_many(
+                {'account': {chr(36)+'nin': lucrum}},
+                {chr(36)+'set': {'balance': 0, 'equity': 0, 'status': 'inactive', 'updated_at': datetime.now(timezone.utc)}}
+            )
+            print(f'Updated {result.modified_count} non-LUCRUM accounts to zero')
+            
+            active = list(db.mt5_accounts.find({'status': 'active'}))
+            total = sum(float(a.get('balance', 0) or 0) for a in active)
+            print(f'Active: {len(active)} accounts, Total: chr(36){total:,.2f}')
+            
+            client.close()
+            "
       
-      - name: Generate Report
+      - name: Report
         if: always()
-        run: |
-          echo "# LUCRUM Account Sync Complete" >> $GITHUB_STEP_SUMMARY
-          echo "Synced LUCRUM accounts and set MEXAtlantic to zero." >> $GITHUB_STEP_SUMMARY
+        run: echo "Sync complete" >> $GITHUB_STEP_SUMMARY
