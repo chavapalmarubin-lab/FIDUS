@@ -173,6 +173,12 @@ const FundPortfolioManagement = () => {
         setClientObligations(finalObligations);
         setTotalObligations(total);
         setTotalClients(allClients.size);
+        
+        // CORRECT Fund P&L Calculation:
+        // Fund P&L = Total Equity (Fund Assets) - Total Client Money (Obligations)
+        // This is the TRUE profit/loss for the fund
+        const correctPnL = totalFundAssets - total;
+        setTotalPnL(correctPnL);
       }
       
     } catch (err) {
