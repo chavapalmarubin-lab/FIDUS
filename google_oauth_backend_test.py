@@ -21,7 +21,7 @@ import time
 import uuid
 
 # Configuration
-BACKEND_URL = "https://viking-trade-dash-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

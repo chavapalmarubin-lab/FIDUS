@@ -1,80 +1,78 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a standalone VIKING trading analytics dashboard. This evolved into a series of feature enhancements, UI adjustments, and data correction tasks for both the VIKING and the main FIDUS platforms.
+The user's initial request was to build a standalone VIKING trading analytics dashboard. This evolved into a series of feature enhancements and critical data correction tasks for the main FIDUS platform. The core of the work involved identifying and fixing numerous incorrect financial calculations across the FIDUS dashboards, creating a reliable data synchronization process from live trading accounts, and managing user-requested features like referral agent creation and data exports.
 
 PRODUCT REQUIREMENTS:
-- A public, no-login VIKING dashboard at the  route.
-- A private, login-required VIKING admin dashboard at the  route.
-- Swapped strategy identities: PRO is now account #885822 (with a 1000x balance multiplier for display), and CORE is account #1309411.
-- Creation of referral links for new FIDUS agents, following a specific format.
-- Maintenance of accurate fund allocation data in the database, based on user-provided spreadsheets and screenshots.
-- Accurate calculation and display of total portfolio values across the FIDUS application.
+- A public, no-login VIKING dashboard and a private admin dashboard.
+- Correct calculation and display of total portfolio values, P&L, and cash flow projections across the FIDUS application.
+- Creation of referral links for new FIDUS agents.
+- A reliable mechanism to sync live data from MT5 accounts into the application's MongoDB database, establishing a single source of truth for account balances.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a React frontend and a FastAPI backend using a MongoDB database. The application serves both the main FIDUS platform and the VIKING sub-application. The VIKING dashboard now has a public-facing version at  and correctly displays data for the swapped CORE and PRO strategies, including a 1000x display multiplier for the PRO balance. The FIDUS referral agent creation process is established and has been used multiple times. The database contains fund allocation data updated from a user-provided Excel file. However, several key financial dashboards in the FIDUS app are displaying incorrect summary totals.
+A full-stack application with a React frontend and a FastAPI backend using MongoDB. A series of critical and complex bugs related to financial calculations across the FIDUS dashboards have been resolved. The Fund Portfolio, Account Management, and Cash Flow/Wealth Calendar pages now correctly calculate and display P&L, total assets, and performance gaps by using only active accounts and applying the right financial logic (e.g., using only trading revenue to pay interest obligations).
+
+A new, robust GitHub Actions workflow () has been created and successfully executed. This workflow connects to the live MT5 bridge, updates all active LUCRUM accounts, and zeroes out all old MEXAtlantic accounts, ensuring the database reflects the true state of the portfolio. Several new referral agents have also been created.
 
 **Last working item**:
--   **Last item agent was working:** The user reported that account balances in the FIDUS app were out of date and provided three screenshots with the correct balances for Lucrum and MultiBank accounts. The agent had acknowledged the request and was about to begin updating the database. This new request interrupted the agent's previous work on fixing incorrect financial totals on the FIDUS dashboards.
+-   **Last item agent was working:** The user reported that a newly created referral agent, Cesar Lambreton (), is unable to log in. The agent investigated and determined that the user creation process correctly set a temporary password but failed to create the hashed  field required for the login mechanism to work.
 -   **Status:** NOT STARTED
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Manual testing by python -c. The agent should write a script to connect to MongoDB, update the  and  fields for the specified accounts in the  collection, and then query the database to confirm the changes were applied correctly.
+-   **Which testing method agent to use?** backend testing agent. The agent should first write a Python script to connect to MongoDB, find the user document for , hash the temporary password (), and update the  field. Afterward, it should use a  command to test the  endpoint with the credentials to confirm the fix.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Balances for Lucrum and MultiBank accounts are out of date (P0)**
--   **Issue 2: Total Fund Assets on the Fund Portfolio page is incorrect (P1)**
--   **Issue 3: The Account Management page is completely off (P1)**
+-   **Issue 1: Cesar Lambreton cannot log in (P0)**
+-   **Issue 2: Failing logins for three other specific referral agents (P1)**
 
 **Issues Detail:**
--   **Issue 1: Balances for Lucrum and MultiBank accounts are out of date (P0)**
-    -   **Attempted fixes:** None. This is the next immediate task.
+-   **Issue 1: Cesar Lambreton cannot log in (P0)**
+    -   **Attempted fixes:** None. The root cause (missing hashed  field) has been identified.
     -   **Next debug checklist:**
-        1.  Analyze the three user-provided screenshots from message #504 to extract the account numbers and their corresponding new balance/equity values.
-        2.  Connect to the  database.
-        3.  In the  collection, find the documents matching the account numbers and update their  and  fields with the new values.
-    -   **Why fix this issue and what will be achieved with the fix?** To ensure the financial data displayed in the FIDUS application is accurate and reflects the latest information from the brokers.
+        1.  Examine the user creation script at  to understand how passwords should be hashed and stored.
+        2.  Write a one-off Python script to find the user record for  in the  collection.
+        3.  In the script, correctly hash the temporary password () and populate the  field for that user.
+        4.  Consider modifying the  script to prevent this from happening for future agent creations.
+    -   **Why fix this issue and what will be achieved with the fix?** To allow the newly created referral agent to access their portal.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend.
     -   **Blocked on other issue:** None.
 
--   **Issue 2 & 3: FIDUS dashboard total calculations are incorrect (P1)**
-    -   **Attempted fixes:** The agent identified that endpoints were summing all accounts instead of only the 7 active ones. Fixes were applied to  and the  endpoint in . However, the changes did not take effect, likely due to a Python module caching issue on the server, which prevented the running application from loading the updated code. A server restart command timed out.
+-   **Issue 2: Failing logins for three specific referral agents (P1)**
+    -   **Attempted fixes:** None in this session. This is a legacy issue that is likely related to Issue 1.
     -   **Next debug checklist:**
-        1.  After updating the balances (Issue 1), perform a forceful restart of the backend service (e.g., backend: stopped
-backend: started) to clear any import caches.
-        2.  Test the  and  endpoints via  to confirm they now return only the active accounts and the correct totals.
-    -   **Why fix this issue and what will be achieved with the fix?** Core financial dashboards are showing incorrect data, which undermines user trust. Fixing this will restore data integrity to the Fund Portfolio and Account Management pages.
-    -   **Status:** IN PROGRESS
+        1.  Identify the three affected referral agents from previous communications or .
+        2.  Check their records in the  collection in MongoDB. It is highly probable they also have a missing or incorrect  field.
+        3.  Apply the same fix as for Issue 1: hash their temporary passwords and update their user records.
+    -   **Why fix this issue and what will be achieved with the fix?** To restore access for all referral agents.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on other issue:** Issue 1 (balances must be updated first).
+    -   **Blocked on other issue:** None.
 
 **In progress Task List**:
--   **Task 1: Update FIDUS account balances from screenshots (P0)**
-    -   **Where to resume:** Analyze the artifacts from message #504 and write a script to update the  collection in MongoDB.
-    -   **What will be achieved with this?** Account data in the database will be synchronized with the latest broker information.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Backend.
+-   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1)** Guide user on enabling live data sync for VIKING CORE & PRO strategies.
-    -   **(P1)** Verify pagination on the VIKING Orders tab works correctly with large datasets.
+    -   **(P1)** Fix the root cause of the referral agent login issue in the creation script ().
 -   **Future Tasks:**
+    -   **(P2)** Guide user on enabling live data sync for VIKING CORE & PRO strategies.
+    -   **(P2)** Verify pagination on the VIKING Orders tab works correctly with large datasets.
     -   **(P2)** Refactor the large  component into smaller sub-components.
-    -   **(P2)** Refactor backend analytics logic from  into a separate  module.
-    -   **(P2)** Address legacy FIDUS issues: Lucrum MT5 Bridge duplicate key errors and failing logins for some referral agents.
+    -   **(P2)** Address legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors.
 
 **Completed work in this session**
--   **VIKING PRO Historical Data:** Successfully integrated the full historical deal data for the VIKING PRO strategy.
--   **VIKING UI & Data Integrity:** Fixed multiple bugs in the VIKING dashboard, ensuring correct balances, analytics, and status were displayed for both CORE and PRO strategies.
--   **VIKING Strategy Swap:** Swapped the identities of the CORE and PRO strategies throughout the backend and frontend as requested.
--   **VIKING Public Dashboard:** Created a new public, no-login route () that displays the VIKING dashboard.
--   **FIDUS Referral Agents:** Created new referral links for three different agents and documented the standardized creation process in .
--   **FIDUS Allocations Update:** Updated all fund and account allocations in the MongoDB database based on a user-provided Excel file.
--   **Technical Documentation:** Created and delivered comprehensive technical specification and deployment guide PDFs for the VIKING application.
+-   **FIDUS Calculation Logic Overhaul:**
+    -   **Account Management & Fund Portfolio Totals:** Fixed multiple API endpoints and frontend components (, ) to ensure they only calculate totals based on  accounts, resolving widespread inaccuracies.
+    -   **Wealth Calendar Logic:** Corrected the backend () and frontend () logic. The Performance Gap now correctly compares total fund assets to total obligations, while the Running Balance correctly uses only trading revenue (P&L) to pay interest obligations.
+    -   **Fund Revenue Calculation:** Corrected the core  function in  to filter by , which resolved a major error where Fund P&L was overstated by over 0k.
+-   **Database Live Data Sync:**
+    -   Created and validated a new GitHub Actions workflow () that successfully syncs live data from the MT5 VPS bridge, zeroing out old accounts and updating active ones. This establishes a reliable source of truth.
+-   **Feature Delivery:**
+    -   Generated a comprehensive Excel export of all trading activity ().
+    -   Created two new referral agents as requested.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Lucrum MT5 Bridge Has Duplicate Key Errors (P2)**
@@ -82,86 +80,75 @@ backend: started) to clear any import caches.
     -   **Why to solve this issue and what will be achieved with this?** Ensures complete and accurate deal history for Lucrum accounts.
     -   **Should Test frontend/backend/both after fix:** Backend.
     -   **Is recurring issue?** Y
--   **Issue 2: Failing logins for three specific referral agents (P2)**
-    -   **Debug checklist:** Check the  and  collections for inconsistencies for the affected users.
-    -   **Why to solve this issue and what will be achieved with this?** Allows all referral agents to access their portals.
-    -   **Should Test frontend/backend/both after fix:** Both.
-    -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Incorrect total calculations on FIDUS dashboards.
--   **Recurrence count:** High. The agent has repeatedly had to fix financial summary calculations that were failing due to incorrect account filtering.
--   **Status:** IN PROGRESS
+-   **Recurrence count:** High.
+-   **Status:** RESOLVED. A comprehensive fix was implemented across the backend and frontend to enforce calculations based on active accounts and correct financial principles. This appears to be a stable solution.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Single Source of Truth (SSOT):** The  service is intended to be the SSOT for financial totals, but the application is not correctly using the updated version. The  constant is used to define which accounts contribute to totals.
--   **Python Module Caching:** This has become a significant blocker, as changes to shared modules like  are not being reflected in the running FastAPI application without a forceful restart.
--   **MongoDB Data Operations:** The agent has performed numerous updates to the  and  collections to correct financial data.
+-   **Source of Truth (SSOT):** The session's work heavily focused on establishing and enforcing a SSOT for financial data. The live MT5 data (synced via GitHub Actions) is the SSOT for balances, while the  collection is the SSOT for client principal. All calculations were updated to respect these sources.
+-   **GitHub Actions for Infrastructure Management:** The agent learned and implemented a solution using GitHub Actions to perform database operations. The final, working pattern involves the workflow running on a GitHub runner, using a  secret, and executing a Python script to update the database.
+-   **Distinction in Capital Types:** A key conceptual fix was differentiating between Client Money (principal, cannot be used for interest payments) and Fund Revenue (P&L, can be used for interest). This logic is now correctly implemented in the Wealth Calendar.
 
 **key DB schema**
--   **mt5_accounts:** The master collection for all trading accounts. It contains fields for , , , and . This collection is the primary target for data correction tasks.
--   **viking_deals_history:** Contains historical MT4 deals for both VIKING strategies.
--   **fund_allocation_state:** Stores summary data for each investment fund.
--   **viking_analytics:** Stores calculated analytics for VIKING strategies. Had a data type issue where account numbers were stored as strings.
+-   **users:** Contains user credentials. A missing hashed  field is the cause of the current P0 bug for new referral agents.
+-   **mt5_accounts:** The master collection for trading accounts. The  field ('active' or 'inactive') is now the critical filter for all financial calculations.
 
 **All files of reference**
--   : Contains the updated logic for calculating totals that is not currently live.
--   : Contains the API endpoints (, ) that need to use the corrected calculation logic.
--   : The frontend page displaying incorrect account totals.
--   The user-uploaded artifacts from message #504, containing the latest account balances.
+-   : Contains the bug for the current P0 issue.
+-   : The new, correct workflow for syncing the database.
+-   : Contains the fixed core calculation logic.
+-   : Contains the fixed Wealth Calendar endpoint logic.
+-   : Contains the fixed frontend display logic.
 
 **Critical Info for New Agent**
--   **Your immediate priority is to update the account balances.** Use the three screenshots provided by the user in the last message to update the  and  in the  MongoDB collection.
--   **You must then fix the incorrect totals on the FIDUS dashboards.** The code changes for this are likely already correct in . The main challenge will be overcoming the Python module caching issue. After updating the balances, perform a forceful restart of the backend (backend: stopped
-backend: started) to ensure the latest code is loaded.
--   Do not trust simple Error: restart requires a process name
-restart <name>		Restart a process
-restart <gname>:*	Restart all processes in a group
-restart <name> <name>	Restart multiple processes or groups
-restart all		Restart all processes
-Note: restart does not reread config files. For that, see reread and update. commands; they have proven unreliable for clearing the module cache.
+-   Your immediate priority is to fix the login issue for the new referral agent, Cesar Lambreton. The root cause is a missing hashed  field in the  collection.
+-   This login bug is recurrent. The best solution is to not only patch the specific user's record but also to fix the underlying issue in the  script to prevent it from happening again.
+-   The complex financial calculation bugs across the application are **resolved**. Do not attempt to change this logic unless the user explicitly reports a new error. The APIs and database now have a consistent and correct state.
+-   If the user reports that account data is out of date, do **not** manually update it from screenshots. Instruct the user to run the **Sync LUCRUM Accounts to MongoDB** GitHub Action, which is the new authoritative process for data synchronization.
 
 **documents and test reports created in this job**
--   /app/VIKING_TECHNICAL_SPEC.md
--   /app/frontend/public/VIKING_TECHNICAL_SPEC.pdf
--   /app/VKNG_RENDER_DEPLOYMENT.md
--   /app/frontend/public/VKNG_RENDER_DEPLOYMENT.pdf
--   /app/test_reports/iteration_1.json
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Request (Done):** User asks to create a referral link for Diego Torres Colo.
-2.  **Feedback/Request (Done):** User requests UI changes to the VIKING monitor: multiply CORE balance by 1000 and filter the symbol pie chart to show only allocations >= 3%.
-3.  **Correction (Done):** User clarifies they made a mistake and the strategy names need to be swapped (CORE is PRO and PRO is CORE).
-4.  **Correction (Done):** User clarifies the name swap is about the account numbers, not the multiplier logic.
-5.  **Request (New):** User provides an Excel file with new allocations for the FIDUS app and asks for the DB and app to be updated.
-6.  **Correction:** User provides screenshots showing different initial allocations.
-7.  **Clarification:** User confirms the allocations from the Excel file are the correct ones to use for the  field.
-8.  **Bug Report (In Progress):** User reports that the total fund assets on the fund portfolio page is wrong (15,703.60 instead of 69,867).
-9.  **Bug Report (In Progress):** User reports the account management page is completely off, with incorrect totals and broker counts.
-10. **Request (Highest Priority):** User provides three new screenshots with updated balances for Lucrum and MultiBank accounts and asks for the app to be updated.
+1.  **Bug Report (Done):** Fund Portfolio P&L calculation is wrong (7k vs. ~7k).
+2.  **Bug Report (Done):** Account Management list is wrong, still shows balances for inactive accounts.
+3.  **Clarification (Done):** Data updates must come from the MT5 API, not screenshots.
+4.  **Instruction (Done):** User explains that the VPS is accessible via GitHub Actions.
+5.  **Feedback (Done):** User reports workflow errors and explains they haven't needed a  secret before.
+6.  **Clarification (Done):** User adds the  secret and re-explains the VPS data flow architecture.
+7.  **Confirmation (Done):** User confirms the new GitHub Action workflow ran successfully.
+8.  **Request (Done):** Create a new referral link for Cesar Lambreton.
+9.  **Bug Report (PENDING):** cesar cant log in. This is the current highest priority task.
+10. **Confirmation of Fix (Done):** User confirmed a calculation fix looked good before reporting the final calendar logic bug.
 
 **Project Health Check:**
 -   **Broken**:
-    -   The Fund Portfolio and Account Management pages in the FIDUS app are displaying incorrect total asset values due to a combination of outdated balances and a server-side code caching issue.
+    -   The login functionality for newly created referral agents is non-functional due to a bug in the user creation script.
 -   **Mocked**:
-    -   The balance for the VIKING PRO strategy is intentionally multiplied by 1000x for display purposes as per a user request.
+    -   None.
 
 **3rd Party Integrations**
--   **MongoDB Atlas:** Primary database for the application.
--   **Render:** The user's intended deployment platform.
--   **GoDaddy:** The user's domain name provider.
+-   **MongoDB Atlas:** Primary database.
+-   **Render:** Production deployment platform for frontend and backend services.
+-   **GoDaddy:** User's domain name provider.
+-   **GitHub Actions:** Used for CI/CD and critical infrastructure tasks, including SSH access to the VPS for data synchronization.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES, it was used to test the VIKING API changes and successfully found a bug that was subsequently fixed.
+-   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None in this session.
--   **Known regressions:** The fix for the total fund assets calculation, while coded, has not been successfully deployed and tested due to server issues, leaving the dashboards in a broken state.
+-   **Test files created:**
+    -    (serves as an integration test for data sync)
+-   **Known regressions:** None. The previous regressions in financial calculations have been fixed.
 
 **Credentials to test flow:**
--   **VIKING Admin:**  / 
+-   **FIDUS Admin:**  / 
+-   **Referral Agent (not working):**  / 
 
 **What agent forgot to execute**
--   The agent was unable to complete the fix for the incorrect dashboard totals. The code was written, but the agent could not get the server to load the new code due to a timeout on the restart command and a likely Python module caching issue. This critical bug remains unresolved.</analysis>
+-   The agent has correctly identified the cause of the final bug report (cesar cant log in) but has not yet implemented the fix. The next action should be to write and execute the script to update the user's password field in the database.</analysis>

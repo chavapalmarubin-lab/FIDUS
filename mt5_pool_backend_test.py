@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Backend URL Configuration - Use from frontend .env
-BACKEND_URL = "https://viking-trade-dash-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com/api"
 
 # Admin Authentication
 ADMIN_CREDENTIALS = {
