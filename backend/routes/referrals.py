@@ -510,7 +510,9 @@ async def get_all_salespeople(active_only: bool = True):
 
 @router.post("/admin/referrals/salespeople")
 async def create_salesperson(data: SalespersonCreate):
-    """Create new salesperson with unique referral code"""
+    """Create new salesperson with unique referral code and proper authentication setup"""
+    import uuid
+    
     # Generate unique referral code
     initials = ''.join([n[0].upper() for n in data.name.split()])
     year = datetime.now().year
@@ -523,6 +525,13 @@ async def create_salesperson(data: SalespersonCreate):
         while await db.salespeople.find_one({"referral_code": f"{referral_code}-{counter}"}):
             counter += 1
         referral_code = f"{referral_code}-{counter}"
+    
+    # Generate default password and hash it
+    default_password = "Fidus2026!"
+    password_hash = get_password_hash(default_password)
+    
+    # Generate unique user ID
+    user_id = f"referral_agent_{str(uuid.uuid4())[:8]}"
     
     salesperson = {
         "name": data.name,
@@ -540,6 +549,8 @@ async def create_salesperson(data: SalespersonCreate):
         "preferred_payment_method": "crypto_wallet",
         "wallet_details": data.wallet_details or {},
         "active": True,
+        "status": "active",
+        "password_hash": password_hash,  # FIXED: Add hashed password for agent portal login
         "joined_date": datetime.now(timezone.utc),
         "created_at": datetime.now(timezone.utc),
         "notes": data.notes
@@ -547,11 +558,35 @@ async def create_salesperson(data: SalespersonCreate):
     
     result = await db.salespeople.insert_one(salesperson)
     
+    # FIXED: Also create entry in users collection for /api/auth/login endpoint
+    user_doc = {
+        "id": user_id,
+        "username": data.email,
+        "email": data.email,
+        "name": data.name,
+        "type": "referral_agent",
+        "role": "referral_agent",
+        "status": "active",
+        "active": True,
+        "temp_password": default_password,
+        "password": password_hash,  # FIXED: Store properly hashed password
+        "referral_code": referral_code,
+        "profile_picture": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    logging.info(f"✅ Created salesperson and user record for {data.email} with referral code {referral_code}")
+    
     return {
         "success": True,
         "salesperson_id": str(result.inserted_id),
+        "user_id": user_id,
         "referral_code": referral_code,
-        "referral_link": salesperson["referral_link"]
+        "referral_link": salesperson["referral_link"],
+        "temp_password": default_password  # Return temp password so admin can share with agent
     }
 
 @router.get("/admin/referrals/salespeople/{salesperson_id}")
