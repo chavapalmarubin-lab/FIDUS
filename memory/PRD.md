@@ -17,6 +17,14 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Feb 2026)
 
+#### Investment Simulator Currency Fixes (Feb 21, 2026) ✅
+- **Live Exchange Rates:** Backend now fetches live rates from exchangerate-api.com (free, no API key)
+  - Before: Hardcoded 18.5 MXN
+  - After: Live rate ~17.17 MXN (updates hourly)
+- **Timeline Tab Currency Fix:** Timeline tab now respects selected currency (MXN/EUR)
+  - Before: Always showed amounts in USD
+  - After: Shows amounts in selected currency
+
 #### Financial Calculation Fixes
 - [x] Fund Portfolio P&L calculation corrected (using only active accounts)
 - [x] Account Management totals fixed to filter by `status='active'`
