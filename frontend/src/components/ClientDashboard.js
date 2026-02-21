@@ -41,11 +41,11 @@ const FUND_INFO = {
   },
   BALANCE: {
     icon: '⚖️',
-    interestRate: 2.5,
-    annualReturn: 30,
+    interestRate: 2.0,  // UPDATED: Was 2.5%, now 2.0% for new investments
+    annualReturn: 24,   // UPDATED: 2.0% * 12 months
     riskLevel: 'Moderate',
     description: 'Balanced risk/reward with monthly guaranteed returns',
-    minInvestment: 25000,
+    minInvestment: 50000,  // Updated to match backend
     maxSuggested: 100000,
     lockPeriod: 'None',
     highlight: 'Best balance of safety and returns'
@@ -55,22 +55,23 @@ const FUND_INFO = {
     interestRate: 3.5,
     annualReturn: 42,
     riskLevel: 'Moderate-High',
-    description: 'Dynamic allocation based on market conditions and opportunities',
-    minInvestment: 50000,
-    maxSuggested: 150000,
+    description: '[LEGACY] No longer available for new investments',
+    minInvestment: 250000,
+    maxSuggested: 500000,
     lockPeriod: '3 months',
-    highlight: 'Higher returns for active traders'
+    highlight: 'Legacy fund - existing clients only',
+    discontinued: true  // Flag for UI to handle
   },
   UNLIMITED: {
     icon: '🚀',
-    interestRate: 4.0,
-    annualReturn: 48,
-    riskLevel: 'High',
-    description: 'Maximum returns for experienced investors with higher risk tolerance',
-    minInvestment: 100000,
-    maxSuggested: 250000,
+    interestRate: 0,  // Performance-based, not fixed
+    annualReturn: 'Variable',
+    riskLevel: 'Performance-Based',
+    description: '50-50 performance sharing - now available from $250K',
+    minInvestment: 250000,  // UPDATED: Was $1M, now $250K (absorbed DYNAMIC tier)
+    maxSuggested: 1000000,
     lockPeriod: '6 months',
-    highlight: 'Premium returns for serious investors'
+    highlight: 'Premium performance sharing for serious investors'
   }
 };
 
