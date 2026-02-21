@@ -328,9 +328,9 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
       pdf.setTextColor(17, 24, 39);
       
       const summaryStats = [
-        `Total Investment: ${formatCurrency(simulationResult.summary.total_investment)}`,
-        `Projected Final Value: ${formatCurrency(simulationResult.summary.final_value)}`,
-        `Total Interest Earned: ${formatCurrency(simulationResult.summary.total_interest_earned)}`,
+        `Total Investment: ${formatPdfCurrency(simulationResult.summary.total_investment)}`,
+        `Projected Final Value: ${formatPdfCurrency(simulationResult.summary.final_value)}`,
+        `Total Interest Earned: ${formatPdfCurrency(simulationResult.summary.total_interest_earned)}`,
         `Return on Investment: ${formatPercentage(simulationResult.summary.total_roi_percentage)}`
       ];
       
