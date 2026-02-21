@@ -409,12 +409,18 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
         pdf.setFontSize(10);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(17, 24, 39);
-        pdf.text(`${new Date(event.date).toLocaleDateString()} - ${event.title}`, margin, yPosition);
+        
+        // Convert title amounts to selected currency
+        const convertedTitle = convertPdfTextAmounts(event.title);
+        pdf.text(`${new Date(event.date).toLocaleDateString()} - ${convertedTitle}`, margin, yPosition);
         
         yPosition += 4;
         pdf.setFont(undefined, 'normal');
         pdf.setTextColor(75, 85, 99);
-        const description = pdf.splitTextToSize(event.description, pageWidth - 2*margin - 10);
+        
+        // Convert description amounts to selected currency
+        const convertedDescription = convertPdfTextAmounts(event.description);
+        const description = pdf.splitTextToSize(convertedDescription, pageWidth - 2*margin - 10);
         pdf.text(description, margin + 5, yPosition);
         yPosition += description.length * 4 + 5;
       });
