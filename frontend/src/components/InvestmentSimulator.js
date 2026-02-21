@@ -392,15 +392,13 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
       pdf.setFontSize(16);
       pdf.setFont(undefined, 'bold');
       pdf.setTextColor(17, 24, 39);
-      pdf.text('Key Investment Timeline Events', margin, yPosition);
+      pdf.text('Complete Investment Timeline', margin, yPosition);
       yPosition += 10;
       
-      // Get key events (investment starts, incubation ends, principal redeemable)
-      const keyEvents = simulationResult.calendar_events.filter(event => 
-        ['investment_start', 'incubation_end', 'principal_redeemable'].includes(event.type)
-      ).slice(0, 10); // Limit to first 10 events
+      // Include ALL calendar events (not just key events)
+      const allEvents = simulationResult.calendar_events;
       
-      keyEvents.forEach(event => {
+      allEvents.forEach(event => {
         if (yPosition > pageHeight - 30) {
           pdf.addPage();
           yPosition = margin;
@@ -422,7 +420,16 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
         const convertedDescription = convertPdfTextAmounts(event.description);
         const description = pdf.splitTextToSize(convertedDescription, pageWidth - 2*margin - 10);
         pdf.text(description, margin + 5, yPosition);
-        yPosition += description.length * 4 + 5;
+        
+        // Add amount if present
+        if (event.amount > 0) {
+          yPosition += description.length * 4;
+          pdf.setTextColor(34, 197, 94); // Green color
+          pdf.text(`Amount: ${formatPdfCurrency(event.amount)}`, margin + 5, yPosition);
+          yPosition += 5;
+        } else {
+          yPosition += description.length * 4 + 5;
+        }
       });
       
       // Add disclaimer/footer
