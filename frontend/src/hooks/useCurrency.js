@@ -27,8 +27,8 @@ const useCurrency = () => {
       }
     } catch (err) {
       setError(err.message);
-      // Set fallback data
-      setExchangeRates({ USD: 1.0, MXN: 18.5, EUR: 0.85 });
+      // Set fallback data with more accurate rates
+      setExchangeRates({ USD: 1.0, MXN: 17.20, EUR: 0.85 });
       setCurrencies([
         { code: 'USD', name: 'US Dollar', symbol: '$' },
         { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
