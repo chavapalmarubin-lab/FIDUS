@@ -66,13 +66,13 @@ const CurrencySelector = ({
       setError("Failed to load exchange rates");
       console.error("Currency fetch error:", err);
       
-      // Fallback currencies if API fails
+      // Fallback currencies if API fails (updated rates)
       setCurrencies([
         { code: 'USD', name: 'US Dollar', symbol: '$' },
         { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
         { code: 'EUR', name: 'Euro', symbol: '€' }
       ]);
-      setExchangeRates({ USD: 1.0, MXN: 18.5, EUR: 0.85 });
+      setExchangeRates({ USD: 1.0, MXN: 17.20, EUR: 0.85 });
     } finally {
       setLoading(false);
     }
