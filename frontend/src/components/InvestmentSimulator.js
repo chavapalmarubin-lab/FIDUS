@@ -1089,6 +1089,28 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                       }
                     };
                     
+                    // Function to replace USD amounts in text with selected currency
+                    const convertTextAmounts = (text) => {
+                      if (!text || selectedCurrency === 'USD') return text;
+                      
+                      // Match dollar amounts like $123,456.78 or $123456.78 or $123,456
+                      const dollarPattern = /\$[\d,]+(?:\.\d{2})?/g;
+                      
+                      return text.replace(dollarPattern, (match) => {
+                        // Extract the numeric value
+                        const numericValue = parseFloat(match.replace(/[$,]/g, ''));
+                        if (isNaN(numericValue)) return match;
+                        
+                        // Convert to selected currency
+                        const converted = convertCurrencyAmount(numericValue, 'USD', selectedCurrency);
+                        return formatCurrencyAmount(converted, selectedCurrency);
+                      });
+                    };
+                    
+                    // Convert title and description to selected currency
+                    const displayTitle = convertTextAmounts(event.title);
+                    const displayDescription = convertTextAmounts(event.description);
+                    
                     return (
                       <div 
                         key={index}
@@ -1107,14 +1129,14 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                         
                         <div className="flex-grow">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900">{event.title}</h4>
+                            <h4 className="font-medium text-gray-900">{displayTitle}</h4>
                             {isUpcoming && (
                               <Badge variant="secondary" className="text-xs">
                                 Upcoming
                               </Badge>
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm mb-2">{event.description}</p>
+                          <p className="text-gray-600 text-sm mb-2">{displayDescription}</p>
                           <div className="flex items-center gap-4 text-sm">
                             <span className="text-gray-500">
                               📅 {eventDate.toLocaleDateString()}
