@@ -438,7 +438,7 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
                 </div>
                 <p className="text-slate-300 text-sm mb-4">
                   Explore potential returns with our fund combination tool. See how different investment allocations 
-                  across CORE, BALANCE, DYNAMIC, and UNLIMITED funds could perform over time.
+                  across CORE, BALANCE, and UNLIMITED funds could perform over time.
                 </p>
               </div>
 
