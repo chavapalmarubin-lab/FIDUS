@@ -367,11 +367,11 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
         pdf.setTextColor(75, 85, 99);
         
         const fundDetails = [
-          `Investment Amount: ${formatCurrency(fund.investment_amount)}`,
+          `Investment Amount: ${formatPdfCurrency(fund.investment_amount)}`,
           `Interest Rate: ${fund.interest_rate}% monthly`,
           `Redemption Frequency: ${fund.redemption_frequency}`,
-          `Final Value: ${formatCurrency(fund.final_value)}`,
-          `Total Interest: ${formatCurrency(fund.total_interest)}`,
+          `Final Value: ${formatPdfCurrency(fund.final_value)}`,
+          `Total Interest: ${formatPdfCurrency(fund.total_interest)}`,
           `ROI: ${formatPercentage(fund.roi_percentage)}`
         ];
         
