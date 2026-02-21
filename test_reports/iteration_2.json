@@ -1,0 +1,54 @@
+{
+  "summary": "Verified fixes for Investment Simulator currency bugs: 1) Exchange rate is now LIVE (17.17 MXN from exchangerate-api.com, not hardcoded 18.5), 2) Timeline tab now displays amounts in selected currency (MXN) instead of always showing USD.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_2.json"],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% - /api/currency/rates returns live rate 17.17 MXN",
+    "frontend": "100% - Currency selector works, Timeline tab shows MXN amounts correctly"
+  },
+  "test_credentials": "cesar@gacel.llc / Fidus2026!",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Investment Simulator currency bugs are fully fixed. Live exchange rates from exchangerate-api.com are working (17.17 MXN). Timeline tab respects selectedCurrency and displays amounts in MXN when selected.",
+  "verified_bugs_fixed": {
+    "exchange_rate_hardcoded": {
+      "status": "FIXED",
+      "before": "Hardcoded 18.5 MXN",
+      "after": "Live rate 17.17 MXN from exchangerate-api.com"
+    },
+    "timeline_tab_currency": {
+      "status": "FIXED",
+      "before": "Timeline always showed USD amounts",
+      "after": "Timeline shows amounts in selected currency (MXN)",
+      "example": "$100,000 USD investment shows as $1,717,000.00 MXN, $1,500 interest shows as $25,755.00 MXN"
+    }
+  },
+  "api_test_results": {
+    "endpoint": "/api/currency/rates",
+    "response": {
+      "success": true,
+      "rates": {"USD": 1.0, "MXN": 17.17, "EUR": 0.849},
+      "last_updated": "2026-02-21T15:52:10.632159+00:00"
+    }
+  },
+  "ui_test_results": {
+    "login": "SUCCESS - cesar@gacel.llc logged in successfully",
+    "investment_calculator": "SUCCESS - Opens correctly from dashboard",
+    "currency_selector": "SUCCESS - Shows USD/MXN/EUR options with live rates",
+    "simulation": "SUCCESS - Runs with CORE fund $100,000",
+    "results_tab": "SUCCESS - Shows amounts in MXN when selected",
+    "timeline_tab": "SUCCESS - Shows amounts in MXN when selected (BUG FIX VERIFIED)"
+  }
+}
