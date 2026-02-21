@@ -392,9 +392,8 @@ const LeadRegistrationForm = ({ onBack, onComplete }) => {
                 >
                   <option value="">Select fund interest</option>
                   <option value="CORE">FIDUS Core Fund (1.5% monthly)</option>
-                  <option value="BALANCE">FIDUS Balance Fund (2.5% monthly)</option>
-                  <option value="DYNAMIC">FIDUS Dynamic Fund (3.5% monthly)</option>
-                  <option value="UNLIMITED">FIDUS Unlimited Fund (Performance sharing)</option>
+                  <option value="BALANCE">FIDUS Balance Fund (2.0% monthly)</option>
+                  <option value="UNLIMITED">FIDUS Unlimited Fund (Performance sharing - $250K+)</option>
                   <option value="MULTIPLE">Multiple funds</option>
                   <option value="CONSULTATION">Need consultation</option>
                 </select>
