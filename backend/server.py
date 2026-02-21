@@ -14262,7 +14262,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         deposit_date = datetime.now(timezone.utc)
         incubation_end_date = deposit_date + timedelta(days=fund_config.incubation_months * 30)
         interest_start_date = incubation_end_date
-        minimum_hold_end_date = deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
+        # FIXED: minimum_hold_end_date = incubation (2mo) + hold period (12mo) = 14 months total
+        minimum_hold_end_date = deposit_date + timedelta(days=(fund_config.incubation_months + fund_config.minimum_hold_months) * 30)
         
         # Calculate projections for this fund
         # CRITICAL FIX: Add incubation period to ensure user gets full interest payment months
@@ -14557,7 +14558,8 @@ def calculate_simulation_projections(investments: List[Dict[str, Any]], timefram
         deposit_date = datetime.now(timezone.utc)
         incubation_end_date = deposit_date + timedelta(days=fund_config.incubation_months * 30)
         interest_start_date = incubation_end_date
-        minimum_hold_end_date = deposit_date + timedelta(days=fund_config.minimum_hold_months * 30)
+        # FIXED: minimum_hold_end_date = incubation (2mo) + hold period (12mo) = 14 months total
+        minimum_hold_end_date = deposit_date + timedelta(days=(fund_config.incubation_months + fund_config.minimum_hold_months) * 30)
         
         # Calculate projections for this fund
         # CRITICAL FIX: Add incubation period to ensure user gets full interest payment months
