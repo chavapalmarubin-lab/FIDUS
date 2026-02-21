@@ -281,7 +281,35 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
         yPosition += 5;
       }
       
+      // Add currency indicator
+      if (selectedCurrency !== 'USD') {
+        pdf.text(`Currency: ${selectedCurrency}`, margin, yPosition + 5);
+        yPosition += 5;
+      }
+      
       yPosition += 20;
+      
+      // Helper function to format amounts in selected currency for PDF
+      const formatPdfCurrency = (amount) => {
+        if (selectedCurrency === 'USD') {
+          return formatCurrency(amount);
+        } else {
+          const converted = convertCurrencyAmount(amount, 'USD', selectedCurrency);
+          return formatCurrencyAmount(converted, selectedCurrency);
+        }
+      };
+      
+      // Helper to convert text amounts to selected currency
+      const convertPdfTextAmounts = (text) => {
+        if (!text || selectedCurrency === 'USD') return text;
+        const dollarPattern = /\$[\d,]+(?:\.\d{2})?/g;
+        return text.replace(dollarPattern, (match) => {
+          const numericValue = parseFloat(match.replace(/[$,]/g, ''));
+          if (isNaN(numericValue)) return match;
+          const converted = convertCurrencyAmount(numericValue, 'USD', selectedCurrency);
+          return formatCurrencyAmount(converted, selectedCurrency);
+        });
+      };
       
       // Executive Summary Box
       pdf.setDrawColor(59, 130, 246);
