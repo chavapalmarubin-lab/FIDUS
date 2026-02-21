@@ -8,15 +8,15 @@ import json
 logger = logging.getLogger(__name__)
 
 class CurrencyService:
-    """Service for handling currency conversion with daily exchange rates"""
+    """Service for handling currency conversion with live exchange rates"""
     
     def __init__(self):
-        self.api_key = os.environ.get('CURRENCY_API_KEY', 'fca_live_gNzPhdGnQWRyYcl44H2aL6cCiQ8KJLrMF8I7Jyoa')
-        self.base_url = "https://api.freecurrencyapi.com/v1/latest"
+        # Use free exchangerate-api.com (no API key required)
+        self.base_url = "https://api.exchangerate-api.com/v4/latest/USD"
         self.supported_currencies = ['USD', 'MXN', 'EUR']
         self.cache = {}
         self.cache_expiry = None
-        self.cache_duration = timedelta(hours=6)  # Cache for 6 hours
+        self.cache_duration = timedelta(hours=1)  # Cache for 1 hour
         
     def _is_cache_valid(self) -> bool:
         """Check if current cache is still valid"""
@@ -25,46 +25,42 @@ class CurrencyService:
         return datetime.now(timezone.utc) < self.cache_expiry
     
     def _fetch_exchange_rates(self) -> Dict[str, float]:
-        """Fetch latest exchange rates from API"""
+        """Fetch latest exchange rates from free API"""
         try:
-            params = {
-                'apikey': self.api_key,
-                'base_currency': 'USD',
-                'currencies': 'MXN,EUR'
-            }
-            
-            response = requests.get(self.base_url, params=params, timeout=10)
+            response = requests.get(self.base_url, timeout=10)
             response.raise_for_status()
             
             data = response.json()
             
-            if 'data' in data:
-                rates = data['data']
-                # Add USD to USD rate (always 1.0)
-                rates['USD'] = 1.0
+            if 'rates' in data:
+                rates = {
+                    'USD': 1.0,
+                    'MXN': data['rates'].get('MXN', 18.50),
+                    'EUR': data['rates'].get('EUR', 0.85)
+                }
                 
                 # Update cache
                 self.cache = rates
                 self.cache_expiry = datetime.now(timezone.utc) + self.cache_duration
                 
-                logger.info(f"Successfully fetched exchange rates: {rates}")
+                logger.info(f"✅ Successfully fetched LIVE exchange rates: USD/MXN={rates['MXN']:.4f}, USD/EUR={rates['EUR']:.4f}")
                 return rates
             else:
                 raise ValueError("Invalid API response format")
                 
         except requests.RequestException as e:
             logger.error(f"Failed to fetch exchange rates: {str(e)}")
-            # Return fallback rates if API fails
             return self._get_fallback_rates()
         except Exception as e:
             logger.error(f"Unexpected error fetching exchange rates: {str(e)}")
             return self._get_fallback_rates()
     
     def _get_fallback_rates(self) -> Dict[str, float]:
-        """Fallback rates if API is unavailable"""
+        """Fallback rates if API is unavailable (updated to recent approximate rates)"""
+        logger.warning("Using fallback exchange rates")
         return {
             'USD': 1.0,
-            'MXN': 18.50,  # Approximate USD/MXN rate
+            'MXN': 17.20,  # Approximate USD/MXN rate as of Feb 2026
             'EUR': 0.85    # Approximate USD/EUR rate
         }
     
