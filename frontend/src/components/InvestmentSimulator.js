@@ -1079,6 +1079,16 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                     const eventDate = new Date(event.date);
                     const isUpcoming = eventDate > new Date();
                     
+                    // Format amount respecting selected currency
+                    const formatEventAmount = (amount) => {
+                      if (selectedCurrency === 'USD') {
+                        return formatCurrency(amount);
+                      } else {
+                        const converted = convertCurrencyAmount(amount, 'USD', selectedCurrency);
+                        return formatCurrencyAmount(converted, selectedCurrency);
+                      }
+                    };
+                    
                     return (
                       <div 
                         key={index}
@@ -1111,7 +1121,7 @@ const InvestmentSimulator = ({ isPublic = true, leadInfo = null }) => {
                             </span>
                             {event.amount > 0 && (
                               <span className="text-green-600 font-medium">
-                                💰 {formatCurrency(event.amount)}
+                                💰 {formatEventAmount(event.amount)}
                               </span>
                             )}
                             <span className="text-blue-600 capitalize">
