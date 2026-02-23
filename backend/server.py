@@ -16293,7 +16293,21 @@ async def calculate_cash_flow_calendar():
             else:
                 CLIENT_MONEY += float(principal) if principal else 0
         
-        BROKER_REBATES = 202.00  # Monthly rebates
+        BROKER_REBATES = 0.0
+        # Get broker rebates from LUCRUM account 2199 (IB COMMISSIONS account)
+        rebates_account = await db.mt5_accounts.find_one({
+            "account_id": "2199",
+            "broker": {"$regex": "LUCRUM", "$options": "i"}
+        })
+        if rebates_account:
+            rebates_balance = rebates_account.get('balance', 0)
+            if hasattr(rebates_balance, 'to_decimal'):
+                BROKER_REBATES = float(rebates_balance.to_decimal())
+            else:
+                BROKER_REBATES = float(rebates_balance) if rebates_balance else 0
+            logging.info(f"💰 Broker Rebates from LUCRUM 2199: ${BROKER_REBATES:,.2f}")
+        else:
+            logging.warning("⚠️ LUCRUM 2199 (IB COMMISSIONS) account not found - using $0 for broker rebates")
         
         # Get ALL active MT5 accounts for total equity (same as Fund Portfolio)
         mt5_accounts = await db.mt5_accounts.find({
