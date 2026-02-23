@@ -41,11 +41,11 @@ const FUND_INFO = {
   },
   BALANCE: {
     icon: '⚖️',
-    interestRate: 2.0,  // UPDATED: Was 2.5%, now 2.0% for new investments
-    annualReturn: 24,   // UPDATED: 2.0% * 12 months
+    interestRate: 2.5,  // 2.5% monthly (confirmed by board)
+    annualReturn: 30,   // 2.5% * 12 months
     riskLevel: 'Moderate',
     description: 'Balanced risk/reward with monthly guaranteed returns',
-    minInvestment: 50000,  // Updated to match backend
+    minInvestment: 50000,
     maxSuggested: 100000,
     lockPeriod: 'None',
     highlight: 'Best balance of safety and returns'
@@ -55,20 +55,19 @@ const FUND_INFO = {
     interestRate: 3.5,
     annualReturn: 42,
     riskLevel: 'Moderate-High',
-    description: '[LEGACY] No longer available for new investments',
+    description: 'Invitation only - for special occasions',
     minInvestment: 250000,
     maxSuggested: 500000,
     lockPeriod: '3 months',
-    highlight: 'Legacy fund - existing clients only',
-    discontinued: true  // Flag for UI to handle
+    highlight: 'Premium fund for select investors'
   },
   UNLIMITED: {
     icon: '🚀',
     interestRate: 0,  // Performance-based, not fixed
     annualReturn: 'Variable',
     riskLevel: 'Performance-Based',
-    description: '50-50 performance sharing - now available from $250K',
-    minInvestment: 250000,  // UPDATED: Was $1M, now $250K (absorbed DYNAMIC tier)
+    description: '50-50 performance sharing',
+    minInvestment: 250000,
     maxSuggested: 1000000,
     lockPeriod: '6 months',
     highlight: 'Premium performance sharing for serious investors'
