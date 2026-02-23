@@ -793,18 +793,18 @@ class FidusWallet(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 # FIDUS Investment Fund Configuration
 # ============================================================================
-# FUND RESTRUCTURE - February 2026
-# - CORE: Unchanged at 1.5%
-# - BALANCE: Reduced from 2.5% to 2.0% for NEW investments
-# - DYNAMIC: DISCONTINUED for new investments (existing clients grandfathered)
-# - UNLIMITED: Now accepts former DYNAMIC tier ($250K+)
+# FIDUS FUND CONFIGURATION - Board Decision February 2026
+# - CORE: 1.5% monthly (unchanged)
+# - BALANCE: 2.5% monthly (unchanged)
+# - DYNAMIC: 3.5% monthly (invitation only - for existing client Guillermo)
+# - UNLIMITED: Performance-based 50-50 sharing ($250K minimum)
 # ============================================================================
 
 FIDUS_FUND_CONFIG = {
     "CORE": FundConfiguration(
         fund_code="CORE",
         name="FIDUS Core Fund",
-        interest_rate=1.5,  # 1.5% simple interest per month - UNCHANGED
+        interest_rate=1.5,  # 1.5% simple interest per month
         minimum_investment=10000.0,  # $10,000 minimum
         interest_frequency="monthly",
         redemption_frequency="monthly",  # Interest redemptions monthly
@@ -815,7 +815,7 @@ FIDUS_FUND_CONFIG = {
     "BALANCE": FundConfiguration(
         fund_code="BALANCE", 
         name="FIDUS Balance Fund",
-        interest_rate=2.0,  # UPDATED: 2.0% (was 2.5%) for NEW investments
+        interest_rate=2.5,  # 2.5% simple interest per month (CONFIRMED by board)
         minimum_investment=50000.0,  # $50,000 minimum
         interest_frequency="monthly",
         redemption_frequency="quarterly",  # Interest redemptions every 3 months
@@ -825,8 +825,8 @@ FIDUS_FUND_CONFIG = {
     ),
     "DYNAMIC": FundConfiguration(
         fund_code="DYNAMIC",
-        name="FIDUS Dynamic Fund [DISCONTINUED]", 
-        interest_rate=3.5,  # 3.5% - LEGACY ONLY for existing clients
+        name="FIDUS Dynamic Fund", 
+        interest_rate=3.5,  # 3.5% - Invitation only for special occasions (existing: Guillermo)
         minimum_investment=250000.0,  # $250,000 minimum
         interest_frequency="monthly",
         redemption_frequency="semi_annually",  # Interest redemptions every 6 months
