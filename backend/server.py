@@ -16296,7 +16296,12 @@ async def calculate_cash_flow_calendar():
         BROKER_REBATES = 0.0
         # Get broker rebates from LUCRUM account 2199 (IB COMMISSIONS account)
         rebates_account = await db.mt5_accounts.find_one({
-            "account_id": "2199",
+            "$or": [
+                {"account": "2199"},
+                {"account": 2199},
+                {"login": "2199"},
+                {"login": 2199}
+            ],
             "broker": {"$regex": "LUCRUM", "$options": "i"}
         })
         if rebates_account:
