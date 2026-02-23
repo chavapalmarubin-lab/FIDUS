@@ -16736,7 +16736,12 @@ async def get_complete_cashflow(days: int = 30):
         # Broker Rebates - get from LUCRUM account 2199 (IB COMMISSIONS)
         broker_rebates = 0.0
         rebates_account = await db.mt5_accounts.find_one({
-            "account_id": "2199",
+            "$or": [
+                {"account": "2199"},
+                {"account": 2199},
+                {"login": "2199"},
+                {"login": 2199}
+            ],
             "broker": {"$regex": "LUCRUM", "$options": "i"}
         })
         if rebates_account:
@@ -16745,6 +16750,9 @@ async def get_complete_cashflow(days: int = 30):
                 broker_rebates = float(rebates_balance.to_decimal())
             else:
                 broker_rebates = float(rebates_balance) if rebates_balance else 0
+            logging.info(f"💰 Broker Rebates from LUCRUM 2199: ${broker_rebates:,.2f}")
+        else:
+            logging.warning("⚠️ LUCRUM 2199 (IB COMMISSIONS) account not found")
         
         # Total Fund Assets
         total_fund_assets = total_equity + broker_rebates
