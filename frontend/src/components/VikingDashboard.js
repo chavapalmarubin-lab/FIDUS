@@ -82,12 +82,14 @@ const formatDateTime = (dateStr) => {
   });
 };
 
-// VKNG AI Brand Colors (from getvkng.com - Purple/Magenta theme)
-const VKNG_COLORS = {
-  purple: '#9B27FF',
-  purpleLight: '#A239EA',
-  magenta: '#CC00FF',
-  pink: '#E621A4',
+// FIDUS Brand Colors (Gold, Navy Blue, Cyan theme)
+const FIDUS_COLORS = {
+  gold: '#D4AF37',       // Primary gold/yellow
+  goldLight: '#E5C158',  // Light gold
+  navy: '#1E3A5F',       // Navy blue
+  navyDark: '#0D1629',   // Dark navy
+  cyan: '#22d3ee',       // Cyan accent
+  blue: '#3B82F6',       // Blue
   dark: '#0A112B',
   darkGray: '#0D1629',
   mediumGray: '#1A2744',
@@ -95,31 +97,31 @@ const VKNG_COLORS = {
   textSecondary: '#9CA3AF'
 };
 
-// PRO Strategy Display Multiplier (for display purposes only - account 885822)
-const PRO_DISPLAY_MULTIPLIER = 1000;
+// BALANCE Strategy Display Multiplier (for display purposes only - account 885822)
+const BALANCE_DISPLAY_MULTIPLIER = 1000;
 
 // Minimum percentage threshold for symbol distribution display
 const SYMBOL_MIN_PERCENTAGE = 3;
 
-// Colors for charts
+// Colors for charts (FIDUS themed)
 const COLORS = {
-  primary: '#9B27FF',    // VKNG Purple
-  secondary: '#A239EA',  // Light Purple
+  primary: '#D4AF37',    // FIDUS Gold
+  secondary: '#3B82F6',  // FIDUS Blue
   success: '#22c55e',    // Green
   danger: '#ef4444',     // Red
   warning: '#eab308',    // Yellow
   purple: '#8b5cf6',     // Purple
-  cyan: '#06b6d4',       // Cyan
-  pink: '#E621A4'        // VKNG Pink
+  cyan: '#22d3ee',       // FIDUS Cyan
+  gold: '#D4AF37'        // FIDUS Gold
 };
 
 // Distinct colors for symbol distribution pie chart
-const SYMBOL_COLORS = ['#9B27FF', '#22c55e', '#3B82F6', '#F59E0B', '#EC4899', '#06B6D4', '#EF4444', '#8B5CF6'];
+const SYMBOL_COLORS = ['#D4AF37', '#22c55e', '#3B82F6', '#F59E0B', '#EC4899', '#22d3ee', '#EF4444', '#8B5CF6'];
 
 // Strategy colors
 const STRATEGY_COLORS = {
   CORE: { primary: '#3B82F6', secondary: '#60A5FA', bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
-  PRO: { primary: '#9B27FF', secondary: '#A239EA', bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' }
+  BALANCE: { primary: '#D4AF37', secondary: '#E5C158', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400' }
 };
 
 const VikingDashboard = ({ onAccountChange }) => {
