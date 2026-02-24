@@ -361,9 +361,9 @@ const VikingDashboard = ({ onAccountChange }) => {
         <div className="text-center">
           <Loader2 
             className="w-12 h-12 animate-spin mx-auto mb-4" 
-            style={{ color: VKNG_COLORS.purple }}
+            style={{ color: FIDUS_COLORS.purple }}
           />
-          <p style={{ color: VKNG_COLORS.textSecondary }}>Loading VKNG AI data...</p>
+          <p style={{ color: FIDUS_COLORS.textSecondary }}>Loading VKNG AI data...</p>
         </div>
       </div>
     );
@@ -434,8 +434,8 @@ const VikingDashboard = ({ onAccountChange }) => {
             disabled={calculating}
             className="transition-all duration-200"
             style={{ 
-              borderColor: VKNG_COLORS.purple,
-              color: VKNG_COLORS.purple,
+              borderColor: FIDUS_COLORS.purple,
+              color: FIDUS_COLORS.purple,
               backgroundColor: 'transparent'
             }}
             data-testid="viking-calculate-btn"
@@ -453,8 +453,8 @@ const VikingDashboard = ({ onAccountChange }) => {
             size="sm"
             className="transition-all duration-200"
             style={{ 
-              borderColor: VKNG_COLORS.mediumGray,
-              color: VKNG_COLORS.textSecondary
+              borderColor: FIDUS_COLORS.mediumGray,
+              color: FIDUS_COLORS.textSecondary
             }}
             data-testid="viking-refresh-btn"
           >
@@ -476,8 +476,8 @@ const VikingDashboard = ({ onAccountChange }) => {
         <TabsList 
           className="p-1 w-full justify-start gap-1 overflow-x-auto rounded-lg"
           style={{ 
-            backgroundColor: VKNG_COLORS.darkGray,
-            border: `1px solid ${VKNG_COLORS.mediumGray}`
+            backgroundColor: FIDUS_COLORS.darkGray,
+            border: `1px solid ${FIDUS_COLORS.mediumGray}`
           }}
         >
           {['overview', 'analysis', 'stats', 'risk', 'orders'].map((tab) => (
@@ -487,10 +487,10 @@ const VikingDashboard = ({ onAccountChange }) => {
               className="capitalize rounded-md px-4 py-2 text-sm font-medium transition-all"
               style={{ 
                 background: activeSubTab === tab 
-                  ? `linear-gradient(135deg, ${VKNG_COLORS.pink} 0%, ${VKNG_COLORS.magenta} 100%)`
+                  ? `linear-gradient(135deg, ${FIDUS_COLORS.pink} 0%, ${FIDUS_COLORS.magenta} 100%)`
                   : 'transparent',
-                color: activeSubTab === tab ? VKNG_COLORS.textPrimary : VKNG_COLORS.textSecondary,
-                boxShadow: activeSubTab === tab ? `0 2px 8px ${VKNG_COLORS.purple}40` : 'none'
+                color: activeSubTab === tab ? FIDUS_COLORS.textPrimary : FIDUS_COLORS.textSecondary,
+                boxShadow: activeSubTab === tab ? `0 2px 8px ${FIDUS_COLORS.purple}40` : 'none'
               }}
             >
               {tab}
@@ -505,14 +505,14 @@ const VikingDashboard = ({ onAccountChange }) => {
             <Card 
               className="border"
               style={{ 
-                backgroundColor: `${VKNG_COLORS.darkGray}`,
-                borderColor: `${VKNG_COLORS.pink}40`,
-                boxShadow: `0 4px 20px ${VKNG_COLORS.purple}15`
+                backgroundColor: `${FIDUS_COLORS.darkGray}`,
+                borderColor: `${FIDUS_COLORS.pink}40`,
+                boxShadow: `0 4px 20px ${FIDUS_COLORS.purple}15`
               }}
             >
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
-                  <span style={{ color: VKNG_COLORS.pink }}>📊</span>
+                <CardTitle className="text-lg flex items-center gap-2" style={{ color: FIDUS_COLORS.textPrimary }}>
+                  <span style={{ color: FIDUS_COLORS.pink }}>📊</span>
                   Combined Portfolio
                 </CardTitle>
               </CardHeader>
@@ -520,11 +520,11 @@ const VikingDashboard = ({ onAccountChange }) => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Total Balance</p>
-                    <p className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>{formatCurrency(totalBalance)}</p>
+                    <p className="text-2xl font-bold" style={{ color: FIDUS_COLORS.textPrimary }}>{formatCurrency(totalBalance)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Total Equity</p>
-                    <p className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>{formatCurrency(totalEquity)}</p>
+                    <p className="text-2xl font-bold" style={{ color: FIDUS_COLORS.textPrimary }}>{formatCurrency(totalEquity)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Total Floating P/L</p>
@@ -534,7 +534,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Total Positions</p>
-                    <p className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>{totalPositions}</p>
+                    <p className="text-2xl font-bold" style={{ color: FIDUS_COLORS.textPrimary }}>{totalPositions}</p>
                   </div>
                 </div>
               </CardContent>
@@ -649,14 +649,14 @@ const VikingDashboard = ({ onAccountChange }) => {
                   </div>
                 ) : (
                   <div className="text-center py-6">
-                    <AlertTriangle className="w-10 h-10 mx-auto mb-2" style={{ color: VKNG_COLORS.purple }} />
+                    <AlertTriangle className="w-10 h-10 mx-auto mb-2" style={{ color: FIDUS_COLORS.purple }} />
                     <p className="text-gray-400 text-sm">PRO account pending setup</p>
                     <p className="text-gray-500 text-xs mt-1">Connect MT5 EA to start syncing</p>
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-800">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: VKNG_COLORS.purple }}></div>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: FIDUS_COLORS.purple }}></div>
                     <span className="text-xs text-gray-400">MEXAtlantic</span>
                   </div>
                   <span className="text-xs text-gray-500">
