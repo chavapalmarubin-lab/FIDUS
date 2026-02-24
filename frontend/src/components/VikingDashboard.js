@@ -375,8 +375,8 @@ const VikingDashboard = ({ onAccountChange }) => {
   
   // Calculate combined totals
   // Apply PRO multiplier to totals for display (PRO is account 885822)
-  const totalBalance = (coreAccount?.balance || 0) + ((proAccount?.balance || 0) * PRO_DISPLAY_MULTIPLIER);
-  const totalEquity = (coreAccount?.equity || 0) + ((proAccount?.equity || 0) * PRO_DISPLAY_MULTIPLIER);
+  const totalBalance = (coreAccount?.balance || 0) + ((proAccount?.balance || 0) * BALANCE_DISPLAY_MULTIPLIER);
+  const totalEquity = (coreAccount?.equity || 0) + ((proAccount?.equity || 0) * BALANCE_DISPLAY_MULTIPLIER);
   const totalProfit = (coreAccount?.profit || 0) + ((proAccount?.profit || 0) * BALANCE_DISPLAY_MULTIPLIER);
   const totalPositions = (coreAccount?.positions_count || 0) + (proAccount?.positions_count || 0);
   
@@ -630,16 +630,16 @@ const VikingDashboard = ({ onAccountChange }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-gray-500">Balance</p>
-                      <p className="text-xl font-bold text-white">{formatCurrency((proAccount?.balance || 0) * PRO_DISPLAY_MULTIPLIER)}</p>
+                      <p className="text-xl font-bold text-white">{formatCurrency((proAccount?.balance || 0) * BALANCE_DISPLAY_MULTIPLIER)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Equity</p>
-                      <p className="text-xl font-bold text-white">{formatCurrency((proAccount?.equity || 0) * PRO_DISPLAY_MULTIPLIER)}</p>
+                      <p className="text-xl font-bold text-white">{formatCurrency((proAccount?.equity || 0) * BALANCE_DISPLAY_MULTIPLIER)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Floating P/L</p>
                       <p className={`text-lg font-semibold ${(proAccount?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency((proAccount?.profit || 0) * PRO_DISPLAY_MULTIPLIER)}
+                        {formatCurrency((proAccount?.profit || 0) * BALANCE_DISPLAY_MULTIPLIER)}
                       </p>
                     </div>
                     <div>
