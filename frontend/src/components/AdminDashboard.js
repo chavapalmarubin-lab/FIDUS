@@ -804,7 +804,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="viking" className="mt-6">
+          <TabsContent value="track-record" className="mt-6">
             <VikingDashboard />
           </TabsContent>
 
