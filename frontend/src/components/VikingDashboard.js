@@ -1,11 +1,11 @@
 /**
- * VKNG AI Trading Operations Dashboard
+ * FIDUS Track-Record Dashboard
  * 
- * Branded with official VKNG AI colors from getvkng.com
+ * Branded with official FIDUS colors (Gold, Navy Blue, Cyan)
  * 
- * This dashboard manages VKNG AI trading strategies:
- * - CORE Strategy: Account 33627673 (MEXAtlantic)
- * - PRO Strategy: Account 1309411 (Traders Trust)
+ * This dashboard manages FIDUS trading strategies:
+ * - CORE Strategy: Account 1309411 (Traders Trust)
+ * - BALANCE Strategy: Account 885822 (MEXAtlantic)
  * 
  * UI follows FXBlue format (https://www.fxblue.com/users/gestion_global)
  */
