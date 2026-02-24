@@ -471,7 +471,7 @@ const VikingDashboard = ({ onAccountChange }) => {
         </div>
       )}
 
-      {/* Sub-navigation tabs following FXBlue format - VKNG Purple/Magenta Theme */}
+      {/* Sub-navigation tabs following FXBlue format - FIDUS Gold/Navy Theme */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
         <TabsList 
           className="p-1 w-full justify-start gap-1 overflow-x-auto rounded-lg"
