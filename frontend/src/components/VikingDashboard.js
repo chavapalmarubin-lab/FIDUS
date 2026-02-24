@@ -128,14 +128,14 @@ const VikingDashboard = ({ onAccountChange }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeSubTab, setActiveSubTab] = useState("overview");
-  const [selectedStrategy, setSelectedStrategy] = useState("ALL"); // ALL, CORE, PRO
+  const [selectedStrategy, setSelectedStrategy] = useState("ALL"); // ALL, CORE, BALANCE
   
   // Data state
   const [summary, setSummary] = useState(null);
   const [accounts, setAccounts] = useState([]); // Array of all accounts
   const [analytics, setAnalytics] = useState(null);
   const [coreAnalytics, setCoreAnalytics] = useState(null);
-  const [proAnalytics, setProAnalytics] = useState(null);
+  const [balanceAnalytics, setBalanceAnalytics] = useState(null);
   const [deals, setDeals] = useState([]);
   const [symbolDistribution, setSymbolDistribution] = useState([]);
   const [riskData, setRiskData] = useState(null);
