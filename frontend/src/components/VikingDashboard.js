@@ -182,7 +182,7 @@ const VikingDashboard = ({ onAccountChange }) => {
     }
   };
 
-  // Fetch all VIKING data
+  // Fetch all FIDUS Track-Record data
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -210,20 +210,20 @@ const VikingDashboard = ({ onAccountChange }) => {
         }
       } catch (e) { console.log("CORE analytics not available"); }
       
-      // Fetch analytics for PRO strategy
+      // Fetch analytics for BALANCE strategy (formerly PRO)
       try {
-        const proAnalyticsRes = await fetch(`${BACKEND_URL}/api/viking/analytics/PRO`);
-        const proAnalyticsData = await proAnalyticsRes.json();
-        if (proAnalyticsData.success) {
-          setProAnalytics(proAnalyticsData.analytics);
-          if (selectedStrategy === 'PRO') {
-            setAnalytics(proAnalyticsData.analytics);
+        const balanceAnalyticsRes = await fetch(`${BACKEND_URL}/api/viking/analytics/PRO`);
+        const balanceAnalyticsData = await balanceAnalyticsRes.json();
+        if (balanceAnalyticsData.success) {
+          setBalanceAnalytics(balanceAnalyticsData.analytics);
+          if (selectedStrategy === 'BALANCE') {
+            setAnalytics(balanceAnalyticsData.analytics);
           }
         }
-      } catch (e) { console.log("PRO analytics not available yet"); }
+      } catch (e) { console.log("BALANCE analytics not available yet"); }
       
       // Fetch deals based on selected strategy WITH PAGINATION
-      const strategy = selectedStrategy === 'ALL' ? 'CORE' : selectedStrategy;
+      const strategy = selectedStrategy === 'ALL' ? 'CORE' : (selectedStrategy === 'BALANCE' ? 'PRO' : selectedStrategy);
       const dealsRes = await fetch(`${BACKEND_URL}/api/viking/deals/${strategy}?limit=${ordersPerPage}&skip=${(ordersPage - 1) * ordersPerPage}`);
       const dealsData = await dealsRes.json();
       
