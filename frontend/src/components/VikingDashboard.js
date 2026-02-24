@@ -543,27 +543,27 @@ const VikingDashboard = ({ onAccountChange }) => {
           
           {/* Strategy Cards Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* VIKING CORE Strategy Card */}
+            {/* FIDUS CORE Strategy Card */}
             {(selectedStrategy === 'ALL' || selectedStrategy === 'CORE') && (
             <Card 
               className="border"
               style={{ 
-                backgroundColor: `${VKNG_COLORS.darkGray}`,
+                backgroundColor: `${FIDUS_COLORS.darkGray}`,
                 borderColor: '#3B82F630'
               }}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
+                  <CardTitle className="text-lg flex items-center gap-2" style={{ color: FIDUS_COLORS.textPrimary }}>
                     <span style={{ color: '#3B82F6' }}>⚡</span>
-                    VIKING CORE
+                    FIDUS CORE
                   </CardTitle>
                   <Badge className={`${getStatusColor(coreAccount?.status)} border`}>
                     {getStatusIcon(coreAccount?.status)}
                     <span className="ml-1 capitalize">{coreAccount?.status?.replace('_', ' ') || 'Unknown'}</span>
                   </Badge>
                 </div>
-                <p className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>
+                <p className="text-sm" style={{ color: FIDUS_COLORS.textSecondary }}>
                   Account: {coreAccount?.account || '1309411'} | {coreAccount?.broker || 'Traders Trust'}
                 </p>
               </CardHeader>
@@ -601,27 +601,27 @@ const VikingDashboard = ({ onAccountChange }) => {
             </Card>
             )}
 
-            {/* VIKING PRO Strategy Card */}
-            {(selectedStrategy === 'ALL' || selectedStrategy === 'PRO') && (
+            {/* FIDUS BALANCE Strategy Card */}
+            {(selectedStrategy === 'ALL' || selectedStrategy === 'BALANCE') && (
             <Card 
               className="border"
               style={{ 
-                backgroundColor: `${VKNG_COLORS.darkGray}`,
-                borderColor: `${VKNG_COLORS.purple}30`
+                backgroundColor: `${FIDUS_COLORS.darkGray}`,
+                borderColor: `${FIDUS_COLORS.gold}30`
               }}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2" style={{ color: VKNG_COLORS.textPrimary }}>
-                    <span style={{ color: VKNG_COLORS.purple }}>⚔️</span>
-                    VIKING PRO
+                  <CardTitle className="text-lg flex items-center gap-2" style={{ color: FIDUS_COLORS.textPrimary }}>
+                    <span style={{ color: FIDUS_COLORS.gold }}>⚖️</span>
+                    FIDUS BALANCE
                   </CardTitle>
                   <Badge className={`${getStatusColor(proAccount?.status)} border`}>
                     {getStatusIcon(proAccount?.status)}
                     <span className="ml-1 capitalize">{proAccount?.status?.replace('_', ' ') || 'Pending Setup'}</span>
                   </Badge>
                 </div>
-                <p className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>
+                <p className="text-sm" style={{ color: FIDUS_COLORS.textSecondary }}>
                   Account: {proAccount?.account || '885822'} | {proAccount?.broker || 'MEXAtlantic'}
                 </p>
               </CardHeader>
