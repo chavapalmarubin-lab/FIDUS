@@ -170,7 +170,7 @@ const VikingDashboard = ({ onAccountChange }) => {
         const proData = await proRes.json();
         if (proData.success) setProAnalytics(proData.analytics);
       } catch (e) {
-        console.log("PRO account not yet available");
+        console.log("BALANCE account not yet available");
       }
       
       // Refresh all data
