@@ -377,30 +377,30 @@ const VikingDashboard = ({ onAccountChange }) => {
   // Apply PRO multiplier to totals for display (PRO is account 885822)
   const totalBalance = (coreAccount?.balance || 0) + ((proAccount?.balance || 0) * PRO_DISPLAY_MULTIPLIER);
   const totalEquity = (coreAccount?.equity || 0) + ((proAccount?.equity || 0) * PRO_DISPLAY_MULTIPLIER);
-  const totalProfit = (coreAccount?.profit || 0) + ((proAccount?.profit || 0) * PRO_DISPLAY_MULTIPLIER);
+  const totalProfit = (coreAccount?.profit || 0) + ((proAccount?.profit || 0) * BALANCE_DISPLAY_MULTIPLIER);
   const totalPositions = (coreAccount?.positions_count || 0) + (proAccount?.positions_count || 0);
   
   // Filter symbol distribution to only show symbols >= 3%
   const filteredSymbolDistribution = symbolDistribution.filter(item => item.percentage >= SYMBOL_MIN_PERCENTAGE);
 
   return (
-    <div className="space-y-6" data-testid="viking-dashboard">
+    <div className="space-y-6" data-testid="fidus-track-record-dashboard">
       {/* Header with Strategy Selector */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: VKNG_COLORS.textPrimary }}>
+          <h1 className="text-2xl font-bold" style={{ color: FIDUS_COLORS.textPrimary }}>
             Trading Operations
           </h1>
-          <p className="mt-1" style={{ color: VKNG_COLORS.textSecondary }}>
+          <p className="mt-1" style={{ color: FIDUS_COLORS.textSecondary }}>
             Real-time MT4 Performance Analytics
           </p>
         </div>
         
         {/* Strategy Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm" style={{ color: VKNG_COLORS.textSecondary }}>Strategy:</span>
-          <div className="flex rounded-lg overflow-hidden" style={{ backgroundColor: VKNG_COLORS.darkGray, border: `1px solid ${VKNG_COLORS.mediumGray}` }}>
-            {['ALL', 'CORE', 'PRO'].map((strategy) => (
+          <span className="text-sm" style={{ color: FIDUS_COLORS.textSecondary }}>Strategy:</span>
+          <div className="flex rounded-lg overflow-hidden" style={{ backgroundColor: FIDUS_COLORS.darkGray, border: `1px solid ${FIDUS_COLORS.mediumGray}` }}>
+            {['ALL', 'CORE', 'BALANCE'].map((strategy) => (
               <button
                 key={strategy}
                 onClick={() => setSelectedStrategy(strategy)}
@@ -409,9 +409,9 @@ const VikingDashboard = ({ onAccountChange }) => {
                 }`}
                 style={{
                   backgroundColor: selectedStrategy === strategy 
-                    ? (strategy === 'PRO' ? VKNG_COLORS.purple : strategy === 'CORE' ? '#3B82F6' : VKNG_COLORS.pink)
+                    ? (strategy === 'BALANCE' ? FIDUS_COLORS.gold : strategy === 'CORE' ? '#3B82F6' : FIDUS_COLORS.cyan)
                     : 'transparent',
-                  color: selectedStrategy === strategy ? '#fff' : VKNG_COLORS.textSecondary
+                  color: selectedStrategy === strategy ? '#fff' : FIDUS_COLORS.textSecondary
                 }}
                 data-testid={`strategy-${strategy.toLowerCase()}-btn`}
               >
@@ -423,7 +423,7 @@ const VikingDashboard = ({ onAccountChange }) => {
         
         <div className="flex items-center gap-3">
           {lastUpdate && (
-            <span className="text-xs" style={{ color: `${VKNG_COLORS.textSecondary}80` }}>
+            <span className="text-xs" style={{ color: `${FIDUS_COLORS.textSecondary}80` }}>
               Last update: {lastUpdate}
             </span>
           )}
