@@ -363,7 +363,7 @@ const VikingDashboard = ({ onAccountChange }) => {
             className="w-12 h-12 animate-spin mx-auto mb-4" 
             style={{ color: FIDUS_COLORS.purple }}
           />
-          <p style={{ color: FIDUS_COLORS.textSecondary }}>Loading VKNG AI data...</p>
+          <p style={{ color: FIDUS_COLORS.textSecondary }}>Loading FIDUS Track-Record data...</p>
         </div>
       </div>
     );
