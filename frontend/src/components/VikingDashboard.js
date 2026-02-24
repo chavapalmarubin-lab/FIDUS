@@ -272,8 +272,8 @@ const VikingDashboard = ({ onAccountChange }) => {
       }
       
     } catch (err) {
-      console.error("Error fetching VIKING data:", err);
-      setError("Failed to load VIKING data. Please try again.");
+      console.error("Error fetching FIDUS Track-Record data:", err);
+      setError("Failed to load Track-Record data. Please try again.");
     } finally {
       setLoading(false);
     }
