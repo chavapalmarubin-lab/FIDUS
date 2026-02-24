@@ -650,7 +650,7 @@ const VikingDashboard = ({ onAccountChange }) => {
                 ) : (
                   <div className="text-center py-6">
                     <AlertTriangle className="w-10 h-10 mx-auto mb-2" style={{ color: FIDUS_COLORS.purple }} />
-                    <p className="text-gray-400 text-sm">PRO account pending setup</p>
+                    <p className="text-gray-400 text-sm">BALANCE account pending setup</p>
                     <p className="text-gray-500 text-xs mt-1">Connect MT5 EA to start syncing</p>
                   </div>
                 )}
