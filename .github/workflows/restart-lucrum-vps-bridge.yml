@@ -1,0 +1,246 @@
+name: Restart LUCRUM VPS Bridge Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: "Diagnose Current VPS State"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 5m
+          script: |
+            echo ================================================
+            echo   VPS DIAGNOSTIC - %DATE% %TIME%
+            echo ================================================
+            echo.
+            
+            echo === Port 8000 Status ===
+            netstat -ano | findstr ":8000" | findstr "LISTENING"
+            if %ERRORLEVEL% NEQ 0 (
+              echo Port 8000: Nothing listening
+            )
+            echo.
+            
+            echo === Python Processes ===
+            tasklist | findstr /i python
+            if %ERRORLEVEL% NEQ 0 (
+              echo No Python processes running
+            )
+            echo.
+            
+            echo === MT5 Terminal Processes ===
+            tasklist | findstr /i terminal64
+            if %ERRORLEVEL% NEQ 0 (
+              echo No MT5 terminals running
+            )
+            echo.
+            
+            echo === MT5 Bridge Directory ===
+            if exist C:\mt5_bridge_service (
+              echo Folder exists: C:\mt5_bridge_service
+              dir C:\mt5_bridge_service\*.py 2>nul
+              if %ERRORLEVEL% NEQ 0 (
+                echo No Python files found
+              )
+            ) else (
+              echo Folder NOT found: C:\mt5_bridge_service
+            )
+            echo.
+            
+            echo === Task Scheduler Status ===
+            schtasks /Query /TN "MT5BridgeService" 2>nul
+            if %ERRORLEVEL% NEQ 0 (
+              schtasks /Query /TN "FIDUS MT5 Bridge API" 2>nul
+              if %ERRORLEVEL% NEQ 0 (
+                echo No MT5 bridge scheduled task found
+              )
+            )
+            echo.
+            
+            echo === Recent Log Entries ===
+            if exist C:\mt5_bridge_service\logs\api_service.log (
+              powershell -Command "Get-Content 'C:\mt5_bridge_service\logs\api_service.log' -Tail 15"
+            ) else (
+              echo No log file found
+            )
+            echo.
+            echo ================================================
+            echo   DIAGNOSTIC COMPLETE
+            echo ================================================
+      
+      - name: "Stop Existing Processes"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 3m
+          script: |
+            echo === Stopping Existing Processes ===
+            
+            REM Stop via Task Scheduler
+            schtasks /End /TN "MT5BridgeService" 2>nul
+            schtasks /End /TN "FIDUS MT5 Bridge API" 2>nul
+            
+            REM Kill Python processes
+            taskkill /F /IM python.exe /T 2>nul
+            timeout /t 3 /nobreak >nul
+            
+            REM Force free port 8000
+            echo Freeing port 8000...
+            for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do taskkill /F /PID %%a 2>nul
+            timeout /t 2 /nobreak >nul
+            
+            echo Processes stopped
+      
+      - name: "Verify Files and Environment"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 3m
+          script: |
+            echo === Verifying Files and Environment ===
+            
+            cd C:\mt5_bridge_service
+            
+            REM Check Python
+            python --version
+            if %ERRORLEVEL% NEQ 0 (
+              echo ERROR: Python not in PATH
+              exit /B 1
+            )
+            
+            REM Check if main script exists
+            if not exist mt5_bridge_api_service.py (
+              echo Script not found - downloading from GitHub...
+              powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py' -OutFile 'mt5_bridge_api_service.py'"
+            )
+            
+            echo Script file:
+            dir mt5_bridge_api_service.py
+            
+            REM Check .env file
+            if exist .env (
+              echo .env file exists
+            ) else (
+              echo WARNING: .env file not found
+            )
+            
+            REM Check logs directory
+            if not exist logs (
+              mkdir logs
+              echo Created logs directory
+            )
+            
+            echo Files verified
+      
+      - name: "Start MT5 Bridge Service"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 3m
+          script: |
+            echo === Starting MT5 Bridge Service ===
+            
+            cd C:\mt5_bridge_service
+            
+            REM Create logs directory if needed
+            if not exist logs mkdir logs
+            
+            REM Start the service
+            echo Starting service...
+            start /B python mt5_bridge_api_service.py > logs\service_output.log 2>&1
+            
+            echo Waiting 25 seconds for service to initialize...
+            timeout /t 25 /nobreak >nul
+            
+            echo Service start command completed
+      
+      - name: "Verify Service is Running"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 3m
+          script: |
+            echo === Verifying Service ===
+            
+            echo Checking port 8000...
+            netstat -ano | findstr ":8000" | findstr "LISTENING"
+            if %ERRORLEVEL% EQU 0 (
+              echo SUCCESS: Port 8000 is listening!
+            ) else (
+              echo ERROR: Port 8000 is NOT listening
+              echo Checking logs...
+              if exist C:\mt5_bridge_service\logs\service_output.log (
+                powershell -Command "Get-Content 'C:\mt5_bridge_service\logs\service_output.log' -Tail 30"
+              )
+              if exist C:\mt5_bridge_service\logs\api_service.log (
+                powershell -Command "Get-Content 'C:\mt5_bridge_service\logs\api_service.log' -Tail 30"
+              )
+            )
+            echo.
+            
+            echo Testing API endpoint...
+            powershell -Command "try { $r = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 10; Write-Host 'API Response:' $r.service $r.status } catch { Write-Host 'API test failed:' $_.Exception.Message }"
+            
+            echo.
+            powershell -Command "try { $r = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 10; Write-Host 'Health:' ($r | ConvertTo-Json -Compress) } catch { Write-Host 'Health check failed:' $_.Exception.Message }"
+      
+      - name: "Test External Access"
+        run: |
+          echo "=== Testing External Access from GitHub Runner ==="
+          echo ""
+          
+          echo "Testing root endpoint..."
+          curl -s --connect-timeout 15 --max-time 20 http://92.118.45.135:8000/ || echo "Connection failed"
+          
+          echo ""
+          echo "Testing health endpoint..."
+          curl -s --connect-timeout 15 --max-time 20 http://92.118.45.135:8000/api/mt5/bridge/health || echo "Connection failed"
+          
+          echo ""
+          echo "Testing accounts summary..."
+          curl -s --connect-timeout 15 --max-time 20 http://92.118.45.135:8000/api/mt5/accounts/summary || echo "Connection failed"
+      
+      - name: "Generate Report"
+        if: always()
+        run: |
+          echo "# LUCRUM VPS Bridge Service Restart Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**VPS:** 92.118.45.135:8000" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Steps Completed" >> $GITHUB_STEP_SUMMARY
+          echo "1. Diagnosed current VPS state" >> $GITHUB_STEP_SUMMARY
+          echo "2. Stopped existing processes" >> $GITHUB_STEP_SUMMARY
+          echo "3. Verified files and environment" >> $GITHUB_STEP_SUMMARY
+          echo "4. Started MT5 Bridge Service" >> $GITHUB_STEP_SUMMARY
+          echo "5. Verified service is running" >> $GITHUB_STEP_SUMMARY
+          echo "6. Tested external access" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## API Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "- Root: http://92.118.45.135:8000/" >> $GITHUB_STEP_SUMMARY
+          echo "- Health: http://92.118.45.135:8000/api/mt5/bridge/health" >> $GITHUB_STEP_SUMMARY
+          echo "- Accounts: http://92.118.45.135:8000/api/mt5/accounts/summary" >> $GITHUB_STEP_SUMMARY
