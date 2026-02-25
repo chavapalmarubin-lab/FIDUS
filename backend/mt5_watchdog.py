@@ -37,11 +37,11 @@ class MT5Watchdog:
         self.alert_service = alert_service
         self.lucrum_only_mode = LUCRUM_ONLY_MODE
         
-        # Configuration
-        self.check_interval = 300 if LUCRUM_ONLY_MODE else 60  # Check every 5 mins in LUCRUM mode
-        self.data_freshness_threshold = 60  # Alert if no LUCRUM data update in 60 minutes
-        self.failure_threshold = 5  # Higher threshold for LUCRUM mode
-        self.healing_cooldown = 3600  # 1 hour between alerts in LUCRUM mode
+        # Configuration - Adjusted to reduce alert spam while VPS connectivity is being fixed
+        self.check_interval = 300  # Check every 5 minutes (was 60 seconds)
+        self.data_freshness_threshold = 60  # Alert if no data in 60 minutes (was 15)
+        self.failure_threshold = 10  # Attempt healing after 10 failures (was 3-5)
+        self.healing_cooldown = 3600  # 1 hour between healing attempts (was 15 min)
         
         # State tracking
         self.consecutive_failures = 0
