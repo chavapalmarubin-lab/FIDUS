@@ -1,0 +1,244 @@
+name: Diagnose LUCRUM VPS API Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Diagnose VPS API Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 10m
+          script: |
+            Write-Host "=================================================" -ForegroundColor Cyan
+            Write-Host "  LUCRUM VPS API DIAGNOSTIC - $(Get-Date)" -ForegroundColor Cyan
+            Write-Host "=================================================" -ForegroundColor Cyan
+            Write-Host ""
+            
+            # STEP 1: Check what's listening on port 8000
+            Write-Host "=== STEP 1: Check Port 8000 ===" -ForegroundColor Yellow
+            $listeners = netstat -an | Select-String "8000" | Select-String "LISTENING"
+            if ($listeners) {
+              Write-Host "LISTENING on port 8000:" -ForegroundColor Green
+              $listeners | ForEach-Object { Write-Host $_ -ForegroundColor White }
+            } else {
+              Write-Host "NOTHING is listening on port 8000!" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # STEP 2: Check all listening ports
+            Write-Host "=== STEP 2: All Listening Ports ===" -ForegroundColor Yellow
+            netstat -an | Select-String "LISTENING" | Select-String ":80" | Select-String -NotMatch "WAIT"
+            Write-Host ""
+            
+            # STEP 3: Check Python processes
+            Write-Host "=== STEP 3: Python Processes ===" -ForegroundColor Yellow
+            $pyProcs = Get-Process python* -ErrorAction SilentlyContinue
+            if ($pyProcs) {
+              Write-Host "Found Python processes:" -ForegroundColor Green
+              $pyProcs | ForEach-Object {
+                Write-Host "  PID: $($_.Id) - Name: $($_.ProcessName) - CPU: $($_.CPU)" -ForegroundColor White
+              }
+            } else {
+              Write-Host "No Python processes running!" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # STEP 4: Check mt5_bridge_service folder
+            Write-Host "=== STEP 4: MT5 Bridge Service Folder ===" -ForegroundColor Yellow
+            $bridgePath = "C:\mt5_bridge_service"
+            if (Test-Path $bridgePath) {
+              Write-Host "Folder exists: $bridgePath" -ForegroundColor Green
+              Write-Host "Contents:" -ForegroundColor White
+              Get-ChildItem $bridgePath -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "  $($_.Name) - $($_.Length) bytes" -ForegroundColor Gray
+              }
+            } else {
+              Write-Host "Folder NOT FOUND: $bridgePath" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # STEP 5: Check if mt5_bridge_lucrum.py exists and inspect it
+            Write-Host "=== STEP 5: Inspect MT5 Bridge Script ===" -ForegroundColor Yellow
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
+            if (Test-Path $scriptPath) {
+              Write-Host "Script found: $scriptPath" -ForegroundColor Green
+              $content = Get-Content $scriptPath -Raw
+              
+              # Check for FastAPI/Flask/HTTP server code
+              if ($content -match "FastAPI|fastapi") {
+                Write-Host "  Contains: FastAPI" -ForegroundColor Green
+              } else {
+                Write-Host "  NO FastAPI found" -ForegroundColor Yellow
+              }
+              
+              if ($content -match "uvicorn") {
+                Write-Host "  Contains: uvicorn" -ForegroundColor Green
+              } else {
+                Write-Host "  NO uvicorn found" -ForegroundColor Yellow
+              }
+              
+              if ($content -match "Flask|flask") {
+                Write-Host "  Contains: Flask" -ForegroundColor Green
+              } else {
+                Write-Host "  NO Flask found" -ForegroundColor Yellow
+              }
+              
+              if ($content -match "0\.0\.0\.0|localhost") {
+                Write-Host "  Contains: Host binding (0.0.0.0 or localhost)" -ForegroundColor Green
+              } else {
+                Write-Host "  NO host binding found" -ForegroundColor Yellow
+              }
+              
+              if ($content -match ":8000|port.*8000") {
+                Write-Host "  Contains: Port 8000 reference" -ForegroundColor Green
+              } else {
+                Write-Host "  NO port 8000 reference" -ForegroundColor Yellow
+              }
+              
+              Write-Host ""
+              Write-Host "First 50 lines of script:" -ForegroundColor Cyan
+              Get-Content $scriptPath -TotalCount 50 | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
+            } else {
+              Write-Host "Script NOT FOUND: $scriptPath" -ForegroundColor Red
+              
+              # Look for other Python files
+              Write-Host ""
+              Write-Host "Looking for other Python files in mt5_bridge_service:" -ForegroundColor Yellow
+              Get-ChildItem "C:\mt5_bridge_service\*.py" -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "  Found: $($_.Name)" -ForegroundColor White
+              }
+            }
+            Write-Host ""
+            
+            # STEP 6: Check Task Scheduler
+            Write-Host "=== STEP 6: Task Scheduler ===" -ForegroundColor Yellow
+            $tasks = Get-ScheduledTask | Where-Object { $_.TaskName -like "*MT5*" -or $_.TaskName -like "*Bridge*" -or $_.TaskName -like "*Lucrum*" }
+            if ($tasks) {
+              Write-Host "Found MT5/Bridge tasks:" -ForegroundColor Green
+              $tasks | ForEach-Object {
+                Write-Host "  Task: $($_.TaskName) - State: $($_.State)" -ForegroundColor White
+              }
+            } else {
+              Write-Host "No MT5/Bridge tasks found!" -ForegroundColor Yellow
+            }
+            Write-Host ""
+            
+            # STEP 7: Check MT5 terminals
+            Write-Host "=== STEP 7: MT5 Terminals ===" -ForegroundColor Yellow
+            $terminals = Get-Process terminal64 -ErrorAction SilentlyContinue
+            if ($terminals) {
+              Write-Host "Found MT5 terminals:" -ForegroundColor Green
+              $terminals | ForEach-Object {
+                Write-Host "  PID: $($_.Id) - Window: $($_.MainWindowTitle)" -ForegroundColor White
+              }
+            } else {
+              Write-Host "No MT5 terminals running!" -ForegroundColor Red
+            }
+            Write-Host ""
+            
+            # STEP 8: Check logs folder
+            Write-Host "=== STEP 8: Logs ===" -ForegroundColor Yellow
+            $logPath = "C:\mt5_bridge_service\logs"
+            if (Test-Path $logPath) {
+              Write-Host "Logs folder exists" -ForegroundColor Green
+              Get-ChildItem $logPath -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "  $($_.Name) - Last Modified: $($_.LastWriteTime)" -ForegroundColor White
+              }
+              
+              # Show last 20 lines of most recent log
+              $latestLog = Get-ChildItem $logPath -Filter "*.log" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+              if ($latestLog) {
+                Write-Host ""
+                Write-Host "Last 20 lines of $($latestLog.Name):" -ForegroundColor Cyan
+                Get-Content $latestLog.FullName -Tail 20 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
+              }
+            } else {
+              Write-Host "No logs folder found" -ForegroundColor Yellow
+            }
+            Write-Host ""
+            
+            # STEP 9: Check for fidus_mt5_bridge folder (alternative location)
+            Write-Host "=== STEP 9: Check Alternative Locations ===" -ForegroundColor Yellow
+            $altPaths = @(
+              "C:\fidus_mt5_bridge",
+              "C:\Users\Administrator\mt5_bridge",
+              "C:\Program Files\MT5Bridge"
+            )
+            foreach ($path in $altPaths) {
+              if (Test-Path $path) {
+                Write-Host "Found: $path" -ForegroundColor Green
+                Get-ChildItem $path -Filter "*.py" -ErrorAction SilentlyContinue | ForEach-Object {
+                  Write-Host "  Python file: $($_.Name)" -ForegroundColor White
+                }
+              }
+            }
+            Write-Host ""
+            
+            Write-Host "=================================================" -ForegroundColor Cyan
+            Write-Host "  DIAGNOSTIC COMPLETE" -ForegroundColor Cyan
+            Write-Host "=================================================" -ForegroundColor Cyan
+      
+      - name: Test Local API from VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 2m
+          script: |
+            Write-Host ""
+            Write-Host "=== Testing Local API ===" -ForegroundColor Cyan
+            
+            try {
+              $response = Invoke-RestMethod -Uri "http://localhost:8000/" -TimeoutSec 5
+              Write-Host "API Response:" -ForegroundColor Green
+              $response | ConvertTo-Json
+            } catch {
+              Write-Host "API NOT responding on localhost:8000" -ForegroundColor Red
+              Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Yellow
+            }
+            
+            Write-Host ""
+            Write-Host "=== Testing External Access ===" -ForegroundColor Cyan
+            try {
+              $extResponse = Invoke-RestMethod -Uri "http://92.118.45.135:8000/" -TimeoutSec 5
+              Write-Host "External API Response:" -ForegroundColor Green
+              $extResponse | ConvertTo-Json
+            } catch {
+              Write-Host "API NOT responding on external IP 92.118.45.135:8000" -ForegroundColor Red
+              Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Yellow
+            }
+      
+      - name: Generate Diagnostic Report
+        if: always()
+        run: |
+          echo "# LUCRUM VPS API Diagnostic Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Issue" >> $GITHUB_STEP_SUMMARY
+          echo "Backend on Render cannot connect to MT5 Bridge API at 92.118.45.135:8000" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Checks Performed" >> $GITHUB_STEP_SUMMARY
+          echo "1. Port 8000 listener status" >> $GITHUB_STEP_SUMMARY
+          echo "2. Python processes" >> $GITHUB_STEP_SUMMARY
+          echo "3. MT5 Bridge script inspection" >> $GITHUB_STEP_SUMMARY
+          echo "4. Task Scheduler status" >> $GITHUB_STEP_SUMMARY
+          echo "5. MT5 Terminal status" >> $GITHUB_STEP_SUMMARY
+          echo "6. Log files" >> $GITHUB_STEP_SUMMARY
+          echo "7. Local and external API tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Review output above to determine root cause" >> $GITHUB_STEP_SUMMARY
+          echo "- If no HTTP server code exists in script, it needs to be added" >> $GITHUB_STEP_SUMMARY
+          echo "- If service not running, deploy proper bridge service" >> $GITHUB_STEP_SUMMARY
