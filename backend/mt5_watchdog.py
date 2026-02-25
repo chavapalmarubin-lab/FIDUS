@@ -216,37 +216,37 @@ class MT5Watchdog:
             return False
     
     async def _check_accounts_syncing(self) -> bool:
-        """Check if accounts are actively syncing and detect $0 balance issue"""
+        """
+        Check if LUCRUM accounts are actively syncing
+        
+        UPDATED: Only check ACTIVE LUCRUM accounts (MEXAtlantic is no longer active)
+        """
         try:
-            # Get all accounts
-            accounts = await self.db.mt5_accounts.find().to_list(length=None)
-            
-            if not accounts:
-                logger.warning("[MT5 WATCHDOG] No MT5 accounts found in database")
-                return False
+            # Query only ACTIVE accounts with LUCRUM broker
+            accounts = await self.db.mt5_accounts.find({
+                "status": "active",
+                "broker": {"$regex": "LUCRUM", "$options": "i"}
+            }).to_list(length=None)
             
             total_accounts = len(accounts)
-            zero_balance_count = 0
-            total_active_accounts = 0  # Count only non-separation accounts
-            synced_count = 0
-            cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=15)
+            if total_accounts == 0:
+                logger.info("[MT5 WATCHDOG] No active LUCRUM accounts found - checking if this is expected")
+                # Check if there are any LUCRUM accounts at all
+                all_lucrum = await self.db.mt5_accounts.find({
+                    "broker": {"$regex": "LUCRUM", "$options": "i"}
+                }).to_list(length=None)
+                if all_lucrum:
+                    logger.info(f"[MT5 WATCHDOG] Found {len(all_lucrum)} total LUCRUM accounts ({total_accounts} active)")
+                return True  # Don't fail if no active accounts
             
-            # Check each account
+            # Count accounts with recent sync (within 60 minutes for LUCRUM)
+            synced_count = 0
+            cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=60)
+            
             for account in accounts:
-                balance = float(account.get('balance', 0))
-                fund_type = account.get('fund_type', '')
-                
-                # Only count non-SEPARATION accounts for zero balance check
-                if fund_type not in ['SEPARATION']:
-                    total_active_accounts += 1
-                    if balance == 0:
-                        zero_balance_count += 1
-                
-                # Count recently synced - FIX: Handle both datetime and string formats
                 updated_at = account.get('updated_at')
                 if updated_at:
                     try:
-                        # Convert to timezone-aware datetime if needed
                         if isinstance(updated_at, str):
                             updated_at = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
                         elif isinstance(updated_at, datetime) and updated_at.tzinfo is None:
@@ -255,36 +255,15 @@ class MT5Watchdog:
                         if updated_at >= cutoff_time:
                             synced_count += 1
                     except (ValueError, AttributeError):
-                        logger.warning(f"[MT5 WATCHDOG] Invalid updated_at format for account {account.get('account')}: {updated_at}")
+                        pass
             
-            # SMART CRITICAL CHECK: Only trigger if $0 balances AND accounts NOT syncing
-            # This prevents false alarms during capital reallocation (accounts sync fine but show $0)
-            zero_balance_percentage = (zero_balance_count / total_active_accounts) if total_active_accounts > 0 else 0
             sync_percentage = (synced_count / total_accounts) * 100 if total_accounts > 0 else 0
-            is_syncing = sync_percentage >= 40  # At least 40% of accounts recently synced
+            is_syncing = sync_percentage >= 40  # At least 40% recently synced
             
-            # CRITICAL CONDITION: >80% accounts at $0 AND low sync activity
-            if zero_balance_percentage > 0.8 and total_active_accounts >= 3:
-                if not is_syncing:
-                    # REAL PROBLEM: Terminals disconnected
-                    logger.critical(f"🚨 [MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} ACTIVE ACCOUNTS SHOWING $0 BALANCE!")
-                    logger.critical(f"🚨 [MT5 WATCHDOG] AND only {synced_count}/{total_accounts} accounts syncing ({sync_percentage:.1f}%)")
-                    logger.critical("🚨 [MT5 WATCHDOG] MT5 Terminals likely DISCONNECTED - Need FULL restart!")
-                    self.needs_full_restart = True
-                    return False
-                else:
-                    # FALSE POSITIVE: Accounts syncing fine, just showing $0 (capital reallocation)
-                    logger.info(f"ℹ️ [MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} accounts at $0 BUT {synced_count}/{total_accounts} syncing ({sync_percentage:.1f}%)")
-                    logger.info("ℹ️ [MT5 WATCHDOG] Likely capital reallocation - accounts syncing normally, not disconnected")
-                    return True  # System is healthy
-            
-            # Check sync percentage for normal operations
-            if not is_syncing:
-                logger.warning(f"[MT5 WATCHDOG] Low sync rate: {synced_count}/{total_accounts} accounts ({sync_percentage:.1f}%)")
-            
-            # Only log (not alarm) about zero balances if some accounts affected but not critical
-            if zero_balance_count > 0 and zero_balance_percentage <= 0.8:
-                logger.info(f"[MT5 WATCHDOG] {zero_balance_count}/{total_active_accounts} active accounts showing $0 balance (normal, SEPARATION excluded)")
+            if is_syncing:
+                logger.debug(f"[MT5 WATCHDOG] LUCRUM accounts syncing OK: {synced_count}/{total_accounts} ({sync_percentage:.1f}%)")
+            else:
+                logger.warning(f"[MT5 WATCHDOG] Low LUCRUM sync rate: {synced_count}/{total_accounts} ({sync_percentage:.1f}%)")
             
             return is_syncing
             
