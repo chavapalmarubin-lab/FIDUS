@@ -418,11 +418,24 @@ class MT5Watchdog:
         """
         Main monitoring loop
         Runs continuously and checks MT5 health
+        
+        LUCRUM-ONLY MODE:
+        - Checks every 5 minutes instead of 1 minute
+        - Only monitors LUCRUM data freshness in MongoDB
+        - Does NOT trigger auto-healing or send critical alerts
+        - LUCRUM accounts are synced via GitHub Actions manually
         """
-        logger.info("[MT5 WATCHDOG] 🚀 Starting MT5 Watchdog monitoring loop")
-        logger.info(f"[MT5 WATCHDOG] Check interval: {self.check_interval}s")
-        logger.info(f"[MT5 WATCHDOG] Data freshness threshold: {self.data_freshness_threshold} minutes")
-        logger.info(f"[MT5 WATCHDOG] Failure threshold for auto-healing: {self.failure_threshold} failures")
+        if self.lucrum_only_mode:
+            logger.info("[MT5 WATCHDOG] 🟢 Starting in LUCRUM-ONLY mode")
+            logger.info("[MT5 WATCHDOG] ℹ️  VPS health checks: DISABLED")
+            logger.info("[MT5 WATCHDOG] ℹ️  Auto-healing: DISABLED")
+            logger.info("[MT5 WATCHDOG] ℹ️  Critical alerts: DISABLED")
+            logger.info(f"[MT5 WATCHDOG] Check interval: {self.check_interval}s (LUCRUM data freshness only)")
+        else:
+            logger.info("[MT5 WATCHDOG] 🚀 Starting MT5 Watchdog monitoring loop")
+            logger.info(f"[MT5 WATCHDOG] Check interval: {self.check_interval}s")
+            logger.info(f"[MT5 WATCHDOG] Data freshness threshold: {self.data_freshness_threshold} minutes")
+            logger.info(f"[MT5 WATCHDOG] Failure threshold for auto-healing: {self.failure_threshold} failures")
         
         while True:
             try:
@@ -430,6 +443,19 @@ class MT5Watchdog:
                 health = await self.check_mt5_health()
                 self.last_check_time = datetime.now(timezone.utc)
                 
+                # LUCRUM-ONLY MODE: Just log status, no alerts or auto-healing
+                if self.lucrum_only_mode:
+                    if health['healthy']:
+                        logger.debug("[MT5 WATCHDOG] 🟢 LUCRUM data status: OK")
+                    else:
+                        logger.info("[MT5 WATCHDOG] ℹ️  LUCRUM data may need manual sync via GitHub Actions")
+                    
+                    # Store status but skip alerts
+                    await self._store_watchdog_status(health)
+                    await asyncio.sleep(self.check_interval)
+                    continue
+                
+                # LEGACY VPS MODE (disabled)
                 if health['healthy']:
                     # System is healthy
                     if not self.is_healthy:
