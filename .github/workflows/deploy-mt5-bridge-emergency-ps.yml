@@ -1,107 +1,31 @@
-name: MT5 Bridge Emergency Restart (HTTP API)
+name: MT5 Bridge Emergency Restart (HTTP API) [DISABLED]
+
+# DISABLED: Feb 24, 2026 - LUCRUM-ONLY Mode
+# This workflow targeted the old MEXAtlantic VPS (92.118.45.135) which is no longer used.
+# LUCRUM accounts are now synced via the "Sync LUCRUM Accounts to MongoDB" workflow.
 
 on:
   workflow_dispatch:
     inputs:
       reason:
-        description: 'Reason for restart'
+        description: 'This workflow is DISABLED - use Sync LUCRUM Accounts instead'
         required: false
-        default: 'Auto-healing triggered by watchdog'
-  repository_dispatch:
-    types: [mt5-bridge-restart]
+        default: 'DISABLED - LUCRUM-ONLY MODE'
 
 jobs:
-  emergency-restart:
+  disabled-notice:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    
     steps:
-      - name: Trigger Emergency Restart via HTTP API
+      - name: Workflow Disabled Notice
         run: |
-          echo "🚨 MT5 Bridge Emergency Restart Initiated"
-          echo "=========================================="
-          echo "Reason: ${{ github.event.inputs.reason || 'Auto-healing triggered by watchdog' }}"
-          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
-          echo "VPS: 92.118.45.135:8000"
-          echo "=========================================="
+          echo "⚠️ THIS WORKFLOW IS DISABLED"
+          echo "=============================="
           echo ""
-          
-          echo "📡 Calling emergency restart endpoint..."
-          response=$(curl -X POST \
-            "http://92.118.45.135:8000/api/admin/emergency-restart?token=${{ secrets.ADMIN_SECRET_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -w "\n%{http_code}" \
-            -s)
-          
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | sed '$d')
-          
+          echo "REASON: FIDUS is now in LUCRUM-ONLY mode."
+          echo "The old MEXAtlantic VPS (92.118.45.135) is no longer used."
           echo ""
-          echo "📊 Response Details:"
-          echo "HTTP Status: $http_code"
-          echo "Response Body: $body"
+          echo "For LUCRUM account syncing, use:"
+          echo "  → 'Sync LUCRUM Accounts to MongoDB' workflow"
           echo ""
-          
-          if [ "$http_code" -eq 200 ]; then
-            echo "✅ Emergency restart successful!"
-            echo "$body" | grep -q '"success":true' && echo "✅ MT5 reinitialized successfully"
-            echo "$body" | grep -q '"mongodb_connected":true' && echo "✅ MongoDB connection verified"
-            exit 0
-          elif [ "$http_code" -eq 401 ]; then
-            echo "❌ Authentication failed!"
-            echo "⚠️  Check ADMIN_SECRET_TOKEN in GitHub secrets"
-            echo "⚠️  Verify token matches VPS .env configuration"
-            exit 1
-          elif [ "$http_code" -eq 404 ]; then
-            echo "❌ Emergency restart endpoint not found!"
-            echo "⚠️  Check VPS deployment status"
-            echo "⚠️  Verify mt5_bridge_api_service.py is running"
-            exit 1
-          else
-            echo "❌ Unexpected response - HTTP $http_code"
-            echo "⚠️  Check VPS service logs for details"
-            exit 1
-          fi
-      
-      - name: Verify Service Recovery
-        run: |
-          echo ""
-          echo "=========================================="
-          echo "🔍 Verifying Service Recovery"
-          echo "=========================================="
-          echo "Waiting 10 seconds for service stabilization..."
-          sleep 10
-          
-          echo "📡 Performing health check..."
-          health=$(curl -s http://92.118.45.135:8000/api/mt5/bridge/health)
-          
-          echo ""
-          echo "📊 Health Check Response:"
-          echo "$health" | python3 -m json.tool || echo "$health"
-          echo ""
-          
-          if echo "$health" | grep -q '"status":"healthy"'; then
-            echo "✅✅✅ SERVICE IS HEALTHY ✅✅✅"
-            echo "✅ MT5 Bridge is operational"
-            echo "✅ Auto-healing completed successfully"
-            echo "=========================================="
-            exit 0
-          else
-            echo "⚠️ Service may need additional recovery time"
-            echo "⚠️ Check service logs if issues persist"
-            echo "=========================================="
-            exit 1
-          fi
-      
-      - name: Report Final Status
-        if: always()
-        run: |
-          echo ""
-          echo "=========================================="
-          echo "📋 Emergency Restart Summary"
-          echo "=========================================="
-          echo "Trigger: ${{ github.event.inputs.reason || 'Auto-healing' }}"
-          echo "Completed: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
-          echo "VPS Service: http://92.118.45.135:8000"
-          echo "Health Check: http://92.118.45.135:8000/api/mt5/bridge/health"
-          echo "=========================================="
+          echo "This workflow has been disabled to stop unnecessary failure emails."
+          exit 0
