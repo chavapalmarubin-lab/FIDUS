@@ -1,0 +1,167 @@
+name: Emergency Restart MT5 Bridge (LUCRUM)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  emergency-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Check Current Status
+        run: |
+          echo "=== Pre-Restart Health Check ==="
+          HEALTH=$(curl -s --connect-timeout 10 http://92.118.45.135:8000/api/mt5/bridge/health || echo "FAILED")
+          echo "Current status: $HEALTH"
+      
+      - name: Emergency Restart via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: 92.118.45.135
+          username: Administrator
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          timeout: 300s
+          command_timeout: 10m
+          script_stop: false
+          debug: true
+          script: |
+            echo ================================================
+            echo   EMERGENCY MT5 BRIDGE RESTART
+            echo   %DATE% %TIME%
+            echo ================================================
+            echo.
+            
+            cd C:\mt5_bridge_service
+            
+            echo Step 1: Stopping existing processes...
+            
+            REM Stop via Task Scheduler (try multiple names)
+            schtasks /End /TN "MT5 Bridge Service" 2>nul
+            schtasks /End /TN "MT5BridgeService" 2>nul
+            schtasks /End /TN "FIDUS MT5 Bridge API" 2>nul
+            
+            REM Force kill Python
+            taskkill /F /IM python.exe /T 2>nul
+            timeout /t 5 /nobreak >nul
+            
+            REM Force free port 8000
+            echo Freeing port 8000...
+            for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do (
+              echo Killing PID: %%a
+              taskkill /F /PID %%a 2>nul
+            )
+            timeout /t 3 /nobreak >nul
+            
+            echo.
+            echo Step 2: Verify port is free...
+            netstat -ano | findstr ":8000" | findstr "LISTENING"
+            if %ERRORLEVEL% EQU 0 (
+              echo WARNING: Port 8000 still in use, trying again...
+              for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000"') do taskkill /F /PID %%a 2>nul
+              timeout /t 3 /nobreak >nul
+            ) else (
+              echo Port 8000 is FREE
+            )
+            
+            echo.
+            echo Step 3: Check Python and dependencies...
+            python --version
+            
+            echo.
+            echo Step 4: Verify script exists...
+            if exist mt5_bridge_api_service.py (
+              echo Script found: mt5_bridge_api_service.py
+              for %%A in (mt5_bridge_api_service.py) do echo Size: %%~zA bytes
+            ) else (
+              echo WARNING: Script not found - downloading...
+              powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py' -OutFile 'mt5_bridge_api_service.py'"
+            )
+            
+            echo.
+            echo Step 5: Create logs directory if needed...
+            if not exist logs mkdir logs
+            
+            echo.
+            echo Step 6: Starting MT5 Bridge API Service...
+            start /B python mt5_bridge_api_service.py > logs\service_output.log 2>&1
+            
+            echo Waiting 25 seconds for service to initialize...
+            timeout /t 25 /nobreak >nul
+            
+            echo.
+            echo Step 7: Verify service is running...
+            netstat -ano | findstr ":8000" | findstr "LISTENING"
+            if %ERRORLEVEL% EQU 0 (
+              echo SUCCESS: Port 8000 is now LISTENING!
+            ) else (
+              echo ERROR: Port 8000 is NOT listening
+              echo.
+              echo Checking logs for errors...
+              if exist logs\service_output.log (
+                echo === service_output.log ===
+                type logs\service_output.log
+              )
+              if exist logs\api_service.log (
+                echo === api_service.log (last 30 lines) ===
+                powershell -Command "Get-Content 'logs\api_service.log' -Tail 30"
+              )
+            )
+            
+            echo.
+            echo Step 8: Testing API endpoint...
+            powershell -Command "try { $r = Invoke-RestMethod -Uri 'http://localhost:8000/' -TimeoutSec 15; Write-Host 'SUCCESS: API responding'; Write-Host 'Service:' $r.service; Write-Host 'Status:' $r.status } catch { Write-Host 'API test failed:' $_.Exception.Message }"
+            
+            echo.
+            echo Step 9: Testing health endpoint...
+            powershell -Command "try { $r = Invoke-RestMethod -Uri 'http://localhost:8000/api/mt5/bridge/health' -TimeoutSec 15; Write-Host 'Health check:' ($r | ConvertTo-Json -Compress) } catch { Write-Host 'Health check failed:' $_.Exception.Message }"
+            
+            echo.
+            echo ================================================
+            echo   EMERGENCY RESTART COMPLETE
+            echo ================================================
+      
+      - name: Verify External Connectivity
+        run: |
+          echo "=== Testing External Access ==="
+          echo ""
+          echo "Waiting 10 seconds before external test..."
+          sleep 10
+          
+          echo "Root endpoint:"
+          curl -s --connect-timeout 15 http://92.118.45.135:8000/ || echo "FAILED"
+          
+          echo ""
+          echo "Health endpoint:"
+          curl -s --connect-timeout 15 http://92.118.45.135:8000/api/mt5/bridge/health || echo "FAILED"
+          
+          echo ""
+          echo "Accounts summary:"
+          curl -s --connect-timeout 15 http://92.118.45.135:8000/api/mt5/accounts/summary || echo "FAILED"
+      
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "# Emergency MT5 Bridge Restart Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**VPS:** 92.118.45.135" >> $GITHUB_STEP_SUMMARY
+          echo "**Port:** 8000" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          FINAL_CHECK=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "http://92.118.45.135:8000/api/mt5/bridge/health" || echo "000")
+          
+          if [ "$FINAL_CHECK" = "200" ]; then
+            echo "## Status: ✅ SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "Bridge is now responding on port 8000" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Status: ❌ FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Bridge is still not responding (HTTP $FINAL_CHECK)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Check VPS logs manually" >> $GITHUB_STEP_SUMMARY
+            echo "2. Verify Python and dependencies are installed" >> $GITHUB_STEP_SUMMARY
+            echo "3. Check Windows firewall settings" >> $GITHUB_STEP_SUMMARY
+            echo "4. Ensure MT5 Terminal is running" >> $GITHUB_STEP_SUMMARY
+          fi
