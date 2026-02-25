@@ -1,6 +1,11 @@
 """
 MT5 Watchdog and Auto-Healing Service
 Monitors MT5 Bridge health and attempts automatic recovery before alerting
+
+UPDATED: Feb 25, 2026 - LUCRUM-ONLY Mode
+- Old MEXAtlantic VPS (92.118.45.135) is no longer used
+- Watchdog now monitors LUCRUM data freshness in MongoDB only
+- No external VPS health checks or auto-healing via SSH
 """
 
 import asyncio
@@ -12,27 +17,31 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# LUCRUM-ONLY MODE: Disable VPS health checks and auto-healing
+LUCRUM_ONLY_MODE = True
+
 
 class MT5Watchdog:
     """
     MT5 Health Monitoring and Auto-Healing System
     
-    Features:
-    - Monitors MT5 data freshness every minute
-    - Tracks consecutive failures
-    - Attempts auto-healing after 3 consecutive failures
-    - Sends alerts only if auto-healing fails
+    LUCRUM-ONLY MODE (Feb 2026):
+    - Only monitors LUCRUM data freshness in MongoDB
+    - No VPS health checks (old MEXAtlantic VPS is offline)
+    - No auto-healing via GitHub Actions (LUCRUM synced differently)
+    - Alerts only if LUCRUM data is stale for extended period
     """
     
     def __init__(self, db, alert_service):
         self.db = db
         self.alert_service = alert_service
+        self.lucrum_only_mode = LUCRUM_ONLY_MODE
         
         # Configuration
-        self.check_interval = 60  # Check every 60 seconds
-        self.data_freshness_threshold = 15  # Alert if no data in 15 minutes
-        self.failure_threshold = 3  # Attempt healing after 3 failures
-        self.healing_cooldown = 900  # 15 minutes between healing attempts (reduced false alerts)
+        self.check_interval = 300 if LUCRUM_ONLY_MODE else 60  # Check every 5 mins in LUCRUM mode
+        self.data_freshness_threshold = 60  # Alert if no LUCRUM data update in 60 minutes
+        self.failure_threshold = 5  # Higher threshold for LUCRUM mode
+        self.healing_cooldown = 3600  # 1 hour between alerts in LUCRUM mode
         
         # State tracking
         self.consecutive_failures = 0
@@ -41,29 +50,47 @@ class MT5Watchdog:
         self.last_alert_time = None
         self.is_healthy = True
         self.auto_healing_in_progress = False
-        self.needs_full_restart = False  # Flag for full MT5 terminal restart
+        self.needs_full_restart = False
         
-        # GitHub configuration for auto-healing
+        # GitHub configuration (not used in LUCRUM-only mode)
         self.github_token = os.getenv('GITHUB_TOKEN')
-        self.github_repo = 'chavapalmarubin-lab/FIDUS'  # Updated repo name
-        self.vps_bridge_url = 'http://92.118.45.135:8000'
+        self.github_repo = 'chavapalmarubin-lab/FIDUS'
+        self.vps_bridge_url = 'http://92.118.45.135:8000'  # Legacy - not used in LUCRUM mode
+        
+        if self.lucrum_only_mode:
+            logger.info("🟢 [MT5 WATCHDOG] Running in LUCRUM-ONLY mode - VPS checks disabled")
     
     async def check_mt5_health(self) -> Dict[str, Any]:
         """
         Check MT5 Bridge health
-        Returns health status and details
+        
+        In LUCRUM-ONLY mode:
+        - Skip VPS bridge API checks
+        - Only check LUCRUM data freshness in MongoDB
+        - Return healthy if LUCRUM data is recent
         """
         try:
-            # Check 1: VPS Bridge API availability
+            if self.lucrum_only_mode:
+                # LUCRUM-ONLY: Only check MongoDB data freshness
+                data_fresh = await self._check_lucrum_data_freshness()
+                
+                return {
+                    'healthy': data_fresh,
+                    'mode': 'lucrum_only',
+                    'bridge_api_available': True,  # Not applicable
+                    'data_fresh': data_fresh,
+                    'accounts_syncing': True,  # Synced via GitHub Actions
+                    'consecutive_failures': self.consecutive_failures,
+                    'auto_healing_in_progress': False,
+                    'last_check': datetime.now(timezone.utc).isoformat(),
+                    'last_healing_attempt': None,
+                    'message': 'LUCRUM accounts synced via GitHub Actions'
+                }
+            
+            # Legacy VPS mode (disabled)
             bridge_healthy = await self._check_bridge_api()
-            
-            # Check 2: Data freshness in MongoDB
             data_fresh = await self._check_data_freshness()
-            
-            # Check 3: Account sync status
             accounts_syncing = await self._check_accounts_syncing()
-            
-            # Determine overall health
             is_healthy = bridge_healthy and data_fresh and accounts_syncing
             
             return {
