@@ -23689,7 +23689,7 @@ async def automatic_vps_sync():
         from vps_sync_service import get_vps_sync_service, LUCRUM_ONLY_MODE
         
         # LUCRUM-ONLY MODE: Skip VPS sync
-        if LUCRUM_ONLY_MODE:
+        if False:  # LUCRUM_ONLY_MODE disabled
             logging.info("🟢 LUCRUM-ONLY mode - VPS sync skipped. Use GitHub Actions for LUCRUM sync.")
             return
         
