@@ -24246,6 +24246,14 @@ async def get_live_demo_accounts():
     try:
         logging.info("Fetching live demo accounts...")
         
+        # Debug: Check DB connection
+        db_name = db.name
+        logging.info(f"Connected to database: {db_name}")
+        
+        # First try to find all docs to verify collection works
+        all_docs = await db.mt5_accounts.find({}).to_list(length=5)
+        logging.info(f"Sample mt5_accounts docs: {len(all_docs)}")
+        
         # Query mt5_accounts for accounts with account_type = 'live_demo'
         demo_accounts = await db.mt5_accounts.find({
             "account_type": "live_demo"
