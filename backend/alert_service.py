@@ -26,6 +26,23 @@ class AlertService:
         self.smtp_password = os.getenv("SMTP_APP_PASSWORD", "")
         self.admin_email = os.getenv("ALERT_RECIPIENT_EMAIL", "chavapalmarubin@gmail.com")
         self.frontend_url = os.getenv("FRONTEND_URL", "https://fidus-investment-platform.onrender.com")
+        
+        # Rate limiting for email alerts (prevent spam)
+        self._last_email_times = {}  # component -> last_email_datetime
+        self._email_cooldown_minutes = 60  # Only send 1 email per component per hour
+    
+    def _can_send_email(self, component: str) -> bool:
+        """Check if enough time has passed since last email for this component"""
+        last_time = self._last_email_times.get(component)
+        if not last_time:
+            return True
+        
+        elapsed = (datetime.now(timezone.utc) - last_time).total_seconds() / 60
+        return elapsed >= self._email_cooldown_minutes
+    
+    def _record_email_sent(self, component: str):
+        """Record that an email was sent for this component"""
+        self._last_email_times[component] = datetime.now(timezone.utc)
     
     async def trigger_alert(
         self,
@@ -56,18 +73,29 @@ class AlertService:
                 component, component_name, severity, status, message, details
             )
             
-            # 2. Send notifications based on severity
+            # 2. Check rate limiting for emails
+            can_email = self._can_send_email(component)
+            
+            # 3. Send notifications based on severity
             if severity == "critical":
-                # Critical: Email + In-app notification
-                await self.send_email_alert(component_name, status, message, details, "CRITICAL")
+                # Critical: Email (rate limited) + In-app notification
+                if can_email:
+                    await self.send_email_alert(component_name, status, message, details, "CRITICAL")
+                    self._record_email_sent(component)
+                    logger.critical(f"🚨 CRITICAL ALERT: {component_name} - {message}")
+                else:
+                    logger.info(f"🚨 CRITICAL (email skipped - rate limited): {component_name} - {message}")
                 await self.send_in_app_notification(alert_id, component, component_name, severity, message)
-                logger.critical(f"🚨 CRITICAL ALERT: {component_name} - {message}")
                 
             elif severity == "warning":
-                # Warning: Email + In-app notification
-                await self.send_email_alert(component_name, status, message, details, "WARNING")
+                # Warning: Email (rate limited) + In-app notification
+                if can_email:
+                    await self.send_email_alert(component_name, status, message, details, "WARNING")
+                    self._record_email_sent(component)
+                    logger.warning(f"⚠️ WARNING ALERT: {component_name} - {message}")
+                else:
+                    logger.info(f"⚠️ WARNING (email skipped - rate limited): {component_name} - {message}")
                 await self.send_in_app_notification(alert_id, component, component_name, severity, message)
-                logger.warning(f"⚠️ WARNING ALERT: {component_name} - {message}")
                 
             elif severity == "info":
                 # Info: In-app notification only
