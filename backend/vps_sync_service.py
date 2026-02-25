@@ -3,10 +3,10 @@ VPS MT5 Bridge Sync Service
 Fetches live MT5 data from VPS Bridge and updates MongoDB
 Critical fix for stale data issue (Oct 24, 2025)
 
-UPDATED: Nov 3, 2025 - MT5 Field Standardization Compliance
-- Changed collection from mt5_deals_history to mt5_deals
-- Using exact MT5 Python API field names (snake_case)
-- Removed invalid fields not in MT5 API
+UPDATED: Feb 24, 2026 - LUCRUM-Only Mode
+- MEXAtlantic VPS (92.118.45.135) is no longer used
+- LUCRUM accounts are synced via GitHub Actions workflow
+- VPS sync is DISABLED to prevent false health check failures
 """
 
 import asyncio
@@ -18,6 +18,9 @@ import os
 
 logger = logging.getLogger(__name__)
 
+# LUCRUM-ONLY MODE: Disable VPS sync since MEXAtlantic is no longer active
+LUCRUM_ONLY_MODE = True
+
 class VPSSyncService:
     """Service to sync MT5 data from VPS Bridge to MongoDB"""
     
@@ -25,18 +28,24 @@ class VPSSyncService:
         self.db = db
         self.bridge_url = os.getenv('MT5_BRIDGE_URL', 'http://92.118.45.135:8000')
         self.timeout = int(os.getenv('MT5_BRIDGE_TIMEOUT', '30'))
-        logger.info(f"🔗 VPS Sync Service initialized with URL: {self.bridge_url}")
+        self.lucrum_only_mode = LUCRUM_ONLY_MODE
+        
+        if self.lucrum_only_mode:
+            logger.info("🟢 VPS Sync Service in LUCRUM-ONLY mode - VPS sync DISABLED")
+            logger.info("📝 LUCRUM accounts are synced via GitHub Actions workflow")
+        else:
+            logger.info(f"🔗 VPS Sync Service initialized with URL: {self.bridge_url}")
     
     async def fetch_from_vps(self, endpoint: str) -> Dict[str, Any]:
         """
         Fetch data from VPS MT5 Bridge API
         
-        Args:
-            endpoint: API endpoint (e.g., '/api/mt5/accounts/summary')
-        
-        Returns:
-            Response data as dict
+        In LUCRUM-ONLY mode, returns empty/skipped status without errors
         """
+        if self.lucrum_only_mode:
+            logger.debug(f"Skipping VPS fetch in LUCRUM-ONLY mode: {endpoint}")
+            return {"skipped": True, "mode": "lucrum_only", "message": "VPS sync disabled - use GitHub Actions for LUCRUM sync"}
+        
         url = f"{self.bridge_url}{endpoint}"
         
         try:
@@ -56,12 +65,21 @@ class VPSSyncService:
     async def sync_all_accounts(self) -> Dict[str, Any]:
         """
         Sync all MT5 accounts from VPS to MongoDB
-        Uses individual account endpoints to get LIVE data (not cached MongoDB data)
         
-        Returns:
-            Sync results with statistics
+        In LUCRUM-ONLY mode, returns success without connecting to VPS
+        LUCRUM accounts are synced via GitHub Actions workflow instead
         """
         try:
+            if self.lucrum_only_mode:
+                logger.info("🟢 VPS sync skipped - LUCRUM-ONLY mode active")
+                return {
+                    "success": True,
+                    "mode": "lucrum_only",
+                    "message": "VPS sync disabled. LUCRUM accounts synced via GitHub Actions.",
+                    "accounts_synced": 0,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            
             logger.info("🔄 Starting VPS→MongoDB sync for all accounts")
             start_time = datetime.now(timezone.utc)
             
