@@ -40,6 +40,7 @@ import Referrals from '../pages/admin/Referrals';
 import AccountsManagement from './AccountsManagement';
 import BridgeHealthMonitor from './BridgeHealthMonitor';
 import VikingDashboard from './VikingDashboard';
+import LiveDemoDashboard from './LiveDemoDashboard';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
