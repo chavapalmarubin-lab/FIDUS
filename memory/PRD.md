@@ -127,14 +127,27 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - [ ] Address Lucrum MT5 Bridge duplicate key errors
 
 ## Key Files Reference
-- `/app/backend/server.py` - Main backend with login endpoint
+- `/app/backend/server.py` - Main backend with login endpoint and Live Demo API
 - `/app/backend/routes/referrals.py` - Agent portal routes
 - `/app/backend/services/calculations.py` - Financial calculations
-- `/app/.github/workflows/sync-lucrum-accounts-to-mongodb.yml` - Data sync workflow
-- `/app/.github/workflows/diagnose-lucrum-vps-api.yml` - VPS diagnostic workflow (NEW)
-- `/app/.github/workflows/deploy-mt5-bridge-api-lucrum.yml` - MT5 Bridge API deployment workflow (NEW)
+- `/app/.github/workflows/sync-lucrum-accounts-to-mongodb.yml` - Data sync workflow (updated with demo accounts)
+- `/app/.github/workflows/diagnose-lucrum-vps-api.yml` - VPS diagnostic workflow
+- `/app/.github/workflows/deploy-mt5-bridge-api-lucrum.yml` - MT5 Bridge API deployment workflow
+- `/app/.github/workflows/emergency-restart-mt5-bridge-lucrum.yml` - Emergency restart workflow (uses VPS_PORT secret)
 - `/app/vps/mt5_bridge_api_service.py` - FastAPI MT5 Bridge service to deploy to VPS
+- `/app/frontend/src/components/LiveDemoDashboard.js` - NEW Live Demo dashboard component
+- `/app/frontend/src/components/AdminDashboard.js` - Admin dashboard with LIVE DEMO tab
 
 ## GitHub Workflows for VPS Management
 1. **diagnose-lucrum-vps-api.yml** - Diagnoses VPS state: checks port 8000 listener, Python processes, script contents, Task Scheduler, logs
 2. **deploy-mt5-bridge-api-lucrum.yml** - Deploys the full FastAPI MT5 Bridge API service with uvicorn, creates Task Scheduler entry for auto-restart
+3. **emergency-restart-mt5-bridge-lucrum.yml** - Emergency restart workflow using VPS_PORT secret
+4. **sync-lucrum-accounts-to-mongodb.yml** - Syncs LUCRUM accounts (now includes 20062, 2210 Live Demo accounts)
+
+## Live Demo Accounts (NEW)
+- Purpose: Evaluate new money managers with simulated funded accounts
+- Account 20062: Demo Manager 1 (password: Fidus2026@)
+- Account 2210: Demo Manager 2 (password: YtJ!T7Qi)
+- Server: Lucrumcapital-Live
+- Status: Configured in mt5_account_config and mt5_accounts collections
+- API: `/api/live-demo/accounts`
