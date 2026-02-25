@@ -125,6 +125,53 @@ class MT5Watchdog:
             logger.warning(f"[MT5 WATCHDOG] Bridge API check failed: {str(e)}")
             return False
     
+    async def _check_lucrum_data_freshness(self) -> bool:
+        """
+        Check if LUCRUM account data in MongoDB is fresh
+        Used in LUCRUM-ONLY mode
+        """
+        try:
+            # Get most recent LUCRUM account update
+            lucrum_accounts = await self.db.mt5_accounts.find({
+                "broker": {"$regex": "LUCRUM", "$options": "i"}
+            }).sort('updated_at', -1).limit(1).to_list(length=1)
+            
+            if not lucrum_accounts:
+                logger.info("[MT5 WATCHDOG] No LUCRUM accounts found - this is normal if sync hasn't run yet")
+                return True  # Don't alert if no accounts yet
+            
+            last_update = lucrum_accounts[0].get('updated_at')
+            if not last_update:
+                logger.info("[MT5 WATCHDOG] LUCRUM account has no updated_at field")
+                return True  # Don't alert for missing field
+            
+            # Convert string to datetime if needed
+            if isinstance(last_update, str):
+                last_update = datetime.fromisoformat(last_update.replace('Z', '+00:00'))
+            
+            # Ensure timezone aware
+            if last_update.tzinfo is None:
+                last_update = last_update.replace(tzinfo=timezone.utc)
+            
+            # Check if data is within threshold (60 minutes for LUCRUM)
+            now = datetime.now(timezone.utc)
+            minutes_since_update = (now - last_update).total_seconds() / 60
+            
+            # LUCRUM data is synced via GitHub Actions (manual trigger)
+            # Don't alert unless data is very old (24 hours)
+            is_fresh = minutes_since_update <= 1440  # 24 hours
+            
+            if not is_fresh:
+                logger.warning(f"[MT5 WATCHDOG] LUCRUM data stale: {minutes_since_update:.1f} minutes since last update")
+            else:
+                logger.debug(f"[MT5 WATCHDOG] LUCRUM data fresh: {minutes_since_update:.1f} minutes since last update")
+            
+            return is_fresh
+            
+        except Exception as e:
+            logger.error(f"[MT5 WATCHDOG] LUCRUM data freshness check failed: {str(e)}")
+            return True  # Don't alert on errors in LUCRUM mode
+    
     async def _check_data_freshness(self) -> bool:
         """Check if MT5 data in MongoDB is fresh"""
         try:
