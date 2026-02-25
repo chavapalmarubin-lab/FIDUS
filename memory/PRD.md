@@ -113,6 +113,9 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ## Future/Backlog Tasks
 
+### P0
+- [ ] Deploy MT5 Bridge API service to LUCRUM VPS (92.118.45.135:8000)
+
 ### P1
 - [ ] Fix root cause in agent creation script to properly hash passwords
 - [ ] Fix login for other affected referral agents
