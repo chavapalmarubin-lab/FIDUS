@@ -56,6 +56,17 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ## Known Issues
 
+### P0 - VPS API Service Not Running (CRITICAL)
+- **Issue:** Backend cannot connect to MT5 Bridge API at 92.118.45.135:8000
+- **Root Cause:** Nothing is listening on port 8000 - the MT5 bridge service is not running or lacks HTTP server functionality
+- **Impact:** Live data sync failures, continuous alert emails about "VPS down"
+- **Diagnosis Result:** Connection refused (not timeout) confirms port is reachable but no service listening
+- **Fix Required:** Deploy the proper FastAPI MT5 Bridge API service to the VPS
+- **Workflows Created:**
+  1. `diagnose-lucrum-vps-api.yml` - Diagnose current VPS state
+  2. `deploy-mt5-bridge-api-lucrum.yml` - Deploy the MT5 Bridge API service
+- **Status:** IN PROGRESS - Workflows created, awaiting GitHub Actions execution
+
 ### P1 - Other Referral Agents Login Issues
 - Three other referral agents may have the same login issue
 - Likely need the same fix (hash password, add id field)
