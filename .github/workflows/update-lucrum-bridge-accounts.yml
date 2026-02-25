@@ -23,152 +23,89 @@ jobs:
             
             $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
             
-            # Check if script exists
             if (-not (Test-Path $scriptPath)) {
               Write-Host "ERROR: Script not found at $scriptPath" -ForegroundColor Red
-              Write-Host "Checking alternative locations..." -ForegroundColor Yellow
-              Get-ChildItem "C:\mt5_bridge_service\*.py" -ErrorAction SilentlyContinue | ForEach-Object {
-                Write-Host "  Found: $($_.Name)" -ForegroundColor White
-              }
+              Get-ChildItem "C:\mt5_bridge_service\*.py" -ErrorAction SilentlyContinue
               exit 1
             }
             
             Write-Host "Found script: $scriptPath" -ForegroundColor Green
             Write-Host ""
             
-            # Show current accounts configuration in the script
+            # Show current accounts
             Write-Host "=== Current Account Configuration ===" -ForegroundColor Yellow
-            $content = Get-Content $scriptPath -Raw
-            
-            # Find lines containing account numbers or LUCRUM_ACCOUNTS
-            $lines = Get-Content $scriptPath
-            $inAccountSection = $false
-            foreach ($line in $lines) {
-              if ($line -match "LUCRUM_ACCOUNTS|MANAGED_ACCOUNTS|accounts\s*=\s*\[") {
-                $inAccountSection = $true
-              }
-              if ($inAccountSection) {
-                Write-Host $line -ForegroundColor Gray
-                if ($line -match "\]$" -or $line -match "^\s*\]") {
-                  $inAccountSection = $false
-                  Write-Host "" -ForegroundColor White
-                }
-              }
-            }
+            Get-Content $scriptPath | Select-String -Pattern "LUCRUM_ACCOUNTS|MANAGED_ACCOUNTS|account.*2198|account.*2199|account.*20062|account.*2210"
             
             Write-Host ""
             Write-Host "=== Backing Up Script ===" -ForegroundColor Yellow
-            $backupPath = "$scriptPath.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-            Copy-Item $scriptPath $backupPath
-            Write-Host "Backup created: $backupPath" -ForegroundColor Green
+            Copy-Item $scriptPath "$scriptPath.backup"
+            Write-Host "Backup created" -ForegroundColor Green
+            
+            # Read content
+            $content = Get-Content $scriptPath -Raw
+            
+            # Check if accounts already exist
+            $has20062 = $content -match "20062"
+            $has2210 = $content -match "2210"
             
             Write-Host ""
-            Write-Host "=== Adding New Demo Accounts ===" -ForegroundColor Yellow
+            Write-Host "Account 20062 exists: $has20062" -ForegroundColor White
+            Write-Host "Account 2210 exists: $has2210" -ForegroundColor White
             
-            # Check if accounts 20062 and 2210 already exist
-            if ($content -match "20062") {
-              Write-Host "Account 20062 already in script" -ForegroundColor Green
-            } else {
-              Write-Host "Need to add account 20062" -ForegroundColor Yellow
-            }
-            
-            if ($content -match "2210") {
-              Write-Host "Account 2210 already in script" -ForegroundColor Green
-            } else {
-              Write-Host "Need to add account 2210" -ForegroundColor Yellow
-            }
-            
-            # Find the pattern for the accounts list and add new accounts
-            # Common patterns: LUCRUM_ACCOUNTS = [...], MANAGED_ACCOUNTS = [...], accounts = [...]
-            
-            # Try to add accounts if they don't exist
-            if ($content -notmatch "20062" -or $content -notmatch "2210") {
+            if (-not $has20062 -or -not $has2210) {
               Write-Host ""
-              Write-Host "Attempting to add new accounts..." -ForegroundColor Yellow
+              Write-Host "Adding new demo accounts..." -ForegroundColor Yellow
               
-              # Pattern 1: LUCRUM_ACCOUNTS = [...]
-              if ($content -match "(LUCRUM_ACCOUNTS\s*=\s*\[)([^\]]*?)(\s*\])") {
-                $existingAccounts = $matches[2]
-                $newAccounts = @"
-$existingAccounts
-    # NEW Live Demo accounts for manager evaluation
-    {"account": 20062, "password": "Fidus2026@", "server": "Lucrumcapital-Live"},
-    {"account": 2210, "password": "YtJ!T7Qi", "server": "Lucrumcapital-Live"},
-"@
-                $newContent = $content -replace "(LUCRUM_ACCOUNTS\s*=\s*\[)([^\]]*?)(\s*\])", "`$1$newAccounts`$3"
-                Set-Content $scriptPath $newContent -Encoding UTF8
-                Write-Host "Updated LUCRUM_ACCOUNTS list" -ForegroundColor Green
+              # Add accounts before the closing bracket of MANAGED_ACCOUNTS
+              $newLine1 = '    20062,  # LIVE DEMO - CRYPTO BITCOIN'
+              $newLine2 = '    2210,   # LIVE DEMO - GOLD DAY TRADING'
+              
+              # Find MANAGED_ACCOUNTS and add before closing ]
+              if ($content -match "MANAGED_ACCOUNTS\s*=\s*\[") {
+                $content = $content -replace "(MANAGED_ACCOUNTS\s*=\s*\[[^\]]+)(]\s*)", "`$1`n$newLine1`n$newLine2`n`$2"
+                Set-Content $scriptPath $content -Encoding UTF8
+                Write-Host "Added to MANAGED_ACCOUNTS" -ForegroundColor Green
               }
-              # Pattern 2: Simple list like accounts = [2198, 2199, ...]
-              elseif ($content -match "(accounts\s*=\s*\[)(\d+(?:,\s*\d+)*)(\s*\])") {
-                $existingList = $matches[2]
-                $newList = "$existingList, 20062, 2210"
-                $newContent = $content -replace "(accounts\s*=\s*\[)(\d+(?:,\s*\d+)*)(\s*\])", "`$1$newList`$3"
-                Set-Content $scriptPath $newContent -Encoding UTF8
-                Write-Host "Updated accounts list" -ForegroundColor Green
-              }
-              # Pattern 3: MANAGED_ACCOUNTS = [...]
-              elseif ($content -match "(MANAGED_ACCOUNTS\s*=\s*\[)([^\]]*?)(\s*\])") {
-                $existingAccounts = $matches[2]
-                if ($existingAccounts -notmatch "20062") {
-                  $newAccounts = "$existingAccounts, 20062, 2210"
-                  $newContent = $content -replace "(MANAGED_ACCOUNTS\s*=\s*\[)([^\]]*?)(\s*\])", "`$1$newAccounts`$3"
-                  Set-Content $scriptPath $newContent -Encoding UTF8
-                  Write-Host "Updated MANAGED_ACCOUNTS list" -ForegroundColor Green
-                }
+              elseif ($content -match "LUCRUM_ACCOUNTS\s*=\s*\[") {
+                $content = $content -replace "(LUCRUM_ACCOUNTS\s*=\s*\[[^\]]+)(]\s*)", "`$1`n$newLine1`n$newLine2`n`$2"
+                Set-Content $scriptPath $content -Encoding UTF8
+                Write-Host "Added to LUCRUM_ACCOUNTS" -ForegroundColor Green
               }
               else {
-                Write-Host "Could not find accounts list pattern - showing first 100 lines:" -ForegroundColor Red
-                Get-Content $scriptPath -TotalCount 100
+                Write-Host "Could not find accounts list - showing script structure:" -ForegroundColor Red
+                Get-Content $scriptPath -TotalCount 80
               }
+            }
+            else {
+              Write-Host "Both accounts already exist in script" -ForegroundColor Green
             }
             
             Write-Host ""
             Write-Host "=== Restarting Bridge Service ===" -ForegroundColor Cyan
             
-            # Stop existing Python processes
-            Write-Host "Stopping existing processes..." -ForegroundColor Yellow
             Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 5
             
-            # Restart the script
-            Write-Host "Starting bridge service..." -ForegroundColor Yellow
             Set-Location "C:\mt5_bridge_service"
             Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
             
             Write-Host "Bridge service restarted" -ForegroundColor Green
-            Write-Host ""
-            Write-Host "Waiting 45 seconds for first sync..." -ForegroundColor Yellow
+            Write-Host "Waiting 45 seconds for sync..." -ForegroundColor Yellow
             Start-Sleep -Seconds 45
             
-            # Check the log to see if new accounts are syncing
             Write-Host ""
-            Write-Host "=== Checking Sync Logs ===" -ForegroundColor Cyan
-            if (Test-Path "C:\mt5_bridge_service\logs\bridge.log") {
-              Get-Content "C:\mt5_bridge_service\logs\bridge.log" -Tail 20
-            }
+            Write-Host "=== Checking Results ===" -ForegroundColor Cyan
+            Get-Content $scriptPath | Select-String -Pattern "20062|2210"
             
             Write-Host ""
-            Write-Host "=== Done ===" -ForegroundColor Cyan
-            Write-Host "Expected accounts: 2198, 2199, 2205, 2206, 2207, 2208, 2209, 20043, 20062, 2210 (10 total)" -ForegroundColor Green
+            Write-Host "Done! Expected 10 accounts total." -ForegroundColor Green
       
       - name: Generate Report
         if: always()
         run: |
           echo "# LUCRUM Bridge Accounts Update" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Accounts Now Syncing (10 total)" >> $GITHUB_STEP_SUMMARY
-          echo "| Account | Type |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 2198 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 2199 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 2205 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 2206 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 2207 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 2208 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 2209 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| 20043 | Original |" >> $GITHUB_STEP_SUMMARY
-          echo "| **20062** | **LIVE DEMO - CRYPTO BITCOIN** |" >> $GITHUB_STEP_SUMMARY
-          echo "| **2210** | **LIVE DEMO - GOLD DAY TRADING** |" >> $GITHUB_STEP_SUMMARY
+          echo "## New Demo Accounts Added" >> $GITHUB_STEP_SUMMARY
+          echo "- **20062** - CRYPTO BITCOIN" >> $GITHUB_STEP_SUMMARY
+          echo "- **2210** - GOLD DAY TRADING" >> $GITHUB_STEP_SUMMARY
