@@ -24244,22 +24244,18 @@ async def get_live_demo_accounts():
     Used to evaluate new money managers before allocating real money to them.
     """
     try:
-        print("DEBUG: Fetching live demo accounts...")
-        
-        # Debug: Check DB connection
-        db_name = db.name
-        print(f"DEBUG: Connected to database: {db_name}")
-        
-        # First try to find all docs to verify collection works
-        all_count = await db.mt5_accounts.count_documents({})
-        print(f"DEBUG: Total mt5_accounts: {all_count}")
-        
         # Query mt5_accounts for accounts with account_type = 'live_demo'
         demo_accounts = await db.mt5_accounts.find({
             "account_type": "live_demo"
         }).to_list(length=100)
         
-        print(f"DEBUG: Found {len(demo_accounts)} accounts with account_type='live_demo'")
+        # If no accounts found with that type, also check for specific demo accounts
+        if not demo_accounts:
+            # Check for known demo account numbers
+            demo_account_numbers = [20062, 2210]
+            demo_accounts = await db.mt5_accounts.find({
+                "account": {"$in": demo_account_numbers}
+            }).to_list(length=100)
         
         # If no accounts found with that type, also check for specific demo accounts
         if not demo_accounts:
