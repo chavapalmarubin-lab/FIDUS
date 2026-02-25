@@ -24244,10 +24244,14 @@ async def get_live_demo_accounts():
     Used to evaluate new money managers before allocating real money to them.
     """
     try:
+        logging.info("Fetching live demo accounts...")
+        
         # Query mt5_accounts for accounts with account_type = 'live_demo'
         demo_accounts = await db.mt5_accounts.find({
             "account_type": "live_demo"
         }).to_list(length=100)
+        
+        logging.info(f"Found {len(demo_accounts)} accounts with account_type='live_demo'")
         
         # If no accounts found with that type, also check for specific demo accounts
         if not demo_accounts:
@@ -24256,6 +24260,7 @@ async def get_live_demo_accounts():
             demo_accounts = await db.mt5_accounts.find({
                 "account": {"$in": demo_account_numbers}
             }).to_list(length=100)
+            logging.info(f"Fallback query found {len(demo_accounts)} accounts")
         
         # Format response
         formatted_accounts = []
