@@ -131,3 +131,10 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - `/app/backend/routes/referrals.py` - Agent portal routes
 - `/app/backend/services/calculations.py` - Financial calculations
 - `/app/.github/workflows/sync-lucrum-accounts-to-mongodb.yml` - Data sync workflow
+- `/app/.github/workflows/diagnose-lucrum-vps-api.yml` - VPS diagnostic workflow (NEW)
+- `/app/.github/workflows/deploy-mt5-bridge-api-lucrum.yml` - MT5 Bridge API deployment workflow (NEW)
+- `/app/vps/mt5_bridge_api_service.py` - FastAPI MT5 Bridge service to deploy to VPS
+
+## GitHub Workflows for VPS Management
+1. **diagnose-lucrum-vps-api.yml** - Diagnoses VPS state: checks port 8000 listener, Python processes, script contents, Task Scheduler, logs
+2. **deploy-mt5-bridge-api-lucrum.yml** - Deploys the full FastAPI MT5 Bridge API service with uvicorn, creates Task Scheduler entry for auto-restart
