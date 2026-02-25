@@ -105,4 +105,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Set all non-LUCRUM (MEXAtlantic) accounts to zero and inactive." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**LUCRUM Accounts:** 2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067" >> $GITHUB_STEP_SUMMARY
+          echo "**LUCRUM Accounts:** 2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067, 20062, 2210 (including Live Demo)" >> $GITHUB_STEP_SUMMARY
