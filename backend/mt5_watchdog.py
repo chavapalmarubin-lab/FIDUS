@@ -18,7 +18,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 # LUCRUM-ONLY MODE: Disable VPS health checks and auto-healing
-LUCRUM_ONLY_MODE = True
+LUCRUM_ONLY_MODE = False
 
 
 class MT5Watchdog:

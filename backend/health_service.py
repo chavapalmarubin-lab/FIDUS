@@ -151,7 +151,7 @@ async def check_mt5_bridge_health() -> Dict[str, Any]:
     - Returns healthy status since LUCRUM accounts are synced via GitHub Actions
     """
     # LUCRUM-ONLY MODE: Skip VPS health check since MEXAtlantic is no longer active
-    LUCRUM_ONLY_MODE = True
+    LUCRUM_ONLY_MODE = False
     
     if LUCRUM_ONLY_MODE:
         return {

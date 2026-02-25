@@ -19,7 +19,7 @@ import os
 logger = logging.getLogger(__name__)
 
 # LUCRUM-ONLY MODE: Disable VPS sync since MEXAtlantic is no longer active
-LUCRUM_ONLY_MODE = True
+LUCRUM_ONLY_MODE = False
 
 class VPSSyncService:
     """Service to sync MT5 data from VPS Bridge to MongoDB"""
