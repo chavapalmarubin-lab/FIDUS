@@ -15,7 +15,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host "=== Pre-Restart Check ===" -ForegroundColor Cyan
             Write-Host ""
@@ -48,7 +48,7 @@ client.close()
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host ""
             Write-Host "=== Stopping MT5 Sync Service ===" -ForegroundColor Cyan
@@ -78,7 +78,7 @@ client.close()
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host ""
             Write-Host "=== Checking MT5 Terminals ===" -ForegroundColor Cyan
@@ -105,7 +105,7 @@ client.close()
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host ""
             Write-Host "=== Starting MT5 Sync Service ===" -ForegroundColor Cyan
@@ -131,7 +131,7 @@ client.close()
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host ""
             Write-Host "=== Waiting for Initial Sync ===" -ForegroundColor Cyan
@@ -151,7 +151,7 @@ client.close()
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host ""
             Write-Host "=== Verifying Account Sync ===" -ForegroundColor Cyan
@@ -205,7 +205,7 @@ client.close()
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host ""
             Write-Host "=== Recent Sync Logs (Last 30 lines) ===" -ForegroundColor Cyan

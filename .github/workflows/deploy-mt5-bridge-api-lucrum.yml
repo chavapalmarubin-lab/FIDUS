@@ -18,7 +18,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=== STEP 1: Stopping Existing Services ===" -ForegroundColor Cyan
@@ -46,7 +46,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host "=== STEP 2: Creating Directory Structure ===" -ForegroundColor Cyan
             
@@ -71,7 +71,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=== STEP 3: Deploying MT5 Bridge API Script ===" -ForegroundColor Cyan
@@ -109,7 +109,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host "=== STEP 4: Creating Environment File ===" -ForegroundColor Cyan
             
@@ -129,7 +129,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 10m
           script: |
             Write-Host "=== STEP 5: Installing Python Dependencies ===" -ForegroundColor Cyan
@@ -161,7 +161,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=== STEP 6: Starting MT5 Bridge API Service ===" -ForegroundColor Cyan
@@ -192,7 +192,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=== STEP 7: Verifying API Endpoints ===" -ForegroundColor Cyan
@@ -234,7 +234,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=== STEP 8: Creating Task Scheduler Entry ===" -ForegroundColor Cyan

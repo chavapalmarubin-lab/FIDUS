@@ -18,7 +18,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 10m
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
@@ -180,7 +180,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 15m
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
@@ -279,7 +279,7 @@ pydantic==2.10.3
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
@@ -388,7 +388,7 @@ if __name__ == "__main__":
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
             Write-Host "  STEP 4: CREATE ENVIRONMENT FILE" -ForegroundColor Cyan
@@ -450,7 +450,7 @@ MT5_SERVER=Lucrumcapital-Live
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
             Write-Host "  STEP 5: CONFIGURE FIREWALL" -ForegroundColor Cyan
@@ -479,7 +479,7 @@ MT5_SERVER=Lucrumcapital-Live
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
@@ -561,7 +561,7 @@ MT5_SERVER=Lucrumcapital-Live
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           command_timeout: 3m
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
@@ -607,7 +607,7 @@ MT5_SERVER=Lucrumcapital-Live
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
             Write-Host "=============================================" -ForegroundColor Cyan
             Write-Host "  STEP 8: CREATE TASK SCHEDULER" -ForegroundColor Cyan
