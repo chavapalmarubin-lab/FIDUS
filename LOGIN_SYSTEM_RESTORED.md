@@ -92,7 +92,7 @@ Instead of spending more time debugging the complex component key conflicts, I i
 ## Production Readiness Status
 
 ### **Immediately Available for Demo**
-- **URL**: `https://trader-analytics-hub-1.preview.emergentagent.com`
+- **URL**: `https://lucrum-api-debug.preview.emergentagent.com`
 - **Login Types**: Both Admin and Client working
 - **Authentication**: Secure MongoDB integration
 - **Session Management**: Persistent login state

@@ -18,7 +18,7 @@ import io
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
 
 class LilianLimonLeiteTest:
     def __init__(self):

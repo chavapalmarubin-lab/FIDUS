@@ -26,7 +26,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_CREDENTIALS = {

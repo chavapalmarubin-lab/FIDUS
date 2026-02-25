@@ -30,7 +30,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Configuration
-BASE_URL = "https://trader-analytics-hub-1.preview.emergentagent.com"
+BASE_URL = "https://lucrum-api-debug.preview.emergentagent.com"
 TIMEOUT = 30
 
 class SSotArchitectureTest:

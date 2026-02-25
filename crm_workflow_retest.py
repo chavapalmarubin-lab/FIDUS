@@ -39,7 +39,7 @@ import time
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

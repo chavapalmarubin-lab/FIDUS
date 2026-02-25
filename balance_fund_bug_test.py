@@ -31,7 +31,7 @@ from datetime import datetime
 
 class BalanceFundBugTester:
     def __init__(self):
-        self.base_url = "https://trader-analytics-hub-1.preview.emergentagent.com/api"
+        self.base_url = "https://lucrum-api-debug.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

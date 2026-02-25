@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials

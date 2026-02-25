@@ -2,7 +2,7 @@
 """
 FIDUS BACKEND CASH FLOW CALCULATIONS TEST
 Testing Date: December 18, 2025
-Backend URL: https://trader-analytics-hub-1.preview.emergentagent.com/api
+Backend URL: https://lucrum-api-debug.preview.emergentagent.com/api
 Auth: Admin token (username: admin, password: password123)
 
 CRITICAL CONTEXT:
@@ -34,7 +34,7 @@ from typing import Dict, Any, List, Optional
 
 class FidusCashFlowTester:
     def __init__(self):
-        self.base_url = "https://trader-analytics-hub-1.preview.emergentagent.com/api"
+        self.base_url = "https://lucrum-api-debug.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

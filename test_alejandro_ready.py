@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://trader-analytics-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com"
 
 def authenticate_admin():
     """Authenticate as admin and get JWT token"""
