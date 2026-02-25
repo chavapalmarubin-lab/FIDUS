@@ -12,6 +12,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       
+      - name: "Check Bridge Health First"
+        id: health_check
+        continue-on-error: true
+        run: |
+          echo "Checking bridge health at http://92.118.45.135:8000/api/mt5/bridge/health"
+          HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "http://92.118.45.135:8000/api/mt5/bridge/health" || echo "000")
+          echo "Health check response: $HEALTH_CHECK"
+          
+          if [ "$HEALTH_CHECK" = "200" ]; then
+            echo "✅ Bridge is healthy - may not need restart"
+            echo "NEEDS_RESTART=false" >> $GITHUB_ENV
+          else
+            echo "❌ Bridge is not responding - restart needed"
+            echo "NEEDS_RESTART=true" >> $GITHUB_ENV
+          fi
+      
       - name: "Diagnose Current VPS State"
         uses: appleboy/ssh-action@master
         with:
