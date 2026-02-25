@@ -1,0 +1,118 @@
+name: Update LUCRUM Bridge Accounts List
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Update mt5_bridge_lucrum.py with new accounts
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Updating LUCRUM Bridge Accounts ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
+            
+            # Check if script exists
+            if (-not (Test-Path $scriptPath)) {
+              Write-Host "ERROR: Script not found at $scriptPath" -ForegroundColor Red
+              exit 1
+            }
+            
+            Write-Host "Found script: $scriptPath" -ForegroundColor Green
+            
+            # Read current content
+            $content = Get-Content $scriptPath -Raw
+            
+            # Check current account list
+            Write-Host ""
+            Write-Host "Current LUCRUM_ACCOUNTS in script:" -ForegroundColor Yellow
+            if ($content -match "LUCRUM_ACCOUNTS\s*=\s*\[([^\]]+)\]") {
+              Write-Host "  $($matches[1])" -ForegroundColor White
+            }
+            
+            # Define the new accounts list with the 2 demo accounts
+            $newAccountsList = @"
+LUCRUM_ACCOUNTS = [
+    # Original accounts
+    {"account": 2198, "password": "${{ secrets.LUCRUM_2198_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 2199, "password": "${{ secrets.LUCRUM_2199_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 2205, "password": "${{ secrets.LUCRUM_2205_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 2206, "password": "${{ secrets.LUCRUM_2206_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 2207, "password": "${{ secrets.LUCRUM_2207_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 2208, "password": "${{ secrets.LUCRUM_2208_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 2209, "password": "${{ secrets.LUCRUM_2209_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    {"account": 20043, "password": "${{ secrets.LUCRUM_20043_PASSWORD }}", "server": "Lucrumcapital-Live"},
+    # NEW Live Demo accounts for manager evaluation
+    {"account": 20062, "password": "Fidus2026@", "server": "Lucrumcapital-Live"},
+    {"account": 2210, "password": "YtJ!T7Qi", "server": "Lucrumcapital-Live"},
+]
+"@
+            
+            Write-Host ""
+            Write-Host "Backing up current script..." -ForegroundColor Yellow
+            Copy-Item $scriptPath "$scriptPath.backup"
+            
+            # Replace the LUCRUM_ACCOUNTS list in the script
+            # Use regex to find and replace the accounts list
+            $pattern = "LUCRUM_ACCOUNTS\s*=\s*\[[^\]]*\]"
+            
+            if ($content -match $pattern) {
+              $newContent = $content -replace $pattern, $newAccountsList
+              Set-Content $scriptPath $newContent -Encoding UTF8
+              Write-Host "Updated LUCRUM_ACCOUNTS list" -ForegroundColor Green
+            } else {
+              Write-Host "Could not find LUCRUM_ACCOUNTS pattern - manual update needed" -ForegroundColor Red
+              exit 1
+            }
+            
+            Write-Host ""
+            Write-Host "=== Restarting Bridge Service ===" -ForegroundColor Cyan
+            
+            # Stop existing Python processes
+            Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
+            
+            # Restart the script
+            Set-Location "C:\mt5_bridge_service"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
+            
+            Write-Host "Bridge service restarted" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "Waiting 30 seconds for sync..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 30
+            
+            Write-Host ""
+            Write-Host "=== Done ===" -ForegroundColor Cyan
+            Write-Host "New accounts should now sync: 2198, 2199, 2205, 2206, 2207, 2208, 2209, 20043, 20062, 2210" -ForegroundColor Green
+      
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "# LUCRUM Bridge Accounts Update" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Accounts Now Syncing (10 total)" >> $GITHUB_STEP_SUMMARY
+          echo "| Account | Type |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 2198 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2199 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2205 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2206 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2207 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2208 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2209 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| 20043 | Original |" >> $GITHUB_STEP_SUMMARY
+          echo "| **20062** | **LIVE DEMO - CRYPTO BITCOIN** |" >> $GITHUB_STEP_SUMMARY
+          echo "| **2210** | **LIVE DEMO - GOLD DAY TRADING** |" >> $GITHUB_STEP_SUMMARY
