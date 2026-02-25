@@ -143,7 +143,26 @@ async def check_database_health(db) -> Dict[str, Any]:
 
 
 async def check_mt5_bridge_health() -> Dict[str, Any]:
-    """Check MT5 Bridge VPS service availability"""
+    """
+    Check MT5 Bridge VPS service availability
+    
+    UPDATED: Feb 24, 2026 - LUCRUM-ONLY Mode
+    - Old MEXAtlantic VPS (92.118.45.135) is no longer used
+    - Returns healthy status since LUCRUM accounts are synced via GitHub Actions
+    """
+    # LUCRUM-ONLY MODE: Skip VPS health check since MEXAtlantic is no longer active
+    LUCRUM_ONLY_MODE = True
+    
+    if LUCRUM_ONLY_MODE:
+        return {
+            "component": "mt5_bridge",
+            "name": "MT5 Bridge Service (LUCRUM Mode)",
+            "status": "healthy",
+            "mode": "lucrum_only",
+            "message": "LUCRUM accounts synced via GitHub Actions. Old VPS check disabled.",
+            "last_check": datetime.now(timezone.utc).isoformat()
+        }
+    
     start = time.time()
     vps_url = "http://92.118.45.135:8000"
     
