@@ -23677,12 +23677,21 @@ async def automatic_vps_sync():
     Fetches LIVE data from VPS MT5 Bridge and updates MongoDB
     Fixed on Oct 24, 2025 - Was reading stale data from MongoDB, now fetches from VPS
     Updated: Now syncs BOTH account balances AND trades/deals
+    
+    UPDATED: Feb 24, 2026 - LUCRUM-ONLY mode
+    - Skip VPS sync when LUCRUM_ONLY_MODE is active
+    - LUCRUM accounts are synced via GitHub Actions workflow
     """
     try:
         logging.info(f"🔄 Auto-sync starting at {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
         
         # Import VPS sync service
-        from vps_sync_service import get_vps_sync_service
+        from vps_sync_service import get_vps_sync_service, LUCRUM_ONLY_MODE
+        
+        # LUCRUM-ONLY MODE: Skip VPS sync
+        if LUCRUM_ONLY_MODE:
+            logging.info("🟢 LUCRUM-ONLY mode - VPS sync skipped. Use GitHub Actions for LUCRUM sync.")
+            return
         
         # Get VPS sync service
         vps_sync = await get_vps_sync_service(db)
