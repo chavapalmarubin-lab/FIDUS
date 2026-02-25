@@ -1,0 +1,300 @@
+name: Deploy MT5 Bridge API to LUCRUM VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Stop Existing Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== STEP 1: Stopping Existing Services ===" -ForegroundColor Cyan
+            
+            # Stop via Task Scheduler
+            $tasks = Get-ScheduledTask | Where-Object { $_.TaskName -like "*MT5*" -or $_.TaskName -like "*Bridge*" }
+            foreach ($task in $tasks) {
+              Write-Host "Stopping task: $($task.TaskName)" -ForegroundColor Yellow
+              Stop-ScheduledTask -TaskName $task.TaskName -ErrorAction SilentlyContinue
+            }
+            
+            # Kill Python processes running MT5 bridge
+            $pyProcs = Get-Process python* -ErrorAction SilentlyContinue
+            if ($pyProcs) {
+              Write-Host "Stopping Python processes..." -ForegroundColor Yellow
+              $pyProcs | Stop-Process -Force -ErrorAction SilentlyContinue
+            }
+            
+            Start-Sleep -Seconds 3
+            Write-Host "Services stopped" -ForegroundColor Green
+      
+      - name: Create Directory Structure
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== STEP 2: Creating Directory Structure ===" -ForegroundColor Cyan
+            
+            $deployDir = "C:\mt5_bridge_service"
+            
+            if (-not (Test-Path $deployDir)) {
+              New-Item -ItemType Directory -Path $deployDir -Force | Out-Null
+              Write-Host "Created: $deployDir" -ForegroundColor Green
+            }
+            
+            $logsDir = "$deployDir\logs"
+            if (-not (Test-Path $logsDir)) {
+              New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
+              Write-Host "Created: $logsDir" -ForegroundColor Green
+            }
+            
+            Write-Host "Directories ready" -ForegroundColor Green
+      
+      - name: Deploy MT5 Bridge API Script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== STEP 3: Deploying MT5 Bridge API Script ===" -ForegroundColor Cyan
+            
+            $deployDir = "C:\mt5_bridge_service"
+            $scriptPath = "$deployDir\mt5_bridge_api_service.py"
+            
+            # Download the script from GitHub
+            $url = "https://raw.githubusercontent.com/chavapalmarubin-lab/FIDUS/main/vps/mt5_bridge_api_service.py"
+            
+            Write-Host "Downloading from: $url" -ForegroundColor Yellow
+            
+            $ProgressPreference = 'SilentlyContinue'
+            try {
+              Invoke-WebRequest -Uri $url -OutFile $scriptPath -TimeoutSec 60
+              $size = (Get-Item $scriptPath).Length
+              Write-Host "Downloaded: $scriptPath ($size bytes)" -ForegroundColor Green
+            } catch {
+              Write-Host "Download failed: $_" -ForegroundColor Red
+              exit 1
+            }
+            
+            # Verify content
+            $content = Get-Content $scriptPath -Raw
+            if ($content -match "FastAPI" -and $content -match "uvicorn") {
+              Write-Host "Script contains FastAPI and uvicorn - VALID" -ForegroundColor Green
+            } else {
+              Write-Host "Script validation failed!" -ForegroundColor Red
+              exit 1
+            }
+      
+      - name: Create Environment File
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            Write-Host "=== STEP 4: Creating Environment File ===" -ForegroundColor Cyan
+            
+            $envContent = @"
+            MONGODB_URI=${{ secrets.MONGO_URL }}
+            MT5_PASSWORD=${{ secrets.MT5_PASSWORD }}
+            MT5_PATH=C:\Program Files\Lucrum Capital MT5\terminal64.exe
+            MT5_SERVER=Lucrumcapital-Live
+            "@
+            
+            Set-Content -Path "C:\mt5_bridge_service\.env" -Value $envContent
+            Write-Host ".env file created" -ForegroundColor Green
+      
+      - name: Install Python Dependencies
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 10m
+          script: |
+            Write-Host "=== STEP 5: Installing Python Dependencies ===" -ForegroundColor Cyan
+            
+            $pythonPath = "python"
+            
+            # Create requirements file
+            $requirements = @"
+            fastapi==0.115.5
+            uvicorn[standard]==0.34.0
+            MetaTrader5==5.0.4518
+            python-dotenv==1.0.1
+            pymongo==4.10.1
+            httpx==0.28.1
+            pydantic==2.10.3
+            "@
+            
+            Set-Content -Path "C:\mt5_bridge_service\requirements.txt" -Value $requirements
+            
+            Write-Host "Installing packages..." -ForegroundColor Yellow
+            & $pythonPath -m pip install --upgrade pip --quiet
+            & $pythonPath -m pip install -r "C:\mt5_bridge_service\requirements.txt" --quiet
+            
+            Write-Host "Dependencies installed" -ForegroundColor Green
+      
+      - name: Start MT5 Bridge API Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== STEP 6: Starting MT5 Bridge API Service ===" -ForegroundColor Cyan
+            
+            Set-Location "C:\mt5_bridge_service"
+            
+            # Start the service in background
+            $process = Start-Process -FilePath "python" -ArgumentList "-m uvicorn mt5_bridge_api_service:app --host 0.0.0.0 --port 8000" -WorkingDirectory "C:\mt5_bridge_service" -RedirectStandardOutput "C:\mt5_bridge_service\logs\stdout.log" -RedirectStandardError "C:\mt5_bridge_service\logs\stderr.log" -PassThru -WindowStyle Hidden
+            
+            Write-Host "Started with PID: $($process.Id)" -ForegroundColor Green
+            
+            Write-Host "Waiting 20 seconds for service to initialize..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 20
+            
+            # Check if still running
+            $running = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+            if ($running) {
+              Write-Host "Service is running!" -ForegroundColor Green
+            } else {
+              Write-Host "Service crashed! Checking logs..." -ForegroundColor Red
+              Get-Content "C:\mt5_bridge_service\logs\stderr.log" -Tail 30 -ErrorAction SilentlyContinue
+              exit 1
+            }
+      
+      - name: Verify API Endpoints
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== STEP 7: Verifying API Endpoints ===" -ForegroundColor Cyan
+            
+            # Test localhost
+            Write-Host "Testing http://localhost:8000/" -ForegroundColor Yellow
+            try {
+              $response = Invoke-RestMethod -Uri "http://localhost:8000/" -TimeoutSec 10
+              Write-Host "Root endpoint OK!" -ForegroundColor Green
+              Write-Host "Service: $($response.service)" -ForegroundColor White
+            } catch {
+              Write-Host "Root endpoint FAILED: $_" -ForegroundColor Red
+            }
+            
+            # Test health endpoint
+            Write-Host ""
+            Write-Host "Testing http://localhost:8000/api/mt5/bridge/health" -ForegroundColor Yellow
+            try {
+              $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/bridge/health" -TimeoutSec 10
+              Write-Host "Health endpoint OK!" -ForegroundColor Green
+            } catch {
+              Write-Host "Health endpoint FAILED: $_" -ForegroundColor Red
+            }
+            
+            # Test external access
+            Write-Host ""
+            Write-Host "Testing http://92.118.45.135:8000/" -ForegroundColor Yellow
+            try {
+              $response = Invoke-RestMethod -Uri "http://92.118.45.135:8000/" -TimeoutSec 10
+              Write-Host "External access OK!" -ForegroundColor Green
+            } catch {
+              Write-Host "External access FAILED: $_" -ForegroundColor Yellow
+              Write-Host "This may be expected if firewall blocks loopback" -ForegroundColor Gray
+            }
+      
+      - name: Create Task Scheduler Entry
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== STEP 8: Creating Task Scheduler Entry ===" -ForegroundColor Cyan
+            
+            $taskName = "MT5 Bridge API Service"
+            
+            # Remove existing task
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+            
+            # Create action
+            $action = New-ScheduledTaskAction -Execute "python" -Argument "-m uvicorn mt5_bridge_api_service:app --host 0.0.0.0 --port 8000" -WorkingDirectory "C:\mt5_bridge_service"
+            
+            # Create triggers - run at startup and every 5 minutes to ensure it's always running
+            $trigger1 = New-ScheduledTaskTrigger -AtStartup
+            $trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration ([TimeSpan]::MaxValue)
+            
+            # Create principal
+            $principal = New-ScheduledTaskPrincipal -UserId "Administrator" -RunLevel Highest
+            
+            # Create settings
+            $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+            
+            # Register task
+            Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger1,$trigger2 -Principal $principal -Settings $settings -Force
+            
+            Write-Host "Task Scheduler entry created: $taskName" -ForegroundColor Green
+      
+      - name: External Connectivity Test
+        run: |
+          echo "=== Testing External Connectivity ===" 
+          sleep 5
+          
+          # Test from GitHub Actions runner
+          echo "Testing http://92.118.45.135:8000/"
+          curl -s --connect-timeout 10 http://92.118.45.135:8000/ || echo "Connection failed"
+          
+          echo ""
+          echo "Testing http://92.118.45.135:8000/api/mt5/bridge/health"
+          curl -s --connect-timeout 10 http://92.118.45.135:8000/api/mt5/bridge/health || echo "Connection failed"
+      
+      - name: Generate Deployment Report
+        if: always()
+        run: |
+          echo "# MT5 Bridge API Deployment Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**VPS:** 92.118.45.135" >> $GITHUB_STEP_SUMMARY
+          echo "**Port:** 8000" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployed Components" >> $GITHUB_STEP_SUMMARY
+          echo "- FastAPI MT5 Bridge API Service" >> $GITHUB_STEP_SUMMARY
+          echo "- Uvicorn ASGI Server" >> $GITHUB_STEP_SUMMARY
+          echo "- Task Scheduler auto-restart" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "- Root: http://92.118.45.135:8000/" >> $GITHUB_STEP_SUMMARY
+          echo "- Health: http://92.118.45.135:8000/api/mt5/bridge/health" >> $GITHUB_STEP_SUMMARY
+          echo "- Accounts: http://92.118.45.135:8000/api/mt5/accounts/summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify backend can connect to VPS API" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test MT5 account data retrieval" >> $GITHUB_STEP_SUMMARY
+          echo "3. Monitor alert emails for VPS health" >> $GITHUB_STEP_SUMMARY
