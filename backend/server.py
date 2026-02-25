@@ -24231,6 +24231,128 @@ async def get_rebate_summary(
         logging.error(f"❌ Get rebate summary error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ===============================================================================
+# LIVE DEMO ACCOUNTS ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/live-demo/accounts")
+async def get_live_demo_accounts():
+    """
+    Get all Live Demo accounts for evaluating potential money managers.
+    These are MT5 accounts that behave like real funded accounts but contain no actual capital.
+    Used to evaluate new money managers before allocating real money to them.
+    """
+    try:
+        # Query mt5_accounts for accounts with account_type = 'live_demo'
+        demo_accounts = await db.mt5_accounts.find({
+            "account_type": "live_demo"
+        }).to_list(length=100)
+        
+        # If no accounts found with that type, also check for specific demo accounts
+        if not demo_accounts:
+            # Check for known demo account numbers
+            demo_account_numbers = [20062, 2210]
+            demo_accounts = await db.mt5_accounts.find({
+                "account": {"$in": demo_account_numbers}
+            }).to_list(length=100)
+        
+        # Format response
+        formatted_accounts = []
+        for acc in demo_accounts:
+            formatted_accounts.append({
+                "account": acc.get("account"),
+                "manager_name": acc.get("manager_name", "Manager Candidate"),
+                "balance": acc.get("balance", 0),
+                "equity": acc.get("equity", 0),
+                "profit": acc.get("profit", 0),
+                "initial_allocation": acc.get("initial_allocation", 0),
+                "platform": acc.get("platform", "MT5"),
+                "broker": acc.get("broker", "LUCRUM Capital"),
+                "server": acc.get("server", "Lucrumcapital-Live"),
+                "status": acc.get("status", "evaluating"),
+                "account_type": "live_demo",
+                "evaluation_notes": acc.get("evaluation_notes", ""),
+                "fund_type": acc.get("fund_type", "DEMO"),
+                "updated_at": acc.get("updated_at", datetime.now(timezone.utc)).isoformat() if isinstance(acc.get("updated_at"), datetime) else acc.get("updated_at")
+            })
+        
+        return {
+            "success": True,
+            "accounts": formatted_accounts,
+            "count": len(formatted_accounts),
+            "message": f"Found {len(formatted_accounts)} live demo account(s)"
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching live demo accounts: {str(e)}")
+        return {
+            "success": False,
+            "accounts": [],
+            "count": 0,
+            "error": str(e)
+        }
+
+
+@api_router.post("/live-demo/accounts/add")
+async def add_live_demo_account(
+    account: int,
+    manager_name: str = "Manager Candidate",
+    evaluation_notes: str = ""
+):
+    """Add a new live demo account for manager evaluation"""
+    try:
+        # Check if account already exists
+        existing = await db.mt5_accounts.find_one({"account": account})
+        
+        if existing:
+            # Update to live demo type
+            await db.mt5_accounts.update_one(
+                {"account": account},
+                {"$set": {
+                    "account_type": "live_demo",
+                    "manager_name": manager_name,
+                    "evaluation_notes": evaluation_notes,
+                    "updated_at": datetime.now(timezone.utc)
+                }}
+            )
+            return {
+                "success": True,
+                "message": f"Account {account} updated as live demo account"
+            }
+        else:
+            # Create new demo account entry
+            new_account = {
+                "account": account,
+                "account_type": "live_demo",
+                "manager_name": manager_name,
+                "platform": "MT5",
+                "broker": "LUCRUM Capital",
+                "server": "Lucrumcapital-Live",
+                "status": "evaluating",
+                "balance": 0,
+                "equity": 0,
+                "profit": 0,
+                "initial_allocation": 0,
+                "fund_type": "DEMO",
+                "evaluation_notes": evaluation_notes,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            await db.mt5_accounts.insert_one(new_account)
+            return {
+                "success": True,
+                "message": f"Account {account} added as live demo account"
+            }
+            
+    except Exception as e:
+        logging.error(f"Error adding live demo account: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
 # ===============================================================================
 # MONEY MANAGERS ENDPOINTS
 # ===============================================================================
