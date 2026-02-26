@@ -82,8 +82,8 @@ const LiveDemoDashboard = () => {
   };
 
   const getPnlColor = (pnl) => {
-    if (pnl > 0) return 'text-green-400';
-    if (pnl < 0) return 'text-red-400';
+    if (pnl > 0) return 'text-green-500';
+    if (pnl < 0) return 'text-red-500';
     return 'text-slate-400';
   };
 
