@@ -258,19 +258,27 @@ const LiveDemoDashboard = () => {
                 <BarChart3 className="mr-2 h-5 w-5 text-purple-400" />
                 Demo Account Performance Comparison
               </CardTitle>
-              <p className="text-slate-400 text-sm">P&L by demo account - Evaluate manager performance</p>
+              <p className="text-slate-400 text-sm">P&L vs Initial Allocation - Evaluate manager performance</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
-                  data={accounts.map(acc => ({
-                    name: acc.manager_name || `Account ${acc.account}`,
-                    account: acc.account,
-                    pnl: acc.profit || 0,
-                    balance: acc.balance || 0
-                  })).sort((a, b) => b.pnl - a.pnl)}
+                  data={accounts.map(acc => {
+                    const initial = acc.initial_allocation || 0;
+                    const balance = acc.balance || 0;
+                    const pnl = initial > 0 ? balance - initial : 0;
+                    const roi = initial > 0 ? (pnl / initial * 100) : 0;
+                    return {
+                      name: acc.manager_name || `Account ${acc.account}`,
+                      account: acc.account,
+                      pnl: pnl,
+                      roi: roi,
+                      initial: initial,
+                      balance: balance
+                    };
+                  }).sort((a, b) => b.roi - a.roi)}
                   layout="vertical"
-                  margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 140, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis 
@@ -284,7 +292,7 @@ const LiveDemoDashboard = () => {
                     dataKey="name"
                     stroke="#94a3b8"
                     tick={{ fill: '#94a3b8', fontSize: 12 }}
-                    width={110}
+                    width={130}
                   />
                   <Tooltip 
                     contentStyle={{ 
@@ -293,16 +301,19 @@ const LiveDemoDashboard = () => {
                       borderRadius: '6px',
                       color: '#fff'
                     }}
-                    formatter={(value, name) => {
+                    formatter={(value, name, props) => {
                       if (name === 'pnl') return [`$${value.toLocaleString()}`, 'P&L'];
-                      if (name === 'balance') return [`$${value.toLocaleString()}`, 'Balance'];
+                      if (name === 'roi') return [`${value.toFixed(2)}%`, 'ROI'];
                       return [value, name];
                     }}
+                    labelFormatter={(label) => label}
                   />
                   <Legend wrapperStyle={{ color: '#94a3b8' }} />
                   <Bar dataKey="pnl" name="P&L" radius={[0, 8, 8, 0]}>
                     {accounts.map((acc, index) => {
-                      const pnl = acc.profit || 0;
+                      const initial = acc.initial_allocation || 0;
+                      const balance = acc.balance || 0;
+                      const pnl = initial > 0 ? balance - initial : 0;
                       const color = pnl > 0 ? '#a855f7' : pnl < 0 ? '#ef4444' : '#64748b';
                       return <Cell key={`cell-${index}`} fill={color} />;
                     })}
