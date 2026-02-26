@@ -86,7 +86,7 @@ jobs:
               $response = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/accounts/summary" -Method Get -TimeoutSec 10
               Write-Host "MT5 Bridge is running with $($response.accounts.Count) accounts" -ForegroundColor Green
               
-              $lucrum = @(2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067, 20062, 2210)
+              $lucrum = @(2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067, 20062, 2210, 2215, 2216, 2217)
               Write-Host ""
               Write-Host "LUCRUM accounts from MT5 Bridge:" -ForegroundColor Cyan
               foreach ($acc in $response.accounts) {
