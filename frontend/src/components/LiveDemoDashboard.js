@@ -315,10 +315,10 @@ const LiveDemoDashboard = () => {
           {/* Account Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {accounts.map((account) => {
-              const pnl = account.profit || 0;
-              const returnPct = account.initial_allocation > 0 
-                ? ((pnl / account.initial_allocation) * 100) 
-                : 0;
+              const initial = account.initial_allocation || 0;
+              const balance = account.balance || 0;
+              const pnl = initial > 0 ? balance - initial : 0;
+              const returnPct = initial > 0 ? (pnl / initial * 100) : 0;
 
               return (
                 <motion.div
@@ -349,6 +349,47 @@ const LiveDemoDashboard = () => {
                     </CardHeader>
                     
                     <CardContent className="space-y-4">
+                      {/* Initial Allocation */}
+                      <div className="bg-orange-900/20 rounded p-3 border border-orange-600/30">
+                        <div className="text-xs text-orange-400 mb-1">Initial Allocation</div>
+                        <div className="text-orange-400 font-semibold text-lg">
+                          {formatCurrency(initial)}
+                        </div>
+                      </div>
+
+                      {/* Balance & Equity */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-slate-800/50 rounded p-3">
+                          <div className="text-xs text-slate-400 mb-1">Current Balance</div>
+                          <div className="text-cyan-400 font-semibold">
+                            {formatCurrency(balance)}
+                          </div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded p-3">
+                          <div className="text-xs text-slate-400 mb-1">Equity</div>
+                          <div className="text-green-400 font-semibold">
+                            {formatCurrency(account.equity)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* P&L with ROI */}
+                      <div className="bg-slate-800/50 rounded p-3">
+                        <div className="text-xs text-slate-400 mb-1">Profit/Loss (ROI)</div>
+                        <div className="flex items-center justify-between">
+                          <span className={`font-bold text-lg ${getPnlColor(pnl)}`}>
+                            {formatCurrency(pnl)}
+                          </span>
+                          <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                            returnPct > 0 ? 'bg-green-900/30 text-green-400' : 
+                            returnPct < 0 ? 'bg-red-900/30 text-red-400' : 
+                            'bg-slate-700 text-slate-400'
+                          }`}>
+                            {returnPct >= 0 ? '+' : ''}{returnPct.toFixed(2)}%
+                          </span>
+                        </div>
+                      </div>
+
                       {/* Account Details */}
                       <div className="bg-slate-800/30 rounded p-3">
                         <div className="text-xs text-slate-400 mb-2">Account Details</div>
