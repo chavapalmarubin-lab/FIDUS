@@ -392,42 +392,13 @@ const LiveDemoDashboard = () => {
 
                       {/* Account Details */}
                       <div className="bg-slate-800/30 rounded p-3">
-                        <div className="text-xs text-slate-400 mb-2">Account Details</div>
+                        <div className="text-xs text-slate-400 mb-2">Platform</div>
                         <div className="flex items-center justify-between">
                           <span className="text-white font-medium">
                             {account.platform || 'MT5'}
                           </span>
                           <span className="text-slate-300 text-sm">
                             {account.server || 'Lucrumcapital-Live'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Balance & Equity */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-slate-800/50 rounded p-3">
-                          <div className="text-xs text-slate-400 mb-1">Balance</div>
-                          <div className="text-cyan-400 font-semibold">
-                            {formatCurrency(account.balance)}
-                          </div>
-                        </div>
-                        <div className="bg-slate-800/50 rounded p-3">
-                          <div className="text-xs text-slate-400 mb-1">Equity</div>
-                          <div className="text-green-400 font-semibold">
-                            {formatCurrency(account.equity)}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* P&L */}
-                      <div className="bg-slate-800/50 rounded p-3">
-                        <div className="text-xs text-slate-400 mb-1">Profit/Loss</div>
-                        <div className="flex items-center justify-between">
-                          <span className={`font-bold text-lg ${getPnlColor(pnl)}`}>
-                            {formatCurrency(pnl)}
-                          </span>
-                          <span className={`text-sm ${getPnlColor(returnPct)}`}>
-                            {formatPercentage(returnPct)}
                           </span>
                         </div>
                       </div>
