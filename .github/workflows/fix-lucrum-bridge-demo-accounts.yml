@@ -1,0 +1,79 @@
+name: Fix LUCRUM Bridge - Add Demo Accounts
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Show Current Script and Add Accounts
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 10m
+          script: |
+            Write-Host "=== STEP 1: Show Current Script Content ===" -ForegroundColor Cyan
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
+            
+            Write-Host "First 100 lines of script:" -ForegroundColor Yellow
+            Get-Content $scriptPath -TotalCount 100
+            
+            Write-Host ""
+            Write-Host "=== STEP 2: Find Account List ===" -ForegroundColor Cyan
+            $content = Get-Content $scriptPath -Raw
+            
+            # Show lines with account numbers
+            Write-Host "Lines containing account definitions:" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
+            
+            Write-Host ""
+            Write-Host "=== STEP 3: Backup and Update ===" -ForegroundColor Cyan
+            Copy-Item $scriptPath "$scriptPath.bak_$(Get-Date -Format 'yyyyMMddHHmmss')"
+            Write-Host "Backup created" -ForegroundColor Green
+            
+            # Find the line numbers with account definitions
+            $lines = Get-Content $scriptPath
+            $accountLines = @()
+            for ($i = 0; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match "^\s*20043") {
+                Write-Host "Found last account (20043) at line $($i+1)" -ForegroundColor Green
+                # Insert new accounts after this line
+                $newLines = $lines[0..$i]
+                $newLines += "    20062,  # LIVE DEMO - CRYPTO BITCOIN"
+                $newLines += "    2210,   # LIVE DEMO - GOLD DAY TRADING"
+                $newLines += $lines[($i+1)..($lines.Count-1)]
+                Set-Content $scriptPath $newLines -Encoding UTF8
+                Write-Host "Added 20062 and 2210 after line $($i+1)" -ForegroundColor Green
+                break
+              }
+            }
+            
+            Write-Host ""
+            Write-Host "=== STEP 4: Verify Update ===" -ForegroundColor Cyan
+            Write-Host "Account lines after update:" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
+            
+            Write-Host ""
+            Write-Host "=== STEP 5: Restart Service ===" -ForegroundColor Cyan
+            Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
+            
+            Set-Location "C:\mt5_bridge_service"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
+            Write-Host "Service restarted" -ForegroundColor Green
+            
+            Write-Host ""
+            Write-Host "=== DONE ===" -ForegroundColor Cyan
+            Write-Host "Check VPS window - should now show 10 accounts" -ForegroundColor Green
+      
+      - name: Report
+        if: always()
+        run: |
+          echo "# LUCRUM Bridge Update" >> $GITHUB_STEP_SUMMARY
+          echo "Added accounts 20062 (CRYPTO BITCOIN) and 2210 (GOLD DAY TRADING)" >> $GITHUB_STEP_SUMMARY
