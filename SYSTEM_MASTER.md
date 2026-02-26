@@ -287,7 +287,7 @@ VPS window should show increased account count:
 | CORE | (omit) | Core strategy accounts |
 | SEPARATION | (omit) | Profit storage accounts |
 
-### Current LUCRUM Accounts (10 total)
+### Current LUCRUM Accounts (13 total)
 
 | Account | Name | Type | Initial Allocation |
 |---------|------|------|-------------------|
@@ -297,6 +297,9 @@ VPS window should show increased account count:
 | 20043 | Manager | BALANCE | - |
 | **20062** | **CRYPTO BITCOIN** | **LIVE DEMO** | $200,000 |
 | **2210** | **GOLD DAY TRADING** | **LIVE DEMO** | $19,850 |
+| **2215** | **JOEL ALVES NASDAQ** | **LIVE DEMO** | TBD |
+| **2216** | **JOEL ALVES GOLD** | **LIVE DEMO** | TBD |
+| **2217** | **UNO14** | **LIVE DEMO** | TBD |
 
 ### Troubleshooting
 
