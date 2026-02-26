@@ -255,8 +255,8 @@ const LiveDemoDashboard = () => {
           <Card className="dashboard-card mb-8">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
-                <BarChart3 className="mr-2 h-5 w-5 text-purple-400" />
-                Demo Account Performance Comparison
+                <BarChart3 className="mr-2 h-5 w-5 text-cyan-400" />
+                TRUE P&L Performance Comparison
               </CardTitle>
               <p className="text-slate-400 text-sm">P&L vs Initial Allocation - Evaluate manager performance</p>
             </CardHeader>
