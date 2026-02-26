@@ -309,12 +309,13 @@ const LiveDemoDashboard = () => {
                     labelFormatter={(label) => label}
                   />
                   <Legend wrapperStyle={{ color: '#94a3b8' }} />
-                  <Bar dataKey="pnl" name="P&L" radius={[0, 8, 8, 0]}>
+                  <Bar dataKey="pnl" name="P&L" radius={[0, 4, 4, 0]}>
                     {accounts.map((acc, index) => {
                       const initial = acc.initial_allocation || 0;
                       const balance = acc.balance || 0;
                       const pnl = initial > 0 ? balance - initial : 0;
-                      const color = pnl > 0 ? '#a855f7' : pnl < 0 ? '#ef4444' : '#64748b';
+                      // Green for positive, Red for negative (matching Money Managers)
+                      const color = pnl > 0 ? '#22c55e' : pnl < 0 ? '#ef4444' : '#64748b';
                       return <Cell key={`cell-${index}`} fill={color} />;
                     })}
                   </Bar>
