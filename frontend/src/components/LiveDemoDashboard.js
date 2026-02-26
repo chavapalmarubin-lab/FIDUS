@@ -179,7 +179,7 @@ const LiveDemoDashboard = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="dashboard-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -196,10 +196,10 @@ const LiveDemoDashboard = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Total Balance</p>
-                <p className="text-2xl font-bold text-white">{formatCurrency(totals.balance)}</p>
+                <p className="text-slate-400 text-sm">Initial Allocation</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(totals.initial)}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-cyan-400" />
+              <Target className="h-8 w-8 text-orange-400" />
             </div>
           </CardContent>
         </Card>
@@ -208,10 +208,10 @@ const LiveDemoDashboard = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Total Equity</p>
-                <p className="text-2xl font-bold text-white">{formatCurrency(totals.equity)}</p>
+                <p className="text-slate-400 text-sm">Current Balance</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(totals.balance)}</p>
               </div>
-              <BarChart3 className="h-8 w-8 text-green-400" />
+              <DollarSign className="h-8 w-8 text-cyan-400" />
             </div>
           </CardContent>
         </Card>
@@ -230,6 +230,20 @@ const LiveDemoDashboard = () => {
               ) : (
                 <TrendingDown className="h-8 w-8 text-red-400" />
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">Total ROI</p>
+                <p className={`text-2xl font-bold ${getPnlColor(totalROI)}`}>
+                  {totalROI >= 0 ? '+' : ''}{totalROI.toFixed(2)}%
+                </p>
+              </div>
+              <Activity className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
