@@ -338,12 +338,12 @@ const LiveDemoDashboard = () => {
                   whileHover={{ scale: 1.02 }}
                   className="group"
                 >
-                  <Card className="dashboard-card h-full border-purple-600/30 hover:border-purple-500/50 transition-all">
+                  <Card className="dashboard-card h-full border-slate-700 hover:border-slate-600 transition-all">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <TestTube className="h-5 w-5 text-purple-400 mr-2" />
-                          <Badge className="bg-purple-600/20 text-purple-400 border border-purple-500">
+                          <TestTube className="h-5 w-5 text-cyan-400 mr-2" />
+                          <Badge className="bg-yellow-600/20 text-yellow-400 border border-yellow-500 text-xs">
                             DEMO
                           </Badge>
                         </div>
@@ -356,69 +356,62 @@ const LiveDemoDashboard = () => {
                         {account.manager_name || `Manager Candidate`}
                       </CardTitle>
                       <p className="text-slate-400 text-sm">
-                        Account #{account.account} • {account.broker || 'LUCRUM Capital'}
+                        Demo Trading • {account.broker || 'LUCRUM Capital'}
                       </p>
                     </CardHeader>
                     
                     <CardContent className="space-y-4">
+                      {/* Account Info */}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-400">Account</span>
+                        <span className="text-white">{account.account} (DEMO - LUCRUM Capital)</span>
+                      </div>
+
+                      {/* Total Equity - Highlighted like Money Managers */}
+                      <div className="bg-slate-800/80 rounded-lg p-4 border border-cyan-500/30">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-300">Total Equity:</span>
+                          <span className="text-cyan-400 font-bold text-xl">
+                            {formatCurrency(account.equity || balance)}
+                          </span>
+                        </div>
+                      </div>
+
                       {/* Initial Allocation */}
-                      <div className="bg-orange-900/20 rounded p-3 border border-orange-600/30">
-                        <div className="text-xs text-orange-400 mb-1">Initial Allocation</div>
-                        <div className="text-orange-400 font-semibold text-lg">
-                          {formatCurrency(initial)}
-                        </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-400">Initial Allocation:</span>
+                        <span className="text-white">{formatCurrency(initial)}</span>
                       </div>
 
-                      {/* Balance & Equity */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-slate-800/50 rounded p-3">
-                          <div className="text-xs text-slate-400 mb-1">Current Balance</div>
-                          <div className="text-cyan-400 font-semibold">
-                            {formatCurrency(balance)}
-                          </div>
-                        </div>
-                        <div className="bg-slate-800/50 rounded p-3">
-                          <div className="text-xs text-slate-400 mb-1">Equity</div>
-                          <div className="text-green-400 font-semibold">
-                            {formatCurrency(account.equity)}
-                          </div>
-                        </div>
+                      {/* Withdrawals */}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-400">Withdrawals:</span>
+                        <span className="text-white">$0.00</span>
                       </div>
 
-                      {/* P&L with ROI */}
-                      <div className="bg-slate-800/50 rounded p-3">
-                        <div className="text-xs text-slate-400 mb-1">Profit/Loss (ROI)</div>
-                        <div className="flex items-center justify-between">
-                          <span className={`font-bold text-lg ${getPnlColor(pnl)}`}>
-                            {formatCurrency(pnl)}
-                          </span>
-                          <span className={`text-sm font-semibold px-2 py-1 rounded ${
-                            returnPct > 0 ? 'bg-green-900/30 text-green-400' : 
-                            returnPct < 0 ? 'bg-red-900/30 text-red-400' : 
-                            'bg-slate-700 text-slate-400'
-                          }`}>
-                            {returnPct >= 0 ? '+' : ''}{returnPct.toFixed(2)}%
-                          </span>
-                        </div>
+                      {/* TRUE P&L */}
+                      <div className="flex justify-between text-sm items-center">
+                        <span className="text-slate-400">TRUE P&L:</span>
+                        <span className={`font-semibold ${getPnlColor(pnl)}`}>
+                          ~{formatCurrency(pnl)} ({returnPct >= 0 ? '+' : ''}{returnPct.toFixed(2)}%)
+                        </span>
                       </div>
 
-                      {/* Account Details */}
-                      <div className="bg-slate-800/30 rounded p-3">
-                        <div className="text-xs text-slate-400 mb-2">Platform</div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-white font-medium">
-                            {account.platform || 'MT5'}
-                          </span>
-                          <span className="text-slate-300 text-sm">
-                            {account.server || 'Lucrumcapital-Live'}
-                          </span>
-                        </div>
+                      {/* Corrected Equity calculation */}
+                      <div className="text-xs text-slate-500">
+                        ✓ Corrected: Equity ({formatCurrency(account.equity || balance)}) + Withdrawals ($0.00)
+                      </div>
+
+                      {/* Platform Info */}
+                      <div className="flex justify-between text-sm border-t border-slate-700 pt-3 mt-3">
+                        <span className="text-slate-400">Platform</span>
+                        <span className="text-slate-300">{account.platform || 'MT5'} • {account.server || 'LucrumCapital-Trade'}</span>
                       </div>
 
                       {/* Evaluation Notes */}
                       {account.evaluation_notes && (
-                        <div className="bg-purple-900/20 rounded p-3 border border-purple-600/30">
-                          <div className="text-xs text-purple-400 mb-1">Evaluation Notes</div>
+                        <div className="bg-slate-800/50 rounded p-3 border border-slate-700">
+                          <div className="text-xs text-slate-400 mb-1">Evaluation Notes</div>
                           <div className="text-slate-300 text-sm">
                             {account.evaluation_notes}
                           </div>
