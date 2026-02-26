@@ -87,13 +87,22 @@ const LiveDemoDashboard = () => {
     return 'text-slate-400';
   };
 
-  // Calculate totals
-  const totals = accounts.reduce((acc, account) => ({
-    balance: acc.balance + (account.balance || 0),
-    equity: acc.equity + (account.equity || 0),
-    profit: acc.profit + (account.profit || 0),
-    initial: acc.initial + (account.initial_allocation || 0)
-  }), { balance: 0, equity: 0, profit: 0, initial: 0 });
+  // Calculate totals with P&L based on initial allocation
+  const totals = accounts.reduce((acc, account) => {
+    const balance = account.balance || 0;
+    const initial = account.initial_allocation || 0;
+    const pnl = initial > 0 ? balance - initial : 0;
+    
+    return {
+      balance: acc.balance + balance,
+      equity: acc.equity + (account.equity || 0),
+      profit: acc.profit + pnl,
+      initial: acc.initial + initial
+    };
+  }, { balance: 0, equity: 0, profit: 0, initial: 0 });
+  
+  // Calculate total ROI
+  const totalROI = totals.initial > 0 ? (totals.profit / totals.initial * 100) : 0;
 
   if (loading) {
     return (
