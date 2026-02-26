@@ -23,7 +23,7 @@ jobs:
           db = client.fidus_production
           
           # LUCRUM accounts to keep active (including Live Demo accounts)
-          lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067, 20062, 2210]
+          lucrum_accounts = [2199, 2205, 2206, 2207, 2208, 2209, 20042, 20043, 20067, 20062, 2210, 2215, 2216, 2217]
           
           print("Setting non-LUCRUM accounts to zero...")
           result = db.mt5_accounts.update_many(
