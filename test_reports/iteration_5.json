@@ -1,0 +1,102 @@
+{
+  "summary": "Live Demo Analytics feature testing complete. All major features verified working: Demo Analytics tab appears in main navigation after LIVE DEMO tab, purple/orange theme distinguishes from teal/gold Trading Analytics, header shows 'Live Demo Analytics' with 'MANAGER CANDIDATE EVALUATION DASHBOARD' subtitle, DEMO ACCOUNTS badge with orange pulsing dot, KPI Strip with demo-specific data, all 4 tabs (Portfolio Overview, Manager Rankings, Deep Dive, AI Advisor) functional, data separation verified - no overlap between demo and real accounts.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "AI Advisor tab - AI Insights",
+        "issues": ["AI Insights takes several seconds to load, showing 'Analyzing portfolio...' loading state - this is expected behavior for AI generation"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_live_demo_analytics.py",
+    "/app/test_reports/pytest/live_demo_analytics_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "LiveDemoAnalytics.js follows same structure as NextGenTradingAnalytics.js with proper CSS prefix (--lda-) separation",
+    "API endpoint /api/admin/live-demo-analytics/managers correctly filters by account_type='live_demo'",
+    "AI Advisor endpoints (/chat, /insights, /allocation) properly scoped to demo accounts",
+    "Data separation fully verified - no overlap between demo accounts (2210, 2215, 2216, 20062, 2217) and real accounts (897589, 885822, 897591, 886602, 886557)",
+    "Purple (#A855F7) and orange (#F97316) accent colors properly distinguish from teal (#00D4AA) and gold (#FFB800)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_live_demo_analytics.py"
+  ],
+  "success_rate": {
+    "backend": "100% - All 10 API tests passed",
+    "frontend": "100% - All features verified functional"
+  },
+  "test_credentials": "FIDUS Admin: username='admin', password='password123'",
+  "seed_data_creation": "None - using existing live_demo accounts from MongoDB",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Live Demo Analytics feature fully tested. 5 demo accounts found: GOLD DAY TRADING (#2210), JOEL ALVES NASDAQ (#2215), JOEL ALVES GOLD (#2216), CRYPTO BITCOIN (#20062), UNO14 (#2217). All accounts have account_type='live_demo'. Data is completely separate from Trading Analytics (real accounts: 897589, 885822, 897591, 886602, 886557).",
+  "verified_features": {
+    "navigation": {
+      "demo_analytics_tab": "✅ Appears in main navigation after LIVE DEMO tab",
+      "tab_position": "✅ Between LIVE DEMO and Broker Rebates tabs"
+    },
+    "theme": {
+      "purple_accent": "✅ --lda-accent-primary: #A855F7 (Purple)",
+      "orange_accent": "✅ --lda-accent-gold: #F97316 (Orange)",
+      "css_prefix": "✅ Uses --lda- prefix (not --ngt-)"
+    },
+    "header": {
+      "title": "✅ 'Live Demo Analytics'",
+      "subtitle": "✅ 'MANAGER CANDIDATE EVALUATION DASHBOARD'"
+    },
+    "demo_badge": {
+      "visible": "✅ DEMO ACCOUNTS badge with orange pulsing dot",
+      "position": "✅ In header controls area"
+    },
+    "kpi_strip": {
+      "total_aum": "✅ Shows $519,850 (demo account totals)",
+      "total_pnl": "✅ Shows $2,861.97",
+      "avg_return": "✅ Shows 3.36%",
+      "active_strategies": "✅ Shows 5 demo managers",
+      "avg_sharpe": "✅ Shows 0.76",
+      "avg_win_rate": "✅ Shows 0.00%",
+      "total_trades": "✅ Shows 0"
+    },
+    "portfolio_overview_tab": {
+      "fund_allocation_chart": "✅ Pie chart showing DEMO fund allocation",
+      "risk_profile_chart": "✅ Radar chart with Sharpe Ratio, Sortino Ratio, Win Rate, Profit Factor, Risk Control"
+    },
+    "manager_rankings_tab": {
+      "strategy_leaderboard": "✅ Table with RANK, STRATEGY, FUND, AUM, P&L, RETURN, SHARPE, WIN RATE, MAX DD, RISK, COMPARE",
+      "demo_managers_only": "✅ Only shows 5 live_demo accounts",
+      "risk_badges": "✅ LOW RISK, MEDIUM, HIGH RISK badges",
+      "compare_buttons": "✅ + buttons for head-to-head comparison"
+    },
+    "deep_dive_tab": {
+      "strategy_selector": "✅ Dropdown to select demo manager",
+      "manager_details": "✅ Shows Initial Allocation, Current Equity, Total P&L, Profit Withdrawals",
+      "equity_curve": "✅ Chart showing historical balance progression",
+      "performance_badge": "✅ STRONG badge for top performer"
+    },
+    "ai_advisor_tab": {
+      "ai_insights": "✅ Shows '# DEMO PORTFOLIO EVALUATION' - demo-specific context",
+      "allocation_advisor": "✅ Capital input and Risk Tolerance dropdown",
+      "chat_interface": "✅ Claude Sonnet 4.5 badge and suggestion buttons",
+      "new_badge": "✅ 'NEW' badge on tab"
+    },
+    "data_separation": {
+      "demo_accounts": "✅ 2210, 2215, 2216, 20062, 2217 (all account_type='live_demo')",
+      "real_accounts": "✅ 897589, 885822, 897591, 886602, 886557 (account_type=null)",
+      "no_overlap": "✅ VERIFIED - No accounts appear in both demo and real analytics"
+    },
+    "api_endpoints": {
+      "managers": "✅ /api/admin/live-demo-analytics/managers - returns only live_demo accounts",
+      "ai_insights": "✅ /api/admin/live-demo-ai-advisor/insights - generates demo portfolio evaluation",
+      "ai_chat": "✅ /api/admin/live-demo-ai-advisor/chat - works with demo context",
+      "ai_allocation": "✅ /api/admin/live-demo-ai-advisor/allocation - recommends capital for demo managers"
+    }
+  }
+}
