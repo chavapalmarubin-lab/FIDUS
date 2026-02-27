@@ -25,7 +25,7 @@ class TestLiveDemoAnalytics:
         """Authenticate as admin and get token"""
         try:
             response = requests.post(
-                f"{BASE_URL}/api/login",
+                f"{BASE_URL}/api/auth/login",
                 json={
                     "username": "admin",
                     "password": "password123",
@@ -58,7 +58,7 @@ class TestLiveDemoAnalytics:
     def test_admin_login(self):
         """Test admin login endpoint"""
         response = requests.post(
-            f"{BASE_URL}/api/login",
+            f"{BASE_URL}/api/auth/login",
             json={
                 "username": "admin",
                 "password": "password123",
