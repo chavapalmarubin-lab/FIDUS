@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -9,7 +9,8 @@ import {
   RefreshCw, Download, Clock, TrendingUp, TrendingDown, DollarSign,
   Users, Target, Shield, AlertTriangle, Award, BarChart3, Activity,
   ChevronRight, ChevronDown, Zap, Briefcase, PieChart as PieChartIcon,
-  ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink
+  ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
+  Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings
 } from 'lucide-react';
 import './NextGenTradingAnalytics.css';
 
