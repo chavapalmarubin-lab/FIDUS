@@ -503,6 +503,17 @@ export default function NextGenTradingAnalytics() {
         </div>
         
         <div className="ngt-header-controls">
+          {/* Auto-refresh Toggle */}
+          <div 
+            className="ngt-auto-refresh" 
+            onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+            style={{ cursor: 'pointer' }}
+            title={autoRefreshEnabled ? 'Auto-refresh ON (30s)' : 'Auto-refresh OFF'}
+          >
+            <span className={`ngt-auto-refresh-dot ${autoRefreshEnabled ? '' : 'paused'}`} />
+            <span>{autoRefreshEnabled ? 'Live' : 'Paused'}</span>
+          </div>
+          
           {/* Time Period Selector */}
           <div className="ngt-period-selector">
             <Clock size={14} />
