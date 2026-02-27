@@ -629,6 +629,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="live-demo" className="flex-shrink-0">
               🧪 LIVE DEMO
             </TabsTrigger>
+            <TabsTrigger value="live-demo-analytics" className="flex-shrink-0">
+              📊 Demo Analytics
+            </TabsTrigger>
             <TabsTrigger value="broker-rebates" className="flex-shrink-0">
               💰 Broker Rebates
             </TabsTrigger>
