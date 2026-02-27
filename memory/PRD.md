@@ -22,18 +22,24 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - **Design:** Dark luxury fintech aesthetic (deep navy #0A0F1C, gold #FFB800, cyan #00D4AA accents)
 - **Typography:** DM Mono for data, Sora/Plus Jakarta Sans for headings (Google Fonts CDN)
 - **Components Built:**
-  1. **Top Header Bar:** Time-period selector (7/30/90/180/365 days), Refresh/Export buttons, live UTC clock
+  1. **Top Header Bar:** Time-period selector (7/30/90/180/365 days), Refresh/Export buttons, live UTC clock, Auto-refresh toggle (30s)
   2. **Summary KPI Strip:** 7 metrics (Total AUM, Total P&L, Avg Return, Active Strategies, Avg Sharpe, Avg Win Rate, Total Trades)
   3. **Portfolio Overview Tab:** Fund Allocation pie chart, Portfolio Risk Profile radar chart, Strategy Performance bar chart, Risk vs Return scatter chart
   4. **Manager Rankings Tab:** Strategy Leaderboard table with sortable columns, fund badges (CORE/BALANCE/SEPARATION), risk badges (LOW/MEDIUM/HIGH), head-to-head comparison panel, risk alerts section
   5. **Deep Dive Tab:** Strategy selector (defaults to TradingHub Gold #886557), strategy header with performance badge, key metrics grid, equity curve area chart, risk metrics (Sharpe/Sortino/Max Drawdown) with progress bars, trading statistics grid, allocation insight recommendation card
-  6. **AI Advisor Tab:** Placeholder with "Coming Soon" badge (Phase 3)
+  6. **AI Strategy Advisor Tab (Phase 3):** Claude Sonnet 4.5 integration via Emergent LLM key, featuring:
+     - **AI Insights:** Auto-generated portfolio analysis with Health Score and rationale
+     - **Allocation Advisor:** Capital allocation recommendations based on risk tolerance
+     - **Chat Interface:** Interactive Q&A with Claude about trading strategies
+- **Auto-refresh:** 30-second silent data refresh with Live/Paused toggle indicator
 - **Data Source:** Live data from `/api/admin/trading-analytics/managers` endpoint
-- **Tech Stack:** React, Recharts, Tailwind CSS, lucide-react
+- **AI Endpoints:** `/api/admin/ai-advisor/chat`, `/api/admin/ai-advisor/insights`, `/api/admin/ai-advisor/allocation`
+- **Tech Stack:** React, Recharts, Tailwind CSS, lucide-react, Claude Sonnet 4.5
 - **Files Created:**
-  - `/app/frontend/src/components/NextGenTradingAnalytics.js` - Main component (~1000 lines)
-  - `/app/frontend/src/components/NextGenTradingAnalytics.css` - Dark luxury styling (~800 lines)
-- **Status:** COMPLETE - Phase 1 & 2 implemented, tested, and verified
+  - `/app/frontend/src/components/NextGenTradingAnalytics.js` - Main component (~1500 lines)
+  - `/app/frontend/src/components/NextGenTradingAnalytics.css` - Dark luxury styling (~1500 lines)
+  - `/app/backend/services/ai_strategy_advisor.py` - AI advisor service (~250 lines)
+- **Status:** COMPLETE - All 3 phases implemented, tested, and verified
 
 #### Investment Simulator Currency Fixes (Feb 21, 2026) ✅
 - **Live Exchange Rates:** Backend now fetches live rates from exchangerate-api.com (free, no API key)
