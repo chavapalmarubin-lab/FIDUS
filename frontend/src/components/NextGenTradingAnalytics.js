@@ -41,6 +41,25 @@ export default function NextGenTradingAnalytics() {
   const [deepDiveManager, setDeepDiveManager] = useState(null);
   const [comparisonManagers, setComparisonManagers] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Auto-refresh state
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  
+  // AI Advisor State
+  const [aiChatMessages, setAiChatMessages] = useState([]);
+  const [aiInputMessage, setAiInputMessage] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiInsights, setAiInsights] = useState(null);
+  const [aiInsightsLoading, setAiInsightsLoading] = useState(false);
+  const [aiSessionId, setAiSessionId] = useState(() => `session_${Date.now()}`);
+  const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const [allocationCapital, setAllocationCapital] = useState(100000);
+  const [allocationRisk, setAllocationRisk] = useState('moderate');
+  const [allocationResult, setAllocationResult] = useState(null);
+  const [allocationLoading, setAllocationLoading] = useState(false);
+  
+  const chatEndRef = useRef(null);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // LIVE CLOCK
