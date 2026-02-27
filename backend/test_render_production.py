@@ -4,7 +4,7 @@ Test Render Production API Endpoints
 import requests
 import json
 
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com"
 
 print("="*80)
 print("RENDER PRODUCTION API VERIFICATION")

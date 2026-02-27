@@ -1,125 +1,42 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a standalone VIKING trading analytics dashboard. This evolved into a series of feature enhancements and critical data correction tasks for the main FIDUS platform. The core of the work involved identifying and fixing numerous incorrect financial calculations across the FIDUS dashboards, creating a reliable data synchronization process from live trading accounts, and managing user-requested features like referral agent creation and data exports.
+The user wants to build a **Next-Generation Trading Analytics Dashboard** for the FIDUS application. This dashboard must replace the current, basic Trading Analytics view and be a world-class, institutional-grade analytics tool.
 
 PRODUCT REQUIREMENTS:
-- A public, no-login VIKING dashboard and a private admin dashboard.
-- Correct calculation and display of total portfolio values, P&L, and cash flow projections across the FIDUS application.
-- Creation of referral links for new FIDUS agents.
-- A reliable mechanism to sync live data from MT5 accounts into the application's MongoDB database, establishing a single source of truth for account balances.
+-   **Aesthetic:** Dark luxury fintech (deep navy/charcoal, gold/cyan accents).
+-   **Typography:** DM Mono for data, Sora/Plus Jakarta Sans for headings.
+-   **Layout:** Dense, information-rich grid with tabs and sparklines.
+-   **Data Source:** Use **real, live data** from the existing MongoDB database and backend APIs (e.g., ).
+-   **Structure:**
+    1.  **Top Header Bar:** Time-period selector, Refresh/Export buttons, live clock.
+    2.  **Summary KPI Strip:** Key aggregate metrics (Total AUM, Active Strategies, etc.).
+    3.  **Main Tabs:**
+        -   **Portfolio Overview:** Radar, bar, pie, and scatter charts for fund-level analysis.
+        -   **Manager Rankings:** Detailed leaderboard table, head-to-head comparison, and risk alerts.
+        -   **Deep Dive:** A detailed profile for a selected strategy, showing extensive stats and historical performance charts (defaults to TradingHub Gold).
+        -   **AI Strategy Advisor:** An LLM-powered chat interface for data analysis (DEFERRED to a future phase).
+-   **Technical Stack:** React, Recharts, Tailwind CSS, lucide-react. The entire dashboard should be built within a single new component.
+-   **Phasing:** The current request is to build **Phase 1 (Core Structure & Design)** and **Phase 2 (All Dashboard Components except AI Advisor)**.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The platform is a full-stack React and FastAPI application. In this session, several critical fixes and features were implemented:
-- The root cause of login failures for new referral agents has been resolved in the agent creation script (), and all existing broken agent accounts were repaired.
-- The VIKING trading dashboard has been completely rebranded to FIDUS TRACK-RECORD, including updated logos, colors, and naming conventions (PRO is now BALANCE).
-- The Investment Simulator in the referral portal was significantly improved:
-    - The hardcoded MXN exchange rate was replaced with a live feed from a reliable API.
-    - The Timeline tab and the downloadable PDF report now correctly display amounts in the user-selected currency (MXN) instead of defaulting to USD.
-    - The PDF report now includes the full timeline of events, not just key dates.
-- The investment contract logic was corrected application-wide to use a 14-month principal redemption term (2 months incubation + 12 months hold).
-- The Broker Rebates card now displays live data from the LUCRUM 2199 account instead of a static value.
-- Outdated and failing GitHub Action workflows related to a decommissioned broker (MEXAtlantic) have been archived to stop email spam.
+The application is a full-stack React/FastAPI app with a MongoDB Atlas database. In this session, the agent successfully implemented a new LIVE DEMO tab, which involved creating a new frontend component () and a corresponding backend endpoint (). This work also led to the resolution of a critical data sync issue by correctly configuring new MT5 accounts in the  MongoDB collection, allowing the existing VPS bridge script to sync their data. The agent also added comprehensive documentation to  on how to add new MT5 accounts.
 
 **Last working item**:
--   **Last item agent was working:** The agent was diagnosing a critical network connectivity issue. The backend service (running on Render) is unable to connect to the live MT5 bridge API on the user's VPS (), causing data sync failures and constant monitoring alerts. After the user opened the firewall port, the agent's diagnostics suggested the API service might not be running or listening on the correct network interface on the VPS. The user directed the agent to use its existing GitHub Actions access to diagnose the VPS directly.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** The next agent must use a GitHub Actions workflow with SSH capabilities to connect to the VPS (). Once connected, it should use shell commands (Active Internet connections (w/o servers)
-Proto Recv-Q Send-Q Local Address           Foreign Address         State      
-tcp        0      0 agent-env-7ea9f19d:8010 10.64.132.69:54914      ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:46120 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:46136 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:46152 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60452 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:47406 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:53952 89.192.9.42:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60424 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:46142 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:59068 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:59088 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60442 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:47410 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:53938 89.192.9.42:27017       ESTABLISHED
-tcp        0    223 agent-env-7ea9f19:59098 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:46116 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:53950 89.192.9.42:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:59062 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60404 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60422 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:59066 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:47400 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:51272 89.192.9.42:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60410 89.192.9.32:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19d:8010 10.64.132.103:40170     ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:60434 89.192.9.32:27017       ESTABLISHED
-tcp        0    247 agent-env-7ea9f19:59112 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:51282 89.192.9.42:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:46124 89.192.9.22:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:53954 89.192.9.42:27017       ESTABLISHED
-tcp        0      0 agent-env-7ea9f19:59072 89.192.9.22:27017       ESTABLISHED
-Active UNIX domain sockets (w/o servers)
-Proto RefCnt Flags       Type       State         I-Node   Path
-unix  3      [ ]         STREAM     CONNECTED     42148158 
-unix  3      [ ]         STREAM     CONNECTED     42148160 
-unix  3      [ ]         STREAM     CONNECTED     42148163 
-unix  3      [ ]         STREAM     CONNECTED     42148164 
-unix  3      [ ]         STREAM     CONNECTED     42148162 
-unix  3      [ ]         STREAM     CONNECTED     42148165 
-unix  3      [ ]         STREAM     CONNECTED     42143612 
-unix  3      [ ]         STREAM     CONNECTED     42148159 
-unix  3      [ ]         STREAM     CONNECTED     42143674 
-unix  3      [ ]         STREAM     CONNECTED     42148161 
-unix  3      [ ]         STREAM     CONNECTED     42143611 
-unix  3      [ ]         STREAM     CONNECTED     42143673 ,     PID TTY          TIME CMD
-      1 ?        00:00:00 entrypoint.sh
-     12 ?        00:00:00 e1_monitor
-     15 ?        00:00:00 entrypoint.sh
-     19 ?        00:00:02 uvicorn
-     20 ?        00:00:02 node
-     38 ?        00:00:00 supervisord
-     46 ?        00:00:00 uvicorn
-     47 ?        00:00:00 node
-     48 ?        00:00:00 node
-     49 ?        00:00:01 mongod
-     68 ?        00:00:00 sh
-     69 ?        00:00:00 node
-     70 ?        00:00:00 python
-     71 ?        00:00:03 python
-     79 ?        00:00:09 node
-    185 ?        00:00:00 node
-    221 ?        00:00:00 bash
-    223 ?        00:00:00 bash
-    224 ?        00:00:00 bash
-    225 ?        00:00:00 tee
-    226 ?        00:00:00 sudo
-    232 ?        00:00:00 supervisorctl
-    233 ?        00:00:00 ps, , etc.) to determine if the  script is running, if it's configured to host an HTTP server, and if it's listening on the public network interface ().
--   **User Testing Done:** N
+-   **Last item agent was working:** The agent was processing the user's request to build the new Next-Generation Trading Analytics Dashboard. It has already clarified the scope with the user: to build Phases 1 and 2, replace the existing tab, use live data, and defer the AI component. The agent is now ready to begin implementation.
+-   **Status:** NOT STARTED
+-   **Agent Testing Done:** N/A
+-   **Which testing method agent to use?** Frontend testing agent after completing both Phase 1 and Phase 2.
+-   **User Testing Done:** N/A
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Backend cannot connect to the MT5 Bridge API on the VPS (P0)**
--   **Issue 2: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
+-   **Issue 1: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
 
 **Issues Detail:**
--   **Issue 1: Backend cannot connect to the MT5 Bridge API on the VPS (P0)**
-    -   **Attempted fixes:** The user opened the firewall port on the VPS. The agent confirmed the connection still fails and that previous diagnostic commands run by the user show nothing listening on port 8000. The agent incorrectly assumed the VPS was decommissioned and made changes that were later reverted. The correct next step of using GitHub Actions for direct diagnosis was identified but not executed.
-    -   **Next debug checklist:**
-        1.  Restore or create a GitHub Actions workflow with secrets to SSH into the VPS at .
-        2.  Execute  to confirm if any process is bound to port 8000.
-        3.  If nothing is listening, inspect the  script. Determine if it contains code to run an HTTP server (e.g., using FastAPI or Flask).
-        4.  Check the process list () to see if the script is running.
-        5.  **Hypothesis:** The script seen running in the user's screenshot might only be performing data calculations without hosting an API. The fix would involve modifying the script to launch a web server that is accessible externally (i.e., listens on ).
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. Fixing it will restore live data synchronization for the entire platform and stop the spam of VPS down alert emails.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend.
-    -   **Blocked on other issue:** None.
-
--   **Issue 2: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
-    -   **Attempted fixes:** None.
-    -   **Next debug checklist:** Investigate  logic in the MT5 sync service for the Lucrum bridge to handle potential race conditions or non-unique keys.
-    -   **Why fix this issue and what will be achieved with the fix?** Ensures complete and accurate deal history for Lucrum accounts without data loss.
+-   **Issue 1: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
+    -   **Attempted fixes:** None. This is a known issue carried over from a previous session.
+    -   **Next debug checklist:** Investigate the  logic in the MT5 sync service for the Lucrum bridge to handle potential race conditions or non-unique keys that might be causing failures during data synchronization.
+    -   **Why fix this issue and what will be achieved with the fix?** Ensures complete and accurate deal history for all Lucrum accounts without data loss or sync interruptions.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend.
@@ -130,97 +47,92 @@ unix  3      [ ]         STREAM     CONNECTED     42143673 ,     PID TTY        
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P2)** Verify pagination on the TRACK-RECORD Orders tab works correctly with large datasets.
-    -   **(P2)** Refactor the large  component into smaller, more manageable sub-components.
+    -   **(P0) Build Next-Gen Trading Analytics Dashboard - Phase 1 & 2:** This is the immediate and highest-priority task.
+        -   **Phase 1:** Implement the core component structure and the dark luxury design system (colors, fonts, base layout).
+        -   **Phase 2:** Build all specified dashboard components (KPI strip, Portfolio Overview, Manager Rankings, Deep Dive) and wire them to live backend data.
 -   **Future Tasks:**
-    -   **(P2)** Address legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (same as Issue 2 above).
+    -   **(P1) Build Next-Gen Trading Analytics Dashboard - Phase 3:** Implement the AI Strategy Advisor tab with LLM integration.
+    -   **(P2)** Verify pagination on the TRACK-RECORD Orders tab.
+    -   **(P2)** Refactor the large  component into smaller sub-components.
 
 **Completed work in this session**
--   **Referral Agent Login System (Fixed):** Resolved login issues for all referral agents by fixing the creation script () to properly hash passwords and create corresponding  collection entries. Manually repaired all existing broken agent accounts.
--   **Investment Simulator Overhaul (Fixed):**
-    -   Replaced a failing currency API with a new, reliable service () in  for live exchange rates.
-    -   Fixed  to ensure the Timeline and PDF export correctly use the selected currency (MXN).
-    -   Modified the PDF generation logic to include the full event timeline.
--   **Contract & Calculation Logic (Fixed):**
-    -   Corrected the principal redemption term from 12 to 14 months across the backend (, ).
-    -   Updated  to fetch Broker Rebates dynamically from MT5 account 2199, removing a hardcoded value.
--   **UI Rebranding (Completed):**
-    -   Rebranded the VIKING analytics page to FIDUS TRACK-RECORD in  and , updating logos, colors, and all text references.
--   **System Health & Monitoring (Cleaned Up):**
-    -   Archived obsolete GitHub Actions workflows related to a decommissioned broker, stopping failure alert emails.
+-   **LIVE DEMO Feature:**
+    -   Created a new LIVE DEMO tab with its own component () and backend endpoint ().
+    -   Successfully onboarded and configured 5 new live demo MT5 accounts, which are now syncing correctly from the VPS.
+    -   Implemented P&L and ROI tracking based on user-defined initial allocations.
+-   **System Documentation:**
+    -   Authored a detailed guide in  explaining the step-by-step process for adding new MT5 accounts.
+-   **Critical Bug Fix:**
+    -   Implicitly resolved a critical VPS data-sync issue by identifying and correcting a misconfiguration ( name) in the MongoDB  collection for the new accounts.
 
 **Earlier issues found/mentioned but not fixed**
--   None, all known issues from this session are tracked in the pending list.
+-   **Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors:** This was noted in the initial handoff summary but was not addressed.
 
 **Known issue recurrence from previous fork**
--   None. The major recurring issue from the previous fork (incorrect financial calculations) has been stable and resolved.
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Live API Integration:** Switched from a failing, key-based currency API to a reliable, key-less public API () for live data.
--   **Remote System Diagnostics:** The current primary task involves using GitHub Actions to perform SSH diagnostics on a user-managed VPS to solve a network connectivity problem.
--   **Root Cause Remediation:** Traced multiple user-reported bugs (agent logins, incorrect PDF data) back to their fundamental cause in the backend or frontend logic and applied permanent fixes rather than data patches.
--   **Component Rebranding:** Executed a comprehensive rebranding of a major UI component, including updating styles, assets (logos), and all textual labels to match the new FIDUS TRACK-RECORD brand.
+-   **Live Data Integration:** The agent debugged and mastered the data flow from the MT5 VPS bridge to MongoDB, understanding that the  collection acts as the source of truth for which accounts to sync.
+-   **Dynamic Frontend Calculation:** The  component was built to perform real-time P&L and ROI calculations by combining live balance data from the API with a static  field stored in the database.
+-   **System Documentation:** Documented a complex operational procedure () in  to ensure future scalability and reduce manual error.
 
 **key DB schema**
--   **users:** Contains user credentials. Fixed to ensure a hashed  and a unique uid=0(root) gid=0(root) groups=0(root) field are always present upon creation.
--   **salespeople:** A supplementary collection for referral agents, now correctly linked to the  collection with a hashed password.
--   **mt5_accounts:** The master collection for all trading accounts. It is queried by  for live broker rebates and is the target for the health monitoring watchdog.
+-   **mt5_account_config:** The configuration collection for MT5 accounts.
+    -   **Key columns:**  (Number),  (String),  (String, must be 'LucrumCapital-Trade'),  (Boolean),  (String, e.g., 'live_demo'),  (Number).
+-   **mt5_accounts:** The collection containing live, synced data from the MT5 terminals (balance, equity, profit, etc.), which is populated by the VPS bridge script.
+
+**changes in tech stack**
+-   None.
 
 **All files of reference**
--   : The monitoring script causing email alerts.
--   : The script on the user's VPS that needs to be investigated. (Path is on the remote VPS).
--   : Directory containing workflows that can be adapted for SSH access.
--   : Contains the fixed currency and PDF logic.
--   : The rebranded track record component.
--   : Contains the permanent fix for agent creation.
+-   : The file/component to be replaced. A new component should be created for the new dashboard.
+-   : Contains existing API endpoints like  which will be used as the data source.
+-   : Contains critical architecture documentation.
+
+**key api endpoints**
+-   : The primary existing endpoint that provides performance data for trading strategies. This will be the main data source for the new dashboard.
+-   : A new endpoint created for the LIVE DEMO tab.
 
 **Critical Info for New Agent**
--   **Your immediate and only priority is to solve the VPS connectivity issue.** The backend on Render cannot reach the MT5 bridge API at . This is the source of the user's alert emails.
--   **Do not assume the VPS is inactive.** It is the live, production VPS for LUCRUM data. Your predecessor made this mistake and had to revert changes.
--   **Use GitHub Actions to SSH into the VPS.** The user has explicitly stated you have access and expects you to perform diagnostics directly. You need to check if the API process is running and if it's listening on the public network interface ().
--   The application has undergone many significant fixes (agent logins, rebranding, calculator logic). Do not revisit these completed tasks unless the user reports a new, specific regression.
+-   Your primary and only task is to build the **Next-Generation Trading Analytics Dashboard** as per the user's detailed specifications.
+-   **Start with Phases 1 & 2 only.** Do NOT build the AI Strategy Advisor tab.
+-   The new dashboard must **replace** the existing Trading Analytics functionality.
+-   Use **LIVE data** from existing backend APIs. Do not use hardcoded mock data for the final implementation.
+-   Strictly follow the specified design direction: dark theme, specific colors,  for charts, and  for icons. The goal is an institutional-grade look and feel.
+-   The previous critical issue regarding VPS data sync is **resolved**. The architecture for adding and syncing accounts is understood and documented. Do not revisit this unless a new, specific problem arises.
 
 **documents and test reports created in this job**
--   
--   
+-    was significantly updated with new documentation for adding MT5 accounts.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Instruction (Done):** Archive old MEXAtlantic workflows.
-2.  **Bug Report (In Progress):** Still getting failure emails.
-3.  **Bug Report (In Progress):** The watchdog is sending alerts about the VPS.
-4.  **CRITICAL CORRECTION:** User stated  is the ACTIVE LUCRUM VPS and must not be disabled.
-5.  **Status Update:** User confirmed the MT5 bridge is running on the VPS.
-6.  **Instruction (In Progress):** User directed the agent to check  for the architecture documentation.
-7.  **Confirmation:** User confirmed they have opened the TCP port on the VPS firewall.
-8.  **Status Update:** User ran a command provided by the agent on the VPS, which showed nothing was listening on port 8000.
-9.  **Clarification:** User specified the correct folder name on the VPS is .
-10. **Instruction (PENDING):** User explicitly told the agent to use its GitHub Actions access to perform the diagnostic work on the VPS, not to ask the user to do it.
+1.  **User:** Provided a detailed PRD for the Next-Gen Trading Analytics Dashboard feature.
+2.  **User:** Asked for the agent's plan and clarifications.
+3.  **Agent:** Asked clarifying questions about data source (real vs. mock), scope (replace vs. new), AI integration, and phasing.
+4.  **User:** Responded to a simulated clarification request, confirming: use real data, replace the tab, use the Emergent LLM key, and build only Phase 1 & 2 for now.
+5.  **Agent:** Acknowledged the user's direction and prepared to start the implementation.
 
 **Project Health Check:**
--   **Broken**:
-    -   The core data synchronization and health monitoring mechanism is broken due to the backend's inability to connect to the live MT5 VPS API.
--   **Mocked**:
-    -   None.
+-   **Broken**: None.
+-   **Mocked**: None.
 
 **3rd Party Integrations**
 -   **MongoDB Atlas:** Primary database.
--   **Render:** Production deployment platform.
--   **GoDaddy:** User's domain name provider.
--   **GitHub Actions:** Used for CI/CD and critical infrastructure tasks, including SSH access to the user's VPS.
--   **exchangerate-api.com:** New public API for live currency exchange rates (no key required).
+-   **Render:** Production deployment platform for the backend.
+-   **GitHub Actions:** Used for CI/CD and remote operations.
+-   **Recharts:** Required charting library for the new dashboard.
+-   **lucide-react:** Required icon library for the new dashboard.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (For the investment simulator fixes).
+-   **Testing agent used after significant changes:** NO (The LIVE DEMO feature was tested via screenshots).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** None from this session's work.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
 -   **FIDUS Admin:**  / 
--   **Referral Agent (Fixed):**  / 
 
 **What agent forgot to execute**
--   The agent correctly identified the need to use a GitHub Actions workflow to SSH into the user's VPS for direct diagnostics but was interrupted before it could restore or create the necessary workflow file and execute it. The next immediate action is to follow through on that plan.</analysis>
+-   The agent did not address the pending low-priority issue from the initial handoff: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors. This remains in the backlog.</analysis>

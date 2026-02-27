@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
 
 class AlejandroDataCleanup:
     def __init__(self):

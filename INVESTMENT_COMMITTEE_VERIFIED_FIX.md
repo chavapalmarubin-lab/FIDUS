@@ -22,7 +22,7 @@
 ```python
 cors_origins = [
     "https://fidus-investment-platform.onrender.com",  # ✅ PRESENT
-    "https://lucrum-api-debug.preview.emergentagent.com",
+    "https://trader-insights-10.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:3001"
 ]

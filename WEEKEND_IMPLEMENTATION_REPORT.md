@@ -138,7 +138,7 @@ Redirect URI: https://fidus-invest.emergent.host/admin/google-callback
 **Solution**: Updated backend .env configuration
 ```bash
 # Before (incorrect)
-GOOGLE_OAUTH_REDIRECT_URI="https://lucrum-api-debug.preview.emergentagent.com/admin/google-callback"
+GOOGLE_OAUTH_REDIRECT_URI="https://trader-insights-10.preview.emergentagent.com/admin/google-callback"
 
 # After (correct)  
 GOOGLE_OAUTH_REDIRECT_URI="https://fidus-invest.emergent.host/admin/google-callback"

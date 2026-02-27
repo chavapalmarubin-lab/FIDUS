@@ -17,7 +17,7 @@ import json
 import sys
 from datetime import datetime
 
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
 
 class MT5DashboardValidator:
     def __init__(self):

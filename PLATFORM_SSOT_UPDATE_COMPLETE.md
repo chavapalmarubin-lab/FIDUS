@@ -116,7 +116,7 @@ else:
 ### Fund Portfolio Endpoint Test
 
 ```bash
-$ curl https://lucrum-api-debug.preview.emergentagent.com/api/v2/derived/fund-portfolio
+$ curl https://trader-insights-10.preview.emergentagent.com/api/v2/derived/fund-portfolio
 
 ✓ Total Allocation: $134,145.41  (was $129,657.41)
 ✓ Total AUM: $146,525.32

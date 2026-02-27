@@ -10,7 +10,7 @@ Test Requirements:
 4. Upcoming Redemptions - next 5 upcoming payments
 
 Authentication: admin/password123
-Backend: https://lucrum-api-debug.preview.emergentagent.com/api
+Backend: https://trader-insights-10.preview.emergentagent.com/api
 """
 
 import requests
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 
 # Use the correct backend URL from review request
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
 
 class CashFlowTester:
     def __init__(self):

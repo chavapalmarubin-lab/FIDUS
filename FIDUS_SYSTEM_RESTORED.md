@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://lucrum-api-debug.preview.emergentagent.com`
+`https://trader-insights-10.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

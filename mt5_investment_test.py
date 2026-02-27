@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Backend URL Configuration
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
 
 class MT5InvestmentTester:
     def __init__(self):

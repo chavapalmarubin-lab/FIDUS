@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Backend URL Configuration - Use from frontend .env
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
 
 # Admin Authentication
 ADMIN_CREDENTIALS = {

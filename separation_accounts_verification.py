@@ -26,7 +26,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://lucrum-api-debug.preview.emergentagent.com"
+BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com"
 
 def test_separation_accounts_verification():
     """Test separation_accounts in cash flow response"""
