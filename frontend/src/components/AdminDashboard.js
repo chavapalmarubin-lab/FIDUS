@@ -20,7 +20,7 @@ import MT5Management from "./MT5Management";
 import MT5Dashboard from "./MT5Dashboard";
 import MT5AccountManagement from "../pages/admin/MT5AccountManagement";
 import ApplicationDocuments from "./ApplicationDocuments";
-import TradingAnalyticsDashboard from "./TradingAnalyticsDashboard";
+import NextGenTradingAnalytics from "./NextGenTradingAnalytics";
 import MoneyManagersDashboard from "./MoneyManagersDashboard";
 import BrokerRebates from "./BrokerRebates"; // PHASE 4A
 import UserAdministration from "./UserAdministration";
