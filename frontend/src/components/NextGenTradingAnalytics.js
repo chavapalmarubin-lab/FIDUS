@@ -1307,17 +1307,224 @@ export default function NextGenTradingAnalytics() {
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────
-            AI ADVISOR TAB (PLACEHOLDER)
+            AI STRATEGY ADVISOR TAB (Phase 3)
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'advisor' && (
           <div className="ngt-advisor-tab" data-testid="advisor-content">
-            <div className="ngt-coming-soon">
-              <Zap size={48} />
-              <h2>AI Strategy Advisor</h2>
-              <p>Coming in Phase 3</p>
-              <span className="ngt-coming-soon-subtitle">
-                LLM-powered insights and portfolio recommendations
-              </span>
+            <div className="ngt-advisor-layout">
+              {/* Left Column: Automated Insights + Allocation Tool */}
+              <div className="ngt-advisor-sidebar">
+                {/* Automated Insights Card */}
+                <div className="ngt-card ngt-insights-card">
+                  <div className="ngt-card-header">
+                    <div className="ngt-card-header-icon">
+                      <Lightbulb size={18} />
+                    </div>
+                    <h3>AI Insights</h3>
+                    <button 
+                      className="ngt-btn ngt-btn-ghost ngt-btn-sm"
+                      onClick={fetchAiInsights}
+                      disabled={aiInsightsLoading}
+                    >
+                      <RefreshCw size={14} className={aiInsightsLoading ? 'spin' : ''} />
+                    </button>
+                  </div>
+                  <div className="ngt-card-body">
+                    {aiInsightsLoading ? (
+                      <div className="ngt-insights-loading">
+                        <Loader2 size={24} className="spin" />
+                        <span>Analyzing portfolio...</span>
+                      </div>
+                    ) : aiInsights ? (
+                      <div className="ngt-insights-content">
+                        <div className="ngt-markdown-content" dangerouslySetInnerHTML={{ 
+                          __html: aiInsights
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\n/g, '<br/>') 
+                        }} />
+                      </div>
+                    ) : (
+                      <div className="ngt-insights-empty">
+                        <Sparkles size={20} />
+                        <span>Click refresh to generate insights</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Allocation Recommendation Tool */}
+                <div className="ngt-card ngt-allocation-card">
+                  <div className="ngt-card-header">
+                    <div className="ngt-card-header-icon">
+                      <PieChartIcon size={18} />
+                    </div>
+                    <h3>Allocation Advisor</h3>
+                  </div>
+                  <div className="ngt-card-body">
+                    <div className="ngt-allocation-form">
+                      <div className="ngt-form-group">
+                        <label>Capital to Allocate</label>
+                        <div className="ngt-input-with-prefix">
+                          <span>$</span>
+                          <input
+                            type="number"
+                            value={allocationCapital}
+                            onChange={(e) => setAllocationCapital(Number(e.target.value))}
+                            placeholder="100000"
+                          />
+                        </div>
+                      </div>
+                      <div className="ngt-form-group">
+                        <label>Risk Tolerance</label>
+                        <select
+                          value={allocationRisk}
+                          onChange={(e) => setAllocationRisk(e.target.value)}
+                        >
+                          <option value="conservative">Conservative</option>
+                          <option value="moderate">Moderate</option>
+                          <option value="aggressive">Aggressive</option>
+                        </select>
+                      </div>
+                      <button
+                        className="ngt-btn ngt-btn-primary ngt-btn-full"
+                        onClick={generateAllocationRecommendation}
+                        disabled={allocationLoading}
+                      >
+                        {allocationLoading ? (
+                          <>
+                            <Loader2 size={14} className="spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={14} />
+                            Generate Recommendation
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {allocationResult && (
+                      <div className="ngt-allocation-result">
+                        <div className="ngt-markdown-content" dangerouslySetInnerHTML={{ 
+                          __html: allocationResult
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\|(.*?)\|/g, '<span class="ngt-table-cell">$1</span>')
+                            .replace(/\n/g, '<br/>') 
+                        }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Chat Interface */}
+              <div className="ngt-advisor-chat">
+                <div className="ngt-card ngt-chat-card">
+                  <div className="ngt-card-header">
+                    <div className="ngt-card-header-icon">
+                      <MessageSquare size={18} />
+                    </div>
+                    <h3>Chat with AI Advisor</h3>
+                    <div className="ngt-chat-actions">
+                      <span className="ngt-chat-model">Claude Sonnet 4.5</span>
+                      <button 
+                        className="ngt-btn ngt-btn-ghost ngt-btn-sm"
+                        onClick={clearAiChat}
+                        title="Clear chat"
+                      >
+                        <RefreshCw size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Chat Messages */}
+                  <div className="ngt-chat-messages">
+                    {aiChatMessages.length === 0 ? (
+                      <div className="ngt-chat-welcome">
+                        <Bot size={48} />
+                        <h4>AI Strategy Advisor</h4>
+                        <p>Ask me anything about your trading strategies, performance metrics, or allocation recommendations.</p>
+                        <div className="ngt-chat-suggestions">
+                          <button onClick={() => setAiInputMessage("What's the best performing strategy and why?")}>
+                            Best performing strategy?
+                          </button>
+                          <button onClick={() => setAiInputMessage("Which strategies have concerning risk metrics?")}>
+                            Risk concerns?
+                          </button>
+                          <button onClick={() => setAiInputMessage("Compare TradingHub Gold vs other strategies")}>
+                            Compare strategies
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {aiChatMessages.map((msg, index) => (
+                          <div 
+                            key={index} 
+                            className={`ngt-chat-message ${msg.role} ${msg.isError ? 'error' : ''}`}
+                          >
+                            <div className="ngt-message-avatar">
+                              {msg.role === 'user' ? (
+                                <Users size={16} />
+                              ) : (
+                                <Bot size={16} />
+                              )}
+                            </div>
+                            <div className="ngt-message-content">
+                              <div className="ngt-message-text" dangerouslySetInnerHTML={{ 
+                                __html: msg.content
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  .replace(/\n/g, '<br/>') 
+                              }} />
+                              <span className="ngt-message-time">
+                                {new Date(msg.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {aiLoading && (
+                          <div className="ngt-chat-message assistant loading">
+                            <div className="ngt-message-avatar">
+                              <Bot size={16} />
+                            </div>
+                            <div className="ngt-message-content">
+                              <div className="ngt-typing-indicator">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <div ref={chatEndRef} />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Chat Input */}
+                  <div className="ngt-chat-input-container">
+                    <textarea
+                      value={aiInputMessage}
+                      onChange={(e) => setAiInputMessage(e.target.value)}
+                      onKeyPress={handleAiKeyPress}
+                      placeholder="Ask about strategies, risk metrics, or allocation..."
+                      rows={1}
+                      disabled={aiLoading}
+                    />
+                    <button
+                      className="ngt-btn ngt-btn-primary ngt-chat-send"
+                      onClick={sendAiMessage}
+                      disabled={!aiInputMessage.trim() || aiLoading}
+                    >
+                      {aiLoading ? (
+                        <Loader2 size={18} className="spin" />
+                      ) : (
+                        <Send size={18} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
