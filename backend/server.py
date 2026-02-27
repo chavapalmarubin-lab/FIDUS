@@ -23554,6 +23554,265 @@ async def ai_advisor_history(
         }
 
 
+# ===============================================================================
+# LIVE DEMO AI ADVISOR ENDPOINTS (Separate from REAL Trading)
+# ===============================================================================
+
+@api_router.post("/admin/live-demo-ai-advisor/chat")
+async def live_demo_ai_advisor_chat(
+    request: ChatRequest,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Chat with the AI Strategy Advisor for LIVE DEMO accounts
+    Uses Claude Sonnet 4.5 for intelligent demo account analysis
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        from services.live_demo_analytics_service import LiveDemoAnalyticsService
+        
+        advisor = AIStrategyAdvisor(db)
+        demo_service = LiveDemoAnalyticsService(db)
+        
+        # Generate session ID if not provided
+        session_id = request.session_id or f"demo_user_{current_user.get('id', 'unknown')}_{datetime.now().timestamp()}"
+        
+        # Get demo managers data for context
+        demo_data = await demo_service.get_managers_ranking(request.period_days)
+        
+        # Format demo-specific context
+        demo_context = f"""
+LIVE DEMO ACCOUNTS DATA (Manager Candidates - NOT REAL CAPITAL):
+These are evaluation accounts to assess potential money managers before allocating real funds.
+
+Total Demo Accounts: {demo_data.get('total_accounts', 0)}
+Total P&L (Demo): ${demo_data.get('total_pnl', 0):,.2f}
+Average Return (Demo): {demo_data.get('average_return', 0):.2f}%
+
+DEMO MANAGER DETAILS:
+"""
+        for m in demo_data.get('managers', []):
+            demo_context += f"""
+- {m.get('manager_name', 'Unknown')} (Demo Account #{m.get('account', 'N/A')})
+  Status: {m.get('status', 'evaluating')}
+  Initial Allocation: ${m.get('initial_allocation', 0):,.2f}
+  Current Equity: ${m.get('current_equity', 0):,.2f}
+  P&L: ${m.get('total_pnl', 0):,.2f}
+  Return: {m.get('return_percentage', 0):.2f}%
+  Win Rate: {m.get('win_rate', 0):.2f}%
+  Sharpe Ratio: {m.get('sharpe_ratio', 0):.2f}
+  Notes: {m.get('evaluation_notes', 'None')}
+"""
+        
+        # Send message with demo context
+        full_message = f"""
+{demo_context}
+
+USER QUESTION:
+{request.message}
+
+IMPORTANT: This analysis is for DEMO accounts used to evaluate manager candidates. 
+Do not confuse with real trading accounts.
+"""
+        
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        chat = LlmChat(
+            api_key=advisor.api_key,
+            session_id=session_id,
+            system_message="You are an AI advisor helping evaluate potential money managers using their DEMO account performance. These are NOT real funded accounts - they are used to assess managers before allocating real capital."
+        ).with_model(advisor.model_provider, advisor.model_name)
+        
+        message = UserMessage(text=full_message)
+        response = await chat.send_message(message)
+        
+        return {
+            "success": True,
+            "response": response,
+            "session_id": session_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "account_type": "live_demo"
+        }
+        
+    except Exception as e:
+        logging.error(f"Live Demo AI Advisor chat error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"AI Advisor error: {str(e)}",
+            "response": None
+        }
+
+@api_router.get("/admin/live-demo-ai-advisor/insights")
+async def live_demo_ai_advisor_insights(
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get automated AI-generated insights for LIVE DEMO accounts
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        from services.live_demo_analytics_service import LiveDemoAnalyticsService
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        advisor = AIStrategyAdvisor(db)
+        demo_service = LiveDemoAnalyticsService(db)
+        
+        # Get demo managers data
+        demo_data = await demo_service.get_managers_ranking(period_days)
+        
+        if not demo_data.get('managers'):
+            return {
+                "success": True,
+                "insights": "No live demo accounts found for analysis. Add demo accounts to begin evaluating manager candidates.",
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "account_type": "live_demo"
+            }
+        
+        # Format context
+        context = f"""
+LIVE DEMO PORTFOLIO ANALYSIS (Manager Candidate Evaluation)
+Analysis Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
+Period: Last {period_days} days
+
+OVERVIEW:
+- Total Demo Accounts: {demo_data.get('total_accounts', 0)}
+- Combined Demo P&L: ${demo_data.get('total_pnl', 0):,.2f}
+- Average Demo Return: {demo_data.get('average_return', 0):.2f}%
+
+INDIVIDUAL DEMO MANAGERS:
+"""
+        for m in demo_data.get('managers', []):
+            context += f"""
+{m.get('manager_name', 'Unknown')} (Demo #{m.get('account', 'N/A')}):
+- Return: {m.get('return_percentage', 0):.2f}% | Sharpe: {m.get('sharpe_ratio', 0):.2f}
+- Win Rate: {m.get('win_rate', 0):.2f}% | Max DD: {m.get('max_drawdown_pct', 0):.2f}%
+- Status: {m.get('status', 'evaluating')}
+"""
+        
+        chat = LlmChat(
+            api_key=advisor.api_key,
+            session_id=f"demo_insights_{datetime.now().timestamp()}",
+            system_message="You are evaluating potential money managers based on their DEMO account performance. Provide recommendations on which managers should be promoted to real capital allocation."
+        ).with_model(advisor.model_provider, advisor.model_name)
+        
+        prompt = f"""
+{context}
+
+Provide a concise DEMO PORTFOLIO EVALUATION with:
+
+1. **Evaluation Summary** - Overall quality of manager candidates
+2. **Top Candidate** - Which demo manager shows the most promise for real allocation?
+3. **Concerns** - Any managers that should NOT receive real capital yet?
+4. **Recommendation** - Clear next steps for each manager
+
+Be specific with numbers and decisive in recommendations.
+"""
+        
+        message = UserMessage(text=prompt)
+        response = await chat.send_message(message)
+        
+        return {
+            "success": True,
+            "insights": response,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "period_days": period_days,
+            "account_type": "live_demo"
+        }
+        
+    except Exception as e:
+        logging.error(f"Live Demo AI Advisor insights error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to generate insights: {str(e)}",
+            "insights": None,
+            "account_type": "live_demo"
+        }
+
+@api_router.post("/admin/live-demo-ai-advisor/allocation")
+async def live_demo_ai_advisor_allocation(
+    request: AllocationRequest,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get AI-powered allocation recommendations for promoting demo managers to real capital
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        from services.live_demo_analytics_service import LiveDemoAnalyticsService
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        advisor = AIStrategyAdvisor(db)
+        demo_service = LiveDemoAnalyticsService(db)
+        
+        # Get demo managers data
+        demo_data = await demo_service.get_managers_ranking(request.period_days)
+        
+        # Format context
+        context = f"""
+CAPITAL ALLOCATION DECISION - Promoting Demo Managers to Real Funding
+
+Available Capital: ${request.total_capital:,.2f}
+Risk Tolerance: {request.risk_tolerance.upper()}
+Evaluation Period: {request.period_days} days
+
+DEMO MANAGER CANDIDATES:
+"""
+        for m in demo_data.get('managers', []):
+            context += f"""
+{m.get('manager_name', 'Unknown')} (Demo #{m.get('account', 'N/A')}):
+- Demo P&L: ${m.get('total_pnl', 0):,.2f} ({m.get('return_percentage', 0):.2f}%)
+- Sharpe: {m.get('sharpe_ratio', 0):.2f} | Sortino: {m.get('sortino_ratio', 0):.2f}
+- Win Rate: {m.get('win_rate', 0):.2f}% | Max DD: {m.get('max_drawdown_pct', 0):.2f}%
+- Trades: {m.get('total_trades', 0)} | Profit Factor: {m.get('profit_factor', 0):.2f}
+"""
+        
+        chat = LlmChat(
+            api_key=advisor.api_key,
+            session_id=f"demo_allocation_{datetime.now().timestamp()}",
+            system_message="You are recommending which DEMO managers should receive real capital allocation based on their demo performance."
+        ).with_model(advisor.model_provider, advisor.model_name)
+        
+        prompt = f"""
+{context}
+
+Based on the demo performance data, recommend how to allocate ${request.total_capital:,.2f} to these manager candidates.
+
+**ALLOCATION RECOMMENDATION:**
+| Manager | Recommended % | Amount | Rationale |
+|---------|--------------|--------|-----------|
+
+**MANAGERS TO SKIP (Not Ready):**
+[List any managers that should NOT receive real capital yet]
+
+**PROMOTION TIMELINE:**
+[When should we re-evaluate skipped managers?]
+
+Be decisive and use specific numbers.
+"""
+        
+        message = UserMessage(text=prompt)
+        response = await chat.send_message(message)
+        
+        return {
+            "success": True,
+            "recommendations": response,
+            "total_capital": request.total_capital,
+            "risk_tolerance": request.risk_tolerance,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "account_type": "live_demo"
+        }
+        
+    except Exception as e:
+        logging.error(f"Live Demo AI Advisor allocation error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to generate allocation recommendations: {str(e)}",
+            "recommendations": None
+        }
+
+
+
 
 # ===============================================================================
 # DEBUG ENDPOINTS - VERIFY ACCOUNT DATA FROM VPS
