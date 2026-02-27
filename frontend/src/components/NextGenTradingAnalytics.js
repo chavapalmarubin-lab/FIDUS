@@ -655,13 +655,13 @@ export default function NextGenTradingAnalytics() {
           Deep Dive
         </button>
         <button 
-          className={`ngt-tab ${activeTab === 'advisor' ? 'active' : ''} disabled`}
-          disabled
+          className={`ngt-tab ${activeTab === 'advisor' ? 'active' : ''}`}
+          onClick={() => setActiveTab('advisor')}
           data-testid="tab-advisor"
         >
           <Zap size={16} />
           AI Advisor
-          <span className="ngt-tab-badge">Coming Soon</span>
+          <span className="ngt-tab-badge ngt-tab-badge-new">NEW</span>
         </button>
       </nav>
 
