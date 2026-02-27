@@ -149,13 +149,16 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - `/app/backend/server.py` - Main backend with login endpoint and Live Demo API
 - `/app/backend/routes/referrals.py` - Agent portal routes
 - `/app/backend/services/calculations.py` - Financial calculations
+- `/app/backend/services/trading_analytics_service.py` - Trading analytics service for manager rankings
+- `/app/frontend/src/components/NextGenTradingAnalytics.js` - Next-Gen Trading Analytics Dashboard (Phase 1 & 2)
+- `/app/frontend/src/components/NextGenTradingAnalytics.css` - Dark luxury fintech styling
+- `/app/frontend/src/components/AdminDashboard.js` - Admin dashboard with Trading Analytics tab
+- `/app/frontend/src/components/LiveDemoDashboard.js` - Live Demo dashboard component
 - `/app/.github/workflows/sync-lucrum-accounts-to-mongodb.yml` - Data sync workflow (updated with demo accounts)
 - `/app/.github/workflows/diagnose-lucrum-vps-api.yml` - VPS diagnostic workflow
 - `/app/.github/workflows/deploy-mt5-bridge-api-lucrum.yml` - MT5 Bridge API deployment workflow
 - `/app/.github/workflows/emergency-restart-mt5-bridge-lucrum.yml` - Emergency restart workflow (uses VPS_PORT secret)
 - `/app/vps/mt5_bridge_api_service.py` - FastAPI MT5 Bridge service to deploy to VPS
-- `/app/frontend/src/components/LiveDemoDashboard.js` - NEW Live Demo dashboard component
-- `/app/frontend/src/components/AdminDashboard.js` - Admin dashboard with LIVE DEMO tab
 
 ## GitHub Workflows for VPS Management
 1. **diagnose-lucrum-vps-api.yml** - Diagnoses VPS state: checks port 8000 listener, Python processes, script contents, Task Scheduler, logs
