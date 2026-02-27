@@ -17,6 +17,24 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Feb 2026)
 
+#### Live Demo Analytics Dashboard (Feb 27, 2026) ✅
+- **Feature:** Complete analytics dashboard for LIVE DEMO accounts (manager candidate evaluation)
+- **Design:** Purple/Orange theme (#A855F7, #F97316) to distinguish from real trading analytics
+- **Data Separation:** REAL accounts (account_type=null) and DEMO accounts (account_type='live_demo') are completely isolated
+- **Components:** Same as Trading Analytics but filtered for demo accounts only
+  - DEMO ACCOUNTS badge with orange pulsing indicator
+  - KPI Strip showing demo portfolio metrics
+  - Portfolio Overview, Manager Rankings, Deep Dive tabs
+  - AI Advisor with demo-specific context ("Which managers should receive real capital?")
+- **API Endpoints:** 
+  - `/api/admin/live-demo-analytics/managers` - Returns only live_demo accounts
+  - `/api/admin/live-demo-ai-advisor/*` - AI endpoints with demo context
+- **Files Created:**
+  - `/app/frontend/src/components/LiveDemoAnalytics.js` - Dashboard component
+  - `/app/frontend/src/components/LiveDemoAnalytics.css` - Purple/orange theme
+  - `/app/backend/services/live_demo_analytics_service.py` - Backend service
+- **Status:** COMPLETE - All features tested, data separation verified
+
 #### Next-Generation Trading Analytics Dashboard (Feb 27, 2026) ✅
 - **Feature:** Complete replacement of the old Trading Analytics tab with an institutional-grade dashboard
 - **Design:** Dark luxury fintech aesthetic (deep navy #0A0F1C, gold #FFB800, cyan #00D4AA accents)
