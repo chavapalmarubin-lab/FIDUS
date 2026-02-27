@@ -137,6 +137,154 @@ export default function NextGenTradingAnalytics() {
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // AI STRATEGY ADVISOR FUNCTIONS
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  // Scroll to bottom of chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [aiChatMessages]);
+
+  // Fetch AI insights on tab change to advisor
+  useEffect(() => {
+    if (activeTab === 'advisor' && !aiInsights && !aiInsightsLoading) {
+      fetchAiInsights();
+    }
+  }, [activeTab]);
+
+  const fetchAiInsights = async () => {
+    try {
+      setAiInsightsLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/ai-advisor/insights?period_days=${timePeriod}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setAiInsights(data.insights);
+      }
+    } catch (err) {
+      console.error('Error fetching AI insights:', err);
+    } finally {
+      setAiInsightsLoading(false);
+    }
+  };
+
+  const sendAiMessage = async () => {
+    if (!aiInputMessage.trim() || aiLoading) return;
+    
+    const userMessage = aiInputMessage.trim();
+    setAiInputMessage('');
+    
+    // Add user message to chat
+    setAiChatMessages(prev => [...prev, {
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    }]);
+    
+    try {
+      setAiLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(`${BACKEND_URL}/api/admin/ai-advisor/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          session_id: aiSessionId,
+          include_context: true,
+          period_days: timePeriod
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setAiChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.response,
+          timestamp: data.timestamp
+        }]);
+      } else {
+        setAiChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Error: ${data.error || 'Failed to get response'}`,
+          timestamp: new Date().toISOString(),
+          isError: true
+        }]);
+      }
+    } catch (err) {
+      console.error('Error sending AI message:', err);
+      setAiChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Error: ${err.message}`,
+        timestamp: new Date().toISOString(),
+        isError: true
+      }]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const generateAllocationRecommendation = async () => {
+    try {
+      setAllocationLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(`${BACKEND_URL}/api/admin/ai-advisor/allocation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          total_capital: allocationCapital,
+          risk_tolerance: allocationRisk,
+          period_days: timePeriod
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setAllocationResult(data.recommendations);
+      } else {
+        setAllocationResult(`Error: ${data.error}`);
+      }
+    } catch (err) {
+      console.error('Error generating allocation:', err);
+      setAllocationResult(`Error: ${err.message}`);
+    } finally {
+      setAllocationLoading(false);
+    }
+  };
+
+  const clearAiChat = () => {
+    setAiChatMessages([]);
+    setAiSessionId(`session_${Date.now()}`);
+  };
+
+  const handleAiKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendAiMessage();
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // COMPUTED VALUES (KPIs)
   // ─────────────────────────────────────────────────────────────────────────────
   const aggregateKPIs = useMemo(() => {
