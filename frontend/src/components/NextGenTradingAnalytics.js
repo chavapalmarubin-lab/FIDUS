@@ -72,9 +72,9 @@ export default function NextGenTradingAnalytics() {
   // ─────────────────────────────────────────────────────────────────────────────
   // DATA FETCHING
   // ─────────────────────────────────────────────────────────────────────────────
-  const fetchManagersData = async () => {
+  const fetchManagersData = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const token = localStorage.getItem('fidus_token');
       
@@ -96,6 +96,7 @@ export default function NextGenTradingAnalytics() {
       
       if (data.success && data.managers) {
         setManagers(data.managers);
+        setLastRefresh(new Date());
         
         // Set default deep dive manager (TradingHub Gold)
         const defaultManager = data.managers.find(m => m.account === DEFAULT_DEEP_DIVE_ACCOUNT);
@@ -107,15 +108,27 @@ export default function NextGenTradingAnalytics() {
       }
     } catch (err) {
       console.error('Error fetching managers:', err);
-      setError(err.message);
+      if (!silent) setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  };
+  }, [timePeriod, deepDiveManager]);
 
+  // Initial fetch
   useEffect(() => {
     fetchManagersData();
   }, [timePeriod]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!autoRefreshEnabled) return;
+    
+    const refreshInterval = setInterval(() => {
+      fetchManagersData(true); // Silent refresh
+    }, AUTO_REFRESH_INTERVAL);
+    
+    return () => clearInterval(refreshInterval);
+  }, [autoRefreshEnabled, fetchManagersData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
