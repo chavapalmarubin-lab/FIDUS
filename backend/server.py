@@ -24437,6 +24437,79 @@ async def get_live_demo_accounts():
         }
 
 
+# ===============================================================================
+# LIVE DEMO ANALYTICS ENDPOINTS (Separate from REAL Trading Analytics)
+# ===============================================================================
+
+@api_router.get("/admin/live-demo-analytics/managers")
+async def get_live_demo_managers_ranking(
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get all LIVE DEMO managers ranked by performance.
+    This endpoint is completely separate from real trading accounts.
+    
+    Returns complete manager rankings with risk-adjusted metrics:
+    - Sharpe Ratio
+    - Sortino Ratio
+    - Calmar Ratio
+    - Max Drawdown
+    - Win Rate
+    - Profit Factor
+    
+    IMPORTANT: Only returns accounts with account_type = 'live_demo'
+    """
+    try:
+        from services.live_demo_analytics_service import LiveDemoAnalyticsService
+        
+        service = LiveDemoAnalyticsService(db)
+        managers_data = await service.get_managers_ranking(period_days)
+        
+        return {
+            "success": True,
+            **managers_data,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Live Demo Analytics error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get live demo managers ranking: {str(e)}",
+            "managers": [],
+            "account_type": "live_demo"
+        }
+
+@api_router.get("/admin/live-demo-analytics/managers/{account_num}")
+async def get_live_demo_manager_details(
+    account_num: int,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get detailed analytics for a specific LIVE DEMO manager.
+    Only works for accounts with account_type = 'live_demo'
+    """
+    try:
+        from services.live_demo_analytics_service import LiveDemoAnalyticsService
+        
+        service = LiveDemoAnalyticsService(db)
+        result = await service.get_manager_details(account_num, period_days)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Live Demo Manager details error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "manager": None
+        }
+
+
+
+
 @api_router.post("/live-demo/accounts/add")
 async def add_live_demo_account(
     account: int,
