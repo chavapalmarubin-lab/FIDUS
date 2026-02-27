@@ -79,7 +79,7 @@ export default function LiveDemoAnalytics() {
       const token = localStorage.getItem('fidus_token');
       
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/trading-analytics/managers?period_days=${timePeriod}`,
+        `${BACKEND_URL}/api/admin/live-demo-analytics/managers?period_days=${timePeriod}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -158,7 +158,7 @@ export default function LiveDemoAnalytics() {
       const token = localStorage.getItem('fidus_token');
       
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/ai-advisor/insights?period_days=${timePeriod}`,
+        `${BACKEND_URL}/api/admin/live-demo-ai-advisor/insights?period_days=${timePeriod}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -196,7 +196,7 @@ export default function LiveDemoAnalytics() {
       setAiLoading(true);
       const token = localStorage.getItem('fidus_token');
       
-      const response = await fetch(`${BACKEND_URL}/api/admin/ai-advisor/chat`, {
+      const response = await fetch(`${BACKEND_URL}/api/admin/live-demo-ai-advisor/chat`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -244,7 +244,7 @@ export default function LiveDemoAnalytics() {
       setAllocationLoading(true);
       const token = localStorage.getItem('fidus_token');
       
-      const response = await fetch(`${BACKEND_URL}/api/admin/ai-advisor/allocation`, {
+      const response = await fetch(`${BACKEND_URL}/api/admin/live-demo-ai-advisor/allocation`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
