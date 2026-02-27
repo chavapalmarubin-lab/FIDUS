@@ -1,29 +1,29 @@
 /* ============================================================================
-   NEXT-GEN TRADING ANALYTICS DASHBOARD - Dark Luxury Fintech Theme
-   Phase 1 & 2: Core Design System
+   LIVE DEMO ANALYTICS DASHBOARD - Demo Evaluation Theme
+   Manager Candidate Evaluation Dashboard
    ============================================================================ */
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   CSS VARIABLES - Design Tokens
+   CSS VARIABLES - Design Tokens (Purple/Orange Demo Theme)
 ───────────────────────────────────────────────────────────────────────────── */
 .lda-dashboard {
-  --lda-bg-primary: #0A0F1C;
-  --lda-bg-secondary: #0F172A;
-  --lda-bg-card: #1A2332;
-  --lda-bg-card-hover: #1E293B;
-  --lda-bg-elevated: #242F42;
+  --lda-bg-primary: #0D0B1A;
+  --lda-bg-secondary: #13111F;
+  --lda-bg-card: #1C1929;
+  --lda-bg-card-hover: #252233;
+  --lda-bg-elevated: #2A2640;
   
   --lda-border: rgba(148, 163, 184, 0.1);
-  --lda-border-accent: rgba(0, 212, 170, 0.3);
-  --lda-border-gold: rgba(255, 184, 0, 0.3);
+  --lda-border-accent: rgba(168, 85, 247, 0.3);
+  --lda-border-gold: rgba(249, 115, 22, 0.3);
   
   --lda-text-primary: #FFFFFF;
   --lda-text-secondary: #94A3B8;
   --lda-text-muted: #64748B;
   
-  --lda-accent-primary: #00D4AA;
-  --lda-accent-gold: #FFB800;
-  --lda-accent-cyan: #00A3FF;
+  --lda-accent-primary: #A855F7;
+  --lda-accent-gold: #F97316;
+  --lda-accent-cyan: #06B6D4;
   --lda-accent-purple: #A855F7;
   
   --lda-positive: #10B981;
@@ -42,7 +42,7 @@
   --lda-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --lda-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
   --lda-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
-  --lda-shadow-glow: 0 0 30px rgba(0, 212, 170, 0.15);
+  --lda-shadow-glow: 0 0 30px rgba(168, 85, 247, 0.15);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
