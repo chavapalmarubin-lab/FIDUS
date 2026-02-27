@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="10" time="3.431" timestamp="2026-02-27T18:41:03.121405+00:00" hostname="agent-env-5fa2995d-981b-4cbd-a0ce-a589b1c2dde8"><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_admin_login" time="0.436"><failure message="AssertionError: Login failed: 404 - {&quot;detail&quot;:&quot;Not Found&quot;}&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">backend/tests/test_live_demo_analytics.py:70: in test_admin_login
+    assert response.status_code == 200, f"Login failed: {response.status_code} - {response.text}"
+E   AssertionError: Login failed: 404 - {"detail":"Not Found"}
+E   assert 404 == 200
+E    +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_analytics_managers_endpoint_exists" time="0.308" /><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_analytics_managers_returns_data" time="0.284"><failure message="AssertionError: Failed to get managers: 401 - {&quot;error&quot;:&quot;Unauthorized&quot;,&quot;message&quot;:&quot;JWT token required. Please include 'Authorization: Bearer &lt;token&gt;' header.&quot;,&quot;endpoint&quot;:&quot;/api/admin/live-demo-analytics/managers&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:101: in test_live_demo_analytics_managers_returns_data
+    assert response.status_code == 200, f"Failed to get managers: {response.status_code} - {response.text}"
+E   AssertionError: Failed to get managers: 401 - {"error":"Unauthorized","message":"JWT token required. Please include 'Authorization: Bearer &lt;token&gt;' header.","endpoint":"/api/admin/live-demo-analytics/managers"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_managers_data_structure" time="0.282"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:123: in test_live_demo_managers_data_structure
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_analytics_with_different_periods" time="0.309"><failure message="AssertionError: Failed for period 7: 401&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:159: in test_live_demo_analytics_with_different_periods
+    assert response.status_code == 200, f"Failed for period {period}: {response.status_code}"
+E   AssertionError: Failed for period 7: 401
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_ai_insights_endpoint" time="0.280"><failure message="AssertionError: Unexpected status: 401&#10;assert 401 in [200, 500]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:177: in test_live_demo_ai_insights_endpoint
+    assert response.status_code in [200, 500], f"Unexpected status: {response.status_code}"
+E   AssertionError: Unexpected status: 401
+E   assert 401 in [200, 500]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_ai_chat_endpoint" time="0.267"><failure message="AssertionError: Unexpected status: 401&#10;assert 401 in [200, 500]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:200: in test_live_demo_ai_chat_endpoint
+    assert response.status_code in [200, 500], f"Unexpected status: {response.status_code}"
+E   AssertionError: Unexpected status: 401
+E   assert 401 in [200, 500]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_ai_allocation_endpoint" time="0.301"><failure message="AssertionError: Unexpected status: 401&#10;assert 401 in [200, 500]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:222: in test_live_demo_ai_allocation_endpoint
+    assert response.status_code in [200, 500], f"Unexpected status: {response.status_code}"
+E   AssertionError: Unexpected status: 401
+E   assert 401 in [200, 500]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_demo_vs_real_data_separation" time="0.414"><failure message="AssertionError: Demo endpoint failed: 401&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_live_demo_analytics.py:252: in test_demo_vs_real_data_separation
+    assert demo_response.status_code == 200, f"Demo endpoint failed: {demo_response.status_code}"
+E   AssertionError: Demo endpoint failed: 401
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_live_demo_analytics.TestLiveDemoAnalytics" name="test_live_demo_accounts_list" time="0.287" /></testsuite></testsuites>
