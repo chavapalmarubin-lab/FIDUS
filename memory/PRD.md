@@ -135,6 +135,7 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - [ ] Deploy MT5 Bridge API service to LUCRUM VPS (92.118.45.135:8000)
 
 ### P1
+- [ ] Next-Gen Trading Analytics Dashboard Phase 3: AI Strategy Advisor tab with LLM integration
 - [ ] Fix root cause in agent creation script to properly hash passwords
 - [ ] Fix login for other affected referral agents
 
