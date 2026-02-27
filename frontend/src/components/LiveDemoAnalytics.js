@@ -492,17 +492,23 @@ export default function LiveDemoAnalytics() {
   // RENDER: MAIN DASHBOARD
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="lda-dashboard" data-testid="trading-analytics-dashboard">
+    <div className="lda-dashboard" data-testid="live-demo-analytics-dashboard">
       {/* ═══════════════════════════════════════════════════════════════════════
           TOP HEADER BAR
       ═══════════════════════════════════════════════════════════════════════ */}
       <header className="lda-header" data-testid="dashboard-header">
         <div className="lda-header-left">
-          <h1 className="lda-title">Trading Analytics</h1>
-          <span className="lda-subtitle">Institutional-Grade Performance Intelligence</span>
+          <h1 className="lda-title">Live Demo Analytics</h1>
+          <span className="lda-subtitle">Manager Candidate Evaluation Dashboard</span>
         </div>
         
         <div className="lda-header-controls">
+          {/* Demo Badge */}
+          <div className="lda-demo-badge">
+            <span className="lda-demo-badge-dot" />
+            <span>DEMO ACCOUNTS</span>
+          </div>
+          
           {/* Auto-refresh Toggle */}
           <div 
             className="lda-auto-refresh" 
