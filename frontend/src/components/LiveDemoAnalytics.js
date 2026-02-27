@@ -12,7 +12,7 @@ import {
   ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
   Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings
 } from 'lucide-react';
-import './NextGenTradingAnalytics.css';
+import './LiveDemoAnalytics.css';
 
 // ============================================================================
 // NEXT-GEN TRADING ANALYTICS DASHBOARD
@@ -27,7 +27,7 @@ const DEFAULT_DEEP_DIVE_ACCOUNT = 886557;
 // Auto-refresh interval (30 seconds)
 const AUTO_REFRESH_INTERVAL = 30000;
 
-export default function NextGenTradingAnalytics() {
+export default function LiveDemoAnalytics() {
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE MANAGEMENT
   // ─────────────────────────────────────────────────────────────────────────────
@@ -479,9 +479,9 @@ export default function NextGenTradingAnalytics() {
   // ─────────────────────────────────────────────────────────────────────────────
   if (loading && !managers.length) {
     return (
-      <div className="ngt-dashboard" data-testid="trading-analytics-loading">
-        <div className="ngt-loading">
-          <div className="ngt-loading-spinner" />
+      <div className="lda-dashboard" data-testid="trading-analytics-loading">
+        <div className="lda-loading">
+          <div className="lda-loading-spinner" />
           <span>Loading Trading Analytics...</span>
         </div>
       </div>
@@ -492,30 +492,30 @@ export default function NextGenTradingAnalytics() {
   // RENDER: MAIN DASHBOARD
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="ngt-dashboard" data-testid="trading-analytics-dashboard">
+    <div className="lda-dashboard" data-testid="trading-analytics-dashboard">
       {/* ═══════════════════════════════════════════════════════════════════════
           TOP HEADER BAR
       ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="ngt-header" data-testid="dashboard-header">
-        <div className="ngt-header-left">
-          <h1 className="ngt-title">Trading Analytics</h1>
-          <span className="ngt-subtitle">Institutional-Grade Performance Intelligence</span>
+      <header className="lda-header" data-testid="dashboard-header">
+        <div className="lda-header-left">
+          <h1 className="lda-title">Trading Analytics</h1>
+          <span className="lda-subtitle">Institutional-Grade Performance Intelligence</span>
         </div>
         
-        <div className="ngt-header-controls">
+        <div className="lda-header-controls">
           {/* Auto-refresh Toggle */}
           <div 
-            className="ngt-auto-refresh" 
+            className="lda-auto-refresh" 
             onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
             style={{ cursor: 'pointer' }}
             title={autoRefreshEnabled ? 'Auto-refresh ON (30s)' : 'Auto-refresh OFF'}
           >
-            <span className={`ngt-auto-refresh-dot ${autoRefreshEnabled ? '' : 'paused'}`} />
+            <span className={`lda-auto-refresh-dot ${autoRefreshEnabled ? '' : 'paused'}`} />
             <span>{autoRefreshEnabled ? 'Live' : 'Paused'}</span>
           </div>
           
           {/* Time Period Selector */}
-          <div className="ngt-period-selector">
+          <div className="lda-period-selector">
             <Clock size={14} />
             <select 
               value={timePeriod} 
@@ -532,7 +532,7 @@ export default function NextGenTradingAnalytics() {
           
           {/* Refresh Button */}
           <button 
-            className="ngt-btn ngt-btn-secondary"
+            className="lda-btn lda-btn-secondary"
             onClick={handleRefresh}
             disabled={refreshing}
             data-testid="refresh-btn"
@@ -542,18 +542,18 @@ export default function NextGenTradingAnalytics() {
           </button>
           
           {/* Export Button */}
-          <button className="ngt-btn ngt-btn-primary" data-testid="export-btn">
+          <button className="lda-btn lda-btn-primary" data-testid="export-btn">
             <Download size={14} />
             Export
           </button>
           
           {/* Live Clock */}
-          <div className="ngt-live-clock" data-testid="live-clock">
-            <span className="ngt-clock-dot" />
-            <span className="ngt-clock-time">
+          <div className="lda-live-clock" data-testid="live-clock">
+            <span className="lda-clock-dot" />
+            <span className="lda-clock-time">
               {currentTime.toLocaleTimeString('en-US', { hour12: false })}
             </span>
-            <span className="ngt-clock-zone">UTC</span>
+            <span className="lda-clock-zone">UTC</span>
           </div>
         </div>
       </header>
@@ -561,78 +561,78 @@ export default function NextGenTradingAnalytics() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SUMMARY KPI STRIP
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="ngt-kpi-strip" data-testid="kpi-strip">
-        <div className="ngt-kpi-card" data-testid="kpi-total-aum">
-          <div className="ngt-kpi-icon">
+      <section className="lda-kpi-strip" data-testid="kpi-strip">
+        <div className="lda-kpi-card" data-testid="kpi-total-aum">
+          <div className="lda-kpi-icon">
             <DollarSign size={20} />
           </div>
-          <div className="ngt-kpi-content">
-            <span className="ngt-kpi-value">{formatCurrency(aggregateKPIs.totalAUM)}</span>
-            <span className="ngt-kpi-label">Total AUM</span>
+          <div className="lda-kpi-content">
+            <span className="lda-kpi-value">{formatCurrency(aggregateKPIs.totalAUM)}</span>
+            <span className="lda-kpi-label">Total AUM</span>
           </div>
         </div>
 
-        <div className="ngt-kpi-card" data-testid="kpi-total-pnl">
-          <div className={`ngt-kpi-icon ${aggregateKPIs.totalPnL >= 0 ? 'positive' : 'negative'}`}>
+        <div className="lda-kpi-card" data-testid="kpi-total-pnl">
+          <div className={`lda-kpi-icon ${aggregateKPIs.totalPnL >= 0 ? 'positive' : 'negative'}`}>
             {aggregateKPIs.totalPnL >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
           </div>
-          <div className="ngt-kpi-content">
-            <span className={`ngt-kpi-value ${aggregateKPIs.totalPnL >= 0 ? 'positive' : 'negative'}`}>
+          <div className="lda-kpi-content">
+            <span className={`lda-kpi-value ${aggregateKPIs.totalPnL >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrencyPrecise(aggregateKPIs.totalPnL)}
             </span>
-            <span className="ngt-kpi-label">Total P&L</span>
+            <span className="lda-kpi-label">Total P&L</span>
           </div>
         </div>
 
-        <div className="ngt-kpi-card" data-testid="kpi-avg-return">
-          <div className={`ngt-kpi-icon ${aggregateKPIs.avgReturn >= 0 ? 'positive' : 'negative'}`}>
+        <div className="lda-kpi-card" data-testid="kpi-avg-return">
+          <div className={`lda-kpi-icon ${aggregateKPIs.avgReturn >= 0 ? 'positive' : 'negative'}`}>
             <Activity size={20} />
           </div>
-          <div className="ngt-kpi-content">
-            <span className={`ngt-kpi-value ${aggregateKPIs.avgReturn >= 0 ? 'positive' : 'negative'}`}>
+          <div className="lda-kpi-content">
+            <span className={`lda-kpi-value ${aggregateKPIs.avgReturn >= 0 ? 'positive' : 'negative'}`}>
               {formatPercent(aggregateKPIs.avgReturn)}
             </span>
-            <span className="ngt-kpi-label">Avg Return</span>
+            <span className="lda-kpi-label">Avg Return</span>
           </div>
         </div>
 
-        <div className="ngt-kpi-card" data-testid="kpi-strategies">
-          <div className="ngt-kpi-icon">
+        <div className="lda-kpi-card" data-testid="kpi-strategies">
+          <div className="lda-kpi-icon">
             <Briefcase size={20} />
           </div>
-          <div className="ngt-kpi-content">
-            <span className="ngt-kpi-value">{aggregateKPIs.activeStrategies}</span>
-            <span className="ngt-kpi-label">Active Strategies</span>
+          <div className="lda-kpi-content">
+            <span className="lda-kpi-value">{aggregateKPIs.activeStrategies}</span>
+            <span className="lda-kpi-label">Active Strategies</span>
           </div>
         </div>
 
-        <div className="ngt-kpi-card" data-testid="kpi-sharpe">
-          <div className="ngt-kpi-icon">
+        <div className="lda-kpi-card" data-testid="kpi-sharpe">
+          <div className="lda-kpi-icon">
             <Target size={20} />
           </div>
-          <div className="ngt-kpi-content">
-            <span className="ngt-kpi-value">{formatNumber(aggregateKPIs.avgSharpe)}</span>
-            <span className="ngt-kpi-label">Avg Sharpe</span>
+          <div className="lda-kpi-content">
+            <span className="lda-kpi-value">{formatNumber(aggregateKPIs.avgSharpe)}</span>
+            <span className="lda-kpi-label">Avg Sharpe</span>
           </div>
         </div>
 
-        <div className="ngt-kpi-card" data-testid="kpi-winrate">
-          <div className="ngt-kpi-icon">
+        <div className="lda-kpi-card" data-testid="kpi-winrate">
+          <div className="lda-kpi-icon">
             <Award size={20} />
           </div>
-          <div className="ngt-kpi-content">
-            <span className="ngt-kpi-value">{formatPercent(aggregateKPIs.avgWinRate)}</span>
-            <span className="ngt-kpi-label">Avg Win Rate</span>
+          <div className="lda-kpi-content">
+            <span className="lda-kpi-value">{formatPercent(aggregateKPIs.avgWinRate)}</span>
+            <span className="lda-kpi-label">Avg Win Rate</span>
           </div>
         </div>
 
-        <div className="ngt-kpi-card" data-testid="kpi-trades">
-          <div className="ngt-kpi-icon">
+        <div className="lda-kpi-card" data-testid="kpi-trades">
+          <div className="lda-kpi-icon">
             <BarChart3 size={20} />
           </div>
-          <div className="ngt-kpi-content">
-            <span className="ngt-kpi-value">{aggregateKPIs.totalTrades.toLocaleString()}</span>
-            <span className="ngt-kpi-label">Total Trades</span>
+          <div className="lda-kpi-content">
+            <span className="lda-kpi-value">{aggregateKPIs.totalTrades.toLocaleString()}</span>
+            <span className="lda-kpi-label">Total Trades</span>
           </div>
         </div>
       </section>
@@ -640,9 +640,9 @@ export default function NextGenTradingAnalytics() {
       {/* ═══════════════════════════════════════════════════════════════════════
           MAIN TABS NAVIGATION
       ═══════════════════════════════════════════════════════════════════════ */}
-      <nav className="ngt-tabs" data-testid="main-tabs">
+      <nav className="lda-tabs" data-testid="main-tabs">
         <button 
-          className={`ngt-tab ${activeTab === 'portfolio' ? 'active' : ''}`}
+          className={`lda-tab ${activeTab === 'portfolio' ? 'active' : ''}`}
           onClick={() => setActiveTab('portfolio')}
           data-testid="tab-portfolio"
         >
@@ -650,7 +650,7 @@ export default function NextGenTradingAnalytics() {
           Portfolio Overview
         </button>
         <button 
-          className={`ngt-tab ${activeTab === 'rankings' ? 'active' : ''}`}
+          className={`lda-tab ${activeTab === 'rankings' ? 'active' : ''}`}
           onClick={() => setActiveTab('rankings')}
           data-testid="tab-rankings"
         >
@@ -658,7 +658,7 @@ export default function NextGenTradingAnalytics() {
           Manager Rankings
         </button>
         <button 
-          className={`ngt-tab ${activeTab === 'deepdive' ? 'active' : ''}`}
+          className={`lda-tab ${activeTab === 'deepdive' ? 'active' : ''}`}
           onClick={() => setActiveTab('deepdive')}
           data-testid="tab-deepdive"
         >
@@ -666,34 +666,34 @@ export default function NextGenTradingAnalytics() {
           Deep Dive
         </button>
         <button 
-          className={`ngt-tab ${activeTab === 'advisor' ? 'active' : ''}`}
+          className={`lda-tab ${activeTab === 'advisor' ? 'active' : ''}`}
           onClick={() => setActiveTab('advisor')}
           data-testid="tab-advisor"
         >
           <Zap size={16} />
           AI Advisor
-          <span className="ngt-tab-badge ngt-tab-badge-new">NEW</span>
+          <span className="lda-tab-badge lda-tab-badge-new">NEW</span>
         </button>
       </nav>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           TAB CONTENT
       ═══════════════════════════════════════════════════════════════════════ */}
-      <main className="ngt-content">
+      <main className="lda-content">
         
         {/* ─────────────────────────────────────────────────────────────────────
             PORTFOLIO OVERVIEW TAB
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'portfolio' && (
-          <div className="ngt-portfolio-tab" data-testid="portfolio-content">
-            <div className="ngt-grid-4">
+          <div className="lda-portfolio-tab" data-testid="portfolio-content">
+            <div className="lda-grid-4">
               {/* Fund Allocation Pie Chart */}
-              <div className="ngt-card ngt-card-span-2">
-                <div className="ngt-card-header">
+              <div className="lda-card lda-card-span-2">
+                <div className="lda-card-header">
                   <h3>Fund Allocation</h3>
-                  <span className="ngt-card-subtitle">Capital Distribution by Fund</span>
+                  <span className="lda-card-subtitle">Capital Distribution by Fund</span>
                 </div>
-                <div className="ngt-card-body">
+                <div className="lda-card-body">
                   <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
                       <Pie
@@ -725,15 +725,15 @@ export default function NextGenTradingAnalytics() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="ngt-pie-legend">
+                  <div className="lda-pie-legend">
                     {fundAllocationData.map((fund, i) => (
-                      <div key={fund.name} className="ngt-legend-item">
+                      <div key={fund.name} className="lda-legend-item">
                         <span 
-                          className="ngt-legend-dot" 
+                          className="lda-legend-dot" 
                           style={{ background: FUND_COLORS[fund.name] || CHART_COLORS[i] }}
                         />
-                        <span className="ngt-legend-label">{fund.name}</span>
-                        <span className="ngt-legend-value">{formatCurrency(fund.value)}</span>
+                        <span className="lda-legend-label">{fund.name}</span>
+                        <span className="lda-legend-value">{formatCurrency(fund.value)}</span>
                       </div>
                     ))}
                   </div>
@@ -741,12 +741,12 @@ export default function NextGenTradingAnalytics() {
               </div>
 
               {/* Risk Metrics Radar */}
-              <div className="ngt-card ngt-card-span-2">
-                <div className="ngt-card-header">
+              <div className="lda-card lda-card-span-2">
+                <div className="lda-card-header">
                   <h3>Portfolio Risk Profile</h3>
-                  <span className="ngt-card-subtitle">Risk-Adjusted Performance Metrics</span>
+                  <span className="lda-card-subtitle">Risk-Adjusted Performance Metrics</span>
                 </div>
-                <div className="ngt-card-body">
+                <div className="lda-card-body">
                   <ResponsiveContainer width="100%" height={280}>
                     <RadarChart data={riskRadarData}>
                       <PolarGrid stroke="rgba(148, 163, 184, 0.2)" />
@@ -781,12 +781,12 @@ export default function NextGenTradingAnalytics() {
               </div>
 
               {/* Performance Comparison Bar Chart */}
-              <div className="ngt-card ngt-card-span-2">
-                <div className="ngt-card-header">
+              <div className="lda-card lda-card-span-2">
+                <div className="lda-card-header">
                   <h3>Strategy Performance</h3>
-                  <span className="ngt-card-subtitle">Return % by Manager (Top 8)</span>
+                  <span className="lda-card-subtitle">Return % by Manager (Top 8)</span>
                 </div>
-                <div className="ngt-card-body">
+                <div className="lda-card-body">
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={performanceBarData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
@@ -821,12 +821,12 @@ export default function NextGenTradingAnalytics() {
               </div>
 
               {/* Risk vs Return Scatter */}
-              <div className="ngt-card ngt-card-span-2">
-                <div className="ngt-card-header">
+              <div className="lda-card lda-card-span-2">
+                <div className="lda-card-header">
                   <h3>Risk vs Return Analysis</h3>
-                  <span className="ngt-card-subtitle">Efficient Frontier Visualization</span>
+                  <span className="lda-card-subtitle">Efficient Frontier Visualization</span>
                 </div>
-                <div className="ngt-card-body">
+                <div className="lda-card-body">
                   <ResponsiveContainer width="100%" height={280}>
                     <ScatterChart>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
@@ -889,39 +889,39 @@ export default function NextGenTradingAnalytics() {
             MANAGER RANKINGS TAB
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'rankings' && (
-          <div className="ngt-rankings-tab" data-testid="rankings-content">
+          <div className="lda-rankings-tab" data-testid="rankings-content">
             {/* Comparison Panel */}
             {comparisonManagers.length > 0 && (
-              <div className="ngt-comparison-panel">
-                <div className="ngt-comparison-header">
+              <div className="lda-comparison-panel">
+                <div className="lda-comparison-header">
                   <h3>Head-to-Head Comparison</h3>
                   <button 
-                    className="ngt-btn ngt-btn-ghost"
+                    className="lda-btn lda-btn-ghost"
                     onClick={() => setComparisonManagers([])}
                   >
                     Clear
                   </button>
                 </div>
-                <div className="ngt-comparison-grid">
+                <div className="lda-comparison-grid">
                   {comparisonManagers.map(manager => (
-                    <div key={manager.manager_id} className="ngt-comparison-card">
-                      <div className="ngt-comparison-name">{manager.manager_name}</div>
-                      <div className="ngt-comparison-stats">
-                        <div className="ngt-stat">
+                    <div key={manager.manager_id} className="lda-comparison-card">
+                      <div className="lda-comparison-name">{manager.manager_name}</div>
+                      <div className="lda-comparison-stats">
+                        <div className="lda-stat">
                           <span className="label">Return</span>
                           <span className={`value ${(manager.return_percentage || 0) >= 0 ? 'positive' : 'negative'}`}>
                             {formatPercent(manager.return_percentage)}
                           </span>
                         </div>
-                        <div className="ngt-stat">
+                        <div className="lda-stat">
                           <span className="label">Sharpe</span>
                           <span className="value">{formatNumber(manager.sharpe_ratio)}</span>
                         </div>
-                        <div className="ngt-stat">
+                        <div className="lda-stat">
                           <span className="label">Win Rate</span>
                           <span className="value">{formatPercent(manager.win_rate)}</span>
                         </div>
-                        <div className="ngt-stat">
+                        <div className="lda-stat">
                           <span className="label">Max DD</span>
                           <span className="value negative">{formatPercent(manager.max_drawdown_pct)}</span>
                         </div>
@@ -933,13 +933,13 @@ export default function NextGenTradingAnalytics() {
             )}
 
             {/* Rankings Table */}
-            <div className="ngt-card">
-              <div className="ngt-card-header">
+            <div className="lda-card">
+              <div className="lda-card-header">
                 <h3>Strategy Leaderboard</h3>
-                <span className="ngt-card-subtitle">Ranked by Risk-Adjusted Performance</span>
+                <span className="lda-card-subtitle">Ranked by Risk-Adjusted Performance</span>
               </div>
-              <div className="ngt-table-wrapper">
-                <table className="ngt-table" data-testid="rankings-table">
+              <div className="lda-table-wrapper">
+                <table className="lda-table" data-testid="rankings-table">
                   <thead>
                     <tr>
                       <th>Rank</th>
@@ -970,7 +970,7 @@ export default function NextGenTradingAnalytics() {
                             onClick={() => setDeepDiveManager(manager)}
                           >
                             <td>
-                              <span className={`ngt-rank rank-${index + 1}`}>
+                              <span className={`lda-rank rank-${index + 1}`}>
                                 {index === 0 && '🥇'}
                                 {index === 1 && '🥈'}
                                 {index === 2 && '🥉'}
@@ -978,37 +978,37 @@ export default function NextGenTradingAnalytics() {
                               </span>
                             </td>
                             <td>
-                              <div className="ngt-manager-cell">
-                                <span className="ngt-manager-name">{manager.manager_name}</span>
-                                <span className="ngt-manager-account">#{manager.account}</span>
+                              <div className="lda-manager-cell">
+                                <span className="lda-manager-name">{manager.manager_name}</span>
+                                <span className="lda-manager-account">#{manager.account}</span>
                               </div>
                             </td>
                             <td>
-                              <span className={`ngt-fund-badge fund-${(manager.fund || 'unknown').toLowerCase()}`}>
+                              <span className={`lda-fund-badge fund-${(manager.fund || 'unknown').toLowerCase()}`}>
                                 {manager.fund || 'N/A'}
                               </span>
                             </td>
-                            <td className="ngt-mono">{formatCurrency(manager.initial_allocation)}</td>
-                            <td className={`ngt-mono ${(manager.total_pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                            <td className="lda-mono">{formatCurrency(manager.initial_allocation)}</td>
+                            <td className={`lda-mono ${(manager.total_pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
                               {formatCurrencyPrecise(manager.total_pnl)}
                             </td>
                             <td>
-                              <span className={`ngt-return ${(manager.return_percentage || 0) >= 0 ? 'positive' : 'negative'}`}>
+                              <span className={`lda-return ${(manager.return_percentage || 0) >= 0 ? 'positive' : 'negative'}`}>
                                 {(manager.return_percentage || 0) >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                                 {formatPercent(manager.return_percentage)}
                               </span>
                             </td>
-                            <td className="ngt-mono">{formatNumber(manager.sharpe_ratio)}</td>
-                            <td className="ngt-mono">{formatPercent(manager.win_rate)}</td>
-                            <td className="ngt-mono negative">{formatPercent(manager.max_drawdown_pct)}</td>
+                            <td className="lda-mono">{formatNumber(manager.sharpe_ratio)}</td>
+                            <td className="lda-mono">{formatPercent(manager.win_rate)}</td>
+                            <td className="lda-mono negative">{formatPercent(manager.max_drawdown_pct)}</td>
                             <td>
-                              <span className={`ngt-risk-badge ${riskBadge.class}`}>
+                              <span className={`lda-risk-badge ${riskBadge.class}`}>
                                 {riskBadge.label}
                               </span>
                             </td>
                             <td>
                               <button 
-                                className={`ngt-compare-btn ${isSelected ? 'active' : ''}`}
+                                className={`lda-compare-btn ${isSelected ? 'active' : ''}`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   toggleComparison(manager);
@@ -1026,23 +1026,23 @@ export default function NextGenTradingAnalytics() {
             </div>
 
             {/* Risk Alerts */}
-            <div className="ngt-risk-alerts">
-              <div className="ngt-alert-header">
+            <div className="lda-risk-alerts">
+              <div className="lda-alert-header">
                 <AlertTriangle size={18} />
                 <h4>Risk Alerts</h4>
               </div>
-              <div className="ngt-alerts-grid">
+              <div className="lda-alerts-grid">
                 {managers
                   .filter(m => Math.abs(m.max_drawdown_pct || 0) > 15 || (m.sharpe_ratio || 0) < 0.5)
                   .slice(0, 3)
                   .map(manager => (
-                    <div key={manager.manager_id} className="ngt-alert-card">
-                      <div className="ngt-alert-icon">
+                    <div key={manager.manager_id} className="lda-alert-card">
+                      <div className="lda-alert-icon">
                         <AlertTriangle size={16} />
                       </div>
-                      <div className="ngt-alert-content">
-                        <span className="ngt-alert-title">{manager.manager_name}</span>
-                        <span className="ngt-alert-message">
+                      <div className="lda-alert-content">
+                        <span className="lda-alert-title">{manager.manager_name}</span>
+                        <span className="lda-alert-message">
                           {Math.abs(manager.max_drawdown_pct || 0) > 15 && 
                             `High drawdown: ${formatPercent(manager.max_drawdown_pct)}`
                           }
@@ -1054,7 +1054,7 @@ export default function NextGenTradingAnalytics() {
                     </div>
                   ))}
                 {managers.filter(m => Math.abs(m.max_drawdown_pct || 0) > 15 || (m.sharpe_ratio || 0) < 0.5).length === 0 && (
-                  <div className="ngt-no-alerts">
+                  <div className="lda-no-alerts">
                     <Shield size={20} />
                     <span>All strategies within acceptable risk parameters</span>
                   </div>
@@ -1068,9 +1068,9 @@ export default function NextGenTradingAnalytics() {
             DEEP DIVE TAB
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'deepdive' && (
-          <div className="ngt-deepdive-tab" data-testid="deepdive-content">
+          <div className="lda-deepdive-tab" data-testid="deepdive-content">
             {/* Strategy Selector */}
-            <div className="ngt-strategy-selector">
+            <div className="lda-strategy-selector">
               <label>Select Strategy:</label>
               <select 
                 value={deepDiveManager?.manager_id || ''}
@@ -1091,61 +1091,61 @@ export default function NextGenTradingAnalytics() {
             {deepDiveManager && (
               <>
                 {/* Strategy Header */}
-                <div className="ngt-strategy-header">
-                  <div className="ngt-strategy-info">
+                <div className="lda-strategy-header">
+                  <div className="lda-strategy-info">
                     <h2>{deepDiveManager.manager_name}</h2>
-                    <div className="ngt-strategy-meta">
-                      <span className="ngt-meta-item">
+                    <div className="lda-strategy-meta">
+                      <span className="lda-meta-item">
                         <Briefcase size={14} />
                         Account #{deepDiveManager.account}
                       </span>
-                      <span className="ngt-meta-item">
+                      <span className="lda-meta-item">
                         <Target size={14} />
                         Fund: {deepDiveManager.fund || 'N/A'}
                       </span>
-                      <span className={`ngt-strategy-badge ${getPerformanceBadge(deepDiveManager.return_percentage).class}`}>
+                      <span className={`lda-strategy-badge ${getPerformanceBadge(deepDiveManager.return_percentage).class}`}>
                         {getPerformanceBadge(deepDiveManager.return_percentage).label}
                       </span>
                     </div>
                   </div>
-                  <div className="ngt-strategy-return">
-                    <span className={`ngt-big-return ${(deepDiveManager.return_percentage || 0) >= 0 ? 'positive' : 'negative'}`}>
+                  <div className="lda-strategy-return">
+                    <span className={`lda-big-return ${(deepDiveManager.return_percentage || 0) >= 0 ? 'positive' : 'negative'}`}>
                       {(deepDiveManager.return_percentage || 0) >= 0 ? '+' : ''}
                       {formatPercent(deepDiveManager.return_percentage)}
                     </span>
-                    <span className="ngt-return-label">{timePeriod}-Day Return</span>
+                    <span className="lda-return-label">{timePeriod}-Day Return</span>
                   </div>
                 </div>
 
                 {/* Key Metrics Grid */}
-                <div className="ngt-metrics-grid">
-                  <div className="ngt-metric-card">
-                    <span className="ngt-metric-label">Initial Allocation</span>
-                    <span className="ngt-metric-value">{formatCurrency(deepDiveManager.initial_allocation)}</span>
+                <div className="lda-metrics-grid">
+                  <div className="lda-metric-card">
+                    <span className="lda-metric-label">Initial Allocation</span>
+                    <span className="lda-metric-value">{formatCurrency(deepDiveManager.initial_allocation)}</span>
                   </div>
-                  <div className="ngt-metric-card">
-                    <span className="ngt-metric-label">Current Equity</span>
-                    <span className="ngt-metric-value">{formatCurrency(deepDiveManager.current_equity)}</span>
+                  <div className="lda-metric-card">
+                    <span className="lda-metric-label">Current Equity</span>
+                    <span className="lda-metric-value">{formatCurrency(deepDiveManager.current_equity)}</span>
                   </div>
-                  <div className="ngt-metric-card">
-                    <span className="ngt-metric-label">Total P&L</span>
-                    <span className={`ngt-metric-value ${(deepDiveManager.total_pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                  <div className="lda-metric-card">
+                    <span className="lda-metric-label">Total P&L</span>
+                    <span className={`lda-metric-value ${(deepDiveManager.total_pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
                       {formatCurrencyPrecise(deepDiveManager.total_pnl)}
                     </span>
                   </div>
-                  <div className="ngt-metric-card">
-                    <span className="ngt-metric-label">Profit Withdrawals</span>
-                    <span className="ngt-metric-value">{formatCurrency(deepDiveManager.profit_withdrawals)}</span>
+                  <div className="lda-metric-card">
+                    <span className="lda-metric-label">Profit Withdrawals</span>
+                    <span className="lda-metric-value">{formatCurrency(deepDiveManager.profit_withdrawals)}</span>
                   </div>
                 </div>
 
                 {/* Equity Curve */}
-                <div className="ngt-card">
-                  <div className="ngt-card-header">
+                <div className="lda-card">
+                  <div className="lda-card-header">
                     <h3>Equity Curve</h3>
-                    <span className="ngt-card-subtitle">Historical Balance Progression</span>
+                    <span className="lda-card-subtitle">Historical Balance Progression</span>
                   </div>
-                  <div className="ngt-card-body">
+                  <div className="lda-card-body">
                     <ResponsiveContainer width="100%" height={300}>
                       <AreaChart data={equityCurveData}>
                         <defs>
@@ -1188,58 +1188,58 @@ export default function NextGenTradingAnalytics() {
                 </div>
 
                 {/* Risk Metrics */}
-                <div className="ngt-grid-3">
-                  <div className="ngt-stat-card">
-                    <div className="ngt-stat-header">
+                <div className="lda-grid-3">
+                  <div className="lda-stat-card">
+                    <div className="lda-stat-header">
                       <Target size={18} />
                       <span>Sharpe Ratio</span>
                     </div>
-                    <div className="ngt-stat-value">{formatNumber(deepDiveManager.sharpe_ratio)}</div>
-                    <div className="ngt-stat-bar">
+                    <div className="lda-stat-value">{formatNumber(deepDiveManager.sharpe_ratio)}</div>
+                    <div className="lda-stat-bar">
                       <div 
-                        className="ngt-stat-fill" 
+                        className="lda-stat-fill" 
                         style={{ width: `${Math.min((deepDiveManager.sharpe_ratio || 0) * 33, 100)}%` }}
                       />
                     </div>
-                    <div className="ngt-stat-range">
+                    <div className="lda-stat-range">
                       <span>Poor {'<'} 0.5</span>
                       <span>Good {'>'} 1.0</span>
                       <span>Excellent {'>'} 2.0</span>
                     </div>
                   </div>
 
-                  <div className="ngt-stat-card">
-                    <div className="ngt-stat-header">
+                  <div className="lda-stat-card">
+                    <div className="lda-stat-header">
                       <Shield size={18} />
                       <span>Sortino Ratio</span>
                     </div>
-                    <div className="ngt-stat-value">{formatNumber(deepDiveManager.sortino_ratio)}</div>
-                    <div className="ngt-stat-bar">
+                    <div className="lda-stat-value">{formatNumber(deepDiveManager.sortino_ratio)}</div>
+                    <div className="lda-stat-bar">
                       <div 
-                        className="ngt-stat-fill" 
+                        className="lda-stat-fill" 
                         style={{ width: `${Math.min((deepDiveManager.sortino_ratio || 0) * 25, 100)}%` }}
                       />
                     </div>
-                    <div className="ngt-stat-range">
+                    <div className="lda-stat-range">
                       <span>Poor {'<'} 1.0</span>
                       <span>Good {'>'} 2.0</span>
                       <span>Excellent {'>'} 3.0</span>
                     </div>
                   </div>
 
-                  <div className="ngt-stat-card">
-                    <div className="ngt-stat-header">
+                  <div className="lda-stat-card">
+                    <div className="lda-stat-header">
                       <TrendingDown size={18} />
                       <span>Max Drawdown</span>
                     </div>
-                    <div className="ngt-stat-value negative">{formatPercent(deepDiveManager.max_drawdown_pct)}</div>
-                    <div className="ngt-stat-bar danger">
+                    <div className="lda-stat-value negative">{formatPercent(deepDiveManager.max_drawdown_pct)}</div>
+                    <div className="lda-stat-bar danger">
                       <div 
-                        className="ngt-stat-fill" 
+                        className="lda-stat-fill" 
                         style={{ width: `${Math.min(Math.abs(deepDiveManager.max_drawdown_pct || 0) * 3, 100)}%` }}
                       />
                     </div>
-                    <div className="ngt-stat-range">
+                    <div className="lda-stat-range">
                       <span>Low {'<'} 10%</span>
                       <span>Med {'<'} 20%</span>
                       <span>High {'>'} 30%</span>
@@ -1248,33 +1248,33 @@ export default function NextGenTradingAnalytics() {
                 </div>
 
                 {/* Trading Statistics */}
-                <div className="ngt-card">
-                  <div className="ngt-card-header">
+                <div className="lda-card">
+                  <div className="lda-card-header">
                     <h3>Trading Statistics</h3>
-                    <span className="ngt-card-subtitle">Performance Breakdown</span>
+                    <span className="lda-card-subtitle">Performance Breakdown</span>
                   </div>
-                  <div className="ngt-stats-grid">
-                    <div className="ngt-stat-item">
+                  <div className="lda-stats-grid">
+                    <div className="lda-stat-item">
                       <span className="label">Total Trades</span>
                       <span className="value">{(deepDiveManager.total_trades || 0).toLocaleString()}</span>
                     </div>
-                    <div className="ngt-stat-item">
+                    <div className="lda-stat-item">
                       <span className="label">Winning Trades</span>
                       <span className="value positive">{(deepDiveManager.winning_trades || 0).toLocaleString()}</span>
                     </div>
-                    <div className="ngt-stat-item">
+                    <div className="lda-stat-item">
                       <span className="label">Losing Trades</span>
                       <span className="value negative">{(deepDiveManager.losing_trades || 0).toLocaleString()}</span>
                     </div>
-                    <div className="ngt-stat-item">
+                    <div className="lda-stat-item">
                       <span className="label">Win Rate</span>
                       <span className="value">{formatPercent(deepDiveManager.win_rate)}</span>
                     </div>
-                    <div className="ngt-stat-item">
+                    <div className="lda-stat-item">
                       <span className="label">Profit Factor</span>
                       <span className="value">{formatNumber(deepDiveManager.profit_factor)}</span>
                     </div>
-                    <div className="ngt-stat-item">
+                    <div className="lda-stat-item">
                       <span className="label">Risk Level</span>
                       <span className={`value ${getRiskBadge(deepDiveManager).class}`}>
                         {getRiskBadge(deepDiveManager).label}
@@ -1284,12 +1284,12 @@ export default function NextGenTradingAnalytics() {
                 </div>
 
                 {/* Allocation Recommendation */}
-                <div className="ngt-recommendation-card">
-                  <div className="ngt-recommendation-header">
+                <div className="lda-recommendation-card">
+                  <div className="lda-recommendation-header">
                     <Zap size={20} />
                     <h4>Allocation Insight</h4>
                   </div>
-                  <div className="ngt-recommendation-content">
+                  <div className="lda-recommendation-content">
                     {(deepDiveManager.sharpe_ratio || 0) >= 1.0 && Math.abs(deepDiveManager.max_drawdown_pct || 0) < 15 ? (
                       <p>
                         <strong>Strong Candidate for Increased Allocation.</strong> This strategy demonstrates 
@@ -1321,41 +1321,41 @@ export default function NextGenTradingAnalytics() {
             AI STRATEGY ADVISOR TAB (Phase 3)
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'advisor' && (
-          <div className="ngt-advisor-tab" data-testid="advisor-content">
-            <div className="ngt-advisor-layout">
+          <div className="lda-advisor-tab" data-testid="advisor-content">
+            <div className="lda-advisor-layout">
               {/* Left Column: Automated Insights + Allocation Tool */}
-              <div className="ngt-advisor-sidebar">
+              <div className="lda-advisor-sidebar">
                 {/* Automated Insights Card */}
-                <div className="ngt-card ngt-insights-card">
-                  <div className="ngt-card-header">
-                    <div className="ngt-card-header-icon">
+                <div className="lda-card lda-insights-card">
+                  <div className="lda-card-header">
+                    <div className="lda-card-header-icon">
                       <Lightbulb size={18} />
                     </div>
                     <h3>AI Insights</h3>
                     <button 
-                      className="ngt-btn ngt-btn-ghost ngt-btn-sm"
+                      className="lda-btn lda-btn-ghost lda-btn-sm"
                       onClick={fetchAiInsights}
                       disabled={aiInsightsLoading}
                     >
                       <RefreshCw size={14} className={aiInsightsLoading ? 'spin' : ''} />
                     </button>
                   </div>
-                  <div className="ngt-card-body">
+                  <div className="lda-card-body">
                     {aiInsightsLoading ? (
-                      <div className="ngt-insights-loading">
+                      <div className="lda-insights-loading">
                         <Loader2 size={24} className="spin" />
                         <span>Analyzing portfolio...</span>
                       </div>
                     ) : aiInsights ? (
-                      <div className="ngt-insights-content">
-                        <div className="ngt-markdown-content" dangerouslySetInnerHTML={{ 
+                      <div className="lda-insights-content">
+                        <div className="lda-markdown-content" dangerouslySetInnerHTML={{ 
                           __html: aiInsights
                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\n/g, '<br/>') 
                         }} />
                       </div>
                     ) : (
-                      <div className="ngt-insights-empty">
+                      <div className="lda-insights-empty">
                         <Sparkles size={20} />
                         <span>Click refresh to generate insights</span>
                       </div>
@@ -1364,18 +1364,18 @@ export default function NextGenTradingAnalytics() {
                 </div>
 
                 {/* Allocation Recommendation Tool */}
-                <div className="ngt-card ngt-allocation-card">
-                  <div className="ngt-card-header">
-                    <div className="ngt-card-header-icon">
+                <div className="lda-card lda-allocation-card">
+                  <div className="lda-card-header">
+                    <div className="lda-card-header-icon">
                       <PieChartIcon size={18} />
                     </div>
                     <h3>Allocation Advisor</h3>
                   </div>
-                  <div className="ngt-card-body">
-                    <div className="ngt-allocation-form">
-                      <div className="ngt-form-group">
+                  <div className="lda-card-body">
+                    <div className="lda-allocation-form">
+                      <div className="lda-form-group">
                         <label>Capital to Allocate</label>
-                        <div className="ngt-input-with-prefix">
+                        <div className="lda-input-with-prefix">
                           <span>$</span>
                           <input
                             type="number"
@@ -1385,7 +1385,7 @@ export default function NextGenTradingAnalytics() {
                           />
                         </div>
                       </div>
-                      <div className="ngt-form-group">
+                      <div className="lda-form-group">
                         <label>Risk Tolerance</label>
                         <select
                           value={allocationRisk}
@@ -1397,7 +1397,7 @@ export default function NextGenTradingAnalytics() {
                         </select>
                       </div>
                       <button
-                        className="ngt-btn ngt-btn-primary ngt-btn-full"
+                        className="lda-btn lda-btn-primary lda-btn-full"
                         onClick={generateAllocationRecommendation}
                         disabled={allocationLoading}
                       >
@@ -1415,11 +1415,11 @@ export default function NextGenTradingAnalytics() {
                       </button>
                     </div>
                     {allocationResult && (
-                      <div className="ngt-allocation-result">
-                        <div className="ngt-markdown-content" dangerouslySetInnerHTML={{ 
+                      <div className="lda-allocation-result">
+                        <div className="lda-markdown-content" dangerouslySetInnerHTML={{ 
                           __html: allocationResult
                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\|(.*?)\|/g, '<span class="ngt-table-cell">$1</span>')
+                            .replace(/\|(.*?)\|/g, '<span class="lda-table-cell">$1</span>')
                             .replace(/\n/g, '<br/>') 
                         }} />
                       </div>
@@ -1429,17 +1429,17 @@ export default function NextGenTradingAnalytics() {
               </div>
 
               {/* Right Column: Chat Interface */}
-              <div className="ngt-advisor-chat">
-                <div className="ngt-card ngt-chat-card">
-                  <div className="ngt-card-header">
-                    <div className="ngt-card-header-icon">
+              <div className="lda-advisor-chat">
+                <div className="lda-card lda-chat-card">
+                  <div className="lda-card-header">
+                    <div className="lda-card-header-icon">
                       <MessageSquare size={18} />
                     </div>
                     <h3>Chat with AI Advisor</h3>
-                    <div className="ngt-chat-actions">
-                      <span className="ngt-chat-model">Claude Sonnet 4.5</span>
+                    <div className="lda-chat-actions">
+                      <span className="lda-chat-model">Claude Sonnet 4.5</span>
                       <button 
-                        className="ngt-btn ngt-btn-ghost ngt-btn-sm"
+                        className="lda-btn lda-btn-ghost lda-btn-sm"
                         onClick={clearAiChat}
                         title="Clear chat"
                       >
@@ -1449,13 +1449,13 @@ export default function NextGenTradingAnalytics() {
                   </div>
                   
                   {/* Chat Messages */}
-                  <div className="ngt-chat-messages">
+                  <div className="lda-chat-messages">
                     {aiChatMessages.length === 0 ? (
-                      <div className="ngt-chat-welcome">
+                      <div className="lda-chat-welcome">
                         <Bot size={48} />
                         <h4>AI Strategy Advisor</h4>
                         <p>Ask me anything about your trading strategies, performance metrics, or allocation recommendations.</p>
-                        <div className="ngt-chat-suggestions">
+                        <div className="lda-chat-suggestions">
                           <button onClick={() => setAiInputMessage("What's the best performing strategy and why?")}>
                             Best performing strategy?
                           </button>
@@ -1472,34 +1472,34 @@ export default function NextGenTradingAnalytics() {
                         {aiChatMessages.map((msg, index) => (
                           <div 
                             key={index} 
-                            className={`ngt-chat-message ${msg.role} ${msg.isError ? 'error' : ''}`}
+                            className={`lda-chat-message ${msg.role} ${msg.isError ? 'error' : ''}`}
                           >
-                            <div className="ngt-message-avatar">
+                            <div className="lda-message-avatar">
                               {msg.role === 'user' ? (
                                 <Users size={16} />
                               ) : (
                                 <Bot size={16} />
                               )}
                             </div>
-                            <div className="ngt-message-content">
-                              <div className="ngt-message-text" dangerouslySetInnerHTML={{ 
+                            <div className="lda-message-content">
+                              <div className="lda-message-text" dangerouslySetInnerHTML={{ 
                                 __html: msg.content
                                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                   .replace(/\n/g, '<br/>') 
                               }} />
-                              <span className="ngt-message-time">
+                              <span className="lda-message-time">
                                 {new Date(msg.timestamp).toLocaleTimeString()}
                               </span>
                             </div>
                           </div>
                         ))}
                         {aiLoading && (
-                          <div className="ngt-chat-message assistant loading">
-                            <div className="ngt-message-avatar">
+                          <div className="lda-chat-message assistant loading">
+                            <div className="lda-message-avatar">
                               <Bot size={16} />
                             </div>
-                            <div className="ngt-message-content">
-                              <div className="ngt-typing-indicator">
+                            <div className="lda-message-content">
+                              <div className="lda-typing-indicator">
                                 <span></span>
                                 <span></span>
                                 <span></span>
@@ -1513,7 +1513,7 @@ export default function NextGenTradingAnalytics() {
                   </div>
 
                   {/* Chat Input */}
-                  <div className="ngt-chat-input-container">
+                  <div className="lda-chat-input-container">
                     <textarea
                       value={aiInputMessage}
                       onChange={(e) => setAiInputMessage(e.target.value)}
@@ -1523,7 +1523,7 @@ export default function NextGenTradingAnalytics() {
                       disabled={aiLoading}
                     />
                     <button
-                      className="ngt-btn ngt-btn-primary ngt-chat-send"
+                      className="lda-btn lda-btn-primary lda-chat-send"
                       onClick={sendAiMessage}
                       disabled={!aiInputMessage.trim() || aiLoading}
                     >
