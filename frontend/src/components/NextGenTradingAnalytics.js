@@ -16,13 +16,16 @@ import './NextGenTradingAnalytics.css';
 
 // ============================================================================
 // NEXT-GEN TRADING ANALYTICS DASHBOARD
-// Phase 1 & 2: Core Structure, Design System, and All Dashboard Components
+// Phase 1, 2 & 3: Core Structure, Design System, All Components + AI Advisor
 // ============================================================================
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Default strategy for Deep Dive (TradingHub Gold - Account 886557)
 const DEFAULT_DEEP_DIVE_ACCOUNT = 886557;
+
+// Auto-refresh interval (30 seconds)
+const AUTO_REFRESH_INTERVAL = 30000;
 
 export default function NextGenTradingAnalytics() {
   // ─────────────────────────────────────────────────────────────────────────────
