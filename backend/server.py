@@ -23421,6 +23421,140 @@ async def get_manager_detailed_analytics(
         }
 
 
+
+# ===============================================================================
+# AI STRATEGY ADVISOR ENDPOINTS (Phase 3)
+# ===============================================================================
+
+class ChatRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+    include_context: bool = True
+    period_days: int = 30
+
+class AllocationRequest(BaseModel):
+    total_capital: float
+    risk_tolerance: str = "moderate"  # conservative, moderate, aggressive
+    period_days: int = 30
+
+@api_router.post("/admin/ai-advisor/chat")
+async def ai_advisor_chat(
+    request: ChatRequest,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Chat with the AI Strategy Advisor
+    Uses Claude Sonnet 4.5 for intelligent trading analysis
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        
+        advisor = AIStrategyAdvisor(db)
+        
+        # Generate session ID if not provided
+        session_id = request.session_id or f"user_{current_user.get('id', 'unknown')}_{datetime.now().timestamp()}"
+        
+        result = await advisor.chat(
+            session_id=session_id,
+            user_message=request.message,
+            include_data_context=request.include_context,
+            period_days=request.period_days
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"AI Advisor chat error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"AI Advisor error: {str(e)}",
+            "response": None
+        }
+
+@api_router.get("/admin/ai-advisor/insights")
+async def ai_advisor_insights(
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get automated AI-generated portfolio insights
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        
+        advisor = AIStrategyAdvisor(db)
+        result = await advisor.generate_automated_insights(period_days)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"AI Advisor insights error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to generate insights: {str(e)}",
+            "insights": None
+        }
+
+@api_router.post("/admin/ai-advisor/allocation")
+async def ai_advisor_allocation(
+    request: AllocationRequest,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get AI-powered allocation recommendations
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        
+        advisor = AIStrategyAdvisor(db)
+        result = await advisor.generate_allocation_recommendations(
+            total_capital=request.total_capital,
+            risk_tolerance=request.risk_tolerance,
+            period_days=request.period_days
+        )
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"AI Advisor allocation error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to generate allocation recommendations: {str(e)}",
+            "recommendations": None
+        }
+
+@api_router.get("/admin/ai-advisor/history/{session_id}")
+async def ai_advisor_history(
+    session_id: str,
+    limit: int = 20,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get chat history for a session
+    """
+    try:
+        from services.ai_strategy_advisor import AIStrategyAdvisor
+        
+        advisor = AIStrategyAdvisor(db)
+        history = await advisor.get_chat_history(session_id, limit)
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "messages": history,
+            "count": len(history)
+        }
+        
+    except Exception as e:
+        logging.error(f"AI Advisor history error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to get chat history: {str(e)}",
+            "messages": []
+        }
+
+
+
 # ===============================================================================
 # DEBUG ENDPOINTS - VERIFY ACCOUNT DATA FROM VPS
 # ===============================================================================
