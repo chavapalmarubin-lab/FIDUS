@@ -750,6 +750,11 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
+          {/* LIVE DEMO ANALYTICS Tab - Full Analytics for Demo Accounts */}
+          <TabsContent value="live-demo-analytics" className="mt-6">
+            <LiveDemoAnalytics />
+          </TabsContent>
+
 
           {/* PHASE 4A: Broker Rebates Tab */}
           <TabsContent value="broker-rebates" className="mt-6">
