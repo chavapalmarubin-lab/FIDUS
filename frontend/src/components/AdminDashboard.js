@@ -21,6 +21,7 @@ import MT5Dashboard from "./MT5Dashboard";
 import MT5AccountManagement from "../pages/admin/MT5AccountManagement";
 import ApplicationDocuments from "./ApplicationDocuments";
 import NextGenTradingAnalytics from "./NextGenTradingAnalytics";
+import LiveDemoAnalytics from "./LiveDemoAnalytics";
 import MoneyManagersDashboard from "./MoneyManagersDashboard";
 import BrokerRebates from "./BrokerRebates"; // PHASE 4A
 import UserAdministration from "./UserAdministration";
