@@ -154,7 +154,107 @@ export default function LiveDemoAnalytics() {
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchManagersData();
+    await fetchRiskNarrative();
     setTimeout(() => setRefreshing(false), 500);
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HULL RISK ENGINE FUNCTIONS
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  // Fetch risk narrative on portfolio tab
+  useEffect(() => {
+    if (activeTab === 'portfolio' && !riskNarrative && !riskNarrativeLoading && managers.length > 0) {
+      fetchRiskNarrative();
+    }
+  }, [activeTab, managers]);
+
+  // Fetch risk analysis when deep dive manager changes
+  useEffect(() => {
+    if (deepDiveManager && activeTab === 'deepdive') {
+      fetchRiskAnalysis(deepDiveManager.account);
+    }
+  }, [deepDiveManager, activeTab]);
+
+  const fetchRiskNarrative = async () => {
+    try {
+      setRiskNarrativeLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/risk-engine/narrative?period_days=${timePeriod}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setRiskNarrative(data);
+      }
+    } catch (err) {
+      console.error('Error fetching risk narrative:', err);
+    } finally {
+      setRiskNarrativeLoading(false);
+    }
+  };
+
+  const fetchRiskAnalysis = async (account) => {
+    try {
+      setRiskAnalysisLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/risk-engine/strategy-analysis/${account}?period_days=${timePeriod}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setRiskAnalysis(data);
+      }
+    } catch (err) {
+      console.error('Error fetching risk analysis:', err);
+    } finally {
+      setRiskAnalysisLoading(false);
+    }
+  };
+
+  const calculateMaxLots = async () => {
+    try {
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(`${BACKEND_URL}/api/admin/risk-engine/calculate-max-lots`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          equity: calcEquity,
+          symbol: calcSymbol,
+          stop_distance: calcStopDistance
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setCalcResult(data);
+      }
+    } catch (err) {
+      console.error('Error calculating max lots:', err);
+    }
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
