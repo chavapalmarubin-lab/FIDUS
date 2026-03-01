@@ -583,7 +583,8 @@ class HullRiskEngine:
     ) -> Dict[str, Any]:
         """Calculate drawdown compliance"""
         equity = account_info.get("equity", 0)
-        max_drawdown_pct = account_info.get("max_drawdown_pct", 0)
+        # Note: max_drawdown_pct from account_info could be used for historical analysis
+        _ = account_info.get("max_drawdown_pct", 0)  # Reserved for future use
         
         # Calculate current drawdown from peak
         if initial_allocation > 0:
