@@ -1447,8 +1447,94 @@ Status: ⚠️ MONITORING
 Issue: Salvador page broken
 Solution: Under investigation
 Status: 🔴 ACTIVE
- 
+
+15.6 HULL-STYLE RISK ENGINE (NEW)
+Implementation Date: March 1, 2026
+Status: ✅ Production Ready
+
+Overview:
+The Hull-style Risk Engine implements institutional-grade position sizing and risk control aligned with John C. Hull risk discipline. This is NOT retail MT5 exposure tracking - it's a proper risk management system.
+
+Core Concept:
+MaxLotsAllowed = min(MaxLotsRisk, MaxLotsMargin, MaxLotsNotionalCaps)
+
+Where:
+- MaxLotsRisk = RiskBudget / LossPerLotAtStop (PRIMARY limiter)
+- MaxLotsMargin = MaxMarginAllowed / MarginPerLot (SECONDARY)
+- Risk per trade (1% default) is the binding constraint, not leverage
+
+Risk Policy Defaults:
+┌──────────────────────────────────────────────────────────────┐
+│ Parameter                    │ Default  │ Allowed Range      │
+├──────────────────────────────┼──────────┼────────────────────┤
+│ Max Risk Per Trade           │ 1.0%     │ 0.25% - 2.0%       │
+│ Max Intraday Loss            │ 3.0%     │ 1.0% - 5.0%        │
+│ Max Weekly Loss              │ 6.0%     │ 3.0% - 10.0%       │
+│ Max Monthly Drawdown         │ 10.0%    │ 6.0% - 15.0%       │
+│ Max Margin Usage             │ 25.0%    │ 10.0% - 35.0%      │
+│ Leverage                     │ 200:1    │ Static             │
+│ Max Single Instrument (x)    │ 10x      │ 5x - 15x equity    │
+│ Max Total Notional (x)       │ 20x      │ 10x - 30x equity   │
+│ Overnight Exposure           │ OFF      │ Force-flat 16:50 NY│
+└──────────────────────────────┴──────────┴────────────────────┘
+
+Risk Control Score (0-100):
+Deterministic penalty-based scoring:
+- Start at 100
+- Lot breach: -6 per trade (cap -30)
+- Risk-per-trade breach: -8 per trade (cap -40)
+- Margin breach: -10 first day, -5 additional (cap -25)
+- Daily loss breach: -20 per day (cap -40)
+- Weekly loss breach: -25 per week (cap -50)
+- Monthly DD breach: -40 one-time
+- Overnight breach: -15 per event (cap -45)
+- Clamp to 0-100
+
+Labels: 80-100 Strong, 60-79 Moderate, 40-59 Weak, 0-39 Critical
+
+ATR Multipliers for Stop Proxy (when SL missing):
+- FX Majors: 0.75 × ATR(14)
+- FX Crosses: 1.00 × ATR(14)
+- Gold (XAUUSD): 0.60 × ATR(14)
+- Indices: 0.80 × ATR(14)
+
+API Endpoints:
+- GET /api/admin/risk-engine/instrument-specs - All instrument specs
+- POST /api/admin/risk-engine/calculate-max-lots - Calculate MaxLotsAllowed
+- GET /api/admin/risk-engine/policy - Get risk policy defaults
+- GET /api/admin/risk-engine/narrative - Risk profile interpretation
+
+Files:
+- Backend: /backend/services/hull_risk_engine.py
+- Frontend: /frontend/src/components/NextGenTradingAnalytics.js (Risk Limits tab)
+
+Example Calculation (XAUUSD):
+Equity: $100,000, RiskPerTrade: 1%, Stop: $10
+- RiskBudget = $100,000 × 1% = $1,000
+- LossPerLot = 100 oz × $10 = $1,000
+- MaxLotsRisk = $1,000 / $1,000 = 1.00 lot
+- Result: RISK BOUND (margin not binding at 200:1)
+
+Collection: instrument_specs (7 FIDUS Tier-1 instruments)
+
 16. CHANGE LOG
+March 1, 2026 - Hull-Style Risk Engine & Trading Analytics Enhancements
+•       Feature: Institutional-grade risk management aligned with John C. Hull discipline
+•       Components: Hull Risk Engine service, Position Sizing Calculator, Risk Control Score
+•       Implementation: 
+        ○       Backend service: hull_risk_engine.py (1200+ lines)
+        ○       Frontend: Risk Limits tab in Trading Analytics
+        ○       MongoDB: instrument_specs collection with 7 instruments
+•       Key Features:
+        ○       MaxLotsAllowed calculation (risk-bound formula)
+        ○       Strategy Allocation horizontal bar chart
+        ○       Portfolio Risk Profile radar chart
+        ○       Risk Profile Interpretation narrative panel
+•       Risk Defaults: 1% per trade, 3% daily, 25% margin, 200:1 leverage
+•       Status: ✅ Production ready
+•       Testing: 100% pass rate (backend + frontend)
+•       Verified by: Testing Agent v3 Fork
+
 November 17, 2025 - Investment Committee Allocation Workflow
 •       Feature: Complete allocation workflow with validation and recalculations
 •       Components: Apply button, 6 recalculation functions, audit logging
