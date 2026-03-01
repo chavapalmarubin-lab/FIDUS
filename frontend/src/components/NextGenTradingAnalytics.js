@@ -46,6 +46,28 @@ export default function NextGenTradingAnalytics() {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   
+  // Strategy Allocation chart state
+  const [allocationViewMode, setAllocationViewMode] = useState('allocated'); // 'allocated', 'equity', 'pnl'
+  
+  // Risk Profile Narrative state
+  const [riskNarrative, setRiskNarrative] = useState(null);
+  const [riskNarrativeLoading, setRiskNarrativeLoading] = useState(false);
+  
+  // Hull Risk Engine state
+  const [riskAnalysis, setRiskAnalysis] = useState(null);
+  const [riskAnalysisLoading, setRiskAnalysisLoading] = useState(false);
+  const [riskPolicy, setRiskPolicy] = useState({
+    max_risk_per_trade_pct: 1.0,
+    max_intraday_loss_pct: 3.0,
+    max_margin_usage_pct: 25.0,
+    leverage: 200
+  });
+  const [showRiskCalculator, setShowRiskCalculator] = useState(false);
+  const [calcSymbol, setCalcSymbol] = useState('XAUUSD');
+  const [calcEquity, setCalcEquity] = useState(100000);
+  const [calcStopDistance, setCalcStopDistance] = useState(10);
+  const [calcResult, setCalcResult] = useState(null);
+  
   // AI Advisor State
   const [aiChatMessages, setAiChatMessages] = useState([]);
   const [aiInputMessage, setAiInputMessage] = useState('');
