@@ -782,7 +782,7 @@ class HullRiskEngine:
                 if isinstance(deal_time, str):
                     try:
                         deal_time = datetime.fromisoformat(deal_time.replace('Z', '+00:00'))
-                    except:
+                    except ValueError:
                         continue
                 date_key = deal_time.strftime("%Y-%m-%d")
                 daily_pnl[date_key] += deal.get("profit", 0)
