@@ -682,6 +682,132 @@ class HullRiskEngine:
             "compliant_pct": round(compliant_pct, 1)
         }
     
+    # =========================================================================
+    # BREACH COUNTING METHODS (for deterministic scoring)
+    # =========================================================================
+    
+    async def _count_lot_breaches(
+        self,
+        deals: List[Dict],
+        equity: float,
+        risk_policy: Dict
+    ) -> int:
+        """Count trades where lot size exceeded MaxLotsAllowed"""
+        if not deals or equity <= 0:
+            return 0
+        
+        breaches = 0
+        for deal in deals:
+            symbol = deal.get("symbol", "")
+            volume = deal.get("volume", 0)
+            
+            if not symbol or volume <= 0:
+                continue
+            
+            specs = await self.get_instrument_specs(symbol)
+            max_calc = self.calculate_max_lots(equity, specs, risk_policy)
+            
+            if volume > max_calc["max_lots_allowed"]:
+                breaches += 1
+        
+        return breaches
+    
+    def _count_risk_breaches(
+        self,
+        deals: List[Dict],
+        equity: float,
+        risk_policy: Dict
+    ) -> int:
+        """Count trades where risk at stop exceeded RiskBudget"""
+        if not deals or equity <= 0:
+            return 0
+        
+        max_risk_pct = risk_policy.get("max_risk_per_trade_pct", 1.0)
+        max_loss_per_trade = equity * (max_risk_pct / 100)
+        
+        breaches = 0
+        for deal in deals:
+            profit = deal.get("profit", 0)
+            # Count losses that exceeded the risk budget
+            if profit < 0 and abs(profit) > max_loss_per_trade:
+                breaches += 1
+        
+        return breaches
+    
+    def _count_margin_breach_days(
+        self,
+        account_info: Dict,
+        risk_policy: Dict
+    ) -> int:
+        """Count days margin usage exceeded threshold (simplified - current state only)"""
+        equity = account_info.get("equity", 0)
+        margin = account_info.get("margin", 0)
+        
+        if equity <= 0:
+            return 0
+        
+        max_margin_pct = risk_policy.get("max_margin_usage_pct", 25.0)
+        current_usage_pct = (margin / equity) * 100
+        
+        # For now, return 1 if currently in breach, 0 otherwise
+        # In production, this would query historical margin snapshots
+        return 1 if current_usage_pct > max_margin_pct else 0
+    
+    def _count_daily_loss_breaches(
+        self,
+        account_info: Dict,
+        deals: List[Dict],
+        risk_policy: Dict
+    ) -> int:
+        """Count days where daily loss exceeded threshold"""
+        if not deals:
+            return 0
+        
+        max_intraday_loss_pct = risk_policy.get("max_intraday_loss_pct", 3.0)
+        equity = account_info.get("equity", 0)
+        initial_allocation = account_info.get("initial_allocation", equity)
+        
+        if initial_allocation <= 0:
+            return 0
+        
+        max_daily_loss = initial_allocation * (max_intraday_loss_pct / 100)
+        
+        # Group deals by date and sum P&L
+        from collections import defaultdict
+        daily_pnl = defaultdict(float)
+        
+        for deal in deals:
+            deal_time = deal.get("time")
+            if deal_time:
+                if isinstance(deal_time, str):
+                    try:
+                        deal_time = datetime.fromisoformat(deal_time.replace('Z', '+00:00'))
+                    except:
+                        continue
+                date_key = deal_time.strftime("%Y-%m-%d")
+                daily_pnl[date_key] += deal.get("profit", 0)
+        
+        # Count days with breach
+        breaches = 0
+        for date_key, pnl in daily_pnl.items():
+            if pnl < -max_daily_loss:
+                breaches += 1
+        
+        return breaches
+    
+    def _count_overnight_breaches(
+        self,
+        deals: List[Dict],
+        risk_policy: Dict
+    ) -> int:
+        """Count overnight position breaches (positions held past force-flat time)"""
+        if risk_policy.get("allow_overnight", True):
+            return 0  # Overnight allowed, no breaches
+        
+        # For now, return 0 - would need position history to detect overnight holds
+        # In production, this would check position open/close times against force_flat_time
+        return 0
+    
     def _calculate_margin_compliance(
         self,
         account_info: Dict,
