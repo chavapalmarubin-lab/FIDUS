@@ -834,56 +834,88 @@ export default function LiveDemoAnalytics() {
         {activeTab === 'portfolio' && (
           <div className="lda-portfolio-tab" data-testid="portfolio-content">
             <div className="lda-grid-4">
-              {/* Fund Allocation Pie Chart */}
+              {/* Strategy Allocation Bar Chart (Replaces Fund Allocation) */}
               <div className="lda-card lda-card-span-2">
                 <div className="lda-card-header">
-                  <h3>Fund Allocation</h3>
-                  <span className="lda-card-subtitle">Capital Distribution by Fund</span>
+                  <h3>Strategy Allocation</h3>
+                  <div className="lda-card-header-controls">
+                    <div className="lda-toggle-group">
+                      <button 
+                        className={`lda-toggle-btn ${allocationViewMode === 'allocated' ? 'active' : ''}`}
+                        onClick={() => setAllocationViewMode('allocated')}
+                      >
+                        Allocated
+                      </button>
+                      <button 
+                        className={`lda-toggle-btn ${allocationViewMode === 'equity' ? 'active' : ''}`}
+                        onClick={() => setAllocationViewMode('equity')}
+                      >
+                        Equity
+                      </button>
+                      <button 
+                        className={`lda-toggle-btn ${allocationViewMode === 'pnl' ? 'active' : ''}`}
+                        onClick={() => setAllocationViewMode('pnl')}
+                      >
+                        P&L
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div className="lda-card-body">
                   <ResponsiveContainer width="100%" height={280}>
-                    <PieChart>
-                      <Pie
-                        data={fundAllocationData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={3}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        labelLine={false}
-                      >
-                        {fundAllocationData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={FUND_COLORS[entry.name] || CHART_COLORS[index % CHART_COLORS.length]} 
-                          />
-                        ))}
-                      </Pie>
+                    <BarChart data={strategyAllocationData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
+                      <XAxis 
+                        type="number" 
+                        tick={{ fill: '#94A3B8', fontSize: 11 }}
+                        tickFormatter={(v) => allocationViewMode === 'pnl' ? `$${(v/1000).toFixed(0)}k` : `$${(v/1000).toFixed(0)}k`}
+                      />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        tick={{ fill: '#94A3B8', fontSize: 11 }}
+                        width={100}
+                      />
                       <Tooltip 
-                        formatter={(value) => formatCurrency(value)}
-                        contentStyle={{ 
-                          background: 'rgba(15, 23, 42, 0.95)', 
-                          border: '1px solid rgba(0, 212, 170, 0.3)',
-                          borderRadius: '8px',
-                          color: '#fff'
+                        content={({ payload, label }) => {
+                          if (payload && payload.length > 0) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="lda-custom-tooltip">
+                                <div className="lda-tooltip-title">{data.fullName}</div>
+                                <div className="lda-tooltip-row">
+                                  <span>Allocated:</span>
+                                  <span>{formatCurrency(data.initial_allocation)}</span>
+                                </div>
+                                <div className="lda-tooltip-row">
+                                  <span>Current Equity:</span>
+                                  <span>{formatCurrency(data.current_equity)}</span>
+                                </div>
+                                <div className="lda-tooltip-row">
+                                  <span>P&L:</span>
+                                  <span className={data.total_pnl >= 0 ? 'positive' : 'negative'}>
+                                    {formatCurrency(data.total_pnl)}
+                                  </span>
+                                </div>
+                                <div className="lda-tooltip-row">
+                                  <span>Return:</span>
+                                  <span className={data.return_percentage >= 0 ? 'positive' : 'negative'}>
+                                    {data.return_percentage.toFixed(2)}%
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
                         }}
                       />
-                    </PieChart>
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                        {strategyAllocationData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
-                  <div className="lda-pie-legend">
-                    {fundAllocationData.map((fund, i) => (
-                      <div key={fund.name} className="lda-legend-item">
-                        <span 
-                          className="lda-legend-dot" 
-                          style={{ background: FUND_COLORS[fund.name] || CHART_COLORS[i] }}
-                        />
-                        <span className="lda-legend-label">{fund.name}</span>
-                        <span className="lda-legend-value">{formatCurrency(fund.value)}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
 
@@ -909,21 +941,112 @@ export default function LiveDemoAnalytics() {
                       <Radar
                         name="Portfolio"
                         dataKey="value"
-                        stroke="#00D4AA"
-                        fill="#00D4AA"
+                        stroke="#A855F7"
+                        fill="#A855F7"
                         fillOpacity={0.3}
                         strokeWidth={2}
                       />
                       <Tooltip 
                         contentStyle={{ 
                           background: 'rgba(15, 23, 42, 0.95)', 
-                          border: '1px solid rgba(0, 212, 170, 0.3)',
+                          border: '1px solid rgba(168, 85, 247, 0.3)',
                           borderRadius: '8px',
                           color: '#fff'
                         }}
                       />
                     </RadarChart>
                   </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Risk Profile Narrative Panel */}
+              <div className="lda-card lda-card-span-4">
+                <div className="lda-card-header">
+                  <div className="lda-card-header-icon lda-card-header-icon-warning">
+                    <AlertTriangle size={18} />
+                  </div>
+                  <h3>Risk Profile Interpretation (Last {timePeriod} Days)</h3>
+                  <button 
+                    className="lda-btn lda-btn-ghost lda-btn-sm"
+                    onClick={fetchRiskNarrative}
+                    disabled={riskNarrativeLoading}
+                  >
+                    <RefreshCw size={14} className={riskNarrativeLoading ? 'spin' : ''} />
+                  </button>
+                </div>
+                <div className="lda-card-body">
+                  {riskNarrativeLoading ? (
+                    <div className="lda-narrative-loading">
+                      <Loader2 size={24} className="spin" />
+                      <span>Analyzing risk profile...</span>
+                    </div>
+                  ) : riskNarrative ? (
+                    <div className="lda-narrative-content">
+                      {/* Confidence Notes */}
+                      {riskNarrative.confidence_notes?.length > 0 && (
+                        <div className="lda-narrative-confidence">
+                          {riskNarrative.confidence_notes.map((note, i) => (
+                            <div key={i} className="lda-confidence-note">{note}</div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Executive Read */}
+                      <div className="lda-narrative-section">
+                        <h4>Executive Summary</h4>
+                        <ul className="lda-narrative-bullets">
+                          {riskNarrative.executive_read?.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      {/* Metric Interpretations */}
+                      <div className="lda-narrative-section">
+                        <h4>Metric Analysis</h4>
+                        <div className="lda-metric-interpretations">
+                          {riskNarrative.metric_interpretations?.map((item, i) => (
+                            <div key={i} className="lda-metric-item">
+                              <div className="lda-metric-header">
+                                <span className="lda-metric-name">{item.metric}</span>
+                                <span className="lda-metric-value">{item.value}</span>
+                              </div>
+                              <p className="lda-metric-desc">{item.interpretation}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Red Flags */}
+                      {riskNarrative.red_flags?.length > 0 && (
+                        <div className="lda-narrative-section lda-narrative-danger">
+                          <h4><AlertTriangle size={16} /> Red Flags</h4>
+                          <ul className="lda-narrative-bullets lda-danger-list">
+                            {riskNarrative.red_flags.map((flag, i) => (
+                              <li key={i}>{flag}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Actionable Fixes */}
+                      {riskNarrative.actionable_fixes?.length > 0 && (
+                        <div className="lda-narrative-section lda-narrative-action">
+                          <h4><Zap size={16} /> Recommended Actions</h4>
+                          <ul className="lda-narrative-bullets lda-action-list">
+                            {riskNarrative.actionable_fixes.map((fix, i) => (
+                              <li key={i}>{fix}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="lda-narrative-empty">
+                      <AlertTriangle size={20} />
+                      <span>Click refresh to generate risk analysis</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -952,12 +1075,20 @@ export default function LiveDemoAnalytics() {
                         formatter={(value) => [`${value.toFixed(2)}%`, 'Return']}
                         contentStyle={{ 
                           background: 'rgba(15, 23, 42, 0.95)', 
-                          border: '1px solid rgba(0, 212, 170, 0.3)',
+                          border: '1px solid rgba(168, 85, 247, 0.3)',
                           borderRadius: '8px',
                           color: '#fff'
                         }}
                       />
                       <Bar dataKey="return" radius={[0, 4, 4, 0]}>
+                        {performanceBarData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
                         {performanceBarData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
