@@ -1089,14 +1089,6 @@ export default function LiveDemoAnalytics() {
                   </ResponsiveContainer>
                 </div>
               </div>
-                        {performanceBarData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
 
               {/* Risk vs Return Scatter */}
               <div className="lda-card lda-card-span-2">
