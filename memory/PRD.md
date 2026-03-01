@@ -15,7 +15,50 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ## What's Been Implemented
 
-### Completed Features (Dec 2025 - Feb 2026)
+### Completed Features (Dec 2025 - Mar 2026)
+
+#### Hull-Style Risk Engine & Trading Analytics Enhancements (Mar 1, 2026) ✅
+- **Feature:** Institutional-grade risk management aligned with John C. Hull discipline
+- **Design:** Dark luxury fintech aesthetic with new Risk Limits tab
+- **Components Built:**
+  1. **Position Sizing Calculator:** Hull-style MaxLotsAllowed calculation
+     - MaxLotsAllowed = min(MaxLotsRisk, MaxLotsMargin)
+     - Risk-bound formula: MaxLotsRisk = RiskBudget / LossPerLotAtStop
+  2. **Strategy Allocation Chart:** Horizontal bar chart showing capital allocation per money manager
+     - Replaced incorrect "Fund Allocation" pie chart
+     - Toggle between Allocated, Equity, and P&L views
+  3. **Risk Profile Interpretation Panel:** Deterministic AI-style narrative
+     - Executive Summary with bullet points
+     - Metric analysis (Sharpe, Win Rate, Profit Factor, Risk Control)
+     - LOW CONFIDENCE warning when insufficient data
+  4. **Risk Limits Tab (NEW):** 
+     - Active Risk Policy header (1%, 3%, 25%, 200:1)
+     - Position Sizing Calculator with instrument dropdown
+     - XAUUSD calculation examples
+     - Key insight: "Risk limit (not margin) is binding constraint"
+- **Risk Policy Defaults:**
+  - Max Risk Per Trade: 1.0% (range 0.25-2.0%)
+  - Max Intraday Loss: 3.0%
+  - Max Weekly Loss: 6.0%
+  - Max Monthly Drawdown: 10.0%
+  - Max Margin Usage: 25.0%
+  - Leverage: 200:1 (static)
+  - No overnight exposure (force-flat 16:50 NY)
+- **Risk Control Score (0-100):** Deterministic penalty-based scoring
+- **instrument_specs Collection:** 7 FIDUS Tier-1 instruments
+  - XAUUSD, EURUSD, GBPUSD, USDJPY, AUDCAD, US30, DE40
+- **API Endpoints:**
+  - GET `/api/admin/risk-engine/instrument-specs`
+  - POST `/api/admin/risk-engine/calculate-max-lots`
+  - GET `/api/admin/risk-engine/policy`
+  - GET `/api/admin/risk-engine/narrative`
+- **Files Created/Modified:**
+  - `/app/backend/services/hull_risk_engine.py` (1200+ lines)
+  - `/app/backend/seed_instrument_specs.py` - Collection seeder
+  - `/app/backend/tests/test_hull_risk_engine.py` - Pytest tests
+  - `/app/frontend/src/components/NextGenTradingAnalytics.js` (updated)
+- **Status:** COMPLETE - 100% test pass rate (backend + frontend)
+- **Documentation:** SYSTEM_MASTER.md updated with Hull Risk Engine section
 
 #### Live Demo Analytics Dashboard (Feb 27, 2026) ✅
 - **Feature:** Complete analytics dashboard for LIVE DEMO accounts (manager candidate evaluation)
