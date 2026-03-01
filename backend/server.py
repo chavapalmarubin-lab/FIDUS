@@ -1966,9 +1966,19 @@ async def login(login_data: LoginRequest):
             password_valid = True
             must_change_password = True
             logging.info(f"✅ Password validated via temp_password")
-        elif password == "password123":
-            password_valid = True
-            logging.info(f"✅ Password validated via password123 fallback")
+        elif user_doc.get("password"):
+            # Check if password is hashed (bcrypt format) or plain
+            stored_pwd = user_doc["password"]
+            if stored_pwd.startswith("$2b$") or stored_pwd.startswith("$2a$"):
+                # Hashed password - verify using bcrypt
+                if verify_password(password, stored_pwd):
+                    password_valid = True
+                    logging.info(f"✅ Password validated via bcrypt hash")
+            else:
+                # Plain text password (legacy)
+                if password == stored_pwd:
+                    password_valid = True
+                    logging.info(f"✅ Password validated via plain text match")
             
         if not password_valid:
             logging.warning(f"❌ Password validation failed for user: {username}")
