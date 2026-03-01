@@ -69,14 +69,21 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
   - KPI Strip showing demo portfolio metrics
   - Portfolio Overview, Manager Rankings, Deep Dive tabs
   - AI Advisor with demo-specific context ("Which managers should receive real capital?")
+- **Hull-style Risk Engine (Mar 1, 2026):** Full feature parity with Trading Analytics
+  - Strategy Allocation horizontal bar chart (Allocated/Equity/P&L toggle)
+  - Portfolio Risk Profile radar chart (5 metrics)
+  - Risk Profile Interpretation narrative panel
+  - Risk Limits tab with Position Sizing Calculator
+  - XAUUSD Example with verified calculations
+  - Strategy Risk Analysis dropdown (5 demo accounts)
 - **API Endpoints:** 
   - `/api/admin/live-demo-analytics/managers` - Returns only live_demo accounts
   - `/api/admin/live-demo-ai-advisor/*` - AI endpoints with demo context
 - **Files Created:**
-  - `/app/frontend/src/components/LiveDemoAnalytics.js` - Dashboard component
-  - `/app/frontend/src/components/LiveDemoAnalytics.css` - Purple/orange theme
+  - `/app/frontend/src/components/LiveDemoAnalytics.js` - Dashboard component (updated with Risk Engine)
+  - `/app/frontend/src/components/LiveDemoAnalytics.css` - Purple/orange theme (updated)
   - `/app/backend/services/live_demo_analytics_service.py` - Backend service
-- **Status:** COMPLETE - All features tested, data separation verified
+- **Status:** COMPLETE - 100% test pass rate, all Risk Engine features verified
 
 #### Next-Generation Trading Analytics Dashboard (Feb 27, 2026) ✅
 - **Feature:** Complete replacement of the old Trading Analytics tab with an institutional-grade dashboard
