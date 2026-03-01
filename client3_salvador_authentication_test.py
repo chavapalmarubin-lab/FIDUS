@@ -26,7 +26,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
+BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com/api"
 CLIENT_USERNAME = "client3"
 CLIENT_PASSWORD = "password123"
 CLIENT_USER_TYPE = "client"

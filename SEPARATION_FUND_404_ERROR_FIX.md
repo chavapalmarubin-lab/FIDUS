@@ -131,7 +131,7 @@ In the browser console, go to **Network** tab and look for the failed request:
 
 **Expected URL:**
 ```
-https://trader-insights-10.preview.emergentagent.com/api/funds/SEPARATION/performance
+https://hull-risk-preview.preview.emergentagent.com/api/funds/SEPARATION/performance
 ```
 
 **If you see something different, that's the issue!**
@@ -154,7 +154,7 @@ Open browser console and test the API directly:
 
 ```javascript
 // Test SEPARATION fund API
-fetch('https://trader-insights-10.preview.emergentagent.com/api/funds/SEPARATION/performance', {
+fetch('https://hull-risk-preview.preview.emergentagent.com/api/funds/SEPARATION/performance', {
   headers: {
     'Authorization': 'Bearer ' + localStorage.getItem('token')
   }

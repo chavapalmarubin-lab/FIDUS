@@ -1,72 +1,287 @@
 <analysis>**original_problem_statement:**
-The user wants to build a **Next-Generation Trading Analytics Dashboard** for the FIDUS application. This dashboard must replace the current, basic Trading Analytics view and be a world-class, institutional-grade analytics tool.
+The user initially requested a Next-Generation Trading Analytics Dashboard for the FIDUS application. This involved building a new dashboard from scratch with a dark luxury theme, live data integration, and several feature tabs (KPIs, Portfolio Overview, Manager Rankings, Deep Dive). This was successfully built.
 
-PRODUCT REQUIREMENTS:
--   **Aesthetic:** Dark luxury fintech (deep navy/charcoal, gold/cyan accents).
--   **Typography:** DM Mono for data, Sora/Plus Jakarta Sans for headings.
--   **Layout:** Dense, information-rich grid with tabs and sparklines.
--   **Data Source:** Use **real, live data** from the existing MongoDB database and backend APIs (e.g., ).
--   **Structure:**
-    1.  **Top Header Bar:** Time-period selector, Refresh/Export buttons, live clock.
-    2.  **Summary KPI Strip:** Key aggregate metrics (Total AUM, Active Strategies, etc.).
-    3.  **Main Tabs:**
-        -   **Portfolio Overview:** Radar, bar, pie, and scatter charts for fund-level analysis.
-        -   **Manager Rankings:** Detailed leaderboard table, head-to-head comparison, and risk alerts.
-        -   **Deep Dive:** A detailed profile for a selected strategy, showing extensive stats and historical performance charts (defaults to TradingHub Gold).
-        -   **AI Strategy Advisor:** An LLM-powered chat interface for data analysis (DEFERRED to a future phase).
--   **Technical Stack:** React, Recharts, Tailwind CSS, lucide-react. The entire dashboard should be built within a single new component.
--   **Phasing:** The current request is to build **Phase 1 (Core Structure & Design)** and **Phase 2 (All Dashboard Components except AI Advisor)**.
+The project then expanded to include:
+1.  **Phase 3: AI Strategy Advisor:** An LLM-powered chat and insights feature using Claude Sonnet 4.5.
+2.  **Auto-Refresh:** A 30-second auto-refresh mechanism for the dashboard.
+3.  **Live Demo Analytics Tab:** A mirrored version of the entire analytics dashboard, but for live_demo accounts, with complete data and UI separation.
+
+The most recent request is a comprehensive, institutional-grade enhancement of the **Trading Analytics** tab, focusing on three core areas:
+-   **A) Insight Narration:** Add a detailed, AI-style written analysis panel to interpret the Portfolio Risk Profile radar chart, using deterministic rules.
+-   **B) Allocation Visualization:** Replace the incorrect Fund Allocation pie chart with a Strategy Allocation horizontal bar chart, showing capital allocation across different money managers/strategies.
+-   **C) Hull-style Risk Engine:** Implement a sophisticated risk management engine to calculate and display the **maximum allowed lot size** per instrument for each strategy. This requires creating a new  MongoDB collection, implementing complex risk formulas (based on equity, risk tolerance, stop-loss, and margin), and displaying the results and any breaches in a new Risk Limits UI section.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack React/FastAPI app with a MongoDB Atlas database. In this session, the agent successfully implemented a new LIVE DEMO tab, which involved creating a new frontend component () and a corresponding backend endpoint (). This work also led to the resolution of a critical data sync issue by correctly configuring new MT5 accounts in the  MongoDB collection, allowing the existing VPS bridge script to sync their data. The agent also added comprehensive documentation to  on how to add new MT5 accounts.
+The application is a full-stack React/FastAPI app with MongoDB. Two main analytics dashboards exist:  (for real accounts) and  (for demo accounts). Both dashboards are feature-rich, including KPI strips, multiple data tabs, and an integrated AI Strategy Advisor powered by Claude Sonnet 4.5.
+
+The agent has begun implementing the latest Institutional-Grade Enhancement request. It has created the necessary backend services () and API endpoints () and has performed extensive modifications to the  frontend component to add the new UI elements and state management. The implementation is currently in an unverified state after the agent fixed a backend server crash.
 
 **Last working item**:
--   **Last item agent was working:** The agent was processing the user's request to build the new Next-Generation Trading Analytics Dashboard. It has already clarified the scope with the user: to build Phases 1 and 2, replace the existing tab, use live data, and defer the AI component. The agent is now ready to begin implementation.
--   **Status:** NOT STARTED
--   **Agent Testing Done:** N/A
--   **Which testing method agent to use?** Frontend testing agent after completing both Phase 1 and Phase 2.
--   **User Testing Done:** N/A
+-   **Last item agent was working:** Implementing the institutional-grade analytics enhancements (Insight Narration, Strategy Allocation, Hull-style Risk Engine). The agent had just finished creating the backend services and performing a large-scale update on the  frontend component. It fixed a backend import error ( from To use the fastapi command, please install "fastapi[standard]":
+
+	pip install "fastapi[standard]") that was causing the server to crash.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Frontend testing agent. The scope of changes is very large and affects UI, data flow, and backend logic, requiring end-to-end verification.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
+-   **Issue 1: New Trading Analytics features are not rendering or verified (P0)**
+-   **Issue 2: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
 
 **Issues Detail:**
--   **Issue 1: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
-    -   **Attempted fixes:** None. This is a known issue carried over from a previous session.
-    -   **Next debug checklist:** Investigate the  logic in the MT5 sync service for the Lucrum bridge to handle potential race conditions or non-unique keys that might be causing failures during data synchronization.
-    -   **Why fix this issue and what will be achieved with the fix?** Ensures complete and accurate deal history for all Lucrum accounts without data loss or sync interruptions.
+-   **Issue 1: New Trading Analytics features are not rendering or verified (P0)**
+    -   **Attempted fixes:** The agent has written the code for the backend and frontend. It just fixed a backend server crash.
+    -   **Next debug checklist:**
+        1.  Take a screenshot to verify the  page loads without crashing.
+        2.  Inspect the browser's developer console for any frontend errors (e.g., state issues, rendering problems).
+        3.  Check backend logs (==> /var/log/supervisor/backend.err.log <==
+  File "/root/.venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    raise RuntimeError("No response returned.")
+RuntimeError: No response returned.
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT5 - Expected 13 accounts, found 9, Data not synced in 18326 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT4 - Data not synced in 65781 minutes (threshold: 5 minutes)
+INFO:root:🔍 User found: Investment Committee, checking password...
+INFO:root:🔍 Has temp_password: False
+INFO:root:✅ Password validated via password123 fallback
+INFO:root:🔍 Creating JWT token with data: {'user_id': 'admin_001', 'id': 'admin_001', 'username': 'admin', 'type': 'admin'}
+INFO:root:🔍 Created JWT token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkI...
+INFO:root:🔍 Middleware extracting token for /api/admin/portfolio-summary - token length: 203
+INFO:root:🔍 Middleware extracting token for /api/admin/portfolio-summary - token length: 203
+INFO:root:🔍 Middleware extracting token for /api/admin/client-money/total - token length: 203
+INFO:root:💰 Total Client Money: $380,536.05 from 4 active investments
+INFO:root:🔍 Middleware extracting token for /api/admin/client-money/total - token length: 203
+INFO:root:💰 Total Client Money: $380,536.05 from 4 active investments
+INFO:root:🔍 Middleware extracting token for /api/admin/trading-analytics/managers - token length: 203
+INFO:root:✅ Cache HIT for key: managers_ranking_30 (age: 21.6s)
+INFO:root:🔍 Middleware extracting token for /api/admin/trading-analytics/managers - token length: 203
+INFO:root:✅ Cache HIT for key: managers_ranking_30 (age: 21.7s)
+INFO:root:🔍 Middleware extracting token for /api/admin/risk-engine/narrative - token length: 203
+INFO:services.trading_analytics_service:📊 Calculating managers ranking for 30 days
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_uno14 (account 886602)
+INFO:services.trading_analytics_service:✅ Added UNO14 Manager from BALANCE fund
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_tradinghub_gold (account 886557)
+INFO:services.trading_analytics_service:✅ Added TradingHub Gold from BALANCE fund
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_tradinghub_gold (account 891215)
+INFO:services.trading_analytics_service:📊 Aggregated performance for TradingHub Gold across multiple accounts
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_provider1_assev (account 897589)
+INFO:services.trading_analytics_service:✅ Added Provider1-Assev from BALANCE fund
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_cp_strategy (account 885822)
+INFO:services.trading_analytics_service:✅ Added CP Strategy from CORE fund
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_cp_strategy (account 897590)
+INFO:services.trading_analytics_service:📊 Aggregated performance for CP Strategy across multiple accounts
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_alefloreztrader (account 897591)
+INFO:services.trading_analytics_service:✅ Added alefloreztrader from SEPARATION fund
+INFO:services.trading_analytics_service:📊 Calculating manager analytics for manager_alefloreztrader (account 897599)
+INFO:services.trading_analytics_service:📊 Aggregated performance for alefloreztrader across multiple accounts
+INFO:apscheduler.executors.default:Running job "background_health_check (trigger: cron[minute='*/5'], next run at: 2026-03-01 14:00:00 UTC)" (scheduled at 2026-03-01 13:55:00+00:00)
+INFO:server:[HEALTH MONITOR] Running scheduled health check...
+INFO:httpx:HTTP Request: GET https://hull-risk-preview.preview.emergentagent.com "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.github.com/repos/chavapalmarubin-lab/FIDUS "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fidus-investment-platform.onrender.com "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fidus-api.onrender.com/api/health "HTTP/1.1 200 OK"
+INFO:server:[HEALTH MONITOR] Health check complete - Overall status: critical
+INFO:server:[HEALTH MONITOR] Health percentage: 71.4% (5/7 components healthy)
+WARNING:server:[HEALTH MONITOR] Component 'MT5 Bridge Service' is offline: VPS bridge unavailable
+INFO:apscheduler.executors.default:Job "background_health_check (trigger: cron[minute='*/5'], next run at: 2026-03-01 14:00:00 UTC)" executed successfully
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT5 - Expected 13 accounts, found 9, Data not synced in 18327 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT4 - Data not synced in 65782 minutes (threshold: 5 minutes)
+INFO:apscheduler.executors.default:Running job "automatic_vps_sync (trigger: cron[minute='1,6,11,16,21,26,31,36,41,46,51,56'], next run at: 2026-03-01 14:01:00 UTC)" (scheduled at 2026-03-01 13:56:00+00:00)
+INFO:root:🔄 Auto-sync starting at 13:56:00
+ERROR:vps_sync_service:❌ Error calling VPS Bridge: All connection attempts failed
+ERROR:root:❌ VPS Bridge unhealthy, skipping sync: All connection attempts failed
+INFO:apscheduler.executors.default:Job "automatic_vps_sync (trigger: cron[minute='1,6,11,16,21,26,31,36,41,46,51,56'], next run at: 2026-03-01 14:01:00 UTC)" executed successfully
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT5 - Expected 13 accounts, found 9, Data not synced in 18328 minutes (threshold: 5 minutes)
+WARNING:services.bridge_monitoring_service:⚠️ ALERT [WARNING]: MEXAtlantic MT4 - Data not synced in 65783 minutes (threshold: 5 minutes)
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [41] using WatchFiles
+INFO:document_signing_service:Document Signing Service initialized
+/root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+INFO:config.database:Database config loaded for environment: production
+INFO:config.database:Database: fidus_production
+INFO:config.database:Connection pool: 10-50
+INFO:root:✅ MT5 Pool router imported successfully
+INFO:services.google.token_manager:✅ Token Manager initialized
+INFO:services.google.oauth:✅ Google OAuth Service initialized
+INFO:services.google.oauth:📍 Redirect URI: https://fidus-api.onrender.com/api/google/callback
+INFO:services.google.gmail:✅ Gmail Service initialized
+INFO:services.google.calendar:✅ Calendar Service initialized
+INFO:services.google.drive:✅ Drive Service initialized
+INFO:services.google.sheets:✅ Sheets Service initialized
+INFO:server:✅ Google Workspace services initialized: OAuth, Gmail, Calendar, Drive, Sheets
+INFO:root:MFA Service initialized
+INFO:root:MetaTrader5 library not available - using advanced simulation
+INFO:root:✅ Scheduled mock allocations initialization as background task
+ERROR:root:Unexpected error importing fund_performance_manager: unterminated string literal (detected at line 79) (fund_performance_manager.py, line 79)
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:root:✅ MT5 Pool router included successfully with prefix /mt5/pool
+INFO:root:✅ MT5 Config Management router included successfully
+INFO:root:✅ MT5 Bridge Proxy router included successfully
+INFO:root:✅ MT5 Health Monitoring router included successfully
+INFO:root:✅ System Test router included successfully
+/root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'fields' has been removed
+  warnings.warn(message, UserWarning)
+INFO:root:✅ Referrals router included successfully
+INFO:root:✅ Investment Committee V2 router included successfully
+INFO:root:✅ Bridge Health Monitoring router included successfully
+INFO:root:✅ Single Source of Truth API router included successfully
+INFO:routes.viking:✅ VIKING routes initialized with database connection
+INFO:root:✅ VIKING Trading router included successfully
+INFO:     Started server process [102]
+INFO:     Waiting for application startup.
+INFO:root:🚀 FIDUS Server starting up...
+INFO:root:📊 Environment: development, Render: False
+
+==> /var/log/supervisor/backend.out.log <==
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+⚠️ WARNING: MONGO_URL environment variable not found, checking .env file...
+✅ Found MONGO_URL in .env file
+✅ Using MongoDB Atlas connection
+✅ MongoDB connected to: fidus_production
+⚠️ MetaTrader5 package not available - using simulation mode
+INFO:     10.211.3.147:58062 - "POST /api/auth/login HTTP/1.1" 200 OK
+❌ Error getting clients: 'Cursor' object has no attribute 'count'
+❌ Full traceback: Traceback (most recent call last):
+  File "/app/backend/mongodb_integration.py", line 129, in get_all_clients
+    print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
+                             ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Cursor' object has no attribute 'count'
+
+INFO:     10.211.3.147:58072 - "GET /api/admin/portfolio-summary HTTP/1.1" 200 OK
+❌ Error getting clients: 'Cursor' object has no attribute 'count'
+❌ Full traceback: Traceback (most recent call last):
+  File "/app/backend/mongodb_integration.py", line 129, in get_all_clients
+    print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
+                             ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Cursor' object has no attribute 'count'
+
+INFO:     10.211.3.147:58062 - "GET /api/mt5/accounts/corrected HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58072 - "GET /api/admin/portfolio-summary HTTP/1.1" 200 OK
+INFO:     10.211.3.172:35110 - "GET /api/admin/client-money/total HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58072 - "GET /api/mt5/accounts/corrected HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58072 - "GET /api/admin/client-money/total HTTP/1.1" 200 OK
+INFO:     10.211.3.147:48668 - "POST /api/auth/login HTTP/1.1" 200 OK
+❌ Error getting clients: 'Cursor' object has no attribute 'count'
+❌ Full traceback: Traceback (most recent call last):
+  File "/app/backend/mongodb_integration.py", line 129, in get_all_clients
+    print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
+                             ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Cursor' object has no attribute 'count'
+
+INFO:     10.211.3.172:50756 - "GET /api/admin/portfolio-summary HTTP/1.1" 200 OK
+❌ Error getting clients: 'Cursor' object has no attribute 'count'
+❌ Full traceback: Traceback (most recent call last):
+  File "/app/backend/mongodb_integration.py", line 129, in get_all_clients
+    print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
+                             ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Cursor' object has no attribute 'count'
+
+INFO:     10.211.3.147:48668 - "GET /api/admin/portfolio-summary HTTP/1.1" 200 OK
+INFO:     10.211.3.172:50752 - "GET /api/mt5/accounts/corrected HTTP/1.1" 200 OK
+INFO:     10.211.3.172:50752 - "GET /api/admin/client-money/total HTTP/1.1" 200 OK
+INFO:     10.211.3.147:48668 - "GET /api/mt5/accounts/corrected HTTP/1.1" 200 OK
+INFO:     10.211.3.147:48668 - "GET /api/admin/client-money/total HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58694 - "POST /api/auth/login HTTP/1.1" 200 OK
+❌ Error getting clients: 'Cursor' object has no attribute 'count'
+❌ Full traceback: Traceback (most recent call last):
+  File "/app/backend/mongodb_integration.py", line 129, in get_all_clients
+    print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
+                             ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Cursor' object has no attribute 'count'
+
+INFO:     10.211.3.172:48852 - "GET /api/admin/portfolio-summary HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58694 - "GET /api/mt5/accounts/corrected HTTP/1.1" 200 OK
+❌ Error getting clients: 'Cursor' object has no attribute 'count'
+❌ Full traceback: Traceback (most recent call last):
+  File "/app/backend/mongodb_integration.py", line 129, in get_all_clients
+    print(f"🔍 DEBUG: Found {client_users.count()} client users in database")
+                             ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Cursor' object has no attribute 'count'
+
+INFO:     10.211.3.147:58694 - "GET /api/admin/portfolio-summary HTTP/1.1" 200 OK
+INFO:     10.211.3.172:48852 - "GET /api/admin/client-money/total HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58694 - "GET /api/mt5/accounts/corrected HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58694 - "GET /api/admin/client-money/total HTTP/1.1" 200 OK
+INFO:     10.211.3.172:48852 - "GET /api/admin/trading-analytics/managers?period_days=30 HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58694 - "GET /api/admin/trading-analytics/managers?period_days=30 HTTP/1.1" 200 OK
+INFO:     10.211.3.147:58694 - "GET /api/admin/risk-engine/narrative?period_days=30 HTTP/1.1" 200 OK) for errors related to the new  endpoints.
+        4.  Confirm the new  collection is created and populated in MongoDB, as the backend risk engine depends on it.
+        5.  Visually confirm the new UI components are present: the Strategy Allocation chart, the Risk Profile Interpretation panel, and the new Risk Limits tab.
+    -   **Why fix this issue and what will be achieved with the fix?** This will complete the user's latest and most complex feature request, delivering an institutional-grade risk analysis dashboard.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** None.
+-   **Issue 2: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors (P2)**
+    -   **Attempted fixes:** None in this session. This is a known carry-over issue.
+    -   **Next debug checklist:** Investigate the  logic in the MT5 sync service for the Lucrum bridge.
+    -   **Why fix this issue and what will be achieved with the fix?** Ensures complete and accurate deal history for all Lucrum accounts without data loss.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend.
     -   **Blocked on other issue:** None.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Complete and Verify Institutional-Grade Analytics Enhancements (P0)**
+    -   **Where to resume:** The backend server is running again. The immediate next step is to take a screenshot to see if the frontend UI loads. Then, begin debugging the new features based on the checklist in Issue 1. A key missing step is creating and seeding the  MongoDB collection.
+    -   **What will be achieved with this?** The Trading Analytics dashboard will be enhanced with a written risk narrative, a correct strategy allocation chart, and a new Risk Limits tab powered by the Hull-style risk engine.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on something:** The backend logic for the Hull risk engine is blocked until the  MongoDB collection is created and populated.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P0) Build Next-Gen Trading Analytics Dashboard - Phase 1 & 2:** This is the immediate and highest-priority task.
-        -   **Phase 1:** Implement the core component structure and the dark luxury design system (colors, fonts, base layout).
-        -   **Phase 2:** Build all specified dashboard components (KPI strip, Portfolio Overview, Manager Rankings, Deep Dive) and wire them to live backend data.
+    -   **(P1)** Update  with documentation for the new risk engine and instrument specs collection, as requested by the user.
+    -   **(P1)** Deploy MT5 Bridge API service to LUCRUM VPS.
+    -   **(P1)** Fix login for other affected referral agents (password hashing).
 -   **Future Tasks:**
-    -   **(P1) Build Next-Gen Trading Analytics Dashboard - Phase 3:** Implement the AI Strategy Advisor tab with LLM integration.
     -   **(P2)** Verify pagination on the TRACK-RECORD Orders tab.
-    -   **(P2)** Refactor the large  component into smaller sub-components.
+    -   **(P2)** Refactor  and  into smaller components.
+    -   **(P2)** Enable live data sync for VIKING CORE & PRO strategies.
 
 **Completed work in this session**
--   **LIVE DEMO Feature:**
-    -   Created a new LIVE DEMO tab with its own component () and backend endpoint ().
-    -   Successfully onboarded and configured 5 new live demo MT5 accounts, which are now syncing correctly from the VPS.
-    -   Implemented P&L and ROI tracking based on user-defined initial allocations.
--   **System Documentation:**
-    -   Authored a detailed guide in  explaining the step-by-step process for adding new MT5 accounts.
--   **Critical Bug Fix:**
-    -   Implicitly resolved a critical VPS data-sync issue by identifying and correcting a misconfiguration ( name) in the MongoDB  collection for the new accounts.
+-   **Next-Gen Trading Analytics Dashboard (Phase 1 & 2):** Created the core dashboard component () with a dark luxury theme, KPI strip, and multiple tabs wired to live data.
+-   **AI Strategy Advisor & Auto-Refresh (Phase 3):** Integrated Claude Sonnet 4.5 to create an AI chat and insights feature (), and added a 30-second data auto-refresh.
+-   **Live Demo Analytics Dashboard:** Created a complete, mirrored version of the analytics dashboard () for demo accounts, ensuring full data separation with a new backend service () and a distinct purple/orange theme.
+-   **Bug Fix:** Resolved an issue where the new Demo Analytics tab was not visible by restarting the frontend service, addressing a likely caching problem.
 
 **Earlier issues found/mentioned but not fixed**
--   **Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors:** This was noted in the initial handoff summary but was not addressed.
+-   **Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors:** This was noted in the initial handoff summary and remains unaddressed.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -75,64 +290,80 @@ The application is a full-stack React/FastAPI app with a MongoDB Atlas database.
 
 
 **Key Technical Concepts**
--   **Live Data Integration:** The agent debugged and mastered the data flow from the MT5 VPS bridge to MongoDB, understanding that the  collection acts as the source of truth for which accounts to sync.
--   **Dynamic Frontend Calculation:** The  component was built to perform real-time P&L and ROI calculations by combining live balance data from the API with a static  field stored in the database.
--   **System Documentation:** Documented a complex operational procedure () in  to ensure future scalability and reduce manual error.
+-   **Component Mirroring & Abstraction:** Efficiently created the  dashboard by reusing and adapting the  component.
+-   **Backend Service-Oriented Design:** Ensured data integrity by creating separate backend services for different data contexts (real, demo, AI, risk).
+-   **Complex Risk Logic (Hull-style):** Began implementation of a sophisticated risk engine to calculate  based on equity, risk tolerance, stop distance, and margin.
+-   **LLM Integration:** Successfully integrated Claude Sonnet 4.5 to provide contextual AI insights and chat functionality within the application.
+-   **Real-time UI:** Implemented a  based auto-refresh to keep dashboard data current.
 
 **key DB schema**
--   **mt5_account_config:** The configuration collection for MT5 accounts.
-    -   **Key columns:**  (Number),  (String),  (String, must be 'LucrumCapital-Trade'),  (Boolean),  (String, e.g., 'live_demo'),  (Number).
--   **mt5_accounts:** The collection containing live, synced data from the MT5 terminals (balance, equity, profit, etc.), which is populated by the VPS bridge script.
+-   **instrument_specs (NEW & REQUIRED):** A new collection to store contract specifications for tradable instruments. It's essential for the Hull risk engine.
+    -   **Key columns:** , , , , , .
+-   **mt5_account_config:** Stores configuration for MT5 accounts, used to differentiate between 'real' and 'live_demo' types.
+    -   **Key columns:** , , .
 
 **changes in tech stack**
--   None.
+-   **emergentintegrations:** Added to facilitate the Claude Sonnet 4.5 LLM integration.
 
 **All files of reference**
--   : The file/component to be replaced. A new component should be created for the new dashboard.
--   : Contains existing API endpoints like  which will be used as the data source.
--   : Contains critical architecture documentation.
+-   : The primary component being modified for the new risk features.
+-   : The main FastAPI file containing all API endpoints, including the new ones for the risk engine.
+-   : The new backend service containing the core logic for the Hull-style risk calculations.
+-   : Important documentation file which the user has requested be updated upon completion.
+
+**Areas that need refactoring**:
+-    has grown excessively large and complex. It should be broken down into smaller, more manageable sub-components (e.g., , , ) to improve maintainability.
 
 **key api endpoints**
--   : The primary existing endpoint that provides performance data for trading strategies. This will be the main data source for the new dashboard.
--   : A new endpoint created for the LIVE DEMO tab.
+-   : (New) Generates the written risk profile interpretation.
+-   : (New) Computes the Hull-style risk metrics and max lot sizes.
+-   : (New) Fetches instrument contract specifications from the new collection.
+-   : Handles chat messages with the AI advisor.
+-   : Fetches data for real accounts.
+-   : Fetches data for live_demo accounts.
 
 **Critical Info for New Agent**
--   Your primary and only task is to build the **Next-Generation Trading Analytics Dashboard** as per the user's detailed specifications.
--   **Start with Phases 1 & 2 only.** Do NOT build the AI Strategy Advisor tab.
--   The new dashboard must **replace** the existing Trading Analytics functionality.
--   Use **LIVE data** from existing backend APIs. Do not use hardcoded mock data for the final implementation.
--   Strictly follow the specified design direction: dark theme, specific colors,  for charts, and  for icons. The goal is an institutional-grade look and feel.
--   The previous critical issue regarding VPS data sync is **resolved**. The architecture for adding and syncing accounts is understood and documented. Do not revisit this unless a new, specific problem arises.
+-   You are resuming mid-implementation of a very large feature. The immediate goal is to get the  page to render without crashing and then systematically debug the new features.
+-   **CRITICAL BLOCKER:** The Hull risk engine () will not work until you **create and populate the  collection in MongoDB**. This should be one of your first backend actions.
+-   The user's last message provided extremely detailed, non-negotiable requirements. Refer to it carefully for the implementation logic of the risk narrative, allocation chart, and Hull engine.
+-   Once the feature is working, remember to update the  file as requested by the user.
 
 **documents and test reports created in this job**
--    was significantly updated with new documentation for adding MT5 accounts.
+-    (from testing Live Demo Analytics)
+-    (from testing AI Advisor)
+-    (from testing core dashboard)
+-    (has been updated throughout the session)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provided a detailed PRD for the Next-Gen Trading Analytics Dashboard feature.
-2.  **User:** Asked for the agent's plan and clarifications.
-3.  **Agent:** Asked clarifying questions about data source (real vs. mock), scope (replace vs. new), AI integration, and phasing.
-4.  **User:** Responded to a simulated clarification request, confirming: use real data, replace the tab, use the Emergent LLM key, and build only Phase 1 & 2 for now.
-5.  **Agent:** Acknowledged the user's direction and prepared to start the implementation.
+10. **User** requested the creation of the Live Demo Analytics tab.
+9. **Agent** implemented the tab.
+8. **User** reported the tab was missing.
+7. **Agent** debugged the frontend cache issue and confirmed the fix.
+6. **User** provided a very detailed, multi-part PRD for the institutional-grade enhancements (Insight Narration, Strategy Allocation Chart, Hull Risk Engine).
+5. **Agent** proposed a plan to implement the features, including creating a new MongoDB collection for instrument specs.
+4. **User** approved the plan and confirmed the need to update  upon completion.
+3. **Agent** began implementation.
+2. **Agent** fixed a backend crash.
+1. **Agent** was about to take a screenshot to verify the UI post-fix.
 
 **Project Health Check:**
--   **Broken**: None.
+-   **Broken**: The  page is in an unknown, likely unstable state due to the recent large-scale, unverified code changes.
 -   **Mocked**: None.
 
 **3rd Party Integrations**
 -   **MongoDB Atlas:** Primary database.
--   **Render:** Production deployment platform for the backend.
--   **GitHub Actions:** Used for CI/CD and remote operations.
--   **Recharts:** Required charting library for the new dashboard.
--   **lucide-react:** Required icon library for the new dashboard.
+-   **Claude Sonnet 4.5:** Integrated via  for the AI Strategy Advisor. Uses the Emergent LLM Key.
+-   **Recharts:** Charting library.
+-   **lucide-react:** Icon library.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (The LIVE DEMO feature was tested via screenshots).
+-   **Testing agent used after significant changes:** YES, but not for the current in-progress task.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** None.
+-   **Known regressions:** High probability of regressions on the Trading Analytics page due to the recent extensive changes.
 
 **Credentials to test flow:**
 -   **FIDUS Admin:**  / 
 
 **What agent forgot to execute**
--   The agent did not address the pending low-priority issue from the initial handoff: Legacy FIDUS issue: Lucrum MT5 Bridge duplicate key errors. This remains in the backlog.</analysis>
+-   The agent created the backend service for the Hull risk engine but did not create or populate the  MongoDB collection that the service depends on. This is a critical missing step that will cause the feature to fail.</analysis>

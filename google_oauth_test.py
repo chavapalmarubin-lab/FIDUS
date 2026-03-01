@@ -25,7 +25,7 @@ import time
 import urllib.parse
 
 # Configuration
-BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
+BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

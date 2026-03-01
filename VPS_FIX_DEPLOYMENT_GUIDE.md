@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://trader-insights-10.preview.emergentagent.com/api/system/status
+   curl https://hull-risk-preview.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://trader-insights-10.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://hull-risk-preview.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

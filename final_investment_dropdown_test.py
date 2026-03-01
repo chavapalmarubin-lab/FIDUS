@@ -27,7 +27,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration - Use production URL from frontend .env
-BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
+BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com/api"
 
 # Test Admin Credentials
 ADMIN_CREDENTIALS = {

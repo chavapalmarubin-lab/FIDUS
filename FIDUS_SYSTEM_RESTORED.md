@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://trader-insights-10.preview.emergentagent.com`
+`https://hull-risk-preview.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

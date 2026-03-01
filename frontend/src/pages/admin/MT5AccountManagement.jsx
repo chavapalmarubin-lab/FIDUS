@@ -59,7 +59,7 @@ const MT5AccountManagement = () => {
     is_active: true
   });
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://trader-insights-10.preview.emergentagent.com';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://hull-risk-preview.preview.emergentagent.com';
 
   const loadAccounts = async () => {
     setLoading(true);

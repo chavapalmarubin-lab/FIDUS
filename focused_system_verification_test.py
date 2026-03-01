@@ -2,7 +2,7 @@
 """
 FOCUSED SYSTEM VERIFICATION - Available Endpoints Only
 Testing Date: December 18, 2025
-Backend URL: https://trader-insights-10.preview.emergentagent.com/api
+Backend URL: https://hull-risk-preview.preview.emergentagent.com/api
 Auth: Admin (username: admin, password: password123)
 
 Available Test Suite:
@@ -24,7 +24,7 @@ from typing import Dict, Any, List, Optional
 
 class FocusedSystemVerifier:
     def __init__(self):
-        self.base_url = "https://trader-insights-10.preview.emergentagent.com/api"
+        self.base_url = "https://hull-risk-preview.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

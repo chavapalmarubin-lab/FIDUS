@@ -17,7 +17,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://trader-insights-10.preview.emergentagent.com/api"
+BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com/api"
 
 class AlejandroActualSetupTester:
     def __init__(self):

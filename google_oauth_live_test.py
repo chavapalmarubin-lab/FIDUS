@@ -21,7 +21,7 @@ from urllib.parse import urlparse, parse_qs
 
 # Live application URLs
 LIVE_FRONTEND_URL = "https://fidus-invest.emergent.host"
-BACKEND_URL_FROM_ENV = "https://trader-insights-10.preview.emergentagent.com/api"  # From frontend/.env
+BACKEND_URL_FROM_ENV = "https://hull-risk-preview.preview.emergentagent.com/api"  # From frontend/.env
 EXPECTED_BACKEND_URL = "https://fidus-invest.emergent.host/api"  # Expected for live app
 
 class GoogleOAuthLiveTester:
