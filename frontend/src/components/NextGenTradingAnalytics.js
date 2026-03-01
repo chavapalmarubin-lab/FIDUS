@@ -448,19 +448,31 @@ export default function NextGenTradingAnalytics() {
   // CHART DATA TRANSFORMATIONS
   // ─────────────────────────────────────────────────────────────────────────────
   
-  // Portfolio allocation by fund
-  const fundAllocationData = useMemo(() => {
-    const fundMap = {};
-    managers.forEach(m => {
-      const fund = m.fund || 'Unknown';
-      if (!fundMap[fund]) {
-        fundMap[fund] = { name: fund, value: 0, managers: 0 };
+  // Strategy allocation data (replaces Fund Allocation - we only have ONE fund)
+  const strategyAllocationData = useMemo(() => {
+    return managers.map(m => {
+      let value;
+      if (allocationViewMode === 'equity') {
+        value = m.current_equity || 0;
+      } else if (allocationViewMode === 'pnl') {
+        value = m.total_pnl || 0;
+      } else {
+        value = m.initial_allocation || 0;
       }
-      fundMap[fund].value += m.initial_allocation || 0;
-      fundMap[fund].managers += 1;
-    });
-    return Object.values(fundMap);
-  }, [managers]);
+      
+      return {
+        name: m.manager_name?.split(' ')[0] || `Account ${m.account}`,
+        fullName: m.manager_name || `Account ${m.account}`,
+        account: m.account,
+        value: value,
+        initial_allocation: m.initial_allocation || 0,
+        current_equity: m.current_equity || 0,
+        total_pnl: m.total_pnl || 0,
+        return_percentage: m.return_percentage || 0,
+        fill: (m.return_percentage || 0) >= 0 ? '#00D4AA' : '#EF4444'
+      };
+    }).sort((a, b) => b.value - a.value);
+  }, [managers, allocationViewMode]);
 
   // Risk metrics radar data
   const riskRadarData = useMemo(() => {
