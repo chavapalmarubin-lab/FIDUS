@@ -805,13 +805,21 @@ export default function LiveDemoAnalytics() {
           Deep Dive
         </button>
         <button 
+          className={`lda-tab ${activeTab === 'risklimits' ? 'active' : ''}`}
+          onClick={() => setActiveTab('risklimits')}
+          data-testid="tab-risklimits"
+        >
+          <Shield size={16} />
+          Risk Limits
+          <span className="lda-tab-badge lda-tab-badge-new">NEW</span>
+        </button>
+        <button 
           className={`lda-tab ${activeTab === 'advisor' ? 'active' : ''}`}
           onClick={() => setActiveTab('advisor')}
           data-testid="tab-advisor"
         >
           <Zap size={16} />
           AI Advisor
-          <span className="lda-tab-badge lda-tab-badge-new">NEW</span>
         </button>
       </nav>
 
