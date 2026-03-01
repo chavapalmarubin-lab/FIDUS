@@ -136,14 +136,90 @@ DEFAULT_INSTRUMENT_SPECS = {
     }
 }
 
-# Default risk policy
+# ============================================================================
+# FIDUS RISK POLICY DEFAULTS (Hull-style discipline)
+# These are platform defaults, overrideable per strategy/account
+# ============================================================================
+
 DEFAULT_RISK_POLICY = {
-    "max_risk_per_trade_pct": 1.0,  # 1% of equity
-    "max_intraday_loss_pct": 3.0,   # 3% of equity
-    "max_margin_usage_pct": 25.0,   # 25% of equity
-    "leverage": 200,                 # 200:1
-    "allow_overnight": True,
-    "max_position_notional_multiplier": 10  # Max 10x equity in notional
+    # A) Loss limits (Hull-style "survival first")
+    "max_risk_per_trade_pct": 1.0,      # 1% of equity (range 0.25-2.0%)
+    "max_intraday_loss_pct": 3.0,       # 3% daily stop (range 1.0-5.0%)
+    "max_weekly_loss_pct": 6.0,         # 6% weekly (range 3.0-10.0%)
+    "max_monthly_drawdown_pct": 10.0,   # 10% monthly DD (range 6.0-15.0%)
+    
+    # B) Margin / leverage controls (secondary constraint)
+    "leverage": 200,                     # 200:1 static
+    "max_margin_usage_pct": 25.0,       # 25% of equity (range 10-35%)
+    "max_single_instrument_notional_x": 10,  # Max 10x equity per symbol (range 5-15x)
+    "max_total_portfolio_notional_x": 20,    # Max 20x equity total (range 10-30x)
+    
+    # C) Time risk (FIDUS = intraday only)
+    "allow_overnight": False,           # No overnight exposure
+    "force_flat_time_utc": "21:50",     # 16:50 NY time = 21:50 UTC (10 min before rollover)
+    
+    # Allowed ranges for UI validation
+    "ranges": {
+        "max_risk_per_trade_pct": [0.25, 2.0],
+        "max_intraday_loss_pct": [1.0, 5.0],
+        "max_weekly_loss_pct": [3.0, 10.0],
+        "max_monthly_drawdown_pct": [6.0, 15.0],
+        "max_margin_usage_pct": [10.0, 35.0],
+        "max_single_instrument_notional_x": [5, 15],
+        "max_total_portfolio_notional_x": [10, 30]
+    }
+}
+
+# ATR multipliers by asset class for stop proxy estimation
+ATR_MULTIPLIERS = {
+    "FX_MAJOR": 0.75,       # FX majors like EURUSD, GBPUSD
+    "FX_CROSS": 1.00,       # FX crosses like AUDCAD (more volatile)
+    "Metals": 0.60,         # Gold - volatile but tighter intraday management
+    "INDEX_CFD": 0.80,      # Indices like US30, DE40
+    "CRYPTO": 2.00          # Crypto pairs (very volatile)
+}
+
+# Risk Control Score penalty weights (deterministic formula)
+# Start at 100, subtract penalties, clamp to 0-100
+RISK_SCORE_PENALTIES = {
+    "lot_breach_per_trade": 6,       # -6 per breach (cap -30)
+    "lot_breach_cap": 30,
+    "risk_per_trade_breach": 8,      # -8 per breach (cap -40)
+    "risk_breach_cap": 40,
+    "margin_breach_first_day": 10,   # -10 first day
+    "margin_breach_additional": 5,   # -5 each additional (cap -25)
+    "margin_breach_cap": 25,
+    "daily_loss_breach": 20,         # -20 per day (cap -40)
+    "daily_loss_breach_cap": 40,
+    "weekly_loss_breach": 25,        # -25 per week (cap -50)
+    "weekly_loss_breach_cap": 50,
+    "monthly_drawdown_breach": 40,   # -40 one-time
+    "overnight_breach": 15,          # -15 per event (cap -45)
+    "overnight_breach_cap": 45
+}
+
+# Risk score thresholds and labels
+RISK_SCORE_LABELS = {
+    "strong": {"min": 80, "color": "#10B981", "label": "Strong"},
+    "moderate": {"min": 60, "color": "#F59E0B", "label": "Moderate"},
+    "weak": {"min": 40, "color": "#F97316", "label": "Weak"},
+    "critical": {"min": 0, "color": "#EF4444", "label": "Critical"}
+}
+
+# Alert severity thresholds
+ALERT_SEVERITY = {
+    "critical": {  # Red
+        "lot_pct_of_allowed": 150,      # > 150% of max allowed
+        "conditions": ["daily_loss_breach", "monthly_drawdown_breach", "overnight_breach"]
+    },
+    "high": {  # Orange
+        "lot_pct_of_allowed_min": 101,  # 101-150% of max allowed
+        "lot_pct_of_allowed_max": 150,
+        "conditions": ["margin_breach", "risk_per_trade_breach"]
+    },
+    "medium": {  # Yellow
+        "conditions": ["missing_stop_atr_proxy", "concentration_above_60_pct"]
+    }
 }
 
 
