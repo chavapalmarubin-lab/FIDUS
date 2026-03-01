@@ -1596,6 +1596,235 @@ export default function LiveDemoAnalytics() {
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────
+            RISK LIMITS TAB (Hull-Style Risk Engine)
+        ───────────────────────────────────────────────────────────────────── */}
+        {activeTab === 'risklimits' && (
+          <div className="lda-risklimits-tab" data-testid="risklimits-content">
+            {/* Risk Policy Summary */}
+            <div className="lda-risk-policy-header">
+              <div className="lda-risk-policy-card">
+                <h3>Active Risk Policy (200:1 Leverage)</h3>
+                <div className="lda-risk-policy-grid">
+                  <div className="lda-policy-item">
+                    <span className="label">Max Risk Per Trade</span>
+                    <span className="value">{riskPolicy.max_risk_per_trade_pct}%</span>
+                  </div>
+                  <div className="lda-policy-item">
+                    <span className="label">Max Intraday Loss</span>
+                    <span className="value">{riskPolicy.max_intraday_loss_pct}%</span>
+                  </div>
+                  <div className="lda-policy-item">
+                    <span className="label">Max Margin Usage</span>
+                    <span className="value">{riskPolicy.max_margin_usage_pct}%</span>
+                  </div>
+                  <div className="lda-policy-item">
+                    <span className="label">Leverage</span>
+                    <span className="value">{riskPolicy.leverage}:1</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lda-risk-content-grid">
+              {/* Left: Position Sizing Calculator */}
+              <div className="lda-card">
+                <div className="lda-card-header">
+                  <h3>Position Sizing Calculator</h3>
+                  <span className="lda-card-subtitle">Hull-Style Max Lot Calculation</span>
+                </div>
+                <div className="lda-card-body">
+                  <div className="lda-calc-form">
+                    <div className="lda-form-row">
+                      <div className="lda-form-group">
+                        <label>Account Equity ($)</label>
+                        <input
+                          type="number"
+                          value={calcEquity}
+                          onChange={(e) => setCalcEquity(Number(e.target.value))}
+                          placeholder="100000"
+                        />
+                      </div>
+                      <div className="lda-form-group">
+                        <label>Instrument</label>
+                        <select value={calcSymbol} onChange={(e) => setCalcSymbol(e.target.value)}>
+                          <option value="XAUUSD">XAUUSD (Gold)</option>
+                          <option value="EURUSD">EURUSD</option>
+                          <option value="GBPUSD">GBPUSD</option>
+                          <option value="USDJPY">USDJPY</option>
+                          <option value="US30">US30 (Dow)</option>
+                          <option value="NAS100">NAS100</option>
+                          <option value="BTCUSD">BTCUSD</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="lda-form-row">
+                      <div className="lda-form-group">
+                        <label>Stop Distance {calcSymbol === 'XAUUSD' ? '($)' : calcSymbol.includes('USD') ? '(pips)' : '(points)'}</label>
+                        <input
+                          type="number"
+                          value={calcStopDistance}
+                          onChange={(e) => setCalcStopDistance(Number(e.target.value))}
+                          step="0.1"
+                        />
+                      </div>
+                      <div className="lda-form-group lda-form-group-btn">
+                        <button 
+                          className="lda-btn lda-btn-primary"
+                          onClick={calculateMaxLots}
+                        >
+                          Calculate Max Lots
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {calcResult && (
+                    <div className="lda-calc-result">
+                      <div className="lda-calc-result-header">
+                        <h4>Maximum Allowed Position</h4>
+                        <span className={`lda-constraint-badge ${calcResult.binding_constraint === 'RISK' ? 'risk' : 'margin'}`}>
+                          {calcResult.binding_constraint} BOUND
+                        </span>
+                      </div>
+                      
+                      <div className="lda-calc-big-number">
+                        <span className="value">{calcResult.max_lots_allowed}</span>
+                        <span className="unit">lots</span>
+                      </div>
+                      
+                      <div className="lda-calc-breakdown">
+                        <div className="lda-breakdown-section">
+                          <h5>Risk-Based Limit</h5>
+                          <div className="lda-breakdown-row">
+                            <span>Risk Budget (1% of ${calcEquity.toLocaleString()}):</span>
+                            <span>${calcResult.risk_budget?.toLocaleString()}</span>
+                          </div>
+                          <div className="lda-breakdown-row">
+                            <span>Loss per lot at stop:</span>
+                            <span>${calcResult.loss_per_lot_at_stop?.toLocaleString()}</span>
+                          </div>
+                          <div className="lda-breakdown-row highlight">
+                            <span>Max Lots (Risk):</span>
+                            <span>{calcResult.max_lots_risk} lots</span>
+                          </div>
+                        </div>
+                        
+                        <div className="lda-breakdown-section">
+                          <h5>Margin-Based Limit</h5>
+                          <div className="lda-breakdown-row">
+                            <span>Margin per lot (at {calcResult.leverage}:1):</span>
+                            <span>${calcResult.margin_per_lot?.toLocaleString()}</span>
+                          </div>
+                          <div className="lda-breakdown-row">
+                            <span>Max margin allowed (25%):</span>
+                            <span>${calcResult.max_margin_allowed?.toLocaleString()}</span>
+                          </div>
+                          <div className="lda-breakdown-row highlight">
+                            <span>Max Lots (Margin):</span>
+                            <span>{calcResult.max_lots_margin} lots</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Gold Example */}
+                  <div className="lda-example-box">
+                    <h5>XAUUSD Example (Gold)</h5>
+                    <p>
+                      At 200:1 leverage with $100,000 equity and 1% risk per trade:
+                    </p>
+                    <ul>
+                      <li>Risk Budget = $1,000</li>
+                      <li>Gold: 1 lot = 100 oz, $1 move = $100 P&L</li>
+                      <li>$10 stop → Loss/lot = $1,000 → <strong>Max 1.00 lot</strong></li>
+                      <li>$5 stop → Loss/lot = $500 → <strong>Max 2.00 lots</strong></li>
+                    </ul>
+                    <p className="lda-example-note">
+                      <strong>Key insight:</strong> At 200:1 leverage, the risk limit (not margin) is typically the binding constraint for gold.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Strategy Risk Analysis */}
+              <div className="lda-card">
+                <div className="lda-card-header">
+                  <h3>Strategy Risk Analysis</h3>
+                  <div className="lda-card-header-controls">
+                    <select 
+                      value={deepDiveManager?.account || ''}
+                      onChange={(e) => {
+                        const mgr = managers.find(m => m.account === parseInt(e.target.value));
+                        setDeepDiveManager(mgr);
+                      }}
+                      className="lda-strategy-select"
+                    >
+                      {managers.map(m => (
+                        <option key={m.account} value={m.account}>
+                          {m.manager_name} (#{m.account})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="lda-card-body">
+                  {riskAnalysisLoading ? (
+                    <div className="lda-loading-inline">
+                      <Loader2 size={20} className="spin" />
+                      <span>Loading risk analysis...</span>
+                    </div>
+                  ) : riskAnalysis ? (
+                    <div className="lda-risk-analysis-content">
+                      {/* Risk Control Score */}
+                      <div className="lda-risk-score-panel">
+                        <div className="lda-risk-score-circle" style={{ borderColor: riskAnalysis.risk_control_score?.color }}>
+                          <span className="score">{riskAnalysis.risk_control_score?.composite_score || 0}</span>
+                          <span className="label">Risk Score</span>
+                        </div>
+                        <div className="lda-risk-score-label" style={{ color: riskAnalysis.risk_control_score?.color }}>
+                          {riskAnalysis.risk_control_score?.label || 'Unknown'}
+                        </div>
+                      </div>
+
+                      {/* Score Components */}
+                      {riskAnalysis.risk_control_score?.components && (
+                        <div className="lda-score-components">
+                          <h5>Score Components</h5>
+                          {Object.entries(riskAnalysis.risk_control_score.components).map(([key, comp]) => (
+                            <div key={key} className="lda-score-component">
+                              <span className="name">{key.replace(/_/g, ' ')}</span>
+                              <span className="score">{comp.score?.toFixed(1) || 'N/A'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Breach Summary */}
+                      {riskAnalysis.risk_control_score?.breach_summary?.length > 0 && (
+                        <div className="lda-breach-summary">
+                          <h5><AlertTriangle size={14} /> Breach Summary</h5>
+                          <ul>
+                            {riskAnalysis.risk_control_score.breach_summary.map((breach, i) => (
+                              <li key={i}>{breach}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="lda-risk-analysis-empty">
+                      <Shield size={24} />
+                      <span>Select a strategy to view risk analysis</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────────
             AI STRATEGY ADVISOR TAB (Phase 3)
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'advisor' && (
