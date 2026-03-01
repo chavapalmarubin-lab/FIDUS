@@ -23554,6 +23554,201 @@ async def ai_advisor_history(
         }
 
 
+
+# ===============================================================================
+# HULL-STYLE RISK ENGINE ENDPOINTS
+# ===============================================================================
+
+@api_router.get("/admin/risk-engine/instrument-specs")
+async def get_all_instrument_specs(
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get all instrument specifications"""
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        specs = await engine.get_all_instrument_specs()
+        return {"success": True, "instruments": specs}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/admin/risk-engine/instrument-specs/{symbol}")
+async def get_instrument_specs(
+    symbol: str,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get specifications for a specific instrument"""
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        specs = await engine.get_instrument_specs(symbol)
+        return {"success": True, "specs": specs}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.post("/admin/risk-engine/instrument-specs")
+async def upsert_instrument_specs(
+    specs: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Create or update instrument specifications"""
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        result = await engine.upsert_instrument_specs(specs)
+        return {"success": result}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/admin/risk-engine/policy")
+async def get_risk_policy(
+    account: Optional[int] = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Get risk policy (global or account-specific)"""
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        policy = await engine.get_risk_policy(account)
+        return {"success": True, "policy": policy}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.post("/admin/risk-engine/policy")
+async def update_risk_policy(
+    policy: Dict[str, Any] = Body(...),
+    account: Optional[int] = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Update risk policy"""
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        result = await engine.update_risk_policy(policy, account)
+        return {"success": result}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+class MaxLotsCalculationRequest(BaseModel):
+    equity: float
+    symbol: str
+    stop_distance: Optional[float] = None
+    current_price: Optional[float] = None
+
+@api_router.post("/admin/risk-engine/calculate-max-lots")
+async def calculate_max_lots(
+    request: MaxLotsCalculationRequest,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Calculate maximum allowed lot size for an instrument
+    
+    This implements Hull-style position sizing:
+    - MaxLotsRisk = RiskBudget / LossPerLotAtStop
+    - MaxLotsMargin = MaxMarginAllowed / MarginPerLot
+    - MaxLotsAllowed = min(MaxLotsRisk, MaxLotsMargin)
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        specs = await engine.get_instrument_specs(request.symbol)
+        policy = await engine.get_risk_policy()
+        
+        result = engine.calculate_max_lots(
+            equity=request.equity,
+            instrument_specs=specs,
+            risk_policy=policy,
+            stop_distance=request.stop_distance,
+            current_price=request.current_price
+        )
+        
+        return {"success": True, **result}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/admin/risk-engine/strategy-analysis/{account}")
+async def get_strategy_risk_analysis(
+    account: int,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get comprehensive risk analysis for a strategy/account
+    
+    Includes:
+    - Risk Control composite score
+    - Per-instrument max lots analysis
+    - Breach detection
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        analysis = await engine.get_strategy_risk_analysis(account, period_days)
+        return {"success": True, **analysis}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/admin/risk-engine/risk-control-score/{account}")
+async def get_risk_control_score(
+    account: int,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get Risk Control composite score (0-100) for an account
+    
+    Components:
+    - Risk per trade compliance (25%)
+    - Margin usage compliance (25%)
+    - Drawdown compliance (25%)
+    - Position size compliance (25%)
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        score = await engine.calculate_risk_control_score(account, period_days)
+        return {"success": True, **score}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/admin/risk-engine/narrative")
+async def get_risk_profile_narrative(
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get deterministic narrative analysis for portfolio risk profile
+    
+    Returns:
+    - Executive Read (2-3 bullets)
+    - Metric-by-metric interpretation
+    - Red flags & what caused them
+    - Actionable fixes
+    - Confidence notes
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        from services.trading_analytics_service import TradingAnalyticsService
+        
+        # Get managers data
+        analytics_service = TradingAnalyticsService(db)
+        managers_data = await analytics_service.get_managers_ranking(period_days)
+        
+        engine = HullRiskEngine(db)
+        narrative = engine.generate_risk_profile_narrative(
+            managers_data.get("managers", []),
+            period_days
+        )
+        
+        return {"success": True, **narrative}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+
 # ===============================================================================
 # LIVE DEMO AI ADVISOR ENDPOINTS (Separate from REAL Trading)
 # ===============================================================================
