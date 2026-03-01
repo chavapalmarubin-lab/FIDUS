@@ -698,6 +698,43 @@ System:
 20.     users - Admin users
 21.     audit_logs - System audit trail
 22.     system_health - Health monitoring
+
+Risk Engine (NEW - March 2026):
+23.     instrument_specs - Contract specifications for tradable instruments (Hull Risk Engine)
+
+9.1.1 INSTRUMENT_SPECS COLLECTION (Hull Risk Engine)
+Added: March 1, 2026
+Purpose: Store contract specifications for tradable instruments to enable Hull-style position sizing calculations.
+
+Schema:
+{
+  "symbol": "XAUUSD",                    // Instrument symbol
+  "name": "Gold",                        // Display name
+  "asset_class": "Metals",               // FX_MAJOR, FX_CROSS, Metals, INDEX_CFD
+  "base_currency": "XAU",
+  "quote_currency": "USD",
+  "contract_size": 100,                  // 100 oz per lot for gold
+  "pip_size": 0.01,
+  "pip_value_per_lot": 1.0,              // $1 per pip per lot
+  "value_per_1_usd_move_per_lot": 100,   // $100 per $1 move per lot
+  "lot_step": 0.01,
+  "min_lot": 0.01,
+  "max_lot": 100,
+  "default_stop_proxy_usd": 10,          // Fallback stop distance if SL missing
+  "atr_multiplier": 0.60,                // For ATR-based stop proxy
+  "margin_leverage": 200,                // 200:1
+  "price_source": "broker_feed"
+}
+
+FIDUS Tier-1 Instruments (7 instruments):
+- XAUUSD (Gold)
+- EURUSD (EUR/USD)
+- GBPUSD (GBP/USD)
+- USDJPY (USD/JPY)
+- AUDCAD (AUD/CAD - FX Cross)
+- US30 (Dow Jones CFD)
+- DE40 (DAX 40 CFD)
+
 9.2 Critical Collections Detail
 See FIELD_REGISTRY.md for complete field definitions for all collections.
 
