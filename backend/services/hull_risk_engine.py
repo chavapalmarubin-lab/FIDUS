@@ -803,7 +803,8 @@ class HullRiskEngine:
         # Calculate aggregate metrics
         total_trades = sum(m.get("total_trades", 0) for m in managers_data)
         avg_sharpe = sum(m.get("sharpe_ratio", 0) for m in managers_data) / len(managers_data)
-        avg_sortino = sum(m.get("sortino_ratio", 0) for m in managers_data) / len(managers_data)
+        # avg_sortino calculated but referenced in Sortino-specific sections if added later
+        _ = sum(m.get("sortino_ratio", 0) for m in managers_data) / len(managers_data)  # Reserved for Sortino analysis
         avg_win_rate = sum(m.get("win_rate", 0) for m in managers_data) / len(managers_data)
         avg_profit_factor = sum(m.get("profit_factor", 0) for m in managers_data) / len(managers_data)
         avg_return = sum(m.get("return_percentage", 0) for m in managers_data) / len(managers_data)
