@@ -216,7 +216,9 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - `/app/backend/routes/referrals.py` - Agent portal routes
 - `/app/backend/services/calculations.py` - Financial calculations
 - `/app/backend/services/trading_analytics_service.py` - Trading analytics service for manager rankings
-- `/app/frontend/src/components/NextGenTradingAnalytics.js` - Next-Gen Trading Analytics Dashboard (Phase 1 & 2)
+- `/app/backend/services/hull_risk_engine.py` - Hull-style Risk Engine (MaxLotsAllowed, Risk Control Score)
+- `/app/backend/seed_instrument_specs.py` - FIDUS Tier-1 instrument specs seeder
+- `/app/frontend/src/components/NextGenTradingAnalytics.js` - Next-Gen Trading Analytics Dashboard with Risk Limits tab
 - `/app/frontend/src/components/NextGenTradingAnalytics.css` - Dark luxury fintech styling
 - `/app/frontend/src/components/AdminDashboard.js` - Admin dashboard with Trading Analytics tab
 - `/app/frontend/src/components/LiveDemoDashboard.js` - Live Demo dashboard component
@@ -225,6 +227,7 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - `/app/.github/workflows/deploy-mt5-bridge-api-lucrum.yml` - MT5 Bridge API deployment workflow
 - `/app/.github/workflows/emergency-restart-mt5-bridge-lucrum.yml` - Emergency restart workflow (uses VPS_PORT secret)
 - `/app/vps/mt5_bridge_api_service.py` - FastAPI MT5 Bridge service to deploy to VPS
+- `/app/SYSTEM_MASTER.md` - System documentation (updated with Hull Risk Engine section)
 
 ## GitHub Workflows for VPS Management
 1. **diagnose-lucrum-vps-api.yml** - Diagnoses VPS state: checks port 8000 listener, Python processes, script contents, Task Scheduler, logs
