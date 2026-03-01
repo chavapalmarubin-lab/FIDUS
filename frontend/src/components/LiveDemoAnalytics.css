@@ -1690,3 +1690,710 @@
     box-shadow: 0 0 0 6px rgba(249, 115, 22, 0);
   }
 }
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RISK LIMITS TAB - Hull-Style Risk Engine
+───────────────────────────────────────────────────────────────────────────── */
+.lda-risklimits-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lda-risk-policy-header {
+  display: flex;
+  justify-content: center;
+}
+
+.lda-risk-policy-card {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(249, 115, 22, 0.08));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: var(--lda-radius-lg);
+  padding: 24px 32px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.lda-risk-policy-card h3 {
+  color: var(--lda-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.lda-risk-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.lda-policy-item {
+  text-align: center;
+}
+
+.lda-policy-item .label {
+  display: block;
+  font-size: 11px;
+  color: var(--lda-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.lda-policy-item .value {
+  display: block;
+  font-family: var(--lda-font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--lda-accent-primary);
+}
+
+.lda-risk-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Position Sizing Calculator Form */
+.lda-calc-form {
+  margin-bottom: 24px;
+}
+
+.lda-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.lda-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lda-form-group label {
+  font-size: 12px;
+  color: var(--lda-text-secondary);
+  font-weight: 500;
+}
+
+.lda-form-group input,
+.lda-form-group select {
+  padding: 12px 14px;
+  background: var(--lda-bg-secondary);
+  border: 1px solid var(--lda-border);
+  border-radius: var(--lda-radius-md);
+  color: var(--lda-text-primary);
+  font-family: var(--lda-font-mono);
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.lda-form-group input:focus,
+.lda-form-group select:focus {
+  outline: none;
+  border-color: var(--lda-accent-primary);
+}
+
+.lda-form-group-btn {
+  justify-content: flex-end;
+}
+
+.lda-btn-primary {
+  background: linear-gradient(135deg, var(--lda-accent-primary), #8B5CF6);
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: var(--lda-radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lda-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+/* Calculator Result Display */
+.lda-calc-result {
+  background: var(--lda-bg-secondary);
+  border: 1px solid var(--lda-border-accent);
+  border-radius: var(--lda-radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.lda-calc-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.lda-calc-result-header h4 {
+  color: var(--lda-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.lda-constraint-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lda-constraint-badge.risk {
+  background: rgba(168, 85, 247, 0.2);
+  color: var(--lda-accent-primary);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.lda-constraint-badge.margin {
+  background: rgba(249, 115, 22, 0.2);
+  color: var(--lda-accent-gold);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.lda-calc-big-number {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.lda-calc-big-number .value {
+  font-family: var(--lda-font-mono);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--lda-accent-primary);
+}
+
+.lda-calc-big-number .unit {
+  font-size: 20px;
+  color: var(--lda-text-secondary);
+  margin-left: 8px;
+}
+
+.lda-calc-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.lda-breakdown-section {
+  background: var(--lda-bg-card);
+  border-radius: var(--lda-radius-md);
+  padding: 14px;
+}
+
+.lda-breakdown-section h5 {
+  font-size: 12px;
+  color: var(--lda-text-secondary);
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lda-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  padding: 6px 0;
+  color: var(--lda-text-secondary);
+}
+
+.lda-breakdown-row span:last-child {
+  font-family: var(--lda-font-mono);
+  color: var(--lda-text-primary);
+}
+
+.lda-breakdown-row.highlight {
+  background: rgba(168, 85, 247, 0.1);
+  margin: 6px -8px;
+  padding: 8px;
+  border-radius: var(--lda-radius-sm);
+}
+
+.lda-breakdown-row.highlight span:last-child {
+  color: var(--lda-accent-primary);
+  font-weight: 600;
+}
+
+/* Gold Example Box */
+.lda-example-box {
+  background: var(--lda-bg-secondary);
+  border: 1px solid var(--lda-border);
+  border-radius: var(--lda-radius-md);
+  padding: 16px;
+}
+
+.lda-example-box h5 {
+  color: var(--lda-accent-gold);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.lda-example-box p {
+  color: var(--lda-text-secondary);
+  font-size: 13px;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.lda-example-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+
+.lda-example-box li {
+  color: var(--lda-text-secondary);
+  font-size: 12px;
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.lda-example-box li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--lda-accent-primary);
+}
+
+.lda-example-box strong {
+  color: var(--lda-accent-primary);
+}
+
+.lda-example-note {
+  background: rgba(168, 85, 247, 0.1);
+  border-left: 3px solid var(--lda-accent-primary);
+  padding: 10px 12px;
+  border-radius: 0 var(--lda-radius-sm) var(--lda-radius-sm) 0;
+  margin: 0;
+  font-size: 12px !important;
+}
+
+/* Strategy Select */
+.lda-strategy-select {
+  background: var(--lda-bg-secondary);
+  border: 1px solid var(--lda-border);
+  border-radius: var(--lda-radius-md);
+  color: var(--lda-text-primary);
+  padding: 8px 12px;
+  font-size: 13px;
+  min-width: 220px;
+}
+
+/* Risk Score Panel */
+.lda-risk-score-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+}
+
+.lda-risk-score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--lda-bg-secondary);
+  margin-bottom: 12px;
+}
+
+.lda-risk-score-circle .score {
+  font-family: var(--lda-font-mono);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--lda-text-primary);
+}
+
+.lda-risk-score-circle .label {
+  font-size: 11px;
+  color: var(--lda-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lda-risk-score-label {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Score Components */
+.lda-score-components {
+  margin-top: 20px;
+}
+
+.lda-score-components h5 {
+  font-size: 12px;
+  color: var(--lda-text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lda-score-component {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--lda-bg-secondary);
+  border-radius: var(--lda-radius-sm);
+  margin-bottom: 6px;
+}
+
+.lda-score-component .name {
+  color: var(--lda-text-secondary);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.lda-score-component .score {
+  color: var(--lda-accent-primary);
+  font-family: var(--lda-font-mono);
+  font-weight: 600;
+}
+
+/* Breach Summary */
+.lda-breach-summary {
+  margin-top: 20px;
+  padding: 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--lda-radius-md);
+}
+
+.lda-breach-summary h5 {
+  color: var(--lda-negative);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lda-breach-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lda-breach-summary li {
+  color: var(--lda-text-secondary);
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+/* Risk Analysis Empty State */
+.lda-risk-analysis-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--lda-text-muted);
+  gap: 12px;
+}
+
+.lda-loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: var(--lda-text-secondary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   NARRATIVE PANEL STYLES
+───────────────────────────────────────────────────────────────────────────── */
+.lda-narrative-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: var(--lda-text-secondary);
+}
+
+.lda-narrative-content {
+  padding: 8px 0;
+}
+
+.lda-narrative-confidence {
+  margin-bottom: 20px;
+}
+
+.lda-confidence-note {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--lda-radius-md);
+  padding: 12px 16px;
+  color: var(--lda-warning);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.lda-narrative-section {
+  margin-bottom: 24px;
+}
+
+.lda-narrative-section h4 {
+  color: var(--lda-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lda-narrative-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lda-narrative-bullets li {
+  padding: 8px 0 8px 20px;
+  position: relative;
+  color: var(--lda-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lda-narrative-bullets li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--lda-accent-primary);
+  font-weight: bold;
+}
+
+.lda-metric-interpretations {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.lda-metric-item {
+  background: var(--lda-bg-secondary);
+  border-radius: var(--lda-radius-md);
+  padding: 14px;
+}
+
+.lda-metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.lda-metric-name {
+  color: var(--lda-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.lda-metric-value {
+  font-family: var(--lda-font-mono);
+  color: var(--lda-accent-primary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.lda-metric-desc {
+  color: var(--lda-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.lda-narrative-danger {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--lda-radius-md);
+  padding: 16px;
+}
+
+.lda-narrative-danger h4 {
+  color: var(--lda-negative);
+}
+
+.lda-danger-list li::before {
+  color: var(--lda-negative);
+}
+
+.lda-narrative-action {
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: var(--lda-radius-md);
+  padding: 16px;
+}
+
+.lda-narrative-action h4 {
+  color: var(--lda-accent-primary);
+}
+
+.lda-action-list li::before {
+  color: var(--lda-accent-primary);
+}
+
+.lda-narrative-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--lda-text-muted);
+  gap: 10px;
+}
+
+/* Toggle Group for Allocation View */
+.lda-toggle-group {
+  display: flex;
+  background: var(--lda-bg-secondary);
+  border-radius: var(--lda-radius-md);
+  padding: 3px;
+}
+
+.lda-toggle-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  color: var(--lda-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--lda-radius-sm);
+  transition: all 0.2s;
+}
+
+.lda-toggle-btn.active {
+  background: var(--lda-accent-primary);
+  color: white;
+}
+
+.lda-toggle-btn:hover:not(.active) {
+  color: var(--lda-text-primary);
+}
+
+/* Custom Tooltip */
+.lda-custom-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: var(--lda-radius-md);
+  padding: 12px 14px;
+  min-width: 180px;
+}
+
+.lda-tooltip-title {
+  color: var(--lda-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--lda-border);
+}
+
+.lda-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.lda-tooltip-row span:first-child {
+  color: var(--lda-text-muted);
+}
+
+.lda-tooltip-row span:last-child {
+  color: var(--lda-text-primary);
+  font-family: var(--lda-font-mono);
+}
+
+.lda-tooltip-row .positive {
+  color: var(--lda-positive);
+}
+
+.lda-tooltip-row .negative {
+  color: var(--lda-negative);
+}
+
+/* Card Header Controls */
+.lda-card-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lda-card-header-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--lda-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lda-card-header-icon-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--lda-warning);
+}
+
+.lda-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--lda-border);
+  color: var(--lda-text-secondary);
+  padding: 6px;
+  border-radius: var(--lda-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lda-btn-ghost:hover {
+  border-color: var(--lda-accent-primary);
+  color: var(--lda-accent-primary);
+}
+
+.lda-btn-sm {
+  padding: 4px 6px;
+}
+
+/* Responsive for Risk Limits */
+@media (max-width: 1024px) {
+  .lda-risk-content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .lda-risk-policy-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .lda-calc-breakdown {
+    grid-template-columns: 1fr;
+  }
+  
+  .lda-metric-interpretations {
+    grid-template-columns: 1fr;
+  }
+}
