@@ -485,7 +485,8 @@ class HullRiskEngine:
         return math.floor(value / step) * step
     
     # =========================================================================
-    # RISK CONTROL COMPOSITE SCORE
+    # RISK CONTROL COMPOSITE SCORE (DETERMINISTIC PENALTY-BASED)
+    # Formula: Start at 100, subtract penalties for breaches, clamp to 0-100
     # =========================================================================
     
     async def calculate_risk_control_score(
@@ -494,13 +495,22 @@ class HullRiskEngine:
         period_days: int = 30
     ) -> Dict[str, Any]:
         """
-        Calculate composite Risk Control score (0-100)
+        Calculate composite Risk Control score (0-100) using deterministic penalty system
         
-        Components (25% each):
-        1. % trades respecting max risk per trade
-        2. % time margin usage stayed below threshold
-        3. Drawdown threshold compliance
-        4. Max position size compliance
+        Penalty deductions:
+        - Lot breach: -6 each (cap -30)
+        - Risk-per-trade breach: -8 each (cap -40)
+        - Margin breach: -10 first day, -5 additional (cap -25)
+        - Daily loss breach: -20 each (cap -40)
+        - Weekly loss breach: -25 each (cap -50)
+        - Monthly drawdown breach: -40 one-time
+        - Overnight breach: -15 each (cap -45)
+        
+        Labels:
+        - 80-100: Strong
+        - 60-79: Moderate
+        - 40-59: Weak
+        - 0-39: Critical
         """
         try:
             risk_policy = await self.get_risk_policy(account)
@@ -520,48 +530,98 @@ class HullRiskEngine:
                 "time": {"$gte": start_date}
             }).to_list(length=1000)
             
-            # Component 1: Risk per trade compliance
+            # ===== Calculate breaches and penalties =====
+            score = 100  # Start at 100
+            breach_details = []
+            
+            # 1) Lot breach penalties
+            lot_breaches = await self._count_lot_breaches(deals, equity, risk_policy)
+            lot_penalty = min(lot_breaches * RISK_SCORE_PENALTIES["lot_breach_per_trade"], 
+                             RISK_SCORE_PENALTIES["lot_breach_cap"])
+            score -= lot_penalty
+            if lot_breaches > 0:
+                breach_details.append(f"Lot breaches: {lot_breaches} (-{lot_penalty})")
+            
+            # 2) Risk-per-trade breach penalties
+            risk_breaches = self._count_risk_breaches(deals, initial_allocation, risk_policy)
+            risk_penalty = min(risk_breaches * RISK_SCORE_PENALTIES["risk_per_trade_breach"],
+                              RISK_SCORE_PENALTIES["risk_breach_cap"])
+            score -= risk_penalty
+            if risk_breaches > 0:
+                breach_details.append(f"Risk breaches: {risk_breaches} (-{risk_penalty})")
+            
+            # 3) Margin breach penalties
+            margin_breach_days = self._count_margin_breach_days(account_info, risk_policy)
+            if margin_breach_days > 0:
+                margin_penalty = RISK_SCORE_PENALTIES["margin_breach_first_day"]
+                if margin_breach_days > 1:
+                    margin_penalty += (margin_breach_days - 1) * RISK_SCORE_PENALTIES["margin_breach_additional"]
+                margin_penalty = min(margin_penalty, RISK_SCORE_PENALTIES["margin_breach_cap"])
+                score -= margin_penalty
+                breach_details.append(f"Margin breaches: {margin_breach_days} days (-{margin_penalty})")
+            
+            # 4) Daily loss breach penalties (from account history if available)
+            daily_breaches = self._count_daily_loss_breaches(account_info, deals, risk_policy)
+            daily_penalty = min(daily_breaches * RISK_SCORE_PENALTIES["daily_loss_breach"],
+                               RISK_SCORE_PENALTIES["daily_loss_breach_cap"])
+            score -= daily_penalty
+            if daily_breaches > 0:
+                breach_details.append(f"Daily loss breaches: {daily_breaches} (-{daily_penalty})")
+            
+            # 5) Drawdown / Monthly breach check
+            current_dd_pct = 0
+            if initial_allocation > 0:
+                current_dd_pct = max(0, ((initial_allocation - equity) / initial_allocation) * 100)
+            
+            max_monthly_dd = risk_policy.get("max_monthly_drawdown_pct", 10.0)
+            if current_dd_pct > max_monthly_dd:
+                score -= RISK_SCORE_PENALTIES["monthly_drawdown_breach"]
+                breach_details.append(f"Monthly DD breach: {current_dd_pct:.1f}% > {max_monthly_dd}% (-40)")
+            
+            # 6) Overnight breach penalties (if we track overnight positions)
+            overnight_breaches = self._count_overnight_breaches(deals, risk_policy)
+            overnight_penalty = min(overnight_breaches * RISK_SCORE_PENALTIES["overnight_breach"],
+                                   RISK_SCORE_PENALTIES["overnight_breach_cap"])
+            score -= overnight_penalty
+            if overnight_breaches > 0:
+                breach_details.append(f"Overnight breaches: {overnight_breaches} (-{overnight_penalty})")
+            
+            # Clamp score to 0-100
+            composite_score = max(0, min(100, score))
+            
+            # Determine label based on thresholds
+            if composite_score >= RISK_SCORE_LABELS["strong"]["min"]:
+                label = RISK_SCORE_LABELS["strong"]["label"]
+                color = RISK_SCORE_LABELS["strong"]["color"]
+            elif composite_score >= RISK_SCORE_LABELS["moderate"]["min"]:
+                label = RISK_SCORE_LABELS["moderate"]["label"]
+                color = RISK_SCORE_LABELS["moderate"]["color"]
+            elif composite_score >= RISK_SCORE_LABELS["weak"]["min"]:
+                label = RISK_SCORE_LABELS["weak"]["label"]
+                color = RISK_SCORE_LABELS["weak"]["color"]
+            else:
+                label = RISK_SCORE_LABELS["critical"]["label"]
+                color = RISK_SCORE_LABELS["critical"]["color"]
+            
+            # Also compute the older component metrics for backward compatibility
             risk_compliance = await self._calculate_risk_per_trade_compliance(
                 deals, initial_allocation, risk_policy
             )
-            
-            # Component 2: Margin usage compliance (simplified - use current state)
             margin_compliance = self._calculate_margin_compliance(account_info, risk_policy)
-            
-            # Component 3: Drawdown compliance
             drawdown_compliance = self._calculate_drawdown_compliance(
                 account_info, initial_allocation, risk_policy
             )
-            
-            # Component 4: Position size compliance
             position_compliance = await self._calculate_position_size_compliance(
                 deals, equity, risk_policy
             )
-            
-            # Composite score (weighted average)
-            composite_score = (
-                risk_compliance["score"] * 0.25 +
-                margin_compliance["score"] * 0.25 +
-                drawdown_compliance["score"] * 0.25 +
-                position_compliance["score"] * 0.25
-            )
-            
-            # Determine label
-            if composite_score >= 80:
-                label = "Strong"
-                color = "#10B981"
-            elif composite_score >= 60:
-                label = "Moderate"
-                color = "#F59E0B"
-            else:
-                label = "Weak / Breaching"
-                color = "#EF4444"
             
             return {
                 "account": account,
                 "composite_score": round(composite_score, 1),
                 "label": label,
                 "color": color,
+                "breach_summary": breach_details,
+                "total_penalty_points": round(100 - composite_score, 1),
                 "components": {
                     "risk_per_trade": risk_compliance,
                     "margin_usage": margin_compliance,
