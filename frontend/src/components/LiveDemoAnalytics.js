@@ -68,6 +68,13 @@ export default function LiveDemoAnalytics() {
   const [calcStopDistance, setCalcStopDistance] = useState(10);
   const [calcResult, setCalcResult] = useState(null);
   
+  // What-If Simulator state
+  const [whatIfEquity, setWhatIfEquity] = useState(null);
+  const [whatIfData, setWhatIfData] = useState(null);
+  const [whatIfLoading, setWhatIfLoading] = useState(false);
+  const [showComplianceDetails, setShowComplianceDetails] = useState(false);
+  const [showWhatIfSimulator, setShowWhatIfSimulator] = useState(false);
+  
   // AI Advisor State
   const [aiChatMessages, setAiChatMessages] = useState([]);
   const [aiInputMessage, setAiInputMessage] = useState('');
@@ -223,11 +230,41 @@ export default function LiveDemoAnalytics() {
       
       if (data.success) {
         setRiskAnalysis(data);
+        setWhatIfEquity(data.equity);
+        // Also fetch What-If data
+        fetchWhatIfAnalysis(account, data.equity);
       }
     } catch (err) {
       console.error('Error fetching risk analysis:', err);
     } finally {
       setRiskAnalysisLoading(false);
+    }
+  };
+
+  const fetchWhatIfAnalysis = async (account, equity) => {
+    try {
+      setWhatIfLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/risk-engine/what-if/${account}?new_equity=${equity}&period_days=${timePeriod}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setWhatIfData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching what-if analysis:', err);
+    } finally {
+      setWhatIfLoading(false);
     }
   };
 
@@ -1730,6 +1767,286 @@ export default function LiveDemoAnalytics() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {/* RISK ALERTS SECTION */}
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {riskAnalysis.alerts?.length > 0 && (
+                  <div className="lda-risk-alerts-section" data-testid="risk-alerts">
+                    <h4><AlertTriangle size={18} /> Active Risk Alerts</h4>
+                    <div className="lda-alerts-grid">
+                      {riskAnalysis.alerts.map((alert, i) => (
+                        <div key={i} className={`lda-alert-card ${alert.severity?.toLowerCase()}`}>
+                          <div className="lda-alert-header">
+                            <span className={`lda-alert-badge ${alert.severity?.toLowerCase()}`}>
+                              {alert.severity}
+                            </span>
+                            <span className="lda-alert-type">{alert.type?.replace(/_/g, ' ')}</span>
+                          </div>
+                          <p className="lda-alert-message">{alert.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {/* ACTION ITEMS SECTION */}
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {riskAnalysis.action_items?.length > 0 && (
+                  <div className="lda-action-items-section" data-testid="action-items">
+                    <h4><Target size={18} /> Action Items to Improve Score</h4>
+                    <div className="lda-action-items-list">
+                      {riskAnalysis.action_items.map((item, i) => (
+                        <div key={i} className={`lda-action-item ${item.priority?.toLowerCase()}`}>
+                          <div className="lda-action-header">
+                            <span className={`lda-priority-badge ${item.priority?.toLowerCase()}`}>
+                              {item.priority}
+                            </span>
+                            <span className="lda-action-category">{item.category?.replace(/_/g, ' ').toUpperCase()}</span>
+                          </div>
+                          <div className="lda-action-content">
+                            <p className="lda-action-issue"><strong>Issue:</strong> {item.issue}</p>
+                            <p className="lda-action-fix"><strong>Fix:</strong> {item.fix}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {/* COMPLIANCE DETAILS TABLE (Expandable) */}
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                <div className="lda-compliance-details-section" data-testid="compliance-details">
+                  <div 
+                    className="lda-section-header-toggle"
+                    onClick={() => setShowComplianceDetails(!showComplianceDetails)}
+                  >
+                    <h4>
+                      <Settings size={18} /> Detailed Compliance Breakdown
+                    </h4>
+                    <span className="lda-toggle-icon">{showComplianceDetails ? '▼' : '▶'}</span>
+                  </div>
+                  
+                  {showComplianceDetails && riskAnalysis.compliance_details && (
+                    <div className="lda-compliance-details-content">
+                      <table className="lda-compliance-details-table">
+                        <thead>
+                          <tr>
+                            <th>Metric</th>
+                            <th>Policy Limit</th>
+                            <th>Calculation</th>
+                            <th>Breaches</th>
+                            <th>Compliance</th>
+                            <th>Penalty</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className={riskAnalysis.compliance_details?.lot_size?.breaches > 0 ? 'breach-row' : ''}>
+                            <td><strong>Lot Size</strong></td>
+                            <td>{riskAnalysis.compliance_details?.lot_size?.policy_limit}</td>
+                            <td className="lda-calc-cell">{riskAnalysis.compliance_details?.lot_size?.calculation}</td>
+                            <td>{riskAnalysis.compliance_details?.lot_size?.breaches} / {riskAnalysis.compliance_details?.lot_size?.total_trades}</td>
+                            <td>{riskAnalysis.compliance_details?.lot_size?.compliance_rate}%</td>
+                            <td className="lda-penalty-cell">-{riskAnalysis.compliance_details?.lot_size?.penalty_applied} pts</td>
+                          </tr>
+                          <tr className={riskAnalysis.compliance_details?.risk_per_trade?.breaches > 0 ? 'breach-row' : ''}>
+                            <td><strong>Risk Per Trade</strong></td>
+                            <td>{riskAnalysis.compliance_details?.risk_per_trade?.policy_limit}</td>
+                            <td className="lda-calc-cell">{riskAnalysis.compliance_details?.risk_per_trade?.calculation}</td>
+                            <td>{riskAnalysis.compliance_details?.risk_per_trade?.breaches} / {riskAnalysis.compliance_details?.risk_per_trade?.total_trades}</td>
+                            <td>{riskAnalysis.compliance_details?.risk_per_trade?.compliance_rate}%</td>
+                            <td className="lda-penalty-cell">-{riskAnalysis.compliance_details?.risk_per_trade?.penalty_applied} pts</td>
+                          </tr>
+                          <tr className={riskAnalysis.compliance_details?.daily_loss?.breach_days > 0 ? 'breach-row' : ''}>
+                            <td><strong>Daily Loss</strong></td>
+                            <td>{riskAnalysis.compliance_details?.daily_loss?.policy_limit}</td>
+                            <td className="lda-calc-cell">{riskAnalysis.compliance_details?.daily_loss?.calculation}</td>
+                            <td>{riskAnalysis.compliance_details?.daily_loss?.breach_days} days</td>
+                            <td>{riskAnalysis.compliance_details?.daily_loss?.breach_days === 0 ? '100%' : 'BREACHED'}</td>
+                            <td className="lda-penalty-cell">-{riskAnalysis.compliance_details?.daily_loss?.penalty_applied} pts</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      
+                      {/* Per-Instrument Compliance */}
+                      {riskAnalysis.compliance_details?.lot_size?.by_instrument?.length > 0 && (
+                        <div className="lda-instrument-compliance">
+                          <h5>Lot Size Limits by Instrument</h5>
+                          <table className="lda-instrument-compliance-table">
+                            <thead>
+                              <tr>
+                                <th>Symbol</th>
+                                <th>Limit</th>
+                                <th>Max Used</th>
+                                <th>Over Limit</th>
+                                <th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {riskAnalysis.compliance_details.lot_size.by_instrument.map((inst, i) => (
+                                <tr key={i} className={inst.status === 'BREACH' ? 'breach-row' : ''}>
+                                  <td>{inst.symbol}</td>
+                                  <td>{inst.limit} lots</td>
+                                  <td>{inst.max_used} lots</td>
+                                  <td className={inst.breach_pct > 0 ? 'lda-breach-value' : ''}>
+                                    {inst.breach_pct > 0 ? `+${inst.breach_pct}%` : '-'}
+                                  </td>
+                                  <td>
+                                    <span className={`lda-status-badge ${inst.status === 'OK' ? 'pass' : 'fail'}`}>
+                                      {inst.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {/* WHAT-IF SIMULATOR */}
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                <div className="lda-whatif-section" data-testid="whatif-simulator">
+                  <div 
+                    className="lda-section-header-toggle"
+                    onClick={() => setShowWhatIfSimulator(!showWhatIfSimulator)}
+                  >
+                    <h4>
+                      <Zap size={18} /> What-If Simulator
+                    </h4>
+                    <span className="lda-toggle-icon">{showWhatIfSimulator ? '▼' : '▶'}</span>
+                  </div>
+                  
+                  {showWhatIfSimulator && (
+                    <div className="lda-whatif-content">
+                      <p className="lda-whatif-description">
+                        Adjust equity to see how risk limits and compliance would change.
+                      </p>
+                      
+                      <div className="lda-whatif-controls">
+                        <label>Simulated Equity</label>
+                        <div className="lda-equity-slider-container">
+                          <input 
+                            type="range"
+                            min={riskAnalysis.equity * 0.25}
+                            max={riskAnalysis.equity * 3}
+                            step={1000}
+                            value={whatIfEquity || riskAnalysis.equity}
+                            onChange={(e) => {
+                              const newEquity = parseFloat(e.target.value);
+                              setWhatIfEquity(newEquity);
+                            }}
+                            className="lda-equity-slider"
+                          />
+                          <div className="lda-equity-value">
+                            <span className="lda-current-label">
+                              {whatIfEquity !== riskAnalysis.equity ? 'Simulated: ' : 'Current: '}
+                            </span>
+                            <span className="lda-equity-amount">{formatCurrency(whatIfEquity || riskAnalysis.equity)}</span>
+                            {whatIfEquity && whatIfEquity !== riskAnalysis.equity && (
+                              <span className={`lda-equity-change ${whatIfEquity > riskAnalysis.equity ? 'positive' : 'negative'}`}>
+                                ({whatIfEquity > riskAnalysis.equity ? '+' : ''}{((whatIfEquity / riskAnalysis.equity - 1) * 100).toFixed(0)}%)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button 
+                          className="lda-simulate-btn"
+                          onClick={() => fetchWhatIfAnalysis(riskAnalysis.account, whatIfEquity)}
+                          disabled={whatIfLoading}
+                        >
+                          {whatIfLoading ? <Loader2 size={16} className="spin" /> : <Zap size={16} />}
+                          {whatIfLoading ? 'Simulating...' : 'Simulate'}
+                        </button>
+                      </div>
+                      
+                      {whatIfData && (
+                        <div className="lda-whatif-results">
+                          <div className="lda-whatif-comparison">
+                            <h5>Limits Comparison</h5>
+                            <div className="lda-limits-comparison-grid">
+                              <div className="lda-limit-compare-card">
+                                <span className="lda-limit-label">Risk Per Trade</span>
+                                <div className="lda-limit-values">
+                                  <span className="lda-current-limit">
+                                    Current: {formatCurrency(whatIfData.comparison?.current_limits?.risk_per_trade)}
+                                  </span>
+                                  <span className={`lda-new-limit ${whatIfData.comparison?.new_limits?.risk_per_trade > whatIfData.comparison?.current_limits?.risk_per_trade ? 'improved' : 'worse'}`}>
+                                    New: {formatCurrency(whatIfData.comparison?.new_limits?.risk_per_trade)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="lda-limit-compare-card">
+                                <span className="lda-limit-label">Daily Loss Limit</span>
+                                <div className="lda-limit-values">
+                                  <span className="lda-current-limit">
+                                    Current: {formatCurrency(whatIfData.comparison?.current_limits?.daily_loss)}
+                                  </span>
+                                  <span className={`lda-new-limit ${whatIfData.comparison?.new_limits?.daily_loss > whatIfData.comparison?.current_limits?.daily_loss ? 'improved' : 'worse'}`}>
+                                    New: {formatCurrency(whatIfData.comparison?.new_limits?.daily_loss)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Lot Limits by Instrument */}
+                          <div className="lda-whatif-lots">
+                            <h5>Max Lots by Instrument</h5>
+                            <div className="lda-lots-comparison-grid">
+                              {whatIfData.lot_limits_comparison?.map((inst, i) => (
+                                <div key={i} className="lda-lot-compare-card">
+                                  <span className="lda-lot-symbol">{inst.symbol}</span>
+                                  <div className="lda-lot-values">
+                                    <span className="lda-lot-current">{inst.current_max_lots.toFixed(2)}</span>
+                                    <span className="lda-lot-arrow">→</span>
+                                    <span className={`lda-lot-new ${inst.change_pct > 0 ? 'improved' : inst.change_pct < 0 ? 'worse' : ''}`}>
+                                      {inst.new_max_lots.toFixed(2)}
+                                    </span>
+                                    {inst.change_pct !== 0 && (
+                                      <span className={`lda-lot-change ${inst.change_pct > 0 ? 'positive' : 'negative'}`}>
+                                        ({inst.change_pct > 0 ? '+' : ''}{inst.change_pct}%)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Score Projection Chart */}
+                          <div className="lda-whatif-chart">
+                            <h5>Score Projection by Equity Level</h5>
+                            <div className="lda-score-projection-grid">
+                              {whatIfData.equity_scenarios?.map((scenario, i) => (
+                                <div key={i} className={`lda-scenario-card ${scenario.is_current ? 'current' : ''}`}>
+                                  <span className="lda-scenario-label">{scenario.label}</span>
+                                  <span className="lda-scenario-equity">{formatCurrency(scenario.equity)}</span>
+                                  <div className="lda-scenario-score-bar">
+                                    <div 
+                                      className="lda-scenario-score-fill"
+                                      style={{ 
+                                        width: `${scenario.projected_score}%`,
+                                        backgroundColor: scenario.projected_score >= 80 ? '#10B981' : 
+                                          scenario.projected_score >= 60 ? '#F59E0B' : '#EF4444'
+                                      }}
+                                    />
+                                    <span className="lda-scenario-score-value">{scenario.projected_score}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Instruments Analysis Table */}

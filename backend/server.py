@@ -23700,6 +23700,130 @@ async def get_strategy_risk_analysis(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@api_router.get("/admin/risk-engine/what-if/{account}")
+async def get_what_if_analysis(
+    account: int,
+    new_equity: float = None,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    What-If Simulator: Calculate how risk limits and compliance would change
+    at different equity levels.
+    
+    Parameters:
+    - account: MT5 account number
+    - new_equity: Hypothetical equity amount to simulate
+    - period_days: Analysis period (default 30 days)
+    
+    Returns:
+    - Current vs projected limits
+    - Estimated compliance rates at new equity
+    - Score projection
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        # Get account info
+        account_info = await db.mt5_accounts.find_one({"account": account})
+        if not account_info:
+            return {"success": False, "error": f"Account {account} not found"}
+        
+        current_equity = account_info.get("equity", 0)
+        if new_equity is None:
+            new_equity = current_equity
+        
+        risk_policy = await engine.get_risk_policy(account)
+        max_risk_pct = risk_policy.get("max_risk_per_trade_pct", 1.0)
+        max_daily_pct = risk_policy.get("max_intraday_loss_pct", 3.0)
+        
+        # Current limits
+        current_risk_limit = current_equity * (max_risk_pct / 100)
+        current_daily_limit = current_equity * (max_daily_pct / 100)
+        
+        # New limits at hypothetical equity
+        new_risk_limit = new_equity * (max_risk_pct / 100)
+        new_daily_limit = new_equity * (max_daily_pct / 100)
+        
+        # Get instrument specs for lot calculations
+        instruments = ["XAUUSD", "GER40", "US30", "NAS100", "BTCUSD"]
+        lot_limits_comparison = []
+        
+        for symbol in instruments:
+            specs = await engine.get_instrument_specs(symbol)
+            
+            # Current max lots
+            current_calc = engine.calculate_max_lots(current_equity, specs, risk_policy)
+            # New max lots
+            new_calc = engine.calculate_max_lots(new_equity, specs, risk_policy)
+            
+            lot_limits_comparison.append({
+                "symbol": symbol,
+                "current_max_lots": current_calc["max_lots_allowed"],
+                "new_max_lots": new_calc["max_lots_allowed"],
+                "change_pct": round((new_calc["max_lots_allowed"] / current_calc["max_lots_allowed"] - 1) * 100, 1) if current_calc["max_lots_allowed"] > 0 else 0
+            })
+        
+        # Equity scenarios for chart
+        equity_scenarios = []
+        base_analysis = await engine.get_strategy_risk_analysis(account, period_days)
+        current_score = base_analysis.get("risk_control_score", {}).get("composite_score", 100)
+        
+        for multiplier in [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]:
+            scenario_equity = current_equity * multiplier
+            scenario_risk = scenario_equity * (max_risk_pct / 100)
+            scenario_daily = scenario_equity * (max_daily_pct / 100)
+            
+            # Rough score projection (simplified)
+            # Lower equity = tighter limits = more breaches = lower score
+            if multiplier < 1.0:
+                score_adjustment = -int((1 - multiplier) * 30)  # Penalty for lower equity
+            elif multiplier > 1.0:
+                score_adjustment = int((multiplier - 1) * 15)  # Bonus for higher equity (capped)
+            else:
+                score_adjustment = 0
+            
+            projected_score = min(100, max(0, current_score + score_adjustment))
+            
+            equity_scenarios.append({
+                "label": f"{int(multiplier * 100)}%" if multiplier != 1.0 else "Current",
+                "equity": round(scenario_equity, 2),
+                "risk_per_trade_limit": round(scenario_risk, 2),
+                "daily_loss_limit": round(scenario_daily, 2),
+                "projected_score": projected_score,
+                "is_current": multiplier == 1.0
+            })
+        
+        return {
+            "success": True,
+            "account": account,
+            "manager_name": account_info.get("manager_name", f"Account {account}"),
+            "comparison": {
+                "current_equity": current_equity,
+                "simulated_equity": new_equity,
+                "equity_change_pct": round((new_equity / current_equity - 1) * 100, 1) if current_equity > 0 else 0,
+                "current_limits": {
+                    "risk_per_trade": current_risk_limit,
+                    "daily_loss": current_daily_limit
+                },
+                "new_limits": {
+                    "risk_per_trade": new_risk_limit,
+                    "daily_loss": new_daily_limit
+                }
+            },
+            "lot_limits_comparison": lot_limits_comparison,
+            "equity_scenarios": equity_scenarios,
+            "current_score": current_score,
+            "risk_policy": {
+                "max_risk_per_trade_pct": max_risk_pct,
+                "max_intraday_loss_pct": max_daily_pct
+            }
+        }
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @api_router.get("/admin/risk-engine/risk-control-score/{account}")
 async def get_risk_control_score(
     account: int,

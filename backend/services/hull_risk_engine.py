@@ -1200,6 +1200,123 @@ class HullRiskEngine:
                 }
             }
             
+            # ===== GENERATE ACTION ITEMS & ALERTS =====
+            action_items = []
+            alerts = []
+            
+            # Lot size issues
+            if lot_breaches > 0:
+                breach_pct = (lot_breaches / total_trades * 100) if total_trades > 0 else 0
+                action_items.append({
+                    "priority": "HIGH" if breach_pct > 30 else "MEDIUM",
+                    "category": "lot_size",
+                    "issue": f"{lot_breaches} trades exceeded lot size limits ({breach_pct:.1f}% of trades)",
+                    "fix": "Reduce position sizes per instrument to stay within MaxLotsAllowed"
+                })
+                for breach in total_lot_breaches_by_symbol[:3]:
+                    alerts.append({
+                        "type": "LOT_BREACH",
+                        "severity": "WARNING",
+                        "message": f"{breach['symbol']}: Using {breach['max_used']:.2f} lots, limit is {breach['allowed']:.2f}"
+                    })
+            
+            # Risk per trade issues
+            if risk_breaches > 0:
+                action_items.append({
+                    "priority": "HIGH",
+                    "category": "risk_per_trade",
+                    "issue": f"{risk_breaches} trades lost more than ${max_risk_per_trade:,.0f} (1% limit)",
+                    "fix": "Use tighter stop-losses or reduce position sizes to cap risk per trade"
+                })
+                alerts.append({
+                    "type": "RISK_BREACH",
+                    "severity": "CRITICAL" if risk_breaches > 5 else "WARNING",
+                    "message": f"{risk_breaches} trades exceeded max risk per trade (${max_risk_per_trade:,.0f})"
+                })
+            
+            # Daily loss issues
+            if len(daily_loss_breaches) > 0:
+                action_items.append({
+                    "priority": "HIGH",
+                    "category": "daily_loss",
+                    "issue": f"{len(daily_loss_breaches)} days exceeded daily loss limit (${max_intraday_loss:,.0f})",
+                    "fix": "Implement hard daily loss cutoff - stop trading when 80% of limit reached"
+                })
+                for breach in daily_loss_breaches[:2]:
+                    alerts.append({
+                        "type": "DAILY_LOSS_BREACH",
+                        "severity": "CRITICAL",
+                        "message": f"{breach['date']}: Lost ${abs(breach['loss']):,.0f}, limit was ${max_intraday_loss:,.0f}"
+                    })
+            
+            # ===== WHAT-IF SIMULATION DATA =====
+            # Calculate projected scores at different equity levels
+            current_score = risk_score.get("composite_score", 100)
+            
+            what_if_scenarios = []
+            # Scenario: What if equity was 50% higher?
+            higher_equity = equity * 1.5
+            higher_max_risk = higher_equity * (risk_policy.get("max_risk_per_trade_pct", 1.0) / 100)
+            higher_max_daily = higher_equity * (risk_policy.get("max_intraday_loss_pct", 3.0) / 100)
+            what_if_scenarios.append({
+                "scenario": "+50% equity",
+                "new_equity": higher_equity,
+                "new_risk_limit": higher_max_risk,
+                "new_daily_limit": higher_max_daily,
+                "projected_improvement": "More headroom for position sizing",
+                "note": f"Risk per trade limit increases from ${max_risk_per_trade:,.0f} to ${higher_max_risk:,.0f}"
+            })
+            
+            # Scenario: What if equity was 50% lower?
+            lower_equity = equity * 0.5
+            lower_max_risk = lower_equity * (risk_policy.get("max_risk_per_trade_pct", 1.0) / 100)
+            lower_max_daily = lower_equity * (risk_policy.get("max_intraday_loss_pct", 3.0) / 100)
+            what_if_scenarios.append({
+                "scenario": "-50% equity",
+                "new_equity": lower_equity,
+                "new_risk_limit": lower_max_risk,
+                "new_daily_limit": lower_max_daily,
+                "projected_improvement": "Stricter limits - more breaches expected",
+                "note": f"Risk per trade limit decreases from ${max_risk_per_trade:,.0f} to ${lower_max_risk:,.0f}"
+            })
+            
+            # ===== DETAILED COMPLIANCE TABLE =====
+            compliance_details = {
+                "lot_size": {
+                    "policy_limit": "MaxLotsAllowed per instrument",
+                    "calculation": "min(RiskBudget/LossPerLot, MarginLimit)",
+                    "breaches": lot_breaches,
+                    "total_trades": total_trades,
+                    "compliance_rate": round(((total_trades - lot_breaches) / total_trades * 100) if total_trades > 0 else 100, 1),
+                    "penalty_applied": min(30, (lot_breaches // 5) * 6),
+                    "by_instrument": [
+                        {
+                            "symbol": inst["symbol"],
+                            "limit": inst["max_lots_allowed"],
+                            "max_used": inst["max_volume_used"],
+                            "breach_pct": round((inst["max_volume_used"] / inst["max_lots_allowed"] - 1) * 100, 1) if inst["max_lots_allowed"] > 0 and inst["max_volume_used"] > inst["max_lots_allowed"] else 0,
+                            "status": "BREACH" if not inst["is_compliant"] else "OK"
+                        }
+                        for inst in instruments_analysis
+                    ]
+                },
+                "risk_per_trade": {
+                    "policy_limit": f"${max_risk_per_trade:,.0f} (1% of equity)",
+                    "calculation": f"{risk_policy.get('max_risk_per_trade_pct', 1.0)}% x ${equity:,.0f} equity",
+                    "breaches": risk_breaches,
+                    "total_trades": total_trades,
+                    "compliance_rate": round(((total_trades - risk_breaches) / total_trades * 100) if total_trades > 0 else 100, 1),
+                    "penalty_applied": min(40, risk_breaches * 8)
+                },
+                "daily_loss": {
+                    "policy_limit": f"${max_intraday_loss:,.0f} (3% of equity)",
+                    "calculation": f"{risk_policy.get('max_intraday_loss_pct', 3.0)}% x ${equity:,.0f} equity",
+                    "breach_days": len(daily_loss_breaches),
+                    "breaches_detail": daily_loss_breaches[:5],
+                    "penalty_applied": min(40, len(daily_loss_breaches) * 20)
+                }
+            }
+            
             return {
                 "account": account,
                 "manager_name": account_info.get("manager_name", f"Account {account}"),
@@ -1213,6 +1330,10 @@ class HullRiskEngine:
                 },
                 "risk_control_score": risk_score,
                 "compliance_summary": overall_compliance,
+                "compliance_details": compliance_details,
+                "action_items": action_items,
+                "alerts": alerts,
+                "what_if_scenarios": what_if_scenarios,
                 "instruments": sorted(instruments_analysis, key=lambda x: x["trades"], reverse=True),
                 "lot_breaches_by_symbol": total_lot_breaches_by_symbol,
                 "daily_loss_breaches": daily_loss_breaches,
