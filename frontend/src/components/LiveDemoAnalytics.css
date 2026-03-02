@@ -21,10 +21,11 @@
   --lda-text-secondary: #94A3B8;
   --lda-text-muted: #64748B;
   
-  --lda-accent-primary: #A855F7;
-  --lda-accent-gold: #F97316;
+  /* FIDUS Brand Colors - Same as Trading Analytics */
+  --lda-accent-primary: #00D4AA;
+  --lda-accent-gold: #F59E0B;
   --lda-accent-cyan: #06B6D4;
-  --lda-accent-purple: #A855F7;
+  --lda-accent-teal: #00D4AA;
   
   --lda-positive: #10B981;
   --lda-negative: #EF4444;
