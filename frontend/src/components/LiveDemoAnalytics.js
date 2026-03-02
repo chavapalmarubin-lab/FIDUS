@@ -1593,227 +1593,274 @@ export default function LiveDemoAnalytics() {
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'risklimits' && (
           <div className="lda-risklimits-tab" data-testid="risklimits-content">
-            {/* Risk Policy Summary */}
-            <div className="lda-risk-policy-header">
-              <div className="lda-risk-policy-card">
-                <h3>Active Risk Policy (200:1 Leverage)</h3>
-                <div className="lda-risk-policy-grid">
-                  <div className="lda-policy-item">
+            {/* Strategy Selector Header */}
+            <div className="lda-risk-strategy-header">
+              <div className="lda-risk-strategy-selector">
+                <label>Select Strategy for Risk Analysis</label>
+                <select 
+                  value={deepDiveManager?.account || ''}
+                  onChange={(e) => {
+                    const mgr = managers.find(m => m.account === parseInt(e.target.value));
+                    setDeepDiveManager(mgr);
+                  }}
+                  className="lda-strategy-select-main"
+                >
+                  <option value="">-- Select a Strategy --</option>
+                  {managers.map(m => (
+                    <option key={m.account} value={m.account}>
+                      {m.manager_name} (#{m.account})
+                    </option>
+                  ))}
+                </select>
+                <span className="lda-analysis-period">Analysis Period: Last {timePeriod} Days</span>
+              </div>
+            </div>
+
+            {riskAnalysisLoading ? (
+              <div className="lda-risk-loading">
+                <Loader2 size={32} className="spin" />
+                <span>Analyzing deals for risk compliance...</span>
+              </div>
+            ) : riskAnalysis ? (
+              <div className="lda-risk-analysis-full">
+                {/* Strategy Info Header */}
+                <div className="lda-risk-strategy-info">
+                  <div className="lda-strategy-name">
+                    <h2>{riskAnalysis.manager_name}</h2>
+                    <span className="lda-account-badge">Account #{riskAnalysis.account}</span>
+                  </div>
+                  <div className="lda-strategy-metrics">
+                    <div className="lda-metric-box">
+                      <span className="label">Equity</span>
+                      <span className="value">{formatCurrency(riskAnalysis.equity)}</span>
+                    </div>
+                    <div className="lda-metric-box">
+                      <span className="label">Trades Analyzed</span>
+                      <span className="value">{riskAnalysis.total_trades_analyzed || 0}</span>
+                    </div>
+                    <div className="lda-metric-box">
+                      <span className="label">Leverage</span>
+                      <span className="value">{riskAnalysis.leverage}:1</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Policy & Score Row */}
+                <div className="lda-risk-policy-score-row">
+                  {/* Active Risk Policy */}
+                  <div className="lda-risk-policy-card-compact">
+                    <h4>Active Risk Policy</h4>
+                    <div className="lda-policy-items">
+                      <div className="lda-policy-item">
+                        <span className="label">Max Risk/Trade</span>
+                        <span className="value">{riskAnalysis.risk_policy?.max_risk_per_trade_pct || 1}%</span>
+                      </div>
+                      <div className="lda-policy-item">
+                        <span className="label">Max Daily Loss</span>
+                        <span className="value">{riskAnalysis.risk_policy?.max_intraday_loss_pct || 3}%</span>
+                      </div>
+                      <div className="lda-policy-item">
+                        <span className="label">Max Margin</span>
+                        <span className="value">{riskAnalysis.risk_policy?.max_margin_usage_pct || 25}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Risk Control Score */}
+                  <div className="lda-risk-score-card">
+                    <div className="lda-risk-score-circle" style={{ borderColor: riskAnalysis.risk_control_score?.color || '#10B981' }}>
+                      <span className="score">{riskAnalysis.risk_control_score?.composite_score || 100}</span>
+                      <span className="label-small">Risk Score</span>
+                    </div>
+                    <div className="lda-risk-score-label" style={{ color: riskAnalysis.risk_control_score?.color || '#10B981' }}>
+                      {riskAnalysis.risk_control_score?.label || 'Strong'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compliance Summary Cards */}
+                <div className="lda-compliance-summary">
+                  <h4>Compliance Summary</h4>
+                  <div className="lda-compliance-cards">
+                    <div className={`lda-compliance-card ${riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'PASS' ? 'pass' : riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'WARNING' ? 'warning' : 'fail'}`}>
+                      <div className="lda-compliance-header">
+                        <span className="lda-compliance-icon">
+                          {riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'PASS' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </span>
+                        <h5>Lot Size Compliance</h5>
+                      </div>
+                      <div className="lda-compliance-value">
+                        {riskAnalysis.compliance_summary?.lot_size_compliance?.compliance_rate || 100}%
+                      </div>
+                      <div className="lda-compliance-detail">
+                        <span>{riskAnalysis.compliance_summary?.lot_size_compliance?.compliant_trades || 0} / {riskAnalysis.compliance_summary?.lot_size_compliance?.total_trades || 0} trades compliant</span>
+                        {riskAnalysis.compliance_summary?.lot_size_compliance?.breached_trades > 0 && (
+                          <span className="lda-breach-count">{riskAnalysis.compliance_summary.lot_size_compliance.breached_trades} breaches</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={`lda-compliance-card ${riskAnalysis.compliance_summary?.risk_per_trade_compliance?.status === 'PASS' ? 'pass' : riskAnalysis.compliance_summary?.risk_per_trade_compliance?.status === 'WARNING' ? 'warning' : 'fail'}`}>
+                      <div className="lda-compliance-header">
+                        <span className="lda-compliance-icon">
+                          {riskAnalysis.compliance_summary?.risk_per_trade_compliance?.status === 'PASS' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </span>
+                        <h5>Risk Per Trade</h5>
+                      </div>
+                      <div className="lda-compliance-value">
+                        {riskAnalysis.compliance_summary?.risk_per_trade_compliance?.compliance_rate || 100}%
+                      </div>
+                      <div className="lda-compliance-detail">
+                        <span>Max allowed: {formatCurrency(riskAnalysis.compliance_summary?.risk_per_trade_compliance?.max_risk_allowed || 0)}</span>
+                      </div>
+                    </div>
+
+                    <div className={`lda-compliance-card ${riskAnalysis.compliance_summary?.daily_loss_compliance?.status === 'PASS' ? 'pass' : 'fail'}`}>
+                      <div className="lda-compliance-header">
+                        <span className="lda-compliance-icon">
+                          {riskAnalysis.compliance_summary?.daily_loss_compliance?.status === 'PASS' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </span>
+                        <h5>Daily Loss Limit</h5>
+                      </div>
+                      <div className="lda-compliance-value">
+                        {riskAnalysis.compliance_summary?.daily_loss_compliance?.breach_days === 0 ? 'COMPLIANT' : 'BREACHED'}
+                      </div>
+                      <div className="lda-compliance-detail">
+                        <span>Max: {formatCurrency(riskAnalysis.compliance_summary?.daily_loss_compliance?.max_daily_loss_allowed || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instruments Analysis Table */}
+                {riskAnalysis.instruments?.length > 0 && (
+                  <div className="lda-instruments-analysis">
+                    <h4>Instruments Traded ({riskAnalysis.instruments.length})</h4>
+                    <div className="lda-instruments-table-wrapper">
+                      <table className="lda-instruments-table-full">
+                        <thead>
+                          <tr>
+                            <th>Symbol</th>
+                            <th>Asset Class</th>
+                            <th>Trades</th>
+                            <th>Win Rate</th>
+                            <th>Max Allowed</th>
+                            <th>Max Used</th>
+                            <th>Avg Used</th>
+                            <th>Compliance</th>
+                            <th>P&L</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {riskAnalysis.instruments.map((inst, i) => (
+                            <tr key={i} className={!inst.is_compliant ? 'breach-row' : ''}>
+                              <td className="lda-symbol-cell">
+                                <span className="symbol-name">{inst.symbol}</span>
+                                {inst.name && <span className="symbol-desc">{inst.name}</span>}
+                              </td>
+                              <td>{inst.asset_class || 'N/A'}</td>
+                              <td>{inst.trades}</td>
+                              <td>{inst.win_rate || 0}%</td>
+                              <td className="lda-lots-cell">{inst.max_lots_allowed} lots</td>
+                              <td className={`lda-lots-cell ${!inst.is_compliant ? 'breach' : ''}`}>
+                                {inst.max_volume_used} lots
+                              </td>
+                              <td className="lda-lots-cell">{inst.avg_volume} lots</td>
+                              <td>
+                                <div className="lda-compliance-bar">
+                                  <div 
+                                    className="lda-compliance-fill" 
+                                    style={{ 
+                                      width: `${inst.compliance_rate || 100}%`,
+                                      backgroundColor: inst.compliance_rate >= 90 ? '#10B981' : inst.compliance_rate >= 70 ? '#F59E0B' : '#EF4444'
+                                    }}
+                                  />
+                                  <span>{inst.compliance_rate || 100}%</span>
+                                </div>
+                              </td>
+                              <td className={inst.total_pnl >= 0 ? 'positive' : 'negative'}>
+                                {formatCurrency(inst.total_pnl)}
+                              </td>
+                              <td>
+                                {inst.is_compliant ? (
+                                  <span className="lda-status-badge pass">COMPLIANT</span>
+                                ) : (
+                                  <span className="lda-status-badge fail">
+                                    {inst.breach_count} BREACH{inst.breach_count > 1 ? 'ES' : ''}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lot Size Breaches Detail */}
+                {riskAnalysis.lot_breaches_by_symbol?.length > 0 && (
+                  <div className="lda-breaches-detail">
+                    <h4><AlertTriangle size={18} /> Lot Size Breaches by Symbol</h4>
+                    <div className="lda-breaches-grid">
+                      {riskAnalysis.lot_breaches_by_symbol.map((breach, i) => (
+                        <div key={i} className="lda-breach-card">
+                          <div className="lda-breach-symbol">{breach.symbol}</div>
+                          <div className="lda-breach-values">
+                            <div className="lda-breach-row">
+                              <span>Max Allowed:</span>
+                              <span>{breach.allowed} lots</span>
+                            </div>
+                            <div className="lda-breach-row breach">
+                              <span>Max Used:</span>
+                              <span>{breach.max_used} lots</span>
+                            </div>
+                            <div className="lda-breach-row">
+                              <span>Breach Count:</span>
+                              <span>{breach.breach_count} trades</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Issues Message */}
+                {riskAnalysis.total_lot_breaches === 0 && riskAnalysis.total_risk_breaches === 0 && (
+                  <div className="lda-all-compliant">
+                    <CheckCircle size={32} />
+                    <h4>Strategy is Fully Compliant</h4>
+                    <p>All trades respect the defined risk parameters. No lot size or risk-per-trade breaches detected.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="lda-risk-empty-state">
+                <Shield size={48} />
+                <h3>Select a Strategy</h3>
+                <p>Choose a money manager from the dropdown above to automatically analyze their trading activity against FIDUS risk parameters.</p>
+                <div className="lda-risk-params-preview">
+                  <div className="lda-param">
                     <span className="label">Max Risk Per Trade</span>
                     <span className="value">{riskPolicy.max_risk_per_trade_pct}%</span>
                   </div>
-                  <div className="lda-policy-item">
-                    <span className="label">Max Intraday Loss</span>
+                  <div className="lda-param">
+                    <span className="label">Max Daily Loss</span>
                     <span className="value">{riskPolicy.max_intraday_loss_pct}%</span>
                   </div>
-                  <div className="lda-policy-item">
+                  <div className="lda-param">
                     <span className="label">Max Margin Usage</span>
                     <span className="value">{riskPolicy.max_margin_usage_pct}%</span>
                   </div>
-                  <div className="lda-policy-item">
+                  <div className="lda-param">
                     <span className="label">Leverage</span>
                     <span className="value">{riskPolicy.leverage}:1</span>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="lda-risk-content-grid">
-              {/* Left: Position Sizing Calculator */}
-              <div className="lda-card">
-                <div className="lda-card-header">
-                  <h3>Position Sizing Calculator</h3>
-                  <span className="lda-card-subtitle">Hull-Style Max Lot Calculation</span>
-                </div>
-                <div className="lda-card-body">
-                  <div className="lda-calc-form">
-                    <div className="lda-form-row">
-                      <div className="lda-form-group">
-                        <label>Account Equity ($)</label>
-                        <input
-                          type="number"
-                          value={calcEquity}
-                          onChange={(e) => setCalcEquity(Number(e.target.value))}
-                          placeholder="100000"
-                        />
-                      </div>
-                      <div className="lda-form-group">
-                        <label>Instrument</label>
-                        <select value={calcSymbol} onChange={(e) => setCalcSymbol(e.target.value)}>
-                          <option value="XAUUSD">XAUUSD (Gold)</option>
-                          <option value="EURUSD">EURUSD</option>
-                          <option value="GBPUSD">GBPUSD</option>
-                          <option value="USDJPY">USDJPY</option>
-                          <option value="US30">US30 (Dow)</option>
-                          <option value="NAS100">NAS100</option>
-                          <option value="BTCUSD">BTCUSD</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="lda-form-row">
-                      <div className="lda-form-group">
-                        <label>Stop Distance {calcSymbol === 'XAUUSD' ? '($)' : calcSymbol.includes('USD') ? '(pips)' : '(points)'}</label>
-                        <input
-                          type="number"
-                          value={calcStopDistance}
-                          onChange={(e) => setCalcStopDistance(Number(e.target.value))}
-                          step="0.1"
-                        />
-                      </div>
-                      <div className="lda-form-group lda-form-group-btn">
-                        <button 
-                          className="lda-btn lda-btn-primary"
-                          onClick={calculateMaxLots}
-                        >
-                          Calculate Max Lots
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {calcResult && (
-                    <div className="lda-calc-result">
-                      <div className="lda-calc-result-header">
-                        <h4>Maximum Allowed Position</h4>
-                        <span className={`lda-constraint-badge ${calcResult.binding_constraint === 'RISK' ? 'risk' : 'margin'}`}>
-                          {calcResult.binding_constraint} BOUND
-                        </span>
-                      </div>
-                      
-                      <div className="lda-calc-big-number">
-                        <span className="value">{calcResult.max_lots_allowed}</span>
-                        <span className="unit">lots</span>
-                      </div>
-                      
-                      <div className="lda-calc-breakdown">
-                        <div className="lda-breakdown-section">
-                          <h5>Risk-Based Limit</h5>
-                          <div className="lda-breakdown-row">
-                            <span>Risk Budget (1% of ${calcEquity.toLocaleString()}):</span>
-                            <span>${calcResult.risk_budget?.toLocaleString()}</span>
-                          </div>
-                          <div className="lda-breakdown-row">
-                            <span>Loss per lot at stop:</span>
-                            <span>${calcResult.loss_per_lot_at_stop?.toLocaleString()}</span>
-                          </div>
-                          <div className="lda-breakdown-row highlight">
-                            <span>Max Lots (Risk):</span>
-                            <span>{calcResult.max_lots_risk} lots</span>
-                          </div>
-                        </div>
-                        
-                        <div className="lda-breakdown-section">
-                          <h5>Margin-Based Limit</h5>
-                          <div className="lda-breakdown-row">
-                            <span>Margin per lot (at {calcResult.leverage}:1):</span>
-                            <span>${calcResult.margin_per_lot?.toLocaleString()}</span>
-                          </div>
-                          <div className="lda-breakdown-row">
-                            <span>Max margin allowed (25%):</span>
-                            <span>${calcResult.max_margin_allowed?.toLocaleString()}</span>
-                          </div>
-                          <div className="lda-breakdown-row highlight">
-                            <span>Max Lots (Margin):</span>
-                            <span>{calcResult.max_lots_margin} lots</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Gold Example */}
-                  <div className="lda-example-box">
-                    <h5>XAUUSD Example (Gold)</h5>
-                    <p>
-                      At 200:1 leverage with $100,000 equity and 1% risk per trade:
-                    </p>
-                    <ul>
-                      <li>Risk Budget = $1,000</li>
-                      <li>Gold: 1 lot = 100 oz, $1 move = $100 P&L</li>
-                      <li>$10 stop → Loss/lot = $1,000 → <strong>Max 1.00 lot</strong></li>
-                      <li>$5 stop → Loss/lot = $500 → <strong>Max 2.00 lots</strong></li>
-                    </ul>
-                    <p className="lda-example-note">
-                      <strong>Key insight:</strong> At 200:1 leverage, the risk limit (not margin) is typically the binding constraint for gold.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Strategy Risk Analysis */}
-              <div className="lda-card">
-                <div className="lda-card-header">
-                  <h3>Strategy Risk Analysis</h3>
-                  <div className="lda-card-header-controls">
-                    <select 
-                      value={deepDiveManager?.account || ''}
-                      onChange={(e) => {
-                        const mgr = managers.find(m => m.account === parseInt(e.target.value));
-                        setDeepDiveManager(mgr);
-                      }}
-                      className="lda-strategy-select"
-                    >
-                      {managers.map(m => (
-                        <option key={m.account} value={m.account}>
-                          {m.manager_name} (#{m.account})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="lda-card-body">
-                  {riskAnalysisLoading ? (
-                    <div className="lda-loading-inline">
-                      <Loader2 size={20} className="spin" />
-                      <span>Loading risk analysis...</span>
-                    </div>
-                  ) : riskAnalysis ? (
-                    <div className="lda-risk-analysis-content">
-                      {/* Risk Control Score */}
-                      <div className="lda-risk-score-panel">
-                        <div className="lda-risk-score-circle" style={{ borderColor: riskAnalysis.risk_control_score?.color }}>
-                          <span className="score">{riskAnalysis.risk_control_score?.composite_score || 0}</span>
-                          <span className="label">Risk Score</span>
-                        </div>
-                        <div className="lda-risk-score-label" style={{ color: riskAnalysis.risk_control_score?.color }}>
-                          {riskAnalysis.risk_control_score?.label || 'Unknown'}
-                        </div>
-                      </div>
-
-                      {/* Score Components */}
-                      {riskAnalysis.risk_control_score?.components && (
-                        <div className="lda-score-components">
-                          <h5>Score Components</h5>
-                          {Object.entries(riskAnalysis.risk_control_score.components).map(([key, comp]) => (
-                            <div key={key} className="lda-score-component">
-                              <span className="name">{key.replace(/_/g, ' ')}</span>
-                              <span className="score">{comp.score?.toFixed(1) || 'N/A'}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Breach Summary */}
-                      {riskAnalysis.risk_control_score?.breach_summary?.length > 0 && (
-                        <div className="lda-breach-summary">
-                          <h5><AlertTriangle size={14} /> Breach Summary</h5>
-                          <ul>
-                            {riskAnalysis.risk_control_score.breach_summary.map((breach, i) => (
-                              <li key={i}>{breach}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="lda-risk-analysis-empty">
-                      <Shield size={24} />
-                      <span>Select a strategy to view risk analysis</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
