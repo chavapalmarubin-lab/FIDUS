@@ -1903,13 +1903,6 @@ export default function NextGenTradingAnalytics() {
             )}
           </div>
         )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ─────────────────────────────────────────────────────────────────────
             AI STRATEGY ADVISOR TAB (Phase 3)
