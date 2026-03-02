@@ -42,6 +42,8 @@ import AccountsManagement from './AccountsManagement';
 import BridgeHealthMonitor from './BridgeHealthMonitor';
 import VikingDashboard from './VikingDashboard';
 import LiveDemoDashboard from './LiveDemoDashboard';
+import InstrumentSpecifications from './InstrumentSpecifications';
+import RiskParameters from './RiskParameters';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
@@ -638,6 +640,12 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="investment-committee" className="flex-shrink-0">
               📊 Investment Committee
             </TabsTrigger>
+            <TabsTrigger value="instrument-specs" className="flex-shrink-0">
+              📋 Instruments
+            </TabsTrigger>
+            <TabsTrigger value="risk-params" className="flex-shrink-0">
+              🛡️ Risk Parameters
+            </TabsTrigger>
 
             <TabsTrigger value="investments" className="flex-shrink-0">
               <TrendingUp size={16} className="mr-2" />
@@ -755,6 +763,15 @@ const AdminDashboard = ({ user, onLogout }) => {
             <LiveDemoAnalytics />
           </TabsContent>
 
+          {/* Instrument Specifications Tab */}
+          <TabsContent value="instrument-specs" className="mt-6">
+            <InstrumentSpecifications />
+          </TabsContent>
+
+          {/* Risk Parameters Tab */}
+          <TabsContent value="risk-params" className="mt-6">
+            <RiskParameters />
+          </TabsContent>
 
           {/* PHASE 4A: Broker Rebates Tab */}
           <TabsContent value="broker-rebates" className="mt-6">

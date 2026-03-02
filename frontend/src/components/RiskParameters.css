@@ -1,0 +1,458 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RISK PARAMETERS - Dark Theme Styling
+═══════════════════════════════════════════════════════════════════════════════ */
+
+.risk-params-container {
+  padding: 24px;
+  background: #0a0a0f;
+  min-height: 100vh;
+}
+
+/* Header */
+.risk-params-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.risk-params-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.risk-params-title svg {
+  color: #00D4AA;
+}
+
+.risk-params-title h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.risk-params-title p {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+}
+
+.risk-params-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.risk-edit-btn {
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.risk-edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.risk-cancel-btn {
+  background: transparent;
+  border: 1px solid #333;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.risk-cancel-btn:hover {
+  background: #1a1a24;
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+.risk-save-btn {
+  background: linear-gradient(135deg, #00D4AA, #00B894);
+  border: none;
+  color: #0a0a0f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.risk-save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 212, 170, 0.3);
+}
+
+.risk-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Alerts */
+.risk-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.risk-alert.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+}
+
+.risk-alert.success {
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  color: #00D4AA;
+}
+
+/* Grid */
+.risk-params-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* Cards */
+.risk-card {
+  background: #12121a;
+  border: 1px solid #1e1e2e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.risk-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e1e2e;
+  background: #0d0d14;
+}
+
+.risk-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.risk-card-title svg {
+  color: #00D4AA;
+}
+
+.risk-card-content {
+  padding: 20px;
+}
+
+/* Parameter Groups */
+.risk-param-group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.risk-param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.risk-param-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.risk-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.risk-input {
+  background: #0d0d14;
+  border: 1px solid #1e1e2e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  width: 120px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.risk-input:focus {
+  outline: none;
+  border-color: #00D4AA;
+  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+}
+
+.risk-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.risk-input-suffix {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+}
+
+.risk-param-hint {
+  font-size: 11px;
+  color: #666;
+  margin: 0;
+}
+
+/* Leverage Table */
+.leverage-card {
+  grid-column: span 2;
+}
+
+.leverage-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.leverage-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leverage-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+  border-bottom: 1px solid #1e1e2e;
+  background: #0d0d14;
+}
+
+.leverage-table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #ccc;
+  border-bottom: 1px solid #1a1a24;
+}
+
+.leverage-table tr:hover {
+  background: #1a1a24;
+}
+
+.class-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.class-badge.fx-major,
+.class-badge.fx-cross {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+}
+
+.class-badge.index-cfd {
+  background: rgba(168, 85, 247, 0.15);
+  color: #A855F7;
+}
+
+.class-badge.metals {
+  background: rgba(234, 179, 8, 0.15);
+  color: #EAB308;
+}
+
+.class-badge.commodities {
+  background: rgba(249, 115, 22, 0.15);
+  color: #F97316;
+}
+
+.class-badge.crypto {
+  background: rgba(236, 72, 153, 0.15);
+  color: #EC4899;
+}
+
+.leverage-value {
+  font-weight: 700;
+  color: #00D4AA;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.margin-value {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #F59E0B;
+}
+
+.count-value {
+  color: #888;
+}
+
+.leverage-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  padding: 12px;
+  background: #0d0d14;
+  border-radius: 8px;
+}
+
+.leverage-note svg {
+  color: #3B82F6;
+}
+
+/* Penalties Card */
+.penalties-card {
+  grid-column: 1 / -1;
+}
+
+.penalties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.penalty-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  background: #0d0d14;
+  border-radius: 10px;
+  border: 1px solid #1e1e2e;
+}
+
+.penalty-type {
+  font-size: 12px;
+  color: #888;
+}
+
+.penalty-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #EF4444;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.penalty-cap {
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.score-labels {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #0d0d14;
+  border-radius: 10px;
+}
+
+.score-label {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.score-label.strong {
+  background: rgba(0, 212, 170, 0.15);
+  color: #00D4AA;
+}
+
+.score-label.moderate {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+}
+
+.score-label.weak {
+  background: rgba(249, 115, 22, 0.15);
+  color: #F97316;
+}
+
+.score-label.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+/* Loading */
+.risk-params-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #666;
+  gap: 16px;
+}
+
+.risk-params-loading .spin {
+  animation: spin 1s linear infinite;
+  color: #00D4AA;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .risk-params-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .risk-params-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .leverage-card,
+  .penalties-card {
+    grid-column: span 1;
+  }
+  
+  .penalties-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .score-labels {
+    flex-direction: column;
+  }
+}
