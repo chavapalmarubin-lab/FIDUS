@@ -1596,258 +1596,312 @@ export default function NextGenTradingAnalytics() {
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────
-            RISK LIMITS TAB (Hull-Style Risk Engine)
+            RISK LIMITS TAB (Hull-Style Risk Engine - Automatic Deal Analysis)
         ───────────────────────────────────────────────────────────────────── */}
         {activeTab === 'risklimits' && (
           <div className="ngt-risklimits-tab" data-testid="risklimits-content">
-            {/* Risk Policy Summary */}
-            <div className="ngt-risk-policy-header">
-              <div className="ngt-risk-policy-card">
-                <h3>Active Risk Policy (200:1 Leverage)</h3>
-                <div className="ngt-risk-policy-grid">
-                  <div className="ngt-policy-item">
+            {/* Strategy Selector Header */}
+            <div className="ngt-risk-strategy-header">
+              <div className="ngt-risk-strategy-selector">
+                <label>Select Strategy for Risk Analysis</label>
+                <select 
+                  value={deepDiveManager?.account || ''}
+                  onChange={(e) => {
+                    const mgr = managers.find(m => m.account === parseInt(e.target.value));
+                    setDeepDiveManager(mgr);
+                  }}
+                  className="ngt-strategy-select-main"
+                >
+                  <option value="">-- Select a Strategy --</option>
+                  {managers.map(m => (
+                    <option key={m.account} value={m.account}>
+                      {m.manager_name} (#{m.account})
+                    </option>
+                  ))}
+                </select>
+                <span className="ngt-analysis-period">Analysis Period: Last {timePeriod} Days</span>
+              </div>
+            </div>
+
+            {riskAnalysisLoading ? (
+              <div className="ngt-risk-loading">
+                <Loader2 size={32} className="spin" />
+                <span>Analyzing deals for risk compliance...</span>
+              </div>
+            ) : riskAnalysis ? (
+              <div className="ngt-risk-analysis-full">
+                {/* Strategy Info Header */}
+                <div className="ngt-risk-strategy-info">
+                  <div className="ngt-strategy-name">
+                    <h2>{riskAnalysis.manager_name}</h2>
+                    <span className="ngt-account-badge">Account #{riskAnalysis.account}</span>
+                  </div>
+                  <div className="ngt-strategy-metrics">
+                    <div className="ngt-metric-box">
+                      <span className="label">Equity</span>
+                      <span className="value">{formatCurrency(riskAnalysis.equity)}</span>
+                    </div>
+                    <div className="ngt-metric-box">
+                      <span className="label">Trades Analyzed</span>
+                      <span className="value">{riskAnalysis.total_trades_analyzed || 0}</span>
+                    </div>
+                    <div className="ngt-metric-box">
+                      <span className="label">Leverage</span>
+                      <span className="value">{riskAnalysis.leverage}:1</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Policy & Score Row */}
+                <div className="ngt-risk-policy-score-row">
+                  {/* Active Risk Policy */}
+                  <div className="ngt-risk-policy-card-compact">
+                    <h4>Active Risk Policy</h4>
+                    <div className="ngt-policy-items">
+                      <div className="ngt-policy-item">
+                        <span className="label">Max Risk/Trade</span>
+                        <span className="value">{riskAnalysis.risk_policy?.max_risk_per_trade_pct || 1}%</span>
+                      </div>
+                      <div className="ngt-policy-item">
+                        <span className="label">Max Daily Loss</span>
+                        <span className="value">{riskAnalysis.risk_policy?.max_intraday_loss_pct || 3}%</span>
+                      </div>
+                      <div className="ngt-policy-item">
+                        <span className="label">Max Margin</span>
+                        <span className="value">{riskAnalysis.risk_policy?.max_margin_usage_pct || 25}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Risk Control Score */}
+                  <div className="ngt-risk-score-card">
+                    <div className="ngt-risk-score-circle" style={{ borderColor: riskAnalysis.risk_control_score?.color || '#10B981' }}>
+                      <span className="score">{riskAnalysis.risk_control_score?.composite_score || 100}</span>
+                      <span className="label-small">Risk Score</span>
+                    </div>
+                    <div className="ngt-risk-score-label" style={{ color: riskAnalysis.risk_control_score?.color || '#10B981' }}>
+                      {riskAnalysis.risk_control_score?.label || 'Strong'}
+                    </div>
+                    {riskAnalysis.risk_control_score?.breach_summary?.length > 0 && (
+                      <div className="ngt-breach-notes">
+                        {riskAnalysis.risk_control_score.breach_summary.slice(0, 2).map((note, i) => (
+                          <span key={i} className="ngt-breach-note">{note}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Compliance Summary Cards */}
+                <div className="ngt-compliance-summary">
+                  <h4>Compliance Summary</h4>
+                  <div className="ngt-compliance-cards">
+                    {/* Lot Size Compliance */}
+                    <div className={`ngt-compliance-card ${riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'PASS' ? 'pass' : riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'WARNING' ? 'warning' : 'fail'}`}>
+                      <div className="ngt-compliance-header">
+                        <span className="ngt-compliance-icon">
+                          {riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'PASS' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </span>
+                        <h5>Lot Size Compliance</h5>
+                      </div>
+                      <div className="ngt-compliance-value">
+                        {riskAnalysis.compliance_summary?.lot_size_compliance?.compliance_rate || 100}%
+                      </div>
+                      <div className="ngt-compliance-detail">
+                        <span>{riskAnalysis.compliance_summary?.lot_size_compliance?.compliant_trades || 0} / {riskAnalysis.compliance_summary?.lot_size_compliance?.total_trades || 0} trades compliant</span>
+                        {riskAnalysis.compliance_summary?.lot_size_compliance?.breached_trades > 0 && (
+                          <span className="ngt-breach-count">{riskAnalysis.compliance_summary.lot_size_compliance.breached_trades} breaches</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Risk Per Trade Compliance */}
+                    <div className={`ngt-compliance-card ${riskAnalysis.compliance_summary?.risk_per_trade_compliance?.status === 'PASS' ? 'pass' : riskAnalysis.compliance_summary?.risk_per_trade_compliance?.status === 'WARNING' ? 'warning' : 'fail'}`}>
+                      <div className="ngt-compliance-header">
+                        <span className="ngt-compliance-icon">
+                          {riskAnalysis.compliance_summary?.risk_per_trade_compliance?.status === 'PASS' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </span>
+                        <h5>Risk Per Trade</h5>
+                      </div>
+                      <div className="ngt-compliance-value">
+                        {riskAnalysis.compliance_summary?.risk_per_trade_compliance?.compliance_rate || 100}%
+                      </div>
+                      <div className="ngt-compliance-detail">
+                        <span>Max allowed: {formatCurrency(riskAnalysis.compliance_summary?.risk_per_trade_compliance?.max_risk_allowed || 0)}</span>
+                        {riskAnalysis.compliance_summary?.risk_per_trade_compliance?.breached_trades > 0 && (
+                          <span className="ngt-breach-count">{riskAnalysis.compliance_summary.risk_per_trade_compliance.breached_trades} breaches</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Daily Loss Compliance */}
+                    <div className={`ngt-compliance-card ${riskAnalysis.compliance_summary?.daily_loss_compliance?.status === 'PASS' ? 'pass' : 'fail'}`}>
+                      <div className="ngt-compliance-header">
+                        <span className="ngt-compliance-icon">
+                          {riskAnalysis.compliance_summary?.daily_loss_compliance?.status === 'PASS' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </span>
+                        <h5>Daily Loss Limit</h5>
+                      </div>
+                      <div className="ngt-compliance-value">
+                        {riskAnalysis.compliance_summary?.daily_loss_compliance?.breach_days === 0 ? 'COMPLIANT' : 'BREACHED'}
+                      </div>
+                      <div className="ngt-compliance-detail">
+                        <span>Max: {formatCurrency(riskAnalysis.compliance_summary?.daily_loss_compliance?.max_daily_loss_allowed || 0)}</span>
+                        {riskAnalysis.compliance_summary?.daily_loss_compliance?.breach_days > 0 && (
+                          <span className="ngt-breach-count">{riskAnalysis.compliance_summary.daily_loss_compliance.breach_days} day(s)</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instruments Analysis Table */}
+                {riskAnalysis.instruments?.length > 0 && (
+                  <div className="ngt-instruments-analysis">
+                    <h4>Instruments Traded ({riskAnalysis.instruments.length})</h4>
+                    <div className="ngt-instruments-table-wrapper">
+                      <table className="ngt-instruments-table-full">
+                        <thead>
+                          <tr>
+                            <th>Symbol</th>
+                            <th>Asset Class</th>
+                            <th>Trades</th>
+                            <th>Win Rate</th>
+                            <th>Max Allowed</th>
+                            <th>Max Used</th>
+                            <th>Avg Used</th>
+                            <th>Compliance</th>
+                            <th>P&L</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {riskAnalysis.instruments.map((inst, i) => (
+                            <tr key={i} className={!inst.is_compliant ? 'breach-row' : ''}>
+                              <td className="ngt-symbol-cell">
+                                <span className="symbol-name">{inst.symbol}</span>
+                                {inst.name && <span className="symbol-desc">{inst.name}</span>}
+                              </td>
+                              <td>{inst.asset_class || 'N/A'}</td>
+                              <td>{inst.trades}</td>
+                              <td>{inst.win_rate || 0}%</td>
+                              <td className="ngt-lots-cell">{inst.max_lots_allowed} lots</td>
+                              <td className={`ngt-lots-cell ${!inst.is_compliant ? 'breach' : ''}`}>
+                                {inst.max_volume_used} lots
+                              </td>
+                              <td className="ngt-lots-cell">{inst.avg_volume} lots</td>
+                              <td>
+                                <div className="ngt-compliance-bar">
+                                  <div 
+                                    className="ngt-compliance-fill" 
+                                    style={{ 
+                                      width: `${inst.compliance_rate || 100}%`,
+                                      backgroundColor: inst.compliance_rate >= 90 ? '#10B981' : inst.compliance_rate >= 70 ? '#F59E0B' : '#EF4444'
+                                    }}
+                                  />
+                                  <span>{inst.compliance_rate || 100}%</span>
+                                </div>
+                              </td>
+                              <td className={inst.total_pnl >= 0 ? 'positive' : 'negative'}>
+                                {formatCurrency(inst.total_pnl)}
+                              </td>
+                              <td>
+                                {inst.is_compliant ? (
+                                  <span className="ngt-status-badge pass">COMPLIANT</span>
+                                ) : (
+                                  <span className="ngt-status-badge fail">
+                                    {inst.breach_count} BREACH{inst.breach_count > 1 ? 'ES' : ''}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lot Size Breaches Detail */}
+                {riskAnalysis.lot_breaches_by_symbol?.length > 0 && (
+                  <div className="ngt-breaches-detail">
+                    <h4><AlertTriangle size={18} /> Lot Size Breaches by Symbol</h4>
+                    <div className="ngt-breaches-grid">
+                      {riskAnalysis.lot_breaches_by_symbol.map((breach, i) => (
+                        <div key={i} className="ngt-breach-card">
+                          <div className="ngt-breach-symbol">{breach.symbol}</div>
+                          <div className="ngt-breach-values">
+                            <div className="ngt-breach-row">
+                              <span>Max Allowed:</span>
+                              <span>{breach.allowed} lots</span>
+                            </div>
+                            <div className="ngt-breach-row breach">
+                              <span>Max Used:</span>
+                              <span>{breach.max_used} lots</span>
+                            </div>
+                            <div className="ngt-breach-row">
+                              <span>Breach Count:</span>
+                              <span>{breach.breach_count} trades</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Daily Loss Breaches */}
+                {riskAnalysis.daily_loss_breaches?.length > 0 && (
+                  <div className="ngt-daily-breaches">
+                    <h4><AlertTriangle size={18} /> Daily Loss Limit Breaches</h4>
+                    <div className="ngt-daily-breach-list">
+                      {riskAnalysis.daily_loss_breaches.map((breach, i) => (
+                        <div key={i} className="ngt-daily-breach-item">
+                          <span className="date">{breach.date}</span>
+                          <span className="loss">{formatCurrency(breach.loss)}</span>
+                          <span className="limit">Limit: {formatCurrency(breach.limit)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Issues Message */}
+                {riskAnalysis.total_lot_breaches === 0 && riskAnalysis.total_risk_breaches === 0 && (
+                  <div className="ngt-all-compliant">
+                    <CheckCircle size={32} />
+                    <h4>Strategy is Fully Compliant</h4>
+                    <p>All trades respect the defined risk parameters. No lot size or risk-per-trade breaches detected.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="ngt-risk-empty-state">
+                <Shield size={48} />
+                <h3>Select a Strategy</h3>
+                <p>Choose a money manager from the dropdown above to automatically analyze their trading activity against FIDUS risk parameters.</p>
+                <div className="ngt-risk-params-preview">
+                  <div className="ngt-param">
                     <span className="label">Max Risk Per Trade</span>
                     <span className="value">{riskPolicy.max_risk_per_trade_pct}%</span>
                   </div>
-                  <div className="ngt-policy-item">
-                    <span className="label">Max Intraday Loss</span>
+                  <div className="ngt-param">
+                    <span className="label">Max Daily Loss</span>
                     <span className="value">{riskPolicy.max_intraday_loss_pct}%</span>
                   </div>
-                  <div className="ngt-policy-item">
+                  <div className="ngt-param">
                     <span className="label">Max Margin Usage</span>
                     <span className="value">{riskPolicy.max_margin_usage_pct}%</span>
                   </div>
-                  <div className="ngt-policy-item">
+                  <div className="ngt-param">
                     <span className="label">Leverage</span>
                     <span className="value">{riskPolicy.leverage}:1</span>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="ngt-risk-content-grid">
-              {/* Left: Position Sizing Calculator */}
-              <div className="ngt-card">
-                <div className="ngt-card-header">
-                  <h3>Position Sizing Calculator</h3>
-                  <span className="ngt-card-subtitle">Hull-Style Max Lot Calculation</span>
-                </div>
-                <div className="ngt-card-body">
-                  <div className="ngt-calc-form">
-                    <div className="ngt-form-row">
-                      <div className="ngt-form-group">
-                        <label>Account Equity ($)</label>
-                        <input
-                          type="number"
-                          value={calcEquity}
-                          onChange={(e) => setCalcEquity(Number(e.target.value))}
-                          placeholder="100000"
-                        />
-                      </div>
-                      <div className="ngt-form-group">
-                        <label>Instrument</label>
-                        <select value={calcSymbol} onChange={(e) => setCalcSymbol(e.target.value)}>
-                          <option value="XAUUSD">XAUUSD (Gold)</option>
-                          <option value="EURUSD">EURUSD</option>
-                          <option value="GBPUSD">GBPUSD</option>
-                          <option value="USDJPY">USDJPY</option>
-                          <option value="US30">US30 (Dow)</option>
-                          <option value="NAS100">NAS100</option>
-                          <option value="BTCUSD">BTCUSD</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="ngt-form-row">
-                      <div className="ngt-form-group">
-                        <label>Stop Distance {calcSymbol === 'XAUUSD' ? '($)' : calcSymbol.includes('USD') ? '(pips)' : '(points)'}</label>
-                        <input
-                          type="number"
-                          value={calcStopDistance}
-                          onChange={(e) => setCalcStopDistance(Number(e.target.value))}
-                          step="0.1"
-                        />
-                      </div>
-                      <div className="ngt-form-group ngt-form-group-btn">
-                        <button 
-                          className="ngt-btn ngt-btn-primary"
-                          onClick={calculateMaxLots}
-                        >
-                          Calculate Max Lots
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {calcResult && (
-                    <div className="ngt-calc-result">
-                      <div className="ngt-calc-result-header">
-                        <h4>Maximum Allowed Position</h4>
-                        <span className={`ngt-constraint-badge ${calcResult.binding_constraint === 'RISK' ? 'risk' : 'margin'}`}>
-                          {calcResult.binding_constraint} BOUND
-                        </span>
-                      </div>
-                      
-                      <div className="ngt-calc-big-number">
-                        <span className="value">{calcResult.max_lots_allowed}</span>
-                        <span className="unit">lots</span>
-                      </div>
-                      
-                      <div className="ngt-calc-breakdown">
-                        <div className="ngt-breakdown-section">
-                          <h5>Risk-Based Limit</h5>
-                          <div className="ngt-breakdown-row">
-                            <span>Risk Budget (1% of ${calcEquity.toLocaleString()}):</span>
-                            <span>${calcResult.risk_budget?.toLocaleString()}</span>
-                          </div>
-                          <div className="ngt-breakdown-row">
-                            <span>Loss per lot at stop:</span>
-                            <span>${calcResult.loss_per_lot_at_stop?.toLocaleString()}</span>
-                          </div>
-                          <div className="ngt-breakdown-row highlight">
-                            <span>Max Lots (Risk):</span>
-                            <span>{calcResult.max_lots_risk} lots</span>
-                          </div>
-                        </div>
-                        
-                        <div className="ngt-breakdown-section">
-                          <h5>Margin-Based Limit</h5>
-                          <div className="ngt-breakdown-row">
-                            <span>Margin per lot (at {calcResult.leverage}:1):</span>
-                            <span>${calcResult.margin_per_lot?.toLocaleString()}</span>
-                          </div>
-                          <div className="ngt-breakdown-row">
-                            <span>Max margin allowed (25%):</span>
-                            <span>${calcResult.max_margin_allowed?.toLocaleString()}</span>
-                          </div>
-                          <div className="ngt-breakdown-row highlight">
-                            <span>Max Lots (Margin):</span>
-                            <span>{calcResult.max_lots_margin} lots</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Gold Example */}
-                  <div className="ngt-example-box">
-                    <h5>XAUUSD Example (Gold)</h5>
-                    <p>
-                      At 200:1 leverage with $100,000 equity and 1% risk per trade:
-                    </p>
-                    <ul>
-                      <li>Risk Budget = $1,000</li>
-                      <li>Gold: 1 lot = 100 oz, $1 move = $100 P&L</li>
-                      <li>$10 stop → Loss/lot = $1,000 → <strong>Max 1.00 lot</strong></li>
-                      <li>$5 stop → Loss/lot = $500 → <strong>Max 2.00 lots</strong></li>
-                    </ul>
-                    <p className="ngt-example-note">
-                      <strong>Key insight:</strong> At 200:1 leverage, the risk limit (not margin) is typically the binding constraint for gold.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Strategy Risk Analysis */}
-              <div className="ngt-card">
-                <div className="ngt-card-header">
-                  <h3>Strategy Risk Analysis</h3>
-                  <div className="ngt-card-header-controls">
-                    <select 
-                      value={deepDiveManager?.account || ''}
-                      onChange={(e) => {
-                        const mgr = managers.find(m => m.account === parseInt(e.target.value));
-                        setDeepDiveManager(mgr);
-                      }}
-                      className="ngt-strategy-select"
-                    >
-                      {managers.map(m => (
-                        <option key={m.account} value={m.account}>
-                          {m.manager_name} (#{m.account})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="ngt-card-body">
-                  {riskAnalysisLoading ? (
-                    <div className="ngt-loading-inline">
-                      <Loader2 size={20} className="spin" />
-                      <span>Loading risk analysis...</span>
-                    </div>
-                  ) : riskAnalysis ? (
-                    <div className="ngt-risk-analysis-content">
-                      {/* Risk Control Score */}
-                      <div className="ngt-risk-score-panel">
-                        <div className="ngt-risk-score-circle" style={{ borderColor: riskAnalysis.risk_control_score?.color }}>
-                          <span className="score">{riskAnalysis.risk_control_score?.composite_score || 0}</span>
-                          <span className="label">Risk Score</span>
-                        </div>
-                        <div className="ngt-risk-score-label" style={{ color: riskAnalysis.risk_control_score?.color }}>
-                          {riskAnalysis.risk_control_score?.label || 'Unknown'}
-                        </div>
-                      </div>
-
-                      {/* Instruments Table */}
-                      {riskAnalysis.instruments?.length > 0 && (
-                        <div className="ngt-instruments-table">
-                          <h5>Instruments Traded</h5>
-                          <table>
-                            <thead>
-                              <tr>
-                                <th>Symbol</th>
-                                <th>Trades</th>
-                                <th>Max Allowed</th>
-                                <th>Max Observed</th>
-                                <th>Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {riskAnalysis.instruments.map((inst, i) => (
-                                <tr key={i} className={inst.is_breach ? 'breach-row' : ''}>
-                                  <td>{inst.symbol}</td>
-                                  <td>{inst.trades}</td>
-                                  <td>{inst.max_lots_allowed} lots</td>
-                                  <td>{inst.max_lots_observed} lots</td>
-                                  <td>
-                                    {inst.is_breach ? (
-                                      <span className="ngt-breach-badge">BREACH</span>
-                                    ) : (
-                                      <span className="ngt-ok-badge">OK</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-
-                      {/* Breaches */}
-                      {riskAnalysis.breaches?.length > 0 && (
-                        <div className="ngt-breaches-panel">
-                          <h5><AlertTriangle size={16} /> Risk Breaches ({riskAnalysis.total_breaches})</h5>
-                          <ul>
-                            {riskAnalysis.breaches.map((breach, i) => (
-                              <li key={i} className="ngt-breach-item">
-                                <span className="breach-type">{breach.type}</span>
-                                <span className="breach-msg">{breach.message}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {riskAnalysis.breaches?.length === 0 && (
-                        <div className="ngt-no-breaches">
-                          <Shield size={20} />
-                          <span>No risk breaches detected for this strategy</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="ngt-risk-empty">
-                      <Shield size={24} />
-                      <span>Select a strategy to view risk analysis</span>
+            )}
+          </div>
+        )}
                     </div>
                   )}
                 </div>
