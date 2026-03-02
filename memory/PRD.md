@@ -17,6 +17,24 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Risk Limits Bug Fix - Demo Account Deal Data (Mar 2, 2026) ✅
+- **Bug:** Risk Limits tab showed 0 trades analyzed and 100% compliance for ALL demo strategies
+- **Root Cause:** Demo account deals stored in `mt5_deals_history` collection, not `mt5_deals`
+- **Fix Applied:**
+  1. Added `get_deals_for_account()` method to Hull Risk Engine
+  2. Method queries BOTH `mt5_deals` AND `mt5_deals_history` collections
+  3. Filters out deposits/withdrawals (non-trading operations)
+  4. Optimized performance with symbol-based caching (reduced from 96s to <1s)
+- **Verified Results:**
+  - Account 2217 (UNO14): 1015 trades, Score 70 (Moderate) ✅
+  - Account 2210 (GOLD DAY TRADING): 625 trades, Score 40 (Weak) ✅
+  - Account 2215 (JOEL NASDAQ): 407 trades, Score 100 (Strong) ✅
+  - Account 2216 (JOEL GOLD): Score 72 (Moderate) ✅
+  - Account 20062 (CRYPTO BITCOIN): Score 100 (Strong) ✅
+- **Files Modified:**
+  - `/app/backend/services/hull_risk_engine.py` - Added get_deals_for_account(), optimized caching
+- **Status:** COMPLETE - 100% test pass rate (backend + frontend)
+
 #### Hull-Style Risk Engine & Trading Analytics Enhancements (Mar 1, 2026) ✅
 - **Feature:** Institutional-grade risk management aligned with John C. Hull discipline
 - **Design:** Dark luxury fintech aesthetic with new Risk Limits tab
