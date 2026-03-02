@@ -2398,3 +2398,407 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RISK LIMITS TAB - AUTOMATIC DEAL ANALYSIS (Matching Trading Analytics)
+   FIDUS Colors: Teal #00D4AA, Gold #F59E0B
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Strategy Selector Header */
+.lda-risk-strategy-header {
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(245, 158, 11, 0.05));
+  border: 1px solid rgba(0, 212, 170, 0.2);
+  border-radius: var(--lda-radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.lda-risk-strategy-selector {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.lda-risk-strategy-selector label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lda-text-primary);
+}
+
+.lda-strategy-select-main {
+  flex: 1;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 12px 16px;
+  background: var(--lda-bg-secondary);
+  border: 2px solid rgba(0, 212, 170, 0.3);
+  border-radius: var(--lda-radius-md);
+  color: var(--lda-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.lda-strategy-select-main:focus {
+  outline: none;
+  border-color: var(--lda-accent-primary);
+}
+
+.lda-analysis-period {
+  font-size: 12px;
+  color: var(--lda-text-muted);
+  background: var(--lda-bg-secondary);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.lda-risk-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  color: var(--lda-text-secondary);
+  gap: 16px;
+}
+
+/* Strategy Info Header */
+.lda-risk-strategy-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--lda-bg-card);
+  border-radius: var(--lda-radius-lg);
+  margin-bottom: 24px;
+}
+
+.lda-strategy-name h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--lda-text-primary);
+  margin: 0 0 6px 0;
+}
+
+.lda-account-badge {
+  font-size: 12px;
+  color: var(--lda-text-muted);
+  background: var(--lda-bg-secondary);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.lda-strategy-metrics {
+  display: flex;
+  gap: 32px;
+}
+
+.lda-metric-box {
+  text-align: center;
+}
+
+.lda-metric-box .label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--lda-text-muted);
+  margin-bottom: 4px;
+}
+
+.lda-metric-box .value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--lda-font-mono);
+  color: var(--lda-text-primary);
+}
+
+/* Risk Policy & Score Row */
+.lda-risk-policy-score-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.lda-risk-policy-card-compact {
+  background: var(--lda-bg-card);
+  border-radius: var(--lda-radius-lg);
+  padding: 20px 24px;
+}
+
+.lda-risk-policy-card-compact h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lda-text-primary);
+  margin: 0 0 16px 0;
+}
+
+.lda-policy-items {
+  display: flex;
+  gap: 24px;
+}
+
+.lda-policy-items .lda-policy-item {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: var(--lda-bg-secondary);
+  border-radius: var(--lda-radius-md);
+}
+
+.lda-policy-items .lda-policy-item .label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--lda-text-muted);
+  margin-bottom: 4px;
+}
+
+.lda-policy-items .lda-policy-item .value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--lda-font-mono);
+  color: var(--lda-accent-primary);
+}
+
+/* Risk Score Card */
+.lda-risk-score-card {
+  background: var(--lda-bg-card);
+  border-radius: var(--lda-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lda-risk-score-circle .label-small {
+  font-size: 10px;
+  color: var(--lda-text-muted);
+  text-transform: uppercase;
+}
+
+/* Compliance Summary */
+.lda-compliance-summary {
+  margin-bottom: 24px;
+}
+
+.lda-compliance-summary h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lda-text-primary);
+  margin: 0 0 16px 0;
+}
+
+.lda-compliance-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.lda-compliance-card {
+  background: var(--lda-bg-card);
+  border-radius: var(--lda-radius-lg);
+  padding: 20px;
+  border-left: 4px solid;
+}
+
+.lda-compliance-card.pass { border-left-color: #00D4AA; }
+.lda-compliance-card.warning { border-left-color: #F59E0B; }
+.lda-compliance-card.fail { border-left-color: #EF4444; }
+
+.lda-compliance-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.lda-compliance-header h5 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lda-text-primary);
+  margin: 0;
+}
+
+.lda-compliance-card.pass .lda-compliance-icon { color: #00D4AA; }
+.lda-compliance-card.warning .lda-compliance-icon { color: #F59E0B; }
+.lda-compliance-card.fail .lda-compliance-icon { color: #EF4444; }
+
+.lda-compliance-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--lda-font-mono);
+  margin-bottom: 8px;
+}
+
+.lda-compliance-card.pass .lda-compliance-value { color: #00D4AA; }
+.lda-compliance-card.warning .lda-compliance-value { color: #F59E0B; }
+.lda-compliance-card.fail .lda-compliance-value { color: #EF4444; }
+
+.lda-compliance-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--lda-text-secondary);
+}
+
+.lda-breach-count {
+  color: #EF4444;
+  font-weight: 600;
+}
+
+/* Instruments Analysis Table */
+.lda-instruments-analysis {
+  margin-bottom: 24px;
+}
+
+.lda-instruments-analysis h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lda-text-primary);
+  margin: 0 0 16px 0;
+}
+
+.lda-instruments-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--lda-radius-lg);
+  border: 1px solid var(--lda-border);
+}
+
+.lda-instruments-table-full {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lda-instruments-table-full th {
+  background: var(--lda-bg-secondary);
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--lda-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.lda-instruments-table-full td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--lda-text-primary);
+  border-top: 1px solid var(--lda-border);
+}
+
+.lda-instruments-table-full tr:hover {
+  background: rgba(0, 212, 170, 0.05);
+}
+
+.lda-instruments-table-full tr.breach-row {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.lda-symbol-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.lda-symbol-cell .symbol-name { font-weight: 600; color: var(--lda-text-primary); }
+.lda-symbol-cell .symbol-desc { font-size: 11px; color: var(--lda-text-muted); }
+
+.lda-lots-cell { font-family: var(--lda-font-mono); }
+.lda-lots-cell.breach { color: #EF4444; font-weight: 600; }
+
+.lda-compliance-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+}
+
+.lda-compliance-fill {
+  height: 6px;
+  border-radius: 3px;
+  flex: 1;
+}
+
+.lda-compliance-bar span {
+  font-size: 11px;
+  font-family: var(--lda-font-mono);
+  color: var(--lda-text-secondary);
+}
+
+.lda-instruments-table-full td.positive { color: #00D4AA; font-weight: 600; }
+.lda-instruments-table-full td.negative { color: #EF4444; font-weight: 600; }
+
+.lda-status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.lda-status-badge.pass { background: rgba(0, 212, 170, 0.15); color: #00D4AA; }
+.lda-status-badge.fail { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+
+/* Breaches Detail */
+.lda-breaches-detail { margin-bottom: 24px; }
+.lda-breaches-detail h4 { font-size: 14px; font-weight: 600; color: #EF4444; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
+.lda-breaches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.lda-breach-card { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--lda-radius-md); padding: 16px; }
+.lda-breach-symbol { font-size: 16px; font-weight: 700; color: #EF4444; margin-bottom: 12px; }
+.lda-breach-values { display: flex; flex-direction: column; gap: 6px; }
+.lda-breach-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--lda-text-secondary); }
+.lda-breach-row span:last-child { font-family: var(--lda-font-mono); color: var(--lda-text-primary); }
+.lda-breach-row.breach span:last-child { color: #EF4444; font-weight: 600; }
+
+/* All Compliant Message */
+.lda-all-compliant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+  background: rgba(0, 212, 170, 0.08);
+  border: 1px solid rgba(0, 212, 170, 0.2);
+  border-radius: var(--lda-radius-lg);
+  color: #00D4AA;
+}
+
+.lda-all-compliant h4 { font-size: 18px; font-weight: 600; margin: 16px 0 8px 0; }
+.lda-all-compliant p { font-size: 14px; color: var(--lda-text-secondary); text-align: center; max-width: 400px; }
+
+/* Empty State */
+.lda-risk-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 40px;
+  color: var(--lda-text-muted);
+}
+
+.lda-risk-empty-state h3 { font-size: 20px; font-weight: 600; color: var(--lda-text-primary); margin: 24px 0 8px 0; }
+.lda-risk-empty-state p { font-size: 14px; text-align: center; max-width: 400px; margin-bottom: 32px; }
+
+.lda-risk-params-preview {
+  display: flex;
+  gap: 24px;
+  background: var(--lda-bg-card);
+  padding: 20px 32px;
+  border-radius: var(--lda-radius-lg);
+}
+
+.lda-param { text-align: center; }
+.lda-param .label { display: block; font-size: 11px; text-transform: uppercase; color: var(--lda-text-muted); margin-bottom: 4px; }
+.lda-param .value { font-size: 18px; font-weight: 700; font-family: var(--lda-font-mono); color: var(--lda-accent-primary); }
+
+@media (max-width: 1200px) {
+  .lda-risk-policy-score-row { grid-template-columns: 1fr; }
+  .lda-compliance-cards { grid-template-columns: 1fr; }
+  .lda-risk-strategy-info { flex-direction: column; gap: 20px; text-align: center; }
+  .lda-strategy-metrics { justify-content: center; }
+}
+
