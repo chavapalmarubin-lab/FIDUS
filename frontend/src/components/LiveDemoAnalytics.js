@@ -10,7 +10,8 @@ import {
   Users, Target, Shield, AlertTriangle, Award, BarChart3, Activity,
   ChevronRight, ChevronDown, Zap, Briefcase, PieChart as PieChartIcon,
   ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
-  Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings
+  Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings,
+  CheckCircle
 } from 'lucide-react';
 import './LiveDemoAnalytics.css';
 
