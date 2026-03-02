@@ -162,6 +162,156 @@ Cluster: FIDUS (M0 Free Tier)
 Database: fidus_production
 Connection: mongodb+srv://emergent-ops:***SANITIZED***@fidus.y1p9be2.mongodb.net/fidus_production
 Collections: 35+ (see Section 9 for complete list)
+
+3.5 ANALYTICS DASHBOARDS
+FIDUS provides two institutional-grade analytics dashboards for portfolio monitoring and risk management:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        TRADING ANALYTICS DASHBOARD                            │
+│                    (Real Accounts - Gold/Emerald Theme)                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Component: NextGenTradingAnalytics.js                                        │
+│ Theme: Dark luxury fintech (#10B981 emerald, #F59E0B gold)                   │
+│ Data Source: mt5_accounts (account_type != 'live_demo')                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ TABS:                                                                        │
+│ 1. Portfolio Overview                                                        │
+│    • Strategy Allocation horizontal bar chart (Allocated/Equity/P&L toggle)  │
+│    • Portfolio Risk Profile radar chart (5 metrics)                          │
+│    • Risk Profile Interpretation narrative panel                             │
+│    • Strategy Performance bar chart (Top 8 managers)                         │
+│    • Risk vs Return scatter plot                                             │
+│                                                                              │
+│ 2. Manager Rankings                                                          │
+│    • Sortable table with all performance metrics                             │
+│    • Rank by: Sharpe, Sortino, Win Rate, Return %, Profit Factor            │
+│                                                                              │
+│ 3. Deep Dive                                                                 │
+│    • Individual strategy analysis                                            │
+│    • Equity curve, trade distribution, drawdown chart                        │
+│                                                                              │
+│ 4. Risk Limits (NEW - Hull-Style Risk Engine)                               │
+│    • Active Risk Policy header (1%, 3%, 25%, 200:1)                         │
+│    • Position Sizing Calculator (MaxLotsAllowed formula)                     │
+│    • XAUUSD Example with verified calculations                               │
+│    • Strategy Risk Analysis with Risk Control Score (0-100)                  │
+│                                                                              │
+│ 5. AI Advisor (Claude Sonnet 4.5)                                           │
+│    • Chat interface for strategy questions                                   │
+│    • AI-powered portfolio insights                                           │
+│    • Capital allocation recommendations                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ KPI STRIP:                                                                   │
+│ Total AUM | Total P&L | Avg Return | Active Strategies | Avg Sharpe |       │
+│ Avg Win Rate | Total Trades                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      LIVE DEMO ANALYTICS DASHBOARD                            │
+│               (Demo Accounts - Purple/Orange Theme)                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Component: LiveDemoAnalytics.js                                              │
+│ Theme: Purple/Orange gradient (#A855F7 purple, #F97316 orange)               │
+│ Data Source: mt5_accounts (account_type = 'live_demo')                       │
+│ Purpose: Manager Candidate Evaluation - "Which traders deserve real capital?"│
+├──────────────────────────────────────────────────────────────────────────────┤
+│ TABS: (Full feature parity with Trading Analytics)                           │
+│ 1. Portfolio Overview                                                        │
+│ 2. Manager Rankings                                                          │
+│ 3. Deep Dive                                                                 │
+│ 4. Risk Limits (Hull-Style Risk Engine)                                     │
+│ 5. AI Advisor                                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Demo Accounts:                                                               │
+│ • GOLD DAY TRADING (#2210)                                                   │
+│ • JOEL ALVES NASDAQ (#2215)                                                  │
+│ • CRYPTO BITCOIN (#20062)                                                    │
+│ • JOEL ALVES GOLD (#2216)                                                    │
+│ • UNO14 (#2217)                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+3.5.1 HULL-STYLE RISK ENGINE (Institutional Risk Management)
+Purpose: Proper position sizing using John C. Hull risk discipline
+
+Core Formula:
+MaxLotsAllowed = min(MaxLotsRisk, MaxLotsMargin)
+
+Where:
+• MaxLotsRisk = RiskBudget / LossPerLotAtStop (PRIMARY LIMITER)
+• MaxLotsMargin = MaxMarginAllowed / MarginPerLot (SECONDARY)
+• RiskBudget = Equity × max_risk_per_trade_pct (default 1%)
+
+Risk Policy Defaults:
+┌─────────────────────────────┬──────────┬────────────────────┐
+│ Parameter                   │ Default  │ Allowed Range      │
+├─────────────────────────────┼──────────┼────────────────────┤
+│ Max Risk Per Trade          │ 1.0%     │ 0.25% - 2.0%       │
+│ Max Intraday Loss           │ 3.0%     │ 1.0% - 5.0%        │
+│ Max Weekly Loss             │ 6.0%     │ 3.0% - 10.0%       │
+│ Max Monthly Drawdown        │ 10.0%    │ 6.0% - 15.0%       │
+│ Max Margin Usage            │ 25.0%    │ 10.0% - 35.0%      │
+│ Leverage                    │ 200:1    │ Static             │
+│ Max Single Instrument (x)   │ 10x      │ 5x - 15x equity    │
+│ Max Total Notional (x)      │ 20x      │ 10x - 30x equity   │
+│ Overnight Exposure          │ OFF      │ Force-flat 16:50 NY│
+└─────────────────────────────┴──────────┴────────────────────┘
+
+Risk Control Score (0-100):
+Deterministic penalty-based scoring starting at 100:
+• Lot breach: -6 per trade (cap -30)
+• Risk-per-trade breach: -8 per trade (cap -40)
+• Margin breach: -10 first day, -5 additional (cap -25)
+• Daily loss breach: -20 per day (cap -40)
+• Weekly loss breach: -25 per week (cap -50)
+• Monthly DD breach: -40 one-time
+• Overnight breach: -15 per event (cap -45)
+
+Labels: 80-100 Strong | 60-79 Moderate | 40-59 Weak | 0-39 Critical
+
+ATR Multipliers (Stop Proxy when SL missing):
+• FX Majors: 0.75 × ATR(14)
+• FX Crosses: 1.00 × ATR(14)
+• Gold (XAUUSD): 0.60 × ATR(14)
+• Indices: 0.80 × ATR(14)
+
+Example Calculation (XAUUSD):
+Equity: $100,000, Risk: 1%, Stop: $10
+• RiskBudget = $100,000 × 1% = $1,000
+• LossPerLot = 100 oz × $10 = $1,000
+• MaxLotsRisk = $1,000 / $1,000 = 1.00 lot
+• Result: RISK BOUND (margin not binding at 200:1)
+
+3.5.2 API ENDPOINTS - Analytics
+
+Trading Analytics:
+GET  /api/admin/trading-analytics/managers    - Real account data
+POST /api/admin/trading-analytics/portfolio   - Portfolio summary
+
+Live Demo Analytics:
+GET  /api/admin/live-demo-analytics/managers  - Demo account data
+POST /api/admin/live-demo-ai-advisor/chat     - AI chat for demo context
+
+Hull Risk Engine:
+GET  /api/admin/risk-engine/instrument-specs  - All instrument specifications
+POST /api/admin/risk-engine/calculate-max-lots - Calculate MaxLotsAllowed
+GET  /api/admin/risk-engine/policy            - Risk policy defaults
+GET  /api/admin/risk-engine/narrative         - Risk profile interpretation
+GET  /api/admin/risk-engine/strategy-analysis/{account} - Strategy risk analysis
+
+3.5.3 FILES - Analytics
+
+Backend:
+/backend/services/trading_analytics_service.py      - Real account analytics
+/backend/services/live_demo_analytics_service.py    - Demo account analytics
+/backend/services/hull_risk_engine.py               - Hull risk calculations (1200+ lines)
+/backend/services/ai_strategy_advisor_service.py    - Claude Sonnet 4.5 integration
+/backend/seed_instrument_specs.py                   - FIDUS Tier-1 instrument seeder
+
+Frontend:
+/frontend/src/components/NextGenTradingAnalytics.js  - Trading Analytics (2000+ lines)
+/frontend/src/components/NextGenTradingAnalytics.css - Dark luxury theme
+/frontend/src/components/LiveDemoAnalytics.js        - Demo Analytics (2000+ lines)
+/frontend/src/components/LiveDemoAnalytics.css       - Purple/orange theme
  
 4. MT5 TRADING ACCOUNTS
 4.1 Account List
