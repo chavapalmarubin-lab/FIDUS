@@ -469,7 +469,7 @@ export default function LiveDemoAnalytics() {
         current_equity: m.current_equity || 0,
         total_pnl: m.total_pnl || 0,
         return_percentage: m.return_percentage || 0,
-        fill: (m.return_percentage || 0) >= 0 ? '#A855F7' : '#EF4444' // Purple theme for demo
+        fill: (m.return_percentage || 0) >= 0 ? '#00D4AA' : '#EF4444' // FIDUS teal theme
       };
     }).sort((a, b) => b.value - a.value);
   }, [managers, allocationViewMode]);
