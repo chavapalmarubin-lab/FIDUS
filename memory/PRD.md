@@ -35,6 +35,36 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
   - `/app/backend/services/hull_risk_engine.py` - Added get_deals_for_account(), optimized caching
 - **Status:** COMPLETE - 100% test pass rate (backend + frontend)
 
+#### Risk Limits Tab Enhanced Features (Mar 2, 2026) ✅
+- **Feature:** Three new features for comprehensive risk analysis and improvement guidance
+- **Components Built:**
+  1. **Active Risk Alerts Section:**
+     - CRITICAL/WARNING severity badges
+     - Alert types: RISK_BREACH, LOT_BREACH, DAILY_LOSS_BREACH
+     - Real-time notification of compliance issues
+  2. **Action Items to Improve Score:**
+     - HIGH/MEDIUM/LOW priority badges
+     - Category labels (risk_per_trade, lot_size, daily_loss)
+     - Issue description + specific fix recommendations
+  3. **Detailed Compliance Breakdown (Expandable):**
+     - Policy limit, calculation formula, breaches, compliance rate, penalty applied
+     - Per-instrument lot size limits table with breach percentages
+  4. **What-If Simulator:**
+     - Equity slider (25% to 300% of current)
+     - "Simulate" button to recalculate
+     - Limits Comparison (Risk Per Trade, Daily Loss)
+     - Max Lots by Instrument comparison (XAUUSD, GER40, US30, NAS100, BTCUSD)
+     - Score Projection by Equity Level chart (6 scenarios: 50%, 75%, Current, 125%, 150%, 200%)
+- **API Endpoints:**
+  - GET `/api/admin/risk-engine/what-if/{account}` - Returns simulation data
+  - GET `/api/admin/risk-engine/strategy-analysis/{account}` - Now includes alerts, action_items, compliance_details
+- **Files Modified:**
+  - `/app/backend/services/hull_risk_engine.py` - Added alerts, action_items, compliance_details, what_if_scenarios
+  - `/app/backend/server.py` - Added What-If simulator endpoint
+  - `/app/frontend/src/components/LiveDemoAnalytics.js` - Added UI components
+  - `/app/frontend/src/components/LiveDemoAnalytics.css` - Added styles for new sections
+- **Status:** COMPLETE - 100% test pass rate (16/16 backend + 7/7 frontend tests)
+
 #### Hull-Style Risk Engine & Trading Analytics Enhancements (Mar 1, 2026) ✅
 - **Feature:** Institutional-grade risk management aligned with John C. Hull discipline
 - **Design:** Dark luxury fintech aesthetic with new Risk Limits tab
