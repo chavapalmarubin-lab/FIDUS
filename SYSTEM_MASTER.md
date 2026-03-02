@@ -1535,6 +1535,25 @@ March 1, 2026 - Hull-Style Risk Engine & Trading Analytics Enhancements
 •       Testing: 100% pass rate (backend + frontend)
 •       Verified by: Testing Agent v3 Fork
 
+March 1, 2026 - Live Demo Analytics Hull-Style Risk Engine
+•       Feature: Applied all Hull-style Risk Engine features to Live Demo Analytics dashboard
+•       Purpose: Full feature parity between Trading Analytics and Demo Analytics
+•       Design: Purple/Orange theme (#A855F7, #F97316) to distinguish demo accounts
+•       Components Added:
+        ○       Strategy Allocation horizontal bar chart (Allocated/Equity/P&L toggle)
+        ○       Portfolio Risk Profile radar chart (5 metrics)
+        ○       Risk Profile Interpretation narrative panel (Executive Summary, Metric Analysis)
+        ○       Risk Limits tab with NEW badge
+        ○       Position Sizing Calculator (Hull-style MaxLotsAllowed)
+        ○       XAUUSD Example with verified calculations
+        ○       Strategy Risk Analysis dropdown (5 demo accounts)
+•       Files Modified:
+        ○       /frontend/src/components/LiveDemoAnalytics.js (added Risk Engine features)
+        ○       /frontend/src/components/LiveDemoAnalytics.css (added Risk Limits styling)
+•       Status: ✅ Production ready
+•       Testing: 100% pass rate (frontend)
+•       Verified by: Testing Agent v3 Fork
+
 November 17, 2025 - Investment Committee Allocation Workflow
 •       Feature: Complete allocation workflow with validation and recalculations
 •       Components: Apply button, 6 recalculation functions, audit logging
