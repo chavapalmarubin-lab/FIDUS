@@ -942,8 +942,8 @@ export default function LiveDemoAnalytics() {
                       <Radar
                         name="Portfolio"
                         dataKey="value"
-                        stroke="#A855F7"
-                        fill="#A855F7"
+                        stroke="#00D4AA"
+                        fill="#00D4AA"
                         fillOpacity={0.3}
                         strokeWidth={2}
                       />
