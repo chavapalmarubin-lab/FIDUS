@@ -3,7 +3,7 @@ Test Render Production API - Corrected Login
 """
 import requests
 
-BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com"
+BACKEND_URL = "https://account-filter-fix.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

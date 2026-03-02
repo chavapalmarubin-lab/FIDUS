@@ -13,7 +13,7 @@ The Investment Committee tab fails on Render production with:
 
 The Render frontend is trying to call:
 ```
-https://hull-risk-preview.preview.emergentagent.com/api/...
+https://account-filter-fix.preview.emergentagent.com/api/...
 ```
 
 But it SHOULD call:
@@ -63,7 +63,7 @@ After deployment completes:
 ## TECHNICAL DETAILS
 
 ### Current (Broken) Configuration:
-- Frontend `.env` file: `REACT_APP_BACKEND_URL=https://hull-risk-preview.preview.emergentagent.com`
+- Frontend `.env` file: `REACT_APP_BACKEND_URL=https://account-filter-fix.preview.emergentagent.com`
 - This is correct for LOCAL development
 - But Render doesn't use this file - it uses dashboard environment variables
 

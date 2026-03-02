@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com/api"
+BACKEND_URL = "https://account-filter-fix.preview.emergentagent.com/api"
 
 class SimplifiedPipelineTest:
     def __init__(self):

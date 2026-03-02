@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://hull-risk-preview.preview.emergentagent.com"
+BACKEND_URL = "https://account-filter-fix.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

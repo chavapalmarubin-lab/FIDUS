@@ -232,6 +232,64 @@ class HullRiskEngine:
         self.db = db
     
     # =========================================================================
+    # DEAL DATA RETRIEVAL - Multi-collection support
+    # =========================================================================
+    
+    async def get_deals_for_account(
+        self,
+        account: int,
+        start_date: datetime = None,
+        max_deals: int = 5000
+    ) -> List[Dict]:
+        """
+        Get deals for an account from both mt5_deals AND mt5_deals_history collections.
+        
+        Some accounts (especially demo accounts) store deals in mt5_deals_history,
+        while real accounts use mt5_deals. This method checks both and returns
+        actual trading deals (excluding deposits/withdrawals).
+        """
+        try:
+            query = {"account": account}
+            if start_date:
+                query["time"] = {"$gte": start_date}
+            
+            # Try mt5_deals first (primary collection)
+            deals = await self.db.mt5_deals.find(query).to_list(length=max_deals)
+            
+            # If no deals found, check mt5_deals_history (used by demo accounts)
+            if not deals:
+                logger.info(f"No deals in mt5_deals for account {account}, checking mt5_deals_history...")
+                deals = await self.db.mt5_deals_history.find(query).to_list(length=max_deals)
+                
+                if deals:
+                    logger.info(f"Found {len(deals)} deals in mt5_deals_history for account {account}")
+            
+            # Filter out deposits/withdrawals (type 2 with symbol empty and profit == initial deposit)
+            # Keep only actual trading deals with symbols
+            trading_deals = []
+            for deal in deals:
+                symbol = deal.get("symbol", "")
+                deal_type = deal.get("type", 0)
+                comment = deal.get("comment", "").lower()
+                
+                # Skip balance operations (deposits/withdrawals)
+                if not symbol and deal_type == 2 and ("deposit" in comment or "withdraw" in comment):
+                    continue
+                
+                # Skip deals without a symbol (non-trading operations)
+                if not symbol:
+                    continue
+                
+                trading_deals.append(deal)
+            
+            logger.info(f"Account {account}: Found {len(trading_deals)} trading deals (filtered from {len(deals)} total)")
+            return trading_deals
+            
+        except Exception as e:
+            logger.error(f"Error getting deals for account {account}: {e}")
+            return []
+    
+    # =========================================================================
     # INSTRUMENT SPECS MANAGEMENT
     # =========================================================================
     
@@ -523,12 +581,9 @@ class HullRiskEngine:
             equity = account_info.get("equity", 0)
             initial_allocation = account_info.get("initial_allocation", equity)
             
-            # Get deals for the period
+            # Get deals for the period (checks both mt5_deals AND mt5_deals_history)
             start_date = datetime.now(timezone.utc) - timedelta(days=period_days)
-            deals = await self.db.mt5_deals.find({
-                "account": account,
-                "time": {"$gte": start_date}
-            }).to_list(length=1000)
+            deals = await self.get_deals_for_account(account, start_date, max_deals=1000)
             
             # ===== Calculate breaches and penalties =====
             score = 100  # Start at 100
@@ -697,6 +752,8 @@ class HullRiskEngine:
             return 0
         
         breaches = 0
+        symbol_specs_cache = {}  # Cache instrument specs per symbol
+        
         for deal in deals:
             symbol = deal.get("symbol", "")
             volume = deal.get("volume", 0)
@@ -704,8 +761,13 @@ class HullRiskEngine:
             if not symbol or volume <= 0:
                 continue
             
-            specs = await self.get_instrument_specs(symbol)
-            max_calc = self.calculate_max_lots(equity, specs, risk_policy)
+            # Cache instrument specs per symbol
+            if symbol not in symbol_specs_cache:
+                specs = await self.get_instrument_specs(symbol)
+                max_calc = self.calculate_max_lots(equity, specs, risk_policy)
+                symbol_specs_cache[symbol] = max_calc
+            else:
+                max_calc = symbol_specs_cache[symbol]
             
             if volume > max_calc["max_lots_allowed"]:
                 breaches += 1
@@ -886,6 +948,7 @@ class HullRiskEngine:
         breaches = 0
         total_evaluated = 0
         breach_details = []
+        symbol_specs_cache = {}  # Cache instrument specs per symbol
         
         for deal in deals:
             symbol = deal.get("symbol", "")
@@ -896,9 +959,13 @@ class HullRiskEngine:
             
             total_evaluated += 1
             
-            # Get instrument specs and calculate max allowed
-            specs = await self.get_instrument_specs(symbol)
-            max_calc = self.calculate_max_lots(equity, specs, risk_policy)
+            # Cache instrument specs per symbol
+            if symbol not in symbol_specs_cache:
+                specs = await self.get_instrument_specs(symbol)
+                max_calc = self.calculate_max_lots(equity, specs, risk_policy)
+                symbol_specs_cache[symbol] = max_calc
+            else:
+                max_calc = symbol_specs_cache[symbol]
             
             if volume > max_calc["max_lots_allowed"] * 1.5:  # 50% tolerance
                 breaches += 1
@@ -944,16 +1011,14 @@ class HullRiskEngine:
             initial_allocation = account_info.get("initial_allocation", equity)
             risk_policy = await self.get_risk_policy(account)
             
-            # Get deals for analysis
+            # Get deals for analysis (checks both mt5_deals AND mt5_deals_history)
             start_date = datetime.now(timezone.utc) - timedelta(days=period_days)
-            deals = await self.db.mt5_deals.find({
-                "account": account,
-                "time": {"$gte": start_date}
-            }).to_list(length=5000)
+            deals = await self.get_deals_for_account(account, start_date, max_deals=5000)
             
             # ===== DEAL-BY-DEAL ANALYSIS =====
             deal_analysis = []
             symbol_analysis = {}
+            symbol_max_lots_cache = {}  # Cache max_lots calculations per symbol
             total_trades = 0
             lot_breaches = 0
             risk_breaches = 0
@@ -985,9 +1050,15 @@ class HullRiskEngine:
                         date_key = deal_time.strftime("%Y-%m-%d")
                         daily_pnl[date_key] = daily_pnl.get(date_key, 0) + profit
                 
-                # Symbol-level aggregation
+                # Symbol-level aggregation - cache instrument specs
                 if symbol not in symbol_analysis:
                     specs = await self.get_instrument_specs(symbol)
+                    # Pre-compute max_lots for this symbol using default stop distance
+                    default_max_calc = self.calculate_max_lots(
+                        equity, specs, risk_policy, 
+                        specs.get("default_stop_distance", 10)
+                    )
+                    symbol_max_lots_cache[symbol] = default_max_calc
                     symbol_analysis[symbol] = {
                         "specs": specs,
                         "trades": 0,
@@ -1012,7 +1083,7 @@ class HullRiskEngine:
                 elif profit < 0:
                     sa["losing_trades"] += 1
                 
-                # Calculate max allowed lots for this trade
+                # Track stop distances for average calculation later
                 sl = deal.get("sl", 0)
                 price = deal.get("price", 0)
                 stop_distance = abs(price - sl) if (sl > 0 and price > 0) else None
@@ -1020,13 +1091,8 @@ class HullRiskEngine:
                 if stop_distance:
                     sa["stop_distances"].append(stop_distance)
                 
-                specs = sa["specs"]
-                max_calc = self.calculate_max_lots(
-                    equity, 
-                    specs, 
-                    risk_policy, 
-                    stop_distance or specs.get("default_stop_distance", 10)
-                )
+                # Use cached max_lots calculation for this symbol
+                max_calc = symbol_max_lots_cache[symbol]
                 
                 # Check for lot size breach
                 is_lot_breach = volume > max_calc["max_lots_allowed"]
@@ -1046,18 +1112,8 @@ class HullRiskEngine:
                 if is_risk_breach:
                     risk_breaches += 1
                 
-                deal_analysis.append({
-                    "ticket": ticket,
-                    "symbol": symbol,
-                    "time": deal_time.isoformat() if deal_time else None,
-                    "type": deal_type,
-                    "volume": volume,
-                    "profit": round(profit, 2),
-                    "max_lots_allowed": max_calc["max_lots_allowed"],
-                    "is_lot_breach": is_lot_breach,
-                    "breach_pct": round(breach_pct, 1) if is_lot_breach else None,
-                    "is_risk_breach": is_risk_breach
-                })
+                # Note: Skipping deal_analysis append for performance
+                # Only summary-level data is needed for the UI
             
             # ===== DAILY LOSS BREACH ANALYSIS =====
             daily_loss_breaches = []

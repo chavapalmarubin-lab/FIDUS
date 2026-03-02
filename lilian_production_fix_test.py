@@ -23,7 +23,7 @@ import time
 
 # Configuration
 PRODUCTION_URL = "https://fidus-invest.emergent.host/api"
-PREVIEW_URL = "https://hull-risk-preview.preview.emergentagent.com/api"
+PREVIEW_URL = "https://account-filter-fix.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

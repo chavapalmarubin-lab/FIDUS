@@ -1,0 +1,97 @@
+{
+  "summary": "Bug Fix Verified - Risk Limits tab now shows actual trade data from demo accounts. The fix in get_deals_for_account() method successfully queries both mt5_deals and mt5_deals_history collections.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Portfolio Overview KPI",
+        "issue": "TOTAL TRADES KPI still shows 0 in Portfolio Overview tab - this is a separate issue in the managers endpoint aggregation, not related to this fix",
+        "affected_selectors": ["[data-testid='kpi-trades']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_risk_limits_fix.py",
+    "/app/test_reports/iteration_8.json"
+  ],
+  "action_items": [
+    "OPTIONAL: Investigate why TOTAL TRADES KPI in Portfolio Overview shows 0 (separate issue from this fix)"
+  ],
+  "critical_code_review_comments": [
+    "Fix correctly implemented: get_deals_for_account() now checks both mt5_deals and mt5_deals_history collections",
+    "Trading deals properly filtered (excluding deposits/withdrawals with symbol check)",
+    "Risk scores calculated correctly based on actual trading data"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_risk_limits_fix.py"
+  ],
+  "success_rate": {
+    "backend": "100% - All 6 API tests passed",
+    "frontend": "100% - Risk Limits tab displays correct data"
+  },
+  "test_credentials": "Admin: admin / Password123",
+  "seed_data_creation": "None - using existing demo accounts",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Risk Limits fix verified. Demo accounts now show actual trade data in Risk Limits tab. Portfolio Overview KPI for TOTAL TRADES may still show 0 - this is a separate issue in the managers endpoint aggregation.",
+  "verified_features": {
+    "api_tests": {
+      "account_2217_uno14": {
+        "trades_analyzed": 1015,
+        "expected_trades": "~991",
+        "risk_score": 70,
+        "expected_score": 70,
+        "risk_label": "Moderate",
+        "status": "PASS"
+      },
+      "account_2210_gold_day_trading": {
+        "trades_analyzed": 625,
+        "expected_trades": "~623",
+        "risk_score": 40,
+        "expected_score": 40,
+        "risk_label": "Weak",
+        "status": "PASS"
+      },
+      "account_2215_joel_nasdaq": {
+        "trades_analyzed": 407,
+        "expected_trades": "~383",
+        "risk_score": 100,
+        "expected_score": 100,
+        "risk_label": "Strong",
+        "status": "PASS"
+      },
+      "account_2216_joel_gold": {
+        "risk_score": 72,
+        "risk_label": "Moderate",
+        "status": "PASS"
+      },
+      "account_20062_crypto_bitcoin": {
+        "risk_score": 100,
+        "risk_label": "Strong",
+        "status": "PASS"
+      }
+    },
+    "ui_tests": {
+      "risk_limits_tab_loads": "PASS",
+      "strategy_selector_dropdown": "PASS - Shows all 5 demo accounts",
+      "trades_analyzed_displayed": "PASS - Shows actual trade counts",
+      "risk_scores_vary": "PASS - Different strategies show different scores (40, 70, 72, 100)",
+      "lot_size_compliance": "PASS - Shows actual compliance rates",
+      "risk_per_trade_compliance": "PASS - Shows actual compliance",
+      "daily_loss_limit_status": "PASS - Shows correct status",
+      "instruments_breakdown": "PASS - Shows XAUUSD, GER40 etc"
+    }
+  },
+  "bug_fix_verification": {
+    "issue": "Risk Limits tab was showing 0 trades analyzed and 100% compliance for all strategies",
+    "root_cause": "Demo account deals stored in mt5_deals_history collection, not mt5_deals",
+    "fix_applied": "Updated get_deals_for_account() method to query both collections",
+    "fix_verified": true,
+    "fix_file": "/app/backend/services/hull_risk_engine.py"
+  }
+}
