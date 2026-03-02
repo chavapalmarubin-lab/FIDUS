@@ -453,57 +453,143 @@ class HullRiskEngine:
         else:
             stop_source = "provided"
         
-        # Calculate max lots based on RISK (stop-based sizing)
-        # Loss per lot at stop = stop_distance * value_per_unit_move_per_lot
-        if symbol == "XAUUSD":
-            # Gold: $1 move = $100 per lot
-            loss_per_lot_at_stop = stop_distance * 100
-        elif symbol in ["EURUSD", "GBPUSD", "AUDUSD", "NZDUSD"]:
-            # Major pairs: pip_value * pips
-            pips = stop_distance / instrument_specs.get("pip_size", 0.0001)
-            loss_per_lot_at_stop = pips * instrument_specs.get("pip_value_per_lot", 10)
-        elif symbol == "USDJPY":
-            pips = stop_distance / instrument_specs.get("pip_size", 0.01)
-            loss_per_lot_at_stop = pips * instrument_specs.get("pip_value_per_lot", 6.67)
-        elif symbol in ["US30", "NAS100", "DE40"]:
-            # Indices: points * $1 per point
-            loss_per_lot_at_stop = stop_distance * instrument_specs.get("pip_value_per_lot", 1.0)
-        elif symbol == "BTCUSD":
-            loss_per_lot_at_stop = stop_distance * 1.0
-        else:
-            # Generic calculation
-            loss_per_lot_at_stop = stop_distance * value_per_unit
+        # =====================================================================
+        # Calculate LOSS PER LOT AT STOP using contract specifications
+        # This is the core of Hull-style position sizing
+        # =====================================================================
         
-        # Max lots based on risk
-        if loss_per_lot_at_stop > 0:
-            max_lots_risk = risk_budget / loss_per_lot_at_stop
-        else:
-            max_lots_risk = max_lot
+        # Get pip_value_per_lot from specs (critical for accurate calculation)
+        pip_value_per_lot = instrument_specs.get("pip_value_per_lot", 10.0)
+        pip_size = instrument_specs.get("pip_size", 0.0001)
+        asset_class = instrument_specs.get("asset_class", "FX_MAJOR")
+        margin_pct = instrument_specs.get("margin_pct", 0.5)  # Use margin from specs
         
-        # Calculate max lots based on MARGIN
-        # Notional per lot = contract_size * price (or contract_size for indices)
+        # Calculate loss per lot at stop based on asset class
+        if asset_class == "Metals":
+            # Metals: For XAUUSD, contract_size = 100 oz, stop in USD terms
+            # Loss = stop_distance * (contract_size / 100) * 100 for gold
+            # Or simply: stop_distance * pip_value_per_lot * pips
+            if symbol == "XAUUSD":
+                # Gold: $1 move per oz, 100 oz per lot = $100 per $1 move
+                loss_per_lot_at_stop = stop_distance * 100  # stop_distance is in USD
+            elif symbol == "XAGUSD":
+                # Silver: contract_size = 5000 oz, pip_value_per_lot = 50
+                loss_per_lot_at_stop = stop_distance * 50  # stop_distance is in USD
+            else:
+                # Other metals (XPTUSD, XPDUSD)
+                loss_per_lot_at_stop = stop_distance * pip_value_per_lot
+                
+        elif asset_class in ["FX_MAJOR", "FX_CROSS"]:
+            # Forex: Loss = pips * pip_value_per_lot
+            # Note: stop_distance might be in PIPS (20) or PRICE (0.0020)
+            # If stop_distance > 1, assume it's in pips directly
+            # If stop_distance < 1, it's in price terms and needs to be converted to pips
+            if stop_distance >= 1:
+                # Already in pips (e.g., 20 pips)
+                pips = stop_distance
+            elif pip_size > 0:
+                # Convert from price to pips (e.g., 0.0020 / 0.0001 = 20 pips)
+                pips = stop_distance / pip_size
+            else:
+                # Fallback: assume standard 4-decimal pip
+                pips = stop_distance * 10000
+            loss_per_lot_at_stop = pips * pip_value_per_lot
+            
+        elif asset_class == "INDEX_CFD":
+            # Indices: Loss = points * pip_value_per_lot (usually $1 per point)
+            # stop_distance is in index points
+            loss_per_lot_at_stop = stop_distance * pip_value_per_lot
+            
+        elif asset_class == "Commodities":
+            # Commodities: contract_size matters
+            # For oil (contract_size=1000 barrels), $1 move = $1000
+            loss_per_lot_at_stop = stop_distance * contract_size * pip_value_per_lot / 1000
+            
+        elif asset_class == "Crypto":
+            # Crypto: contract_size = 1, so loss = stop_distance * pip_value_per_lot
+            loss_per_lot_at_stop = stop_distance * pip_value_per_lot
+            
+        else:
+            # Generic fallback
+            loss_per_lot_at_stop = stop_distance * pip_value_per_lot
+        
+        # Ensure minimum loss per lot to avoid division by zero
+        loss_per_lot_at_stop = max(loss_per_lot_at_stop, 0.01)
+        
+        # =====================================================================
+        # Calculate MAX LOTS based on RISK (stop-based sizing)
+        # MaxLotsRisk = RiskBudget / LossPerLotAtStop
+        # =====================================================================
+        max_lots_risk = risk_budget / loss_per_lot_at_stop
+        
+        # =====================================================================
+        # Calculate MAX LOTS based on MARGIN using specs margin_pct
+        # Margin required per lot = (contract_size * price) * (margin_pct / 100)
+        # Or use leverage: Margin = Notional / Leverage
+        # =====================================================================
+        
+        # Get effective leverage from margin_pct
+        # margin_pct of 0.2% = 500:1 leverage, 1% = 100:1, etc.
+        effective_leverage = 100 / margin_pct if margin_pct > 0 else leverage
+        
+        # Calculate notional value per lot
         if current_price and current_price > 0:
             notional_per_lot = contract_size * current_price
         else:
-            # Estimate based on typical values
-            if symbol == "XAUUSD":
-                notional_per_lot = 100 * 2000  # 100 oz * $2000
-            elif symbol in ["EURUSD", "GBPUSD"]:
-                notional_per_lot = 100000 * 1.0  # Standard lot
-            elif symbol in ["US30"]:
-                notional_per_lot = 1 * 40000  # ~$40k index
+            # Estimate based on typical values for each asset class
+            if asset_class == "Metals":
+                if symbol == "XAUUSD":
+                    notional_per_lot = contract_size * 2650  # ~$2650/oz gold
+                elif symbol == "XAGUSD":
+                    notional_per_lot = contract_size * 30  # ~$30/oz silver
+                else:
+                    notional_per_lot = contract_size * 1000  # Generic metals
+            elif asset_class in ["FX_MAJOR", "FX_CROSS"]:
+                notional_per_lot = contract_size  # 100,000 units
+            elif asset_class == "INDEX_CFD":
+                # Estimate index values
+                if symbol in ["US30"]:
+                    notional_per_lot = contract_size * 43000
+                elif symbol in ["NAS100", "UT100"]:
+                    notional_per_lot = contract_size * 21000
+                elif symbol in ["DE40", "GER40"]:
+                    notional_per_lot = contract_size * 22000
+                elif symbol in ["US500", "SPX500"]:
+                    notional_per_lot = contract_size * 5800
+                else:
+                    notional_per_lot = contract_size * 10000
+            elif asset_class == "Commodities":
+                if symbol in ["USOUSD", "UKOUSD"]:
+                    notional_per_lot = contract_size * 75  # ~$75/barrel
+                elif symbol == "NATGAS":
+                    notional_per_lot = contract_size * 3  # ~$3/MMBtu
+                else:
+                    notional_per_lot = contract_size * 100
+            elif asset_class == "Crypto":
+                if symbol == "BTCUSD":
+                    notional_per_lot = contract_size * 95000  # ~$95k BTC
+                elif symbol == "ETHUSD":
+                    notional_per_lot = contract_size * 3500  # ~$3500 ETH
+                else:
+                    notional_per_lot = contract_size * 100  # Generic crypto
             else:
                 notional_per_lot = contract_size
         
-        margin_per_lot = notional_per_lot / leverage
+        # Calculate margin required per lot
+        margin_per_lot = notional_per_lot * (margin_pct / 100)
+        
+        # Max margin allowed from equity
         max_margin_allowed = equity * max_margin_pct
         
+        # Max lots based on margin
         if margin_per_lot > 0:
             max_lots_margin = max_margin_allowed / margin_per_lot
         else:
             max_lots_margin = max_lot
         
+        # =====================================================================
         # Final max lots = min(risk, margin) capped at instrument max
+        # =====================================================================
         max_lots_allowed = min(max_lots_risk, max_lots_margin, max_lot)
         
         # Floor to lot step
@@ -518,6 +604,7 @@ class HullRiskEngine:
         
         return {
             "symbol": symbol,
+            "asset_class": asset_class,
             "equity": equity,
             "risk_budget": round(risk_budget, 2),
             "risk_per_trade_pct": risk_per_trade_pct * 100,
@@ -525,7 +612,10 @@ class HullRiskEngine:
             "stop_source": stop_source,
             "loss_per_lot_at_stop": round(loss_per_lot_at_stop, 2),
             "max_lots_risk": round(self._floor_to_step(max_lots_risk, lot_step), 2),
-            "leverage": leverage,
+            "contract_size": contract_size,
+            "margin_pct": margin_pct,
+            "effective_leverage": round(effective_leverage, 1),
+            "notional_per_lot": round(notional_per_lot, 2),
             "margin_per_lot": round(margin_per_lot, 2),
             "max_margin_allowed": round(max_margin_allowed, 2),
             "max_lots_margin": round(self._floor_to_step(max_lots_margin, lot_step), 2),
@@ -533,7 +623,8 @@ class HullRiskEngine:
             "binding_constraint": binding_constraint,
             "lot_step": lot_step,
             "min_lot": min_lot,
-            "max_lot": max_lot
+            "max_lot": max_lot,
+            "pip_value_per_lot": pip_value_per_lot
         }
     
     def _floor_to_step(self, value: float, step: float) -> float:

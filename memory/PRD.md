@@ -17,6 +17,30 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Contract Specifications Database & Risk Engine Update (Mar 2, 2026) ✅
+- **Task:** Import all MultiBank contract specifications and ensure risk calculations use proper specs
+- **Database Update:**
+  - Added 60 instruments total (53 new, 7 updated)
+  - Forex Majors: 7 pairs (EURUSD, GBPUSD, USDJPY, etc.)
+  - Forex Crosses: 21 pairs (EURGBP, GBPJPY, etc.)
+  - Indices: 14 (DE40, NAS100, US30, UK100, HK50, JP225, etc.)
+  - Metals: 4 (XAUUSD, XAGUSD, XPTUSD, XPDUSD)
+  - Commodities: 5 (USOUSD, UKOUSD, NATGAS, CLxx, LCOxx)
+  - Crypto: 9 (BTCUSD, ETHUSD, XRPUSD, ADAUSD, etc.)
+- **Risk Engine Fixes:**
+  - Updated `calculate_max_lots()` to use `margin_pct` from specs (not hardcoded leverage)
+  - Fixed FX stop distance handling (pips vs price format)
+  - Added asset class-specific loss calculations for each instrument type
+  - Included `contract_size`, `margin_pct`, `effective_leverage` in calculation results
+- **Each instrument includes:**
+  - Symbol, Name, Asset Class
+  - Margin % (0.2% to 10% based on MultiBank specs)
+  - Contract Size (100 oz gold, 100,000 FX, etc.)
+  - Quote Currency
+  - Pip Value Per Lot
+  - Default Stop Distance
+- **Status:** COMPLETE - All 60 instruments tested with accurate calculations
+
 #### Risk Limits Bug Fix - Demo Account Deal Data (Mar 2, 2026) ✅
 - **Bug:** Risk Limits tab showed 0 trades analyzed and 100% compliance for ALL demo strategies
 - **Root Cause:** Demo account deals stored in `mt5_deals_history` collection, not `mt5_deals`
