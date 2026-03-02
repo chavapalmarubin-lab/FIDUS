@@ -932,6 +932,7 @@ class HullRiskEngine:
     ) -> Dict[str, Any]:
         """
         Get comprehensive risk analysis for a strategy/account
+        Analyzes ACTUAL deals to determine compliance with risk parameters
         """
         try:
             # Get account info
@@ -940,94 +941,214 @@ class HullRiskEngine:
                 return {"error": f"Account {account} not found"}
             
             equity = account_info.get("equity", 0)
+            initial_allocation = account_info.get("initial_allocation", equity)
             risk_policy = await self.get_risk_policy(account)
             
-            # Get deals for symbol analysis
+            # Get deals for analysis
             start_date = datetime.now(timezone.utc) - timedelta(days=period_days)
             deals = await self.db.mt5_deals.find({
                 "account": account,
                 "time": {"$gte": start_date}
-            }).to_list(length=1000)
+            }).to_list(length=5000)
             
-            # Analyze symbols traded
+            # ===== DEAL-BY-DEAL ANALYSIS =====
+            deal_analysis = []
             symbol_analysis = {}
+            total_trades = 0
+            lot_breaches = 0
+            risk_breaches = 0
+            daily_pnl = {}  # For daily loss analysis
+            
+            max_risk_per_trade = initial_allocation * (risk_policy.get("max_risk_per_trade_pct", 1.0) / 100)
+            max_intraday_loss = initial_allocation * (risk_policy.get("max_intraday_loss_pct", 3.0) / 100)
+            
             for deal in deals:
                 symbol = deal.get("symbol", "")
                 if not symbol:
                     continue
                 
+                total_trades += 1
+                volume = deal.get("volume", 0)
+                profit = deal.get("profit", 0)
+                deal_time = deal.get("time")
+                ticket = deal.get("ticket", "N/A")
+                deal_type = deal.get("type", "")
+                
+                # Track daily P&L
+                if deal_time:
+                    if isinstance(deal_time, str):
+                        try:
+                            deal_time = datetime.fromisoformat(deal_time.replace('Z', '+00:00'))
+                        except ValueError:
+                            deal_time = None
+                    if deal_time:
+                        date_key = deal_time.strftime("%Y-%m-%d")
+                        daily_pnl[date_key] = daily_pnl.get(date_key, 0) + profit
+                
+                # Symbol-level aggregation
                 if symbol not in symbol_analysis:
+                    specs = await self.get_instrument_specs(symbol)
                     symbol_analysis[symbol] = {
+                        "specs": specs,
                         "trades": 0,
                         "total_volume": 0,
                         "max_volume": 0,
+                        "min_volume": float('inf'),
                         "total_pnl": 0,
+                        "winning_trades": 0,
+                        "losing_trades": 0,
+                        "breached_trades": [],
                         "stop_distances": []
                     }
                 
-                symbol_analysis[symbol]["trades"] += 1
-                volume = deal.get("volume", 0)
-                symbol_analysis[symbol]["total_volume"] += volume
-                symbol_analysis[symbol]["max_volume"] = max(symbol_analysis[symbol]["max_volume"], volume)
-                symbol_analysis[symbol]["total_pnl"] += deal.get("profit", 0)
+                sa = symbol_analysis[symbol]
+                sa["trades"] += 1
+                sa["total_volume"] += volume
+                sa["max_volume"] = max(sa["max_volume"], volume)
+                sa["min_volume"] = min(sa["min_volume"], volume)
+                sa["total_pnl"] += profit
+                if profit > 0:
+                    sa["winning_trades"] += 1
+                elif profit < 0:
+                    sa["losing_trades"] += 1
                 
-                # Try to extract stop distance (if available)
+                # Calculate max allowed lots for this trade
                 sl = deal.get("sl", 0)
                 price = deal.get("price", 0)
-                if sl > 0 and price > 0:
-                    symbol_analysis[symbol]["stop_distances"].append(abs(price - sl))
+                stop_distance = abs(price - sl) if (sl > 0 and price > 0) else None
+                
+                if stop_distance:
+                    sa["stop_distances"].append(stop_distance)
+                
+                specs = sa["specs"]
+                max_calc = self.calculate_max_lots(
+                    equity, 
+                    specs, 
+                    risk_policy, 
+                    stop_distance or specs.get("default_stop_distance", 10)
+                )
+                
+                # Check for lot size breach
+                is_lot_breach = volume > max_calc["max_lots_allowed"]
+                breach_pct = (volume / max_calc["max_lots_allowed"] * 100) if max_calc["max_lots_allowed"] > 0 else 0
+                
+                if is_lot_breach:
+                    lot_breaches += 1
+                    sa["breached_trades"].append({
+                        "ticket": ticket,
+                        "volume": volume,
+                        "allowed": max_calc["max_lots_allowed"],
+                        "breach_pct": breach_pct
+                    })
+                
+                # Check for risk per trade breach (based on actual loss)
+                is_risk_breach = profit < 0 and abs(profit) > max_risk_per_trade
+                if is_risk_breach:
+                    risk_breaches += 1
+                
+                deal_analysis.append({
+                    "ticket": ticket,
+                    "symbol": symbol,
+                    "time": deal_time.isoformat() if deal_time else None,
+                    "type": deal_type,
+                    "volume": volume,
+                    "profit": round(profit, 2),
+                    "max_lots_allowed": max_calc["max_lots_allowed"],
+                    "is_lot_breach": is_lot_breach,
+                    "breach_pct": round(breach_pct, 1) if is_lot_breach else None,
+                    "is_risk_breach": is_risk_breach
+                })
             
-            # Calculate risk limits for each symbol
+            # ===== DAILY LOSS BREACH ANALYSIS =====
+            daily_loss_breaches = []
+            for date_key, pnl in daily_pnl.items():
+                if pnl < -max_intraday_loss:
+                    daily_loss_breaches.append({
+                        "date": date_key,
+                        "loss": round(pnl, 2),
+                        "limit": round(-max_intraday_loss, 2)
+                    })
+            
+            # ===== BUILD INSTRUMENTS SUMMARY =====
             instruments_analysis = []
-            breaches = []
+            total_lot_breaches_by_symbol = []
             
             for symbol, data in symbol_analysis.items():
-                specs = await self.get_instrument_specs(symbol)
+                specs = data["specs"]
+                avg_stop = sum(data["stop_distances"]) / len(data["stop_distances"]) if data["stop_distances"] else specs.get("default_stop_distance", 10)
                 
-                # Calculate average stop distance
-                if data["stop_distances"]:
-                    avg_stop = sum(data["stop_distances"]) / len(data["stop_distances"])
-                    stop_source = "historical"
-                else:
-                    avg_stop = specs.get("default_stop_distance", 0)
-                    stop_source = "default"
-                
-                # Calculate max lots
                 max_calc = self.calculate_max_lots(equity, specs, risk_policy, avg_stop)
                 
-                # Check for breaches
                 is_breach = data["max_volume"] > max_calc["max_lots_allowed"]
+                breach_count = len(data["breached_trades"])
+                compliance_rate = ((data["trades"] - breach_count) / data["trades"] * 100) if data["trades"] > 0 else 100
+                win_rate = (data["winning_trades"] / data["trades"] * 100) if data["trades"] > 0 else 0
                 
                 analysis = {
                     "symbol": symbol,
+                    "name": specs.get("name", symbol),
+                    "asset_class": specs.get("asset_class", "Unknown"),
                     "trades": data["trades"],
-                    "avg_stop_distance": round(avg_stop, 5),
-                    "stop_source": stop_source,
+                    "winning_trades": data["winning_trades"],
+                    "losing_trades": data["losing_trades"],
+                    "win_rate": round(win_rate, 1),
+                    "total_volume": round(data["total_volume"], 2),
+                    "avg_volume": round(data["total_volume"] / data["trades"], 2) if data["trades"] > 0 else 0,
+                    "max_volume_used": round(data["max_volume"], 2),
+                    "min_volume_used": round(data["min_volume"], 2) if data["min_volume"] != float('inf') else 0,
                     "max_lots_allowed": max_calc["max_lots_allowed"],
-                    "max_lots_observed": round(data["max_volume"], 2),
                     "binding_constraint": max_calc["binding_constraint"],
-                    "is_breach": is_breach,
+                    "avg_stop_distance": round(avg_stop, 5),
+                    "is_compliant": not is_breach,
+                    "compliance_rate": round(compliance_rate, 1),
+                    "breach_count": breach_count,
+                    "breached_trades": data["breached_trades"][:5],  # Top 5 breaches
                     "total_pnl": round(data["total_pnl"], 2)
                 }
                 
                 instruments_analysis.append(analysis)
                 
                 if is_breach:
-                    breaches.append({
-                        "type": "LOT_SIZE_BREACH",
+                    total_lot_breaches_by_symbol.append({
                         "symbol": symbol,
-                        "traded": data["max_volume"],
+                        "max_used": data["max_volume"],
                         "allowed": max_calc["max_lots_allowed"],
-                        "message": f"Traded {data['max_volume']:.2f} lots {symbol}, allowed {max_calc['max_lots_allowed']:.2f}"
+                        "breach_count": breach_count
                     })
             
-            # Get risk control score
+            # ===== RISK CONTROL SCORE =====
             risk_score = await self.calculate_risk_control_score(account, period_days)
+            
+            # ===== COMPLIANCE SUMMARY =====
+            overall_compliance = {
+                "lot_size_compliance": {
+                    "compliant_trades": total_trades - lot_breaches,
+                    "breached_trades": lot_breaches,
+                    "total_trades": total_trades,
+                    "compliance_rate": round(((total_trades - lot_breaches) / total_trades * 100) if total_trades > 0 else 100, 1),
+                    "status": "PASS" if lot_breaches == 0 else ("WARNING" if lot_breaches < 3 else "FAIL")
+                },
+                "risk_per_trade_compliance": {
+                    "compliant_trades": total_trades - risk_breaches,
+                    "breached_trades": risk_breaches,
+                    "total_trades": total_trades,
+                    "compliance_rate": round(((total_trades - risk_breaches) / total_trades * 100) if total_trades > 0 else 100, 1),
+                    "max_risk_allowed": round(max_risk_per_trade, 2),
+                    "status": "PASS" if risk_breaches == 0 else ("WARNING" if risk_breaches < 3 else "FAIL")
+                },
+                "daily_loss_compliance": {
+                    "breach_days": len(daily_loss_breaches),
+                    "max_daily_loss_allowed": round(max_intraday_loss, 2),
+                    "breaches": daily_loss_breaches[:5],  # Top 5
+                    "status": "PASS" if len(daily_loss_breaches) == 0 else "FAIL"
+                }
+            }
             
             return {
                 "account": account,
                 "manager_name": account_info.get("manager_name", f"Account {account}"),
                 "equity": equity,
+                "initial_allocation": initial_allocation,
                 "leverage": risk_policy.get("leverage", 200),
                 "risk_policy": {
                     "max_risk_per_trade_pct": risk_policy.get("max_risk_per_trade_pct", 1.0),
@@ -1035,9 +1156,13 @@ class HullRiskEngine:
                     "max_margin_usage_pct": risk_policy.get("max_margin_usage_pct", 25.0)
                 },
                 "risk_control_score": risk_score,
+                "compliance_summary": overall_compliance,
                 "instruments": sorted(instruments_analysis, key=lambda x: x["trades"], reverse=True),
-                "breaches": breaches,
-                "total_breaches": len(breaches),
+                "lot_breaches_by_symbol": total_lot_breaches_by_symbol,
+                "daily_loss_breaches": daily_loss_breaches,
+                "total_trades_analyzed": total_trades,
+                "total_lot_breaches": lot_breaches,
+                "total_risk_breaches": risk_breaches,
                 "period_days": period_days,
                 "analyzed_at": datetime.now(timezone.utc).isoformat()
             }
