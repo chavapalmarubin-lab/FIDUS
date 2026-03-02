@@ -170,9 +170,9 @@ export default function LiveDemoAnalytics() {
     }
   }, [activeTab, managers]);
 
-  // Fetch risk analysis when deep dive manager changes
+  // Fetch risk analysis when deep dive manager changes (for both deepdive and risklimits tabs)
   useEffect(() => {
-    if (deepDiveManager && activeTab === 'deepdive') {
+    if (deepDiveManager && (activeTab === 'deepdive' || activeTab === 'risklimits')) {
       fetchRiskAnalysis(deepDiveManager.account);
     }
   }, [deepDiveManager, activeTab]);
