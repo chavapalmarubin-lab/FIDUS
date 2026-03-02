@@ -51,6 +51,14 @@ TABLE OF CONTENTS
 1.      System Overview
 2.      Business Model
 3.      Technology Stack
+    3.1 Frontend
+    3.2 Backend
+    3.3 MT5 Integration
+    3.4 Database
+    3.5 Analytics Dashboards (NEW)
+        3.5.1 Hull-Style Risk Engine
+        3.5.2 API Endpoints - Analytics
+        3.5.3 Files - Analytics
 4.      MT5 Trading Accounts
     4.1 Account List
     4.2 Account Synchronization
