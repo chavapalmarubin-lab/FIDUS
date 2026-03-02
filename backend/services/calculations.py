@@ -49,15 +49,17 @@ async def get_total_equity(db):
     - Only sum equity from accounts with status='active'
     - This ensures consistency across all dashboards
     - Inactive accounts (MEXAtlantic, SEPARATION) are excluded
+    - LIVE DEMO accounts are excluded (they only appear in Demo Analytics)
     """
     try:
-        # CRITICAL: Only include ACTIVE accounts
+        # CRITICAL: Only include ACTIVE accounts, EXCLUDE live_demo accounts
         accounts = await db.mt5_accounts.find({
-            "status": "active"
+            "status": "active",
+            "account_type": {"$ne": "live_demo"}  # Exclude demo accounts from fund calculations
         }, {"_id": 0}).to_list(length=None)
         
         total = sum(convert_decimal128(acc.get('equity', 0)) for acc in accounts)
-        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} ACTIVE accounts")
+        logger.info(f"💰 Total Equity (SSOT): ${total:,.2f} from {len(accounts)} ACTIVE REAL accounts (excluding demo)")
         return total
     except Exception as e:
         logger.error(f"Error calculating total equity: {e}")
