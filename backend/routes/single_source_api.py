@@ -129,8 +129,12 @@ async def get_fund_portfolio_derived():
         db = await get_database()
         
         # Aggregate by fund type - derive from mt5_accounts
+        # CRITICAL: Exclude live_demo accounts - they have no real money
         pipeline = [
-            {"$match": {"status": "active"}},  # Only active accounts
+            {"$match": {
+                "status": "active",
+                "account_type": {"$ne": "live_demo"}  # EXCLUDE demo accounts from Fund Portfolio
+            }},
             {"$group": {
                 "_id": "$fund_type",
                 "account_count": {"$sum": 1},
@@ -249,8 +253,12 @@ async def get_money_managers_derived():
         db = await get_database()
         
         # Aggregate by manager - derive from mt5_accounts + join money_managers for metadata
+        # CRITICAL: Exclude live_demo accounts - they should only appear in LIVE DEMO and Demo Analytics tabs
         pipeline = [
-            {"$match": {"status": "active"}},  # Only active accounts
+            {"$match": {
+                "status": "active",
+                "account_type": {"$ne": "live_demo"}  # EXCLUDE demo accounts from Money Managers
+            }},
             {"$group": {
                 "_id": "$manager_name",
                 "account_count": {"$sum": 1},
@@ -399,9 +407,9 @@ async def get_cash_flow_derived():
     try:
         db = await get_database()
         
-        # Get all active accounts
+        # Get all active accounts - EXCLUDE live_demo accounts (they have no real money)
         accounts = await db.mt5_accounts.find(
-            {"status": "active"},
+            {"status": "active", "account_type": {"$ne": "live_demo"}},
             {"_id": 0}
         ).sort("account", 1).to_list(100)
         
@@ -437,9 +445,9 @@ async def get_trading_analytics_derived():
     try:
         db = await get_database()
         
-        # Get all active accounts with positions data
+        # Get all active accounts with positions data - EXCLUDE live_demo accounts
         accounts = await db.mt5_accounts.find(
-            {"status": "active"},
+            {"status": "active", "account_type": {"$ne": "live_demo"}},
             {"_id": 0}
         ).to_list(100)
         

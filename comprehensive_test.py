@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = 'https://account-filter-fix.preview.emergentagent.com/api'
+BACKEND_URL = 'https://risk-engine-v2.preview.emergentagent.com/api'
 session = requests.Session()
 
 def main():

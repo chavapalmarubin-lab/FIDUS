@@ -14,7 +14,7 @@ import requests
 import json
 
 def analyze_salvador_data():
-    base_url = "https://account-filter-fix.preview.emergentagent.com"
+    base_url = "https://risk-engine-v2.preview.emergentagent.com"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/api/auth/login", json={

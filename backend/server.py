@@ -22775,8 +22775,11 @@ async def get_fund_performance_dashboard():
     """Get comprehensive fund performance vs MT5 reality dashboard using real data"""
     try:
         # Get all investments and MT5 accounts for comparison
+        # CRITICAL: Exclude live_demo accounts from fund performance
         all_investments = await db.investments.find().to_list(length=None)
-        all_mt5_accounts = await db.mt5_accounts.find().to_list(length=None)
+        all_mt5_accounts = await db.mt5_accounts.find({
+            "account_type": {"$ne": "live_demo"}
+        }).to_list(length=None)
         
         # Calculate key performance metrics
         total_fund_commitments = sum(inv.get('principal_amount', 0) for inv in all_investments)

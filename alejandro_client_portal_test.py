@@ -31,7 +31,7 @@ from typing import Dict, Any, List, Optional
 class AlejandroClientPortalTester:
     def __init__(self):
         # Use the frontend environment URL for testing
-        self.base_url = "https://account-filter-fix.preview.emergentagent.com/api"
+        self.base_url = "https://risk-engine-v2.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.client_token = None
         self.test_results = []

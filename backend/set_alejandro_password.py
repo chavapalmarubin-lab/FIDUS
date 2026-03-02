@@ -33,7 +33,7 @@ async def set_password():
     print(f"Username: alejandro_mariscal")
     print(f"Password: Alejandro123")
     print()
-    print("Login URL: https://account-filter-fix.preview.emergentagent.com")
+    print("Login URL: https://risk-engine-v2.preview.emergentagent.com")
     print()
     
     client.close()

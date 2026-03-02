@@ -66,7 +66,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from frontend environment
-BACKEND_URL = "https://account-filter-fix.preview.emergentagent.com"
+BACKEND_URL = "https://risk-engine-v2.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

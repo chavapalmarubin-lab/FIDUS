@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://account-filter-fix.preview.emergentagent.com"
+BACKEND_URL = "https://risk-engine-v2.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials
