@@ -17,6 +17,29 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Instruments & Risk Parameters Admin Tabs (Mar 2, 2026) ✅
+- **Feature:** Two new tabs in FIDUS Admin Dashboard for managing risk configurations
+- **Instruments Specifications Tab:**
+  - Displays all 61 tradeable instruments with full contract specs
+  - Columns: Symbol, Name, Class, Leverage, Margin, Contract Size, Pip Value, Spread, Trading Hours
+  - Filter by asset class (ALL, FX Major, FX Cross, Index CFD, Metals, Commodities, Crypto)
+  - Search by symbol/name
+  - Export to CSV functionality
+  - Sortable columns
+- **Risk Parameters Tab:**
+  - Trade Risk Limits: Max Risk Per Trade (1%), Max Margin Usage (25%)
+  - Loss Limits: Max Intraday (3%), Max Weekly (6%), Max Monthly Drawdown (10%)
+  - Force Flat (EOD): Time and Timezone settings
+  - Leverage by Asset Class table with live data
+  - Risk Score Penalty Structure reference
+  - Edit mode with Save/Cancel buttons
+- **Files Created:**
+  - `/app/frontend/src/components/InstrumentSpecifications.js`
+  - `/app/frontend/src/components/InstrumentSpecifications.css`
+  - `/app/frontend/src/components/RiskParameters.js`
+  - `/app/frontend/src/components/RiskParameters.css`
+- **Status:** COMPLETE - 100% test pass rate (11/11 backend + all frontend tests)
+
 #### Contract Specifications Database & Risk Engine Update (Mar 2, 2026) ✅
 - **Task:** Import all MultiBank contract specifications and ensure risk calculations use proper specs
 - **Database Update:**
