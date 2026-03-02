@@ -634,12 +634,14 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="live-demo-analytics" className="flex-shrink-0">
               📊 Demo Analytics
             </TabsTrigger>
+            {/* Hidden tabs - not currently used:
             <TabsTrigger value="broker-rebates" className="flex-shrink-0">
               💰 Broker Rebates
             </TabsTrigger>
             <TabsTrigger value="investment-committee" className="flex-shrink-0">
               📊 Investment Committee
             </TabsTrigger>
+            */}
             <TabsTrigger value="instrument-specs" className="flex-shrink-0">
               📋 Instruments
             </TabsTrigger>
@@ -647,10 +649,12 @@ const AdminDashboard = ({ user, onLogout }) => {
               🛡️ Risk Parameters
             </TabsTrigger>
 
+            {/* Hidden - Investments tab not currently used
             <TabsTrigger value="investments" className="flex-shrink-0">
               <TrendingUp size={16} className="mr-2" />
               Investments
             </TabsTrigger>
+            */}
             <TabsTrigger value="accounts-management" className="flex-shrink-0">
               🗄️ Account Management
             </TabsTrigger>
@@ -672,6 +676,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="crm" className="flex-shrink-0">
               CRM Dashboard
             </TabsTrigger>
+            {/* Hidden - Redemptions and Google Workspace not currently used
             <TabsTrigger value="redemptions" className="flex-shrink-0">
               <ArrowDownCircle size={16} className="mr-2" />
               Redemptions
@@ -679,6 +684,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="google" className="flex-shrink-0">
               🌐 Google Workspace
             </TabsTrigger>
+            */}
             {/* Google Connection Monitor removed - redundant with Google Workspace integration */}
             <TabsTrigger value="technical-docs" className="flex-shrink-0">
               <FileText size={16} className="mr-2" />
