@@ -16589,15 +16589,22 @@ async def calculate_cash_flow_calendar():
             month_data['clients_breakdown'] = list(clients_map.values())
         
         # Calculate running balance for INTEREST PAYMENTS
-        # CRITICAL: We can ONLY use FUND REVENUE (P&L) to pay interest obligations
+        # CRITICAL: We can use FUND REVENUE (P&L) + LUCRUM WALLET to pay interest obligations
         # Client Money (principal) CANNOT be used to pay interest - it belongs to clients
         # 
-        # Formula: Running Balance = Current Revenue - Cumulative Interest Paid
-        running_balance = current_revenue  # Start with ONLY the revenue/profit
+        # Formula: Running Balance = Lucrum Wallet + Current Revenue - Cumulative Interest Paid
+        # Get Lucrum Wallet balance
+        lucrum_wallet = await db.lucrum_wallet.find_one({"_id": "current"})
+        wallet_balance = lucrum_wallet.get("balance", 0) if lucrum_wallet else 0
+        
+        # Starting balance includes both wallet and trading revenue
+        running_balance = wallet_balance + current_revenue  # Wallet + Revenue/Profit
         sorted_months = sorted(monthly_obligations.keys())
         
         logging.info(f"💰 Running Balance Calculation (Interest Payments):")
-        logging.info(f"   Starting Balance (Fund Revenue): ${running_balance:,.2f}")
+        logging.info(f"   Lucrum Wallet: ${wallet_balance:,.2f}")
+        logging.info(f"   Fund Revenue: ${current_revenue:,.2f}")
+        logging.info(f"   Starting Balance (Wallet + Revenue): ${running_balance:,.2f}")
         logging.info(f"   NOTE: Client Money (${CLIENT_MONEY:,.2f}) is NOT used for interest payments")
         
         for month_key in sorted_months:
@@ -16696,10 +16703,11 @@ async def calculate_cash_flow_calendar():
                 'total_future_obligations': sum(month['total_due'] for month in monthly_obligations.values()),
                 'total_interest_obligations': total_interest_obligations,  # Interest only
                 'months_until_shortfall': len([m for m in monthly_obligations.values() if m['running_balance_after'] >= 0]),
-                'final_balance': running_balance,  # Based on revenue only
-                'fund_assets': total_equity,  # For overall picture
-                'available_for_interest': current_revenue,  # What we can use to pay interest
-                'interest_gap': total_interest_obligations - current_revenue  # Gap for interest payments
+                'final_balance': running_balance,  # Based on wallet + revenue
+                'fund_assets': total_equity + wallet_balance,  # MT5 equity + wallet
+                'lucrum_wallet': wallet_balance,  # Wallet balance for display
+                'available_for_interest': wallet_balance + current_revenue,  # Wallet + revenue for interest
+                'interest_gap': max(0, total_interest_obligations - (wallet_balance + current_revenue))  # Gap for interest payments
             }
         }
         

@@ -86,6 +86,9 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance 
   const actualTotalEquity = total_equity || totalEquity || 0;
   // CRITICAL: Include wallet balance in fund assets calculation
   const fundAssets = (summary.fund_assets || actualTotalEquity) + walletBalance;
+  
+  // Available capital for interest payments = wallet + revenue
+  const availableForInterest = walletBalance + current_revenue;
 
   const sortedMonths = Object.keys(monthly_obligations).sort();
   const displayMonths = showAllMonths ? sortedMonths : sortedMonths.slice(0, 6);
@@ -95,13 +98,14 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance 
   const monthsUntilShortfall = summary.months_until_shortfall || 'N/A';
   const finalBalance = summary.final_balance || 0;
   
-  // Calculate health metrics
+  // Calculate health metrics - NOW INCLUDES WALLET
   const next3MonthsObligations = sortedMonths.slice(0, 3).reduce((sum, month) => {
     return sum + (monthly_obligations[month]?.total_due || 0);
   }, 0);
   
-  const healthStatus = getHealthStatus(current_revenue, next3MonthsObligations);
-  const coverageRatio = next3MonthsObligations > 0 ? (current_revenue / next3MonthsObligations * 100).toFixed(1) : 100;
+  // Use available capital (wallet + revenue) for health calculation
+  const healthStatus = getHealthStatus(availableForInterest, next3MonthsObligations);
+  const coverageRatio = next3MonthsObligations > 0 ? (availableForInterest / next3MonthsObligations * 100).toFixed(1) : 100;
 
   return (
     <div className="space-y-6">
@@ -133,11 +137,11 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance 
         {/* Current Revenue */}
         <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 rounded-xl p-4 border border-emerald-500/20">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-slate-400 text-sm">Fund Revenue (P&L)</span>
+            <span className="text-slate-400 text-sm">Available Capital</span>
             <Wallet className="w-5 h-5 text-emerald-400" />
           </div>
-          <p className="text-2xl font-bold text-emerald-400">{formatCurrency(current_revenue)}</p>
-          <p className="text-xs text-slate-500 mt-1">Available to pay interest</p>
+          <p className="text-2xl font-bold text-emerald-400">{formatCurrency(availableForInterest)}</p>
+          <p className="text-xs text-slate-500 mt-1">Wallet + Revenue for interest</p>
         </div>
 
         {/* Client Money (Principal - Cannot use for interest) */}
@@ -167,7 +171,7 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance 
             <Target className="w-5 h-5 text-yellow-400" />
           </div>
           <p className={`text-2xl font-bold text-${healthStatus.color}-400`}>{coverageRatio}%</p>
-          <p className="text-xs text-slate-500 mt-1">Revenue vs upcoming obligations</p>
+          <p className="text-xs text-slate-500 mt-1">Capital vs upcoming obligations</p>
         </div>
 
         {/* Performance Gap */}
@@ -405,8 +409,8 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance 
         </div>
       </div>
 
-      {/* Performance Requirements Alert */}
-      {finalBalance < 0 && (
+      {/* Performance Requirements Alert - NOW USES WALLET + REVENUE */}
+      {summary.interest_gap > 0 && (
         <div className="bg-red-500/10 rounded-xl p-5 border border-red-500/30">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-red-500/20 rounded-lg">
@@ -416,32 +420,35 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance 
               <h3 className="text-lg font-semibold text-red-400 mb-2">Interest Payment Gap Alert</h3>
               <p className="text-slate-300 mb-4">
                 Based on current projections, the fund needs to generate an additional{' '}
-                <span className="font-bold text-red-400">{formatCurrency(Math.abs(finalBalance))}</span>{' '}
+                <span className="font-bold text-red-400">{formatCurrency(summary.interest_gap || Math.abs(finalBalance))}</span>{' '}
                 in trading profits to cover all interest obligations. Client money (principal) cannot be used to pay interest.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div className="bg-slate-800/50 rounded-lg p-3">
                   <p className="text-slate-400">Total Interest Obligations</p>
-                  <p className="text-white font-bold">{formatCurrency(totalFutureObligations)}</p>
+                  <p className="text-white font-bold">{formatCurrency(summary.total_interest_obligations || totalFutureObligations)}</p>
                   <p className="text-xs text-slate-500">Must be paid from revenue</p>
                 </div>
+                <div className="bg-yellow-900/30 rounded-lg p-3 border border-yellow-500/30">
+                  <p className="text-yellow-400">Available Capital</p>
+                  <p className="text-yellow-400 font-bold">{formatCurrency(availableForInterest)}</p>
+                  <p className="text-xs text-slate-500">Wallet + Revenue</p>
+                </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-slate-400">Available Revenue (P&L)</p>
-                  <p className={`font-bold ${current_revenue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {formatCurrency(current_revenue)}
-                  </p>
-                  <p className="text-xs text-slate-500">Current trading profits</p>
+                  <p className="text-slate-400">Lucrum Wallet</p>
+                  <p className="text-yellow-400 font-bold">{formatCurrency(walletBalance)}</p>
+                  <p className="text-xs text-slate-500">Unallocated capital</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
                   <p className="text-slate-400">Interest Gap</p>
-                  <p className="text-red-400 font-bold">{formatCurrency(Math.abs(finalBalance))}</p>
+                  <p className="text-red-400 font-bold">{formatCurrency(summary.interest_gap || Math.max(0, totalFutureObligations - availableForInterest))}</p>
                   <p className="text-xs text-slate-500">Additional revenue needed</p>
                 </div>
               </div>
               <div className="mt-4 bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
                 <p className="text-sm text-blue-300">
                   <strong>Note:</strong> Client Money ({formatCurrency(actualClientMoney)}) is held as principal and will be returned at contract end. 
-                  It cannot be used to pay interest obligations - only trading revenue can cover those costs.
+                  It cannot be used to pay interest obligations - only trading revenue and wallet capital can cover those costs.
                 </p>
               </div>
             </div>
