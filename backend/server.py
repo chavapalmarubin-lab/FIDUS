@@ -16325,8 +16325,10 @@ async def calculate_cash_flow_calendar():
             logging.warning("⚠️ LUCRUM 2199 (IB COMMISSIONS) account not found - using $0 for broker rebates")
         
         # Get ALL active MT5 accounts for total equity (same as Fund Portfolio)
+        # CRITICAL: Exclude live_demo accounts - they have no real money
         mt5_accounts = await db.mt5_accounts.find({
-            "status": "active"
+            "status": "active",
+            "account_type": {"$ne": "live_demo"}
         }).to_list(length=None)
         
         # Handle Decimal128 for equity
