@@ -68,6 +68,17 @@ const CashFlowManagement = () => {
     description: ''
   });
 
+  // LUCRUM WALLET: Track unallocated capital during high volatility
+  const [lucrumWallet, setLucrumWallet] = useState({
+    balance: 0,
+    notes: '',
+    last_updated: ''
+  });
+  const [totalAllocated, setTotalAllocated] = useState(0);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [walletInput, setWalletInput] = useState({ balance: '', notes: '' });
+  const [walletLoading, setWalletLoading] = useState(false);
+
   const FUND_COLORS = {
     CORE: '#0891b2',
     BALANCE: '#10b981', 
@@ -77,6 +88,7 @@ const CashFlowManagement = () => {
 
   useEffect(() => {
     fetchCashFlowData();
+    fetchLucrumWallet(); // Fetch wallet data on mount
   }, [selectedTimeframe, selectedFund]);
   
   // PHASE 3: Regenerate monthly trends when time range changes
@@ -86,6 +98,95 @@ const CashFlowManagement = () => {
       setMonthlyTrends(monthlyData);
     }
   }, [trendTimeRange, cashFlowData]);
+
+  // LUCRUM WALLET: Fetch wallet balance
+  const fetchLucrumWallet = async () => {
+    try {
+      const token = localStorage.getItem('fidus_token');
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/admin/lucrum-wallet`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setLucrumWallet(data.wallet);
+          setTotalAllocated(data.total_allocated);
+          console.log(`💰 Lucrum Wallet: $${data.wallet.balance.toLocaleString()}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Lucrum wallet:', error);
+    }
+  };
+
+  // LUCRUM WALLET: Update wallet balance
+  const updateLucrumWallet = async () => {
+    try {
+      setWalletLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/admin/lucrum-wallet`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            balance: parseFloat(walletInput.balance) || 0,
+            notes: walletInput.notes
+          })
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setLucrumWallet(data.wallet);
+          setTotalAllocated(data.total_allocated);
+          setShowWalletModal(false);
+          setWalletInput({ balance: '', notes: '' });
+          if (data.warning) {
+            setError(data.warning);
+          }
+          console.log('✅ Wallet updated successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating wallet:', error);
+      setError('Failed to update wallet');
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  // RESET ALLOCATIONS: Move all money to wallet
+  const resetAllAllocations = async () => {
+    if (!window.confirm('Are you sure you want to reset ALL money manager allocations to $0?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('fidus_token');
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/admin/reset-allocations`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          await fetchLucrumWallet();
+          await fetchCashFlowData();
+          alert(`Reset ${data.accounts_affected} accounts. Total reset: $${data.total_reset.toLocaleString()}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error resetting allocations:', error);
+      setError('Failed to reset allocations');
+    }
+  };
 
   const fetchCashFlowData = async () => {
     try {
@@ -967,6 +1068,134 @@ const CashFlowManagement = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* 💰 LUCRUM WALLET - Track unallocated capital during high volatility */}
+      <Card className="dashboard-card border-yellow-500/30 bg-slate-800/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold text-yellow-400 flex items-center">
+              <DollarSign className="w-5 h-5 mr-2" />
+              💰 Lucrum Wallet (Unallocated Capital)
+            </CardTitle>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/20"
+                onClick={() => {
+                  setWalletInput({ balance: lucrumWallet.balance.toString(), notes: lucrumWallet.notes || '' });
+                  setShowWalletModal(true);
+                }}
+              >
+                Update Wallet
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-red-500 text-red-400 hover:bg-red-500/20"
+                onClick={resetAllAllocations}
+              >
+                Reset All Allocations
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Wallet Balance */}
+            <div className="bg-yellow-900/20 rounded-lg p-4 border border-yellow-500/30">
+              <p className="text-sm text-yellow-400 mb-1">Lucrum Wallet Balance</p>
+              <p className="text-2xl font-bold text-yellow-300">
+                {formatCurrency(lucrumWallet.balance)}
+              </p>
+              {lucrumWallet.notes && (
+                <p className="text-xs text-slate-400 mt-2 italic">{lucrumWallet.notes}</p>
+              )}
+            </div>
+            
+            {/* Total Allocated to Managers */}
+            <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
+              <p className="text-sm text-blue-400 mb-1">Allocated to Managers</p>
+              <p className="text-2xl font-bold text-blue-300">
+                {formatCurrency(totalAllocated)}
+              </p>
+              <p className="text-xs text-slate-400 mt-2">Currently in trading accounts</p>
+            </div>
+            
+            {/* Total Capital */}
+            <div className="bg-green-900/20 rounded-lg p-4 border border-green-500/30">
+              <p className="text-sm text-green-400 mb-1">Total Capital</p>
+              <p className="text-2xl font-bold text-green-300">
+                {formatCurrency(lucrumWallet.balance + totalAllocated)}
+              </p>
+              <p className="text-xs text-slate-400 mt-2">Wallet + Allocated</p>
+            </div>
+          </div>
+          
+          {/* Anti-duplication warning */}
+          {lucrumWallet.balance > 0 && totalAllocated > 0 && Math.abs(lucrumWallet.balance - totalAllocated) < 100 && (
+            <div className="mt-4 bg-red-900/20 border border-red-500 rounded-lg p-3">
+              <p className="text-red-400 text-sm flex items-center">
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Warning: Wallet balance equals allocated amount. Ensure money is not counted twice!
+              </p>
+            </div>
+          )}
+          
+          {lucrumWallet.last_updated && (
+            <p className="text-xs text-slate-500 mt-3">
+              Last updated: {new Date(lucrumWallet.last_updated).toLocaleString()}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Wallet Update Modal */}
+      {showWalletModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md border border-yellow-500/30">
+            <h3 className="text-lg font-bold text-yellow-400 mb-4">Update Lucrum Wallet</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Wallet Balance ($)</label>
+                <input
+                  type="number"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  value={walletInput.balance}
+                  onChange={(e) => setWalletInput({ ...walletInput, balance: e.target.value })}
+                  placeholder="Enter wallet balance"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Notes (optional)</label>
+                <textarea
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  value={walletInput.notes}
+                  onChange={(e) => setWalletInput({ ...walletInput, notes: e.target.value })}
+                  placeholder="e.g., High volatility - funds on hold"
+                  rows={2}
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowWalletModal(false)}
+                  className="border-slate-600"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={updateLucrumWallet}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                  disabled={walletLoading}
+                >
+                  {walletLoading ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ✅ Verification Status Banner */}

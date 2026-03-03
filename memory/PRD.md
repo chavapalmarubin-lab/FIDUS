@@ -17,6 +17,61 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Lucrum Wallet & Capital Allocation Management (Mar 3, 2026) ✅
+- **Feature:** Track unallocated capital during high volatility periods
+- **Use Case:** When market volatility is high, money can be moved from trading accounts to the Lucrum wallet for safety
+- **Components Built:**
+  1. **Lucrum Wallet Section (Cash Flow Tab):**
+     - Displays current wallet balance ($407,316.36 as of Mar 2, 2026)
+     - Shows total allocated to managers ($0 after reset)
+     - Shows total capital (wallet + allocated)
+     - Notes field for context (e.g., "High volatility - all funds moved to wallet")
+     - Last updated timestamp
+  2. **Update Wallet Modal:**
+     - Input field for balance
+     - Notes field for context
+     - Save/Cancel buttons
+  3. **Reset All Allocations Button:**
+     - One-click reset of all money manager allocations to $0
+     - Confirmation dialog
+     - Logs previous allocations for audit
+  4. **Anti-Duplication Validation:**
+     - Rule: If wallet balance ≈ total allocated, show warning (money may be double-counted)
+     - $100 tolerance threshold
+- **API Endpoints:**
+  - GET `/api/admin/lucrum-wallet` - Get wallet balance and validation status
+  - PUT `/api/admin/lucrum-wallet` - Update wallet balance with notes
+  - POST `/api/admin/reset-allocations` - Reset all manager allocations to $0
+  - POST `/api/admin/set-allocation/{account_id}` - Set individual account allocation
+- **Database Collections:**
+  - `lucrum_wallet` - Stores current wallet balance, notes, timestamps
+  - `allocation_history` - Audit log of allocation resets
+- **Files Modified:**
+  - `/app/backend/server.py` - Added wallet endpoints and updated cashflow/complete
+  - `/app/frontend/src/components/CashFlowManagement.js` - Added wallet UI section
+- **Initial Setup Done:**
+  - Set Lucrum Wallet to $407,316.36
+  - Reset all 5 manager allocations to $0 (previously totaled $369,900.01)
+- **Status:** COMPLETE - Tested via API and UI screenshots
+
+#### Data Contamination Bug Fix - Demo Account Isolation (Mar 2, 2026) ✅
+- **Bug:** Demo accounts (account_type='live_demo') were appearing in real fund dashboards
+- **Impact:** Money Managers and Cash Flow tabs showed inflated/incorrect data
+- **Root Cause:** Backend endpoints not filtering by account_type
+- **Fix Applied:**
+  - Added `{"account_type": {"$ne": "live_demo"}}` filter to:
+    - `/api/v2/derived/fund-portfolio` (line 136)
+    - `/api/v2/derived/money-managers` (line 260)
+    - `/api/v2/derived/positions-overview` (lines 412, 450)
+    - `/api/admin/fund-performance/dashboard` (line 22781)
+- **Files Modified:**
+  - `/app/backend/routes/single_source_api.py`
+  - `/app/backend/server.py`
+- **Verification:**
+  - API returns 5 real managers, 0 demo accounts
+  - Demo accounts correctly isolated to LIVE DEMO tab
+- **Status:** COMPLETE - Verified via curl and screenshots
+
 #### Instruments & Risk Parameters Admin Tabs (Mar 2, 2026) ✅
 - **Feature:** Two new tabs in FIDUS Admin Dashboard for managing risk configurations
 - **Instruments Specifications Tab:**
@@ -312,15 +367,18 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - [ ] Verify pagination on VIKING "Orders" tab with large datasets
 - [ ] Refactor VikingDashboard.js into smaller components
 - [ ] Address Lucrum MT5 Bridge duplicate key errors
+- [ ] Backend notification system for Risk Alerts (email, push)
 
 ## Key Files Reference
-- `/app/backend/server.py` - Main backend with login endpoint and Live Demo API
+- `/app/backend/server.py` - Main backend with login endpoint, Live Demo API, Lucrum Wallet endpoints
 - `/app/backend/routes/referrals.py` - Agent portal routes
+- `/app/backend/routes/single_source_api.py` - Single Source of Truth API (demo account filtering)
 - `/app/backend/services/calculations.py` - Financial calculations
 - `/app/backend/services/trading_analytics_service.py` - Trading analytics service for manager rankings
 - `/app/backend/services/hull_risk_engine.py` - Hull-style Risk Engine (MaxLotsAllowed, Risk Control Score)
 - `/app/backend/seed_instrument_specs.py` - FIDUS Tier-1 instrument specs seeder
 - `/app/frontend/src/components/NextGenTradingAnalytics.js` - Next-Gen Trading Analytics Dashboard with Risk Limits tab
+- `/app/frontend/src/components/CashFlowManagement.js` - Cash Flow tab with Lucrum Wallet section
 - `/app/frontend/src/components/NextGenTradingAnalytics.css` - Dark luxury fintech styling
 - `/app/frontend/src/components/AdminDashboard.js` - Admin dashboard with Trading Analytics tab
 - `/app/frontend/src/components/LiveDemoDashboard.js` - Live Demo dashboard component

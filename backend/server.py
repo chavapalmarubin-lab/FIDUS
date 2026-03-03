@@ -16826,6 +16826,21 @@ async def get_complete_cashflow(days: int = 30):
         # Get current time for metadata
         now = datetime.now(timezone.utc)
         
+        # NEW: Get Lucrum Wallet balance for cash flow analysis
+        lucrum_wallet = await db.lucrum_wallet.find_one({"_id": "current"})
+        wallet_balance = lucrum_wallet.get("balance", 0) if lucrum_wallet else 0
+        
+        # Get total allocated for validation
+        alloc_pipeline = [
+            {"$match": {"status": "active", "account_type": {"$ne": "live_demo"}}},
+            {"$group": {"_id": None, "total": {"$sum": "$initial_allocation"}}}
+        ]
+        alloc_result = await db.mt5_accounts.aggregate(alloc_pipeline).to_list(1)
+        total_allocated_to_managers = alloc_result[0]["total"] if alloc_result else 0
+        
+        # Total capital = wallet + allocated (should equal total client money when balanced)
+        total_capital = wallet_balance + total_allocated_to_managers
+        
         return {
             'success': True,
             
@@ -16836,6 +16851,15 @@ async def get_complete_cashflow(days: int = 30):
             'total_allocation': round(total_allocation, 2),
             'broker_rebates': round(broker_rebates, 2),
             'total_fund_assets': round(total_fund_assets, 2),
+            
+            # NEW: Lucrum Wallet - unallocated capital during high volatility
+            'lucrum_wallet': {
+                'balance': round(wallet_balance, 2),
+                'notes': lucrum_wallet.get("notes", "") if lucrum_wallet else "",
+                'last_updated': lucrum_wallet.get("last_updated", "") if lucrum_wallet else ""
+            },
+            'total_allocated_to_managers': round(total_allocated_to_managers, 2),
+            'total_capital': round(total_capital, 2),
             
             # NEW: Bottom Section (Fund Revenue & Obligations)
             'client_money': round(client_money, 2),
@@ -16890,6 +16914,223 @@ async def get_complete_cashflow(days: int = 30):
     
     except Exception as e:
         logging.error(f"Error in get_complete_cashflow: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# LUCRUM WALLET MANAGEMENT - For tracking unallocated capital during high volatility
+# ============================================================================
+
+class LucrumWalletUpdate(BaseModel):
+    """Model for updating the Lucrum Wallet balance"""
+    balance: float = Field(..., description="Current wallet balance in USD")
+    notes: Optional[str] = Field(None, description="Optional notes about this update")
+
+@api_router.get("/admin/lucrum-wallet")
+async def get_lucrum_wallet():
+    """
+    Get the current Lucrum Wallet balance.
+    The wallet stores unallocated capital during high volatility periods.
+    
+    RULE: If total_allocated == wallet_balance, wallet must be $0 (no duplication)
+    """
+    try:
+        # Get wallet record from database
+        wallet = await db.lucrum_wallet.find_one({"_id": "current"})
+        
+        if not wallet:
+            # Create default wallet record
+            wallet = {
+                "_id": "current",
+                "balance": 0.0,
+                "notes": "",
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "updated_by": "system"
+            }
+            await db.lucrum_wallet.insert_one(wallet)
+        
+        # Get total allocated from all money managers
+        pipeline = [
+            {"$match": {
+                "status": "active",
+                "account_type": {"$ne": "live_demo"}
+            }},
+            {"$group": {
+                "_id": None,
+                "total_allocated": {"$sum": "$initial_allocation"}
+            }}
+        ]
+        result = await db.mt5_accounts.aggregate(pipeline).to_list(1)
+        total_allocated = result[0]["total_allocated"] if result else 0
+        
+        wallet_balance = wallet.get("balance", 0)
+        
+        # Validation: if allocated equals wallet, flag potential duplication
+        is_potentially_duplicated = False
+        if total_allocated > 0 and abs(wallet_balance - total_allocated) < 100:  # $100 tolerance
+            is_potentially_duplicated = True
+        
+        return {
+            "success": True,
+            "wallet": {
+                "balance": wallet.get("balance", 0),
+                "notes": wallet.get("notes", ""),
+                "last_updated": wallet.get("last_updated", ""),
+                "updated_by": wallet.get("updated_by", "")
+            },
+            "total_allocated": round(total_allocated, 2),
+            "validation": {
+                "is_potentially_duplicated": is_potentially_duplicated,
+                "message": "Warning: Wallet balance equals allocated amount. Ensure money is not counted twice." if is_potentially_duplicated else "OK"
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error getting Lucrum wallet: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/lucrum-wallet")
+async def update_lucrum_wallet(update: LucrumWalletUpdate):
+    """
+    Update the Lucrum Wallet balance.
+    Used when moving money in/out of trading accounts during volatility.
+    """
+    try:
+        # Get total allocated to validate
+        pipeline = [
+            {"$match": {
+                "status": "active",
+                "account_type": {"$ne": "live_demo"}
+            }},
+            {"$group": {
+                "_id": None,
+                "total_allocated": {"$sum": "$initial_allocation"}
+            }}
+        ]
+        result = await db.mt5_accounts.aggregate(pipeline).to_list(1)
+        total_allocated = result[0]["total_allocated"] if result else 0
+        
+        # Apply anti-duplication rule
+        new_balance = update.balance
+        warning_message = None
+        
+        # If total allocated equals wallet, wallet should be $0
+        if total_allocated > 0 and abs(new_balance - total_allocated) < 100:
+            warning_message = f"Warning: Wallet balance (${new_balance:,.2f}) equals total allocated (${total_allocated:,.2f}). This may indicate double-counting."
+        
+        # Update wallet
+        wallet_data = {
+            "_id": "current",
+            "balance": new_balance,
+            "notes": update.notes or "",
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "updated_by": "admin"
+        }
+        
+        await db.lucrum_wallet.replace_one(
+            {"_id": "current"},
+            wallet_data,
+            upsert=True
+        )
+        
+        logging.info(f"💰 Lucrum Wallet updated: ${new_balance:,.2f}")
+        
+        return {
+            "success": True,
+            "message": "Wallet balance updated successfully",
+            "wallet": {
+                "balance": new_balance,
+                "notes": update.notes or "",
+                "last_updated": wallet_data["last_updated"]
+            },
+            "total_allocated": round(total_allocated, 2),
+            "warning": warning_message
+        }
+    except Exception as e:
+        logging.error(f"Error updating Lucrum wallet: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/reset-allocations")
+async def reset_all_allocations():
+    """
+    Reset all money manager allocations to $0.
+    Used when all money has been moved to the Lucrum Wallet during high volatility.
+    """
+    try:
+        # Get current allocations before reset
+        accounts = await db.mt5_accounts.find({
+            "status": "active",
+            "account_type": {"$ne": "live_demo"}
+        }).to_list(100)
+        
+        previous_allocations = []
+        for acc in accounts:
+            previous_allocations.append({
+                "account": acc.get("account"),
+                "manager_name": acc.get("manager_name"),
+                "previous_allocation": acc.get("initial_allocation", 0)
+            })
+        
+        total_before = sum(a["previous_allocation"] for a in previous_allocations)
+        
+        # Reset all allocations to 0
+        result = await db.mt5_accounts.update_many(
+            {
+                "status": "active",
+                "account_type": {"$ne": "live_demo"}
+            },
+            {"$set": {"initial_allocation": 0}}
+        )
+        
+        # Log the action
+        await db.allocation_history.insert_one({
+            "action": "reset_all",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "total_reset": total_before,
+            "accounts_affected": result.modified_count,
+            "previous_allocations": previous_allocations,
+            "reason": "High volatility - funds moved to wallet"
+        })
+        
+        logging.info(f"📊 Reset {result.modified_count} account allocations. Total reset: ${total_before:,.2f}")
+        
+        return {
+            "success": True,
+            "message": f"Reset {result.modified_count} account allocations to $0",
+            "total_reset": round(total_before, 2),
+            "accounts_affected": result.modified_count,
+            "previous_allocations": previous_allocations
+        }
+    except Exception as e:
+        logging.error(f"Error resetting allocations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/set-allocation/{account_id}")
+async def set_account_allocation(account_id: int, allocation: float = Body(..., embed=True)):
+    """
+    Set a specific account's allocation.
+    Used when moving money from wallet to a trading account.
+    """
+    try:
+        result = await db.mt5_accounts.update_one(
+            {"account": account_id},
+            {"$set": {"initial_allocation": allocation}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail=f"Account {account_id} not found")
+        
+        logging.info(f"💰 Set allocation for account {account_id}: ${allocation:,.2f}")
+        
+        return {
+            "success": True,
+            "message": f"Allocation set for account {account_id}",
+            "account": account_id,
+            "new_allocation": allocation
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error setting allocation: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
