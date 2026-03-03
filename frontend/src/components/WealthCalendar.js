@@ -58,7 +58,7 @@ const getHealthStatus = (revenue, obligations) => {
   return { status: 'danger', color: 'red', label: 'Danger' };
 };
 
-const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
+const WealthCalendar = ({ calendarData, clientMoney, totalEquity, walletBalance = 0 }) => {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [showAllMonths, setShowAllMonths] = useState(false);
 
@@ -83,8 +83,9 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
 
   // Use values from backend if provided, otherwise use props
   const actualClientMoney = client_money || clientMoney || 380536.05;
-  const actualTotalEquity = total_equity || totalEquity || (actualClientMoney + current_revenue);
-  const fundAssets = summary.fund_assets || actualTotalEquity;
+  const actualTotalEquity = total_equity || totalEquity || 0;
+  // CRITICAL: Include wallet balance in fund assets calculation
+  const fundAssets = (summary.fund_assets || actualTotalEquity) + walletBalance;
 
   const sortedMonths = Object.keys(monthly_obligations).sort();
   const displayMonths = showAllMonths ? sortedMonths : sortedMonths.slice(0, 6);
@@ -147,6 +148,16 @@ const WealthCalendar = ({ calendarData, clientMoney, totalEquity }) => {
           </div>
           <p className="text-2xl font-bold text-blue-400">{formatCurrency(actualClientMoney)}</p>
           <p className="text-xs text-slate-500 mt-1">Principal (not for interest)</p>
+        </div>
+
+        {/* Lucrum Wallet */}
+        <div className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl p-4 border border-yellow-500/20">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-slate-400 text-sm">Lucrum Wallet</span>
+            <Wallet className="w-5 h-5 text-yellow-400" />
+          </div>
+          <p className="text-2xl font-bold text-yellow-400">{formatCurrency(walletBalance)}</p>
+          <p className="text-xs text-slate-500 mt-1">Unallocated capital</p>
         </div>
 
         {/* Coverage Ratio */}

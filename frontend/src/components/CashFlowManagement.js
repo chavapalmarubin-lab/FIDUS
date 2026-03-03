@@ -629,10 +629,15 @@ const CashFlowManagement = () => {
     // Get current fund data
     const totalObligations = cashFlowCalendar.summary.total_future_obligations || 0;
     const currentRevenue = cashFlowCalendar.current_revenue || fundAccounting.assets.total_inflows || 0;
-    // CRITICAL: Include Client Money in Fund Assets calculation
-    // Fund Assets = Client Money (principal) + Net Revenue (P&L)
+    // CRITICAL: Include Client Money AND Lucrum Wallet in Fund Assets calculation
+    // Fund Assets = MT5 Equity + Lucrum Wallet
     const clientMoney = cashFlowCalendar.client_money || 380536.05;
-    const fundAssets = cashFlowCalendar.total_equity || (clientMoney + currentRevenue);
+    const mt5Equity = cashFlowCalendar.total_equity || 0;
+    const walletBalance = lucrumWallet.balance || 0;
+    // Total Fund Assets = MT5 + Wallet (what we actually have)
+    const totalCapital = mt5Equity + walletBalance;
+    // Net position after obligations
+    const fundAssets = totalCapital;
     
     const investmentStartDate = new Date('2025-10-01');
     const contractEndDate = new Date('2026-12-01');
@@ -643,7 +648,7 @@ const CashFlowManagement = () => {
     const daysElapsed = Math.max(1, Math.ceil((today - investmentStartDate) / (1000 * 60 * 60 * 24)));
     const daysRemaining = Math.max(1, Math.ceil((contractEndDate - today) / (1000 * 60 * 60 * 24)));
     
-    // Required Performance Metrics - Use FUND ASSETS (Client Money + Revenue), not just revenue
+    // Required Performance Metrics - Use FUND ASSETS (MT5 + Wallet), not just revenue
     // Because obligations include principal redemptions (returning client money)
     const stillNeeded = Math.max(0, totalObligations - fundAssets);
     const percentComplete = totalObligations > 0 ? (fundAssets / totalObligations) * 100 : 0;
@@ -654,7 +659,8 @@ const CashFlowManagement = () => {
     const mt5Trading = fundAccounting.assets.mt5_trading_profits || 0;
     const separationInterest = fundAccounting.assets.separation_interest || 0;
     const brokerRebates = fundAccounting.assets.broker_rebates || 0;
-    const netRevenue = currentRevenue;
+    // Net Revenue now includes wallet (since wallet IS part of our capital)
+    const netRevenue = currentRevenue + walletBalance;
     const actualDailyAvg = netRevenue / daysElapsed;
     const actualMonthlyProjection = actualDailyAvg * 30;
     
@@ -683,9 +689,11 @@ const CashFlowManagement = () => {
     return {
       required: {
         totalNeeded: totalObligations,
-        alreadyEarned: fundAssets,  // Changed: Now includes Client Money + Revenue
-        clientMoney: clientMoney,   // Added: Client principal
-        netRevenue: currentRevenue, // Added: Net P&L only
+        alreadyEarned: fundAssets,  // Now includes MT5 + Wallet
+        clientMoney: clientMoney,   // Client principal
+        walletBalance: walletBalance, // Lucrum Wallet
+        mt5Equity: mt5Equity,       // MT5 equity
+        netRevenue: currentRevenue, // Net P&L from trading
         stillNeeded: stillNeeded,
         percentComplete: percentComplete,
         requiredDailyAvg: requiredDailyAvg,
@@ -696,6 +704,7 @@ const CashFlowManagement = () => {
         mt5Trading: mt5Trading,
         separationInterest: separationInterest,
         brokerRebates: brokerRebates,
+        walletBalance: walletBalance,
         netRevenue: netRevenue,
         daysElapsed: daysElapsed,
         actualDailyAvg: actualDailyAvg,
@@ -790,14 +799,12 @@ const CashFlowManagement = () => {
                 </div>
                 <div className="text-xs space-y-1 pl-2 border-l-2 border-slate-600">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Client Money:</span>
-                    <span className="text-blue-400">{formatCurrency(metrics.required.clientMoney)}</span>
+                    <span className="text-slate-500">MT5 Equity:</span>
+                    <span className="text-blue-400">{formatCurrency(metrics.required.mt5Equity || 0)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Net Revenue:</span>
-                    <span className={metrics.required.netRevenue >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      {formatCurrency(metrics.required.netRevenue)}
-                    </span>
+                    <span className="text-yellow-500">Lucrum Wallet:</span>
+                    <span className="text-yellow-400">{formatCurrency(metrics.required.walletBalance || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -856,6 +863,12 @@ const CashFlowManagement = () => {
                 <span className="text-slate-400 text-sm">Broker Rebates:</span>
                 <span className="text-cyan-400 font-medium">
                   {formatCurrency(metrics.actual.brokerRebates)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Lucrum Wallet:</span>
+                <span className="text-yellow-400 font-medium">
+                  {formatCurrency(metrics.actual.walletBalance || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -1016,18 +1029,37 @@ const CashFlowManagement = () => {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold text-cyan-400 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2" />
-              📊 Revenue Calculation (Single Source of Truth)
+              📊 Capital & Revenue Calculation (Single Source of Truth)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {/* Total Equity */}
+              {/* Total Equity from MT5 */}
               <div className="flex items-center justify-between pb-2 border-b border-slate-700">
                 <span className="text-slate-300 font-medium">Total Equity (MT5 Accounts)</span>
                 <span className="text-white font-bold text-lg">
                   {formatCurrency(fundAccounting?.total_equity || 0)}
                 </span>
               </div>
+              
+              {/* Lucrum Wallet (NEW - add to total assets) */}
+              <div className="flex items-center justify-between pb-2 border-b border-yellow-500/30 bg-yellow-900/10 rounded px-2 py-1">
+                <span className="text-yellow-400 font-medium">+ Lucrum Wallet (Unallocated)</span>
+                <span className="text-yellow-400 font-bold text-lg">
+                  +{formatCurrency(lucrumWallet.balance || 0)}
+                </span>
+              </div>
+              
+              {/* Total Capital = MT5 + Wallet */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span className="text-white font-medium">= Total Capital (MT5 + Wallet)</span>
+                <span className="text-white font-bold text-lg">
+                  {formatCurrency((fundAccounting?.total_equity || 0) + (lucrumWallet.balance || 0))}
+                </span>
+              </div>
+              
+              {/* Divider line */}
+              <div className="border-t-2 border-cyan-500/50 my-2"></div>
               
               {/* Client Money (subtract) */}
               <div className="flex items-center justify-between pb-2 border-b border-slate-700">
@@ -1036,9 +1068,6 @@ const CashFlowManagement = () => {
                   −{formatCurrency(fundAccounting?.client_money || 0)}
                 </span>
               </div>
-              
-              {/* Divider line */}
-              <div className="border-t-2 border-cyan-500/50 my-2"></div>
               
               {/* Broker Rebates (add) */}
               <div className="flex items-center justify-between pb-2 border-b border-slate-700">
@@ -1051,19 +1080,22 @@ const CashFlowManagement = () => {
               {/* Divider line */}
               <div className="border-t-2 border-cyan-500/50 my-2"></div>
               
-              {/* Current Fund Revenue (result) */}
+              {/* Net Fund Position (result) - Now includes wallet */}
               <div className="flex items-center justify-between bg-cyan-900/20 rounded-lg p-3">
-                <span className="text-cyan-400 font-bold text-lg">= Current Fund Revenue</span>
-                <span className="text-cyan-400 font-bold text-2xl">
+                <span className="text-cyan-400 font-bold text-lg">= Net Fund Position</span>
+                <span className={`font-bold text-2xl ${
+                  ((fundAccounting?.total_equity || 0) + (lucrumWallet.balance || 0) - (fundAccounting?.client_money || 0) + (fundAccounting?.assets?.broker_rebates || 0)) >= 0 
+                    ? 'text-green-400' : 'text-red-400'
+                }`}>
                   {formatCurrency(
-                    (fundAccounting?.total_equity || 0) - (fundAccounting?.client_money || 0) + (fundAccounting?.assets?.broker_rebates || 0)
+                    (fundAccounting?.total_equity || 0) + (lucrumWallet.balance || 0) - (fundAccounting?.client_money || 0) + (fundAccounting?.assets?.broker_rebates || 0)
                   )}
                 </span>
               </div>
               
               {/* Helper text */}
               <p className="text-xs text-slate-400 mt-2 italic">
-                This calculation is used consistently across all sections of this page.
+                Net Fund Position = MT5 Equity + Lucrum Wallet − Client Money + Broker Rebates
               </p>
             </div>
           </CardContent>
@@ -1262,6 +1294,19 @@ const CashFlowManagement = () => {
                 </div>
               </div>
               
+              {/* LUCRUM WALLET - NEW LINE ITEM */}
+              <div className="flex justify-between items-center p-3 bg-yellow-900/20 rounded-lg border border-yellow-500/30">
+                <div>
+                  <p className="text-sm text-yellow-400 font-medium">Lucrum Wallet (Unallocated Capital)</p>
+                  <p className="text-xs text-slate-500">Cash held at broker during high volatility</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-yellow-400">
+                    {formatCurrency(lucrumWallet.balance || 0)}
+                  </p>
+                </div>
+              </div>
+              
               {/* Broker Interest (NOT full separation balance to avoid double counting) */}
               <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
                 <div>
@@ -1301,11 +1346,12 @@ const CashFlowManagement = () => {
               {/* Total Assets */}
               <div className="border-t border-slate-600 pt-3">
                 <div className="flex justify-between items-center">
-                  <p className="text-white font-semibold">Total Fund Assets</p>
+                  <p className="text-white font-semibold">Total Fund Assets (incl. Wallet)</p>
                   <p className="text-xl font-bold text-green-400">
                     {formatCurrency(
                       (fundAccounting?.assets?.mt5_trading_profits || 0) + 
-                      (fundAccounting?.assets?.broker_rebates || 0)
+                      (fundAccounting?.assets?.broker_rebates || 0) +
+                      (lucrumWallet.balance || 0)
                     )}
                   </p>
                 </div>
@@ -1805,6 +1851,7 @@ const CashFlowManagement = () => {
               calendarData={cashFlowCalendar}
               clientMoney={fundAccounting?.liabilities?.client_obligations || 380536.05}
               totalEquity={fundAccounting?.assets?.total_equity || 0}
+              walletBalance={lucrumWallet.balance || 0}
             />
           </CardContent>
         </Card>
@@ -1822,14 +1869,28 @@ const CashFlowManagement = () => {
           <CardContent>
             <div className="space-y-6">
               
-              {/* Current Status Summary - USES FUND ASSETS (Client Money + Revenue) */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-800/50 rounded-lg">
+              {/* Current Status Summary - INCLUDES LUCRUM WALLET */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-slate-800/50 rounded-lg">
                 <div className="text-center">
-                  <p className="text-sm text-slate-400">Fund Assets</p>
-                  <p className="text-xl font-bold text-cyan-400">
-                    {formatCurrency(cashFlowCalendar.total_equity || (cashFlowCalendar.client_money || 380536.05) + (cashFlowCalendar.current_revenue || 0))}
+                  <p className="text-sm text-slate-400">MT5 Equity</p>
+                  <p className="text-xl font-bold text-blue-400">
+                    {formatCurrency(cashFlowCalendar.total_equity || 0)}
                   </p>
-                  <p className="text-xs text-slate-500">Client Money + Revenue</p>
+                  <p className="text-xs text-slate-500">In trading accounts</p>
+                </div>
+                <div className="text-center bg-yellow-900/20 rounded-lg py-2">
+                  <p className="text-sm text-yellow-400">Lucrum Wallet</p>
+                  <p className="text-xl font-bold text-yellow-400">
+                    {formatCurrency(lucrumWallet.balance || 0)}
+                  </p>
+                  <p className="text-xs text-slate-500">Unallocated capital</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-slate-400">Total Fund Assets</p>
+                  <p className="text-xl font-bold text-cyan-400">
+                    {formatCurrency((cashFlowCalendar.total_equity || 0) + (lucrumWallet.balance || 0))}
+                  </p>
+                  <p className="text-xs text-slate-500">MT5 + Wallet</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-slate-400">Total Obligations</p>
@@ -1840,19 +1901,12 @@ const CashFlowManagement = () => {
                 <div className="text-center">
                   <p className="text-sm text-slate-400">Net Position</p>
                   <p className={`text-xl font-bold ${
-                    ((cashFlowCalendar.total_equity || (cashFlowCalendar.client_money || 380536.05) + (cashFlowCalendar.current_revenue || 0)) - (cashFlowCalendar.summary?.total_future_obligations || 0)) >= 0 
+                    ((cashFlowCalendar.total_equity || 0) + (lucrumWallet.balance || 0) - (cashFlowCalendar.summary?.total_future_obligations || 0)) >= 0 
                       ? 'text-green-400' : 'text-red-400'
                   }`}>
-                    {formatCurrency((cashFlowCalendar.total_equity || (cashFlowCalendar.client_money || 380536.05) + (cashFlowCalendar.current_revenue || 0)) - (cashFlowCalendar.summary?.total_future_obligations || 0))}
+                    {formatCurrency((cashFlowCalendar.total_equity || 0) + (lucrumWallet.balance || 0) - (cashFlowCalendar.summary?.total_future_obligations || 0))}
                   </p>
                   <p className="text-xs text-slate-500">Assets - Obligations</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-slate-400">Net Revenue (P&L)</p>
-                  <p className={`text-xl font-bold ${(cashFlowCalendar.current_revenue || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatCurrency(cashFlowCalendar.current_revenue || 0)}
-                  </p>
-                  <p className="text-xs text-slate-500">Trading profits</p>
                 </div>
               </div>
 
