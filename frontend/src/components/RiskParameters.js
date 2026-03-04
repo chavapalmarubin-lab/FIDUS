@@ -381,6 +381,71 @@ const RiskParameters = () => {
           </CardContent>
         </Card>
 
+        {/* 🚨 DAY TRADING COMPLIANCE - CRITICAL */}
+        <Card className="risk-card day-trading-card">
+          <CardHeader className="risk-card-header" style={{ background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(251, 146, 60, 0.1))' }}>
+            <CardTitle className="risk-card-title" style={{ color: '#f87171' }}>
+              <AlertTriangle size={20} />
+              🚨 DAY TRADING COMPLIANCE (STRICT)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="risk-card-content">
+            <div className="day-trading-rules">
+              <div className="rule-header">
+                <span className="rule-badge critical">NO OVERNIGHT POSITIONS</span>
+              </div>
+              
+              <div className="rule-section">
+                <h4 className="rule-title">📋 FIDUS Day Trading Rules</h4>
+                <ul className="rule-list">
+                  <li className="rule-item critical">
+                    <span className="rule-icon">⛔</span>
+                    <span>ALL strategies are STRICTLY DAY TRADING - NO EXCEPTIONS</span>
+                  </li>
+                  <li className="rule-item warning">
+                    <span className="rule-icon">⏰</span>
+                    <span>Force Flat: <strong>21:50 UTC (16:50 NY)</strong> - All positions MUST be closed</span>
+                  </li>
+                  <li className="rule-item warning">
+                    <span className="rule-icon">🌏</span>
+                    <span>Asia Open (Sunday 5PM EST) = HIGHEST VOLATILITY - Gap risk unacceptable</span>
+                  </li>
+                  <li className="rule-item info">
+                    <span className="rule-icon">📊</span>
+                    <span>Overnight breach penalty: <strong>-15 points</strong> per occurrence (max -45)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rule-section">
+                <h4 className="rule-title">⚠️ Prohibited Trading Periods</h4>
+                <ul className="rule-list">
+                  <li className="rule-item warning">
+                    <span className="rule-icon">🌙</span>
+                    <span>Sunday 17:00-22:00 EST (Asia market opening risk)</span>
+                  </li>
+                  <li className="rule-item warning">
+                    <span className="rule-icon">📅</span>
+                    <span>Friday after 21:50 UTC (weekend gap risk)</span>
+                  </li>
+                  <li className="rule-item warning">
+                    <span className="rule-icon">📰</span>
+                    <span>Major economic events (FOMC, NFP, CPI releases)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rule-warning-box">
+                <AlertTriangle size={24} />
+                <div>
+                  <strong>BITCOIN & CRYPTO STRATEGIES:</strong><br />
+                  Due to 24/7 crypto markets, extra vigilance required. All FIDUS crypto strategies must still close by 21:50 UTC. Weekend holding is PROHIBITED.
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Leverage by Asset Class */}
         <Card className="risk-card leverage-card">
           <CardHeader className="risk-card-header">

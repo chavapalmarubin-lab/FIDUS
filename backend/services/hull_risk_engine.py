@@ -992,13 +992,93 @@ class HullRiskEngine:
         deals: List[Dict],
         risk_policy: Dict
     ) -> int:
-        """Count overnight position breaches (positions held past force-flat time)"""
+        """
+        Count overnight position breaches (positions held past force-flat time)
+        
+        FIDUS RULE: All strategies are DAY TRADING ONLY
+        - No positions can be held overnight
+        - Force flat time: 21:50 UTC (16:50 NY time) - 10 min before rollover
+        - Asia market opening (Sunday 5PM EST = Monday Asia open) is highest volatility
+        - Gap risk is unacceptable for FIDUS
+        
+        Detection: Look for positions that:
+        1. Opened on day N and closed on day N+1 or later
+        2. Positions with open time before force_flat and close time after next day's open
+        """
         if risk_policy.get("allow_overnight", True):
             return 0  # Overnight allowed, no breaches
         
-        # For now, return 0 - would need position history to detect overnight holds
-        # In production, this would check position open/close times against force_flat_time
-        return 0
+        force_flat_time_str = risk_policy.get("force_flat_time_utc", "21:50")
+        force_flat_hour, force_flat_minute = map(int, force_flat_time_str.split(":"))
+        
+        overnight_count = 0
+        positions_by_ticket = {}
+        
+        for deal in deals:
+            ticket = deal.get("position_id") or deal.get("position") or deal.get("ticket")
+            if not ticket:
+                continue
+            
+            # Track position open/close
+            deal_type = deal.get("type", deal.get("entry", ""))
+            deal_time = deal.get("time")
+            
+            # Convert time to datetime if it's a timestamp
+            if isinstance(deal_time, (int, float)):
+                deal_time = datetime.fromtimestamp(deal_time, tz=timezone.utc)
+            elif isinstance(deal_time, str):
+                try:
+                    deal_time = datetime.fromisoformat(deal_time.replace('Z', '+00:00'))
+                except:
+                    continue
+            
+            if deal_time is None:
+                continue
+            
+            # Track entries (type 0 = BUY, type 1 = SELL for entries)
+            # In MT5: entry=0 is IN, entry=1 is OUT
+            entry_type = deal.get("entry", -1)
+            
+            if entry_type == 0 or "in" in str(deal_type).lower() or deal_type in [0, 1]:
+                # Position opened
+                positions_by_ticket[ticket] = {
+                    "open_time": deal_time,
+                    "symbol": deal.get("symbol"),
+                    "volume": deal.get("volume", deal.get("lots", 0))
+                }
+            elif entry_type == 1 or "out" in str(deal_type).lower():
+                # Position closed
+                if ticket in positions_by_ticket:
+                    open_time = positions_by_ticket[ticket]["open_time"]
+                    close_time = deal_time
+                    
+                    # Check if held overnight
+                    # Overnight = opened before force_flat on day N, closed after market open on day N+1
+                    open_date = open_time.date()
+                    close_date = close_time.date()
+                    
+                    if close_date > open_date:
+                        # Position was held overnight
+                        overnight_count += 1
+                        logger.warning(f"⚠️ OVERNIGHT BREACH: Ticket {ticket} ({positions_by_ticket[ticket].get('symbol')})"
+                                      f" opened {open_time.isoformat()} closed {close_time.isoformat()}")
+                    elif close_date == open_date:
+                        # Same day - check if past force flat time
+                        force_flat_datetime = datetime(
+                            open_time.year, open_time.month, open_time.day,
+                            force_flat_hour, force_flat_minute, tzinfo=timezone.utc
+                        )
+                        if open_time < force_flat_datetime and close_time > force_flat_datetime:
+                            # Opened before force flat, closed after (same day but late)
+                            # This is technically OK but very close to breach
+                            pass
+                    
+                    del positions_by_ticket[ticket]
+        
+        # Any positions still open (not closed in the deals) might be overnight violations
+        # But we can't determine this without current position data
+        
+        return overnight_count
     
     def _calculate_margin_compliance(
         self,
