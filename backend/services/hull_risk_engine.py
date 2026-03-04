@@ -576,8 +576,44 @@ class HullRiskEngine:
             else:
                 notional_per_lot = contract_size
         
-        # Calculate margin required per lot
-        margin_per_lot = notional_per_lot * (margin_pct / 100)
+        # =====================================================================
+        # Calculate MARGIN REQUIRED per lot using Lucrum's official formulas
+        # Based on margin_calc_type from instrument specifications:
+        # - FOREX: Lots * Contract_Size / Leverage * Percentage / 100
+        # - CFD: Lots * Contract_Size * Market_Price * Percentage / 100
+        # - CFDLEVERAGE: Lots * Contract_Size * Market_Price / Leverage * Percentage / 100
+        # - FOREX_NO_LEVERAGE: Same as CFD (percentage-based, no leverage)
+        # =====================================================================
+        margin_calc_type = instrument_specs.get("margin_calc_type", "FOREX")
+        lucrum_leverage = instrument_specs.get("lucrum_leverage", leverage)
+        
+        # Note: margin_pct is already in decimal form (0.01 = 1%)
+        # We need to convert it to percentage for the formula
+        margin_percentage = margin_pct  # Already 0.01 for 1%
+        
+        if margin_calc_type == "FOREX":
+            # FOREX: Lots * Contract_Size / Leverage * Percentage / 100
+            # For 1 lot: Contract_Size / Leverage * Percentage / 100
+            # Example: 100,000 / 200 * 1 / 100 = $5 margin per lot (for 1% margin at 200:1)
+            margin_per_lot = (contract_size / lucrum_leverage) * margin_percentage
+            
+        elif margin_calc_type in ["CFD", "FOREX_NO_LEVERAGE", "Forex-no leverage"]:
+            # CFD/No Leverage: Lots * Contract_Size * Market_Price * Percentage / 100
+            # This uses notional value * percentage (no leverage reduction)
+            margin_per_lot = notional_per_lot * margin_percentage
+            
+        elif margin_calc_type == "CFDLEVERAGE":
+            # CFD-Leverage: Lots * Contract_Size * Market_Price / Leverage * Percentage / 100
+            # Example: 100 oz * $2650 / 200 * 0.01 = $13.25 margin per lot for gold
+            margin_per_lot = (notional_per_lot / lucrum_leverage) * margin_percentage
+            
+        else:
+            # Default fallback: use notional * margin_pct
+            margin_per_lot = notional_per_lot * margin_percentage
+        
+        logger.debug(f"Margin calculation for {symbol}: type={margin_calc_type}, "
+                    f"leverage={lucrum_leverage}, notional={notional_per_lot:.2f}, "
+                    f"margin_pct={margin_percentage*100:.2f}%, margin_per_lot=${margin_per_lot:.2f}")
         
         # Max margin allowed from equity
         max_margin_allowed = equity * max_margin_pct
@@ -614,7 +650,9 @@ class HullRiskEngine:
             "loss_per_lot_at_stop": round(loss_per_lot_at_stop, 2),
             "max_lots_risk": round(self._floor_to_step(max_lots_risk, lot_step), 2),
             "contract_size": contract_size,
+            "margin_calc_type": margin_calc_type,  # NEW: Track which formula was used
             "margin_pct": margin_pct,
+            "lucrum_leverage": lucrum_leverage,  # NEW: Lucrum-specific leverage
             "effective_leverage": round(effective_leverage, 1),
             "notional_per_lot": round(notional_per_lot, 2),
             "margin_per_lot": round(margin_per_lot, 2),
