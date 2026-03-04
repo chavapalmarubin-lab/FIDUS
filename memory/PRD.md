@@ -17,6 +17,47 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Trading Hours Compliance - Day Trading Rules (Mar 4, 2026) ✅
+- **Feature:** Strict day-trading-only compliance enforcement
+- **FIDUS Rule:** NO overnight positions allowed - all trades must be closed by force_flat_time
+- **Components Built:**
+  1. **Overnight Breach Detection:**
+     - Detects positions held past midnight (different calendar days)
+     - Penalty: -15 points per breach (cap -45)
+     - Logged in compliance_details.trading_hours.overnight_violations
+  2. **Late Trade Detection:**
+     - Detects trades closed after 21:50 UTC (force_flat_time)
+     - Shows in Active Risk Alerts as WARNING severity
+     - Listed in compliance_details.trading_hours.late_trade_violations
+  3. **Trade Duration Analysis:**
+     - Average, longest, shortest trade durations
+     - Day trades percentage (trades < 16 hours)
+     - Top 5 longest trades table
+  4. **Trading Session Analysis:**
+     - Entry/Exit hour distribution (UTC)
+     - Peak trading hours identification
+     - Trades after force flat count
+  5. **UI Display (Risk Limits Tab):**
+     - Day Trading row in Detailed Compliance Breakdown table
+     - Shows 21:50 UTC (16:50 NY) force flat time
+     - Breaches count and COMPLIANT/NON-COMPLIANT status
+     - Overnight Violations table (if any)
+- **API Response Structure:**
+  - `compliance_details.trading_hours.overnight_positions_found`
+  - `compliance_details.trading_hours.late_trades_found`
+  - `compliance_details.trading_hours.force_flat_time`
+  - `compliance_details.trading_hours.status` (COMPLIANT/NON-COMPLIANT)
+  - `compliance_details.trading_hours.penalty_applied`
+  - `compliance_details.trading_hours.overnight_violations[]`
+  - `compliance_details.trading_hours.late_trade_violations[]`
+- **Test Coverage:**
+  - `/app/backend/tests/test_trading_hours_compliance.py` - 11 tests (all passing)
+  - API endpoint validation, overnight detection logic, penalty calculations
+- **Files Modified:**
+  - `/app/backend/services/hull_risk_engine.py` - Lines 1507-1708: compliance logic
+  - `/app/frontend/src/components/LiveDemoAnalytics.js` - Lines 1872-1982: UI display
+- **Status:** COMPLETE - 100% test pass rate (11/11 backend + all frontend UI verified)
+
 #### Lucrum Wallet & Capital Allocation Management (Mar 3, 2026) ✅
 - **Feature:** Track unallocated capital during high volatility periods
 - **Use Case:** When market volatility is high, money can be moved from trading accounts to the Lucrum wallet for safety
