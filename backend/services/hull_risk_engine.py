@@ -247,6 +247,9 @@ class HullRiskEngine:
         Some accounts (especially demo accounts) store deals in mt5_deals_history,
         while real accounts use mt5_deals. This method checks both and returns
         actual trading deals (excluding deposits/withdrawals).
+        
+        If no deals are found within the date range, it will retry without the date filter
+        to capture historical data.
         """
         try:
             query = {"account": account}
@@ -256,10 +259,22 @@ class HullRiskEngine:
             # Try mt5_deals first (primary collection)
             deals = await self.db.mt5_deals.find(query).to_list(length=max_deals)
             
-            # If no deals found, check mt5_deals_history (used by demo accounts)
+            # If no deals found with date filter, try without date filter
+            if not deals and start_date:
+                logger.info(f"No deals in mt5_deals for account {account} in date range, trying without date filter...")
+                deals = await self.db.mt5_deals.find({"account": account}).to_list(length=max_deals)
+            
+            # If still no deals found, check mt5_deals_history (used by demo accounts)
             if not deals:
                 logger.info(f"No deals in mt5_deals for account {account}, checking mt5_deals_history...")
-                deals = await self.db.mt5_deals_history.find(query).to_list(length=max_deals)
+                query_history = {"account": account}
+                if start_date:
+                    query_history["time"] = {"$gte": start_date}
+                deals = await self.db.mt5_deals_history.find(query_history).to_list(length=max_deals)
+                
+                # Try without date filter for history too
+                if not deals and start_date:
+                    deals = await self.db.mt5_deals_history.find({"account": account}).to_list(length=max_deals)
                 
                 if deals:
                     logger.info(f"Found {len(deals)} deals in mt5_deals_history for account {account}")
@@ -1244,7 +1259,8 @@ class HullRiskEngine:
             overnight_positions = []  # Positions held overnight
             late_trades = []  # Trades closed after force flat time
             trade_durations = []  # All trade durations in minutes
-            positions_tracker = {}  # Track open positions by ticket
+            positions_tracker = {}  # Track open positions by position_id
+            symbol_entry_queue = {}  # FIFO queue for matching by symbol when position_id not available
             entry_hour_distribution = {}  # Hours of entries
             exit_hour_distribution = {}  # Hours of exits
             weekend_trades = []  # Trades during weekend/Asia open
@@ -1280,24 +1296,40 @@ class HullRiskEngine:
                         
                         # ===== TRADING HOURS COMPLIANCE TRACKING =====
                         hour_key = deal_time.hour
-                        position_id = deal.get("position_id") or deal.get("position") or ticket
+                        raw_position_id = deal.get("position_id") or deal.get("position")
                         entry_type = deal.get("entry", -1)
+                        
+                        # Determine if we have a valid position_id for matching
+                        # position_id can be None in some MT5 data exports
+                        use_fifo_matching = raw_position_id is None
+                        position_key = raw_position_id if not use_fifo_matching else ticket
                         
                         # Track entry times (entry=0 is IN)
                         if entry_type == 0 or (entry_type == -1 and deal_type in [0, 1]):
                             entry_hour_distribution[hour_key] = entry_hour_distribution.get(hour_key, 0) + 1
-                            positions_tracker[position_id] = {
+                            
+                            entry_data = {
+                                "ticket": ticket,
                                 "symbol": symbol,
                                 "volume": volume,
                                 "entry_time": deal_time,
                                 "entry_price": deal.get("price", 0)
                             }
                             
+                            if use_fifo_matching:
+                                # Use FIFO queue by symbol when position_id not available
+                                if symbol not in symbol_entry_queue:
+                                    symbol_entry_queue[symbol] = []
+                                symbol_entry_queue[symbol].append(entry_data)
+                            else:
+                                # Use direct position_id matching
+                                positions_tracker[position_key] = entry_data
+                            
                             # Check if entry is during prohibited period (Sunday Asia open)
                             day_of_week = deal_time.weekday()  # 0=Monday, 6=Sunday
                             if day_of_week == 6:  # Sunday
                                 weekend_trades.append({
-                                    "ticket": position_id,
+                                    "ticket": ticket,
                                     "symbol": symbol,
                                     "time": deal_time.isoformat(),
                                     "issue": "Entry on Sunday (Asia open risk)"
@@ -1306,7 +1338,7 @@ class HullRiskEngine:
                             # Check if entry is after force flat time
                             if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
                                 late_trades.append({
-                                    "ticket": position_id,
+                                    "ticket": ticket,
                                     "symbol": symbol,
                                     "time": deal_time.isoformat(),
                                     "issue": f"Entry after force flat ({force_flat_time_str} UTC)"
@@ -1316,14 +1348,29 @@ class HullRiskEngine:
                         elif entry_type == 1:
                             exit_hour_distribution[hour_key] = exit_hour_distribution.get(hour_key, 0) + 1
                             
-                            if position_id in positions_tracker:
-                                entry_data = positions_tracker[position_id]
+                            # Try to find matching entry
+                            entry_data = None
+                            matched_ticket = ticket
+                            
+                            if use_fifo_matching:
+                                # FIFO matching by symbol - pop earliest entry for this symbol
+                                if symbol in symbol_entry_queue and symbol_entry_queue[symbol]:
+                                    entry_data = symbol_entry_queue[symbol].pop(0)
+                                    matched_ticket = entry_data.get("ticket", ticket)
+                            else:
+                                # Direct position_id matching
+                                if position_key in positions_tracker:
+                                    entry_data = positions_tracker[position_key]
+                                    matched_ticket = position_key
+                                    del positions_tracker[position_key]
+                            
+                            if entry_data:
                                 entry_time = entry_data["entry_time"]
                                 
                                 # Calculate trade duration
                                 duration_minutes = (deal_time - entry_time).total_seconds() / 60
                                 trade_durations.append({
-                                    "ticket": position_id,
+                                    "ticket": matched_ticket,
                                     "symbol": symbol,
                                     "entry_time": entry_time.isoformat(),
                                     "exit_time": deal_time.isoformat(),
@@ -1335,7 +1382,7 @@ class HullRiskEngine:
                                 # Check for overnight position (different calendar days)
                                 if entry_time.date() != deal_time.date():
                                     overnight_positions.append({
-                                        "ticket": position_id,
+                                        "ticket": matched_ticket,
                                         "symbol": symbol,
                                         "entry_date": entry_time.date().isoformat(),
                                         "exit_date": deal_time.date().isoformat(),
@@ -1343,17 +1390,15 @@ class HullRiskEngine:
                                         "profit": profit,
                                         "issue": "OVERNIGHT POSITION - Day trading violation"
                                     })
-                                
-                                # Check if exit was after force flat time
-                                if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
-                                    late_trades.append({
-                                        "ticket": position_id,
-                                        "symbol": symbol,
-                                        "time": deal_time.isoformat(),
-                                        "issue": f"Exit after force flat ({force_flat_time_str} UTC)"
-                                    })
-                                
-                                del positions_tracker[position_id]
+                            
+                            # Check if exit was after force flat time (regardless of matching)
+                            if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
+                                late_trades.append({
+                                    "ticket": ticket,
+                                    "symbol": symbol,
+                                    "time": deal_time.isoformat(),
+                                    "issue": f"Exit after force flat ({force_flat_time_str} UTC)"
+                                })
                 
                 # Symbol-level aggregation - cache instrument specs
                 if symbol not in symbol_analysis:
