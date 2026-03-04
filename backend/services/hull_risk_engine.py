@@ -329,18 +329,19 @@ class HullRiskEngine:
             return DEFAULT_INSTRUMENT_SPECS.get(symbol.upper(), DEFAULT_INSTRUMENT_SPECS["EURUSD"])
     
     async def get_all_instrument_specs(self) -> List[Dict[str, Any]]:
-        """Get all instrument specifications"""
+        """Get all instrument specifications - DB specs take priority over defaults"""
         try:
-            db_specs = await self.db.instrument_specs.find({}).to_list(length=100)
+            # Get ALL DB specs (increased limit to 500)
+            db_specs = await self.db.instrument_specs.find({}).to_list(length=500)
             
-            # Merge with defaults
-            specs_map = {s["symbol"]: s for s in DEFAULT_INSTRUMENT_SPECS.values()}
+            # If we have DB specs, use only those (Lucrum specs are our source of truth)
+            if db_specs:
+                for spec in db_specs:
+                    spec.pop("_id", None)
+                return db_specs
             
-            for spec in db_specs:
-                spec.pop("_id", None)
-                specs_map[spec["symbol"]] = spec
-            
-            return list(specs_map.values())
+            # Fallback to defaults only if no DB specs exist
+            return list(DEFAULT_INSTRUMENT_SPECS.values())
             
         except Exception as e:
             logger.error(f"Error getting all instrument specs: {e}")

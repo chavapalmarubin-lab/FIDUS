@@ -245,8 +245,8 @@ const InstrumentSpecifications = () => {
                   <th onClick={() => handleSort('asset_class')} className="sortable">
                     Class <SortIcon field="asset_class" />
                   </th>
-                  <th onClick={() => handleSort('pro_leverage')} className="sortable">
-                    Leverage <SortIcon field="pro_leverage" />
+                  <th onClick={() => handleSort('lucrum_leverage')} className="sortable">
+                    Leverage <SortIcon field="lucrum_leverage" />
                   </th>
                   <th onClick={() => handleSort('margin_pct')} className="sortable">
                     Margin <SortIcon field="margin_pct" />
@@ -276,9 +276,9 @@ const InstrumentSpecifications = () => {
                       </span>
                     </td>
                     <td className="inst-leverage">
-                      <span className="leverage-value">{inst.pro_leverage}:1</span>
+                      <span className="leverage-value">{inst.lucrum_leverage || inst.pro_leverage || 'N/A'}:1</span>
                     </td>
-                    <td className="inst-margin">{inst.margin_pct}%</td>
+                    <td className="inst-margin">{(inst.margin_pct * 100).toFixed(2) || 'N/A'}%</td>
                     <td className="inst-contract">{inst.contract_size?.toLocaleString()}</td>
                     <td className="inst-pip">${inst.pip_value_per_lot}</td>
                     <td className="inst-spread">{inst.typical_spread}</td>
