@@ -239,7 +239,8 @@ class HullRiskEngine:
         self,
         account: int,
         start_date: datetime = None,
-        max_deals: int = 5000
+        max_deals: int = 5000,
+        allowed_symbols: List[str] = None
     ) -> List[Dict]:
         """
         Get deals for an account from both mt5_deals AND mt5_deals_history collections.
@@ -252,8 +253,20 @@ class HullRiskEngine:
         to capture historical data.
         
         Returns deals SORTED BY TIME (ascending) for proper FIFO matching.
+        
+        Args:
+            account: MT5 account number
+            start_date: Optional start date for filtering
+            max_deals: Maximum number of deals to fetch
+            allowed_symbols: Optional list of symbols to include (e.g., ["BTCUSD"] for crypto-only analysis)
         """
         try:
+            # If allowed_symbols not provided, check account config
+            if allowed_symbols is None:
+                account_config = await self.db.mt5_accounts.find_one({"account": account})
+                if account_config:
+                    allowed_symbols = account_config.get("allowed_symbols")
+            
             query = {"account": account}
             if start_date:
                 query["time"] = {"$gte": start_date}
@@ -297,9 +310,19 @@ class HullRiskEngine:
                 if not symbol:
                     continue
                 
+                # Apply allowed_symbols filter if specified
+                if allowed_symbols:
+                    # Normalize symbol comparison (handle .ecn, etc.)
+                    symbol_base = symbol.upper().replace(".ECN", "").replace(".STP", "")
+                    if not any(allowed.upper() in symbol_base or symbol_base in allowed.upper() for allowed in allowed_symbols):
+                        continue
+                
                 trading_deals.append(deal)
             
-            logger.info(f"Account {account}: Found {len(trading_deals)} trading deals (filtered from {len(deals)} total)")
+            if allowed_symbols:
+                logger.info(f"Account {account}: Found {len(trading_deals)} trading deals (filtered by symbols: {allowed_symbols})")
+            else:
+                logger.info(f"Account {account}: Found {len(trading_deals)} trading deals (filtered from {len(deals)} total)")
             return trading_deals
             
         except Exception as e:
