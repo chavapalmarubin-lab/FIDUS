@@ -44,6 +44,7 @@ import VikingDashboard from './VikingDashboard';
 import LiveDemoDashboard from './LiveDemoDashboard';
 import InstrumentSpecifications from './InstrumentSpecifications';
 import RiskParameters from './RiskParameters';
+import GapRiskAnalysis from './GapRiskAnalysis';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
@@ -648,6 +649,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="risk-params" className="flex-shrink-0">
               🛡️ Risk Parameters
             </TabsTrigger>
+            <TabsTrigger value="gap-analysis" className="flex-shrink-0">
+              📊 Gap Analysis
+            </TabsTrigger>
 
             {/* Hidden - Investments tab not currently used
             <TabsTrigger value="investments" className="flex-shrink-0">
@@ -865,6 +869,10 @@ const AdminDashboard = ({ user, onLogout }) => {
 
           <TabsContent value="technical-docs" className="mt-6">
             <TechnicalDocumentation />
+          </TabsContent>
+
+          <TabsContent value="gap-analysis" className="mt-6">
+            <GapRiskAnalysis />
           </TabsContent>
 
           <TabsContent value="phase4-docs" className="mt-6">
