@@ -1234,6 +1234,21 @@ class HullRiskEngine:
             risk_breaches = 0
             daily_pnl = {}  # For daily loss analysis
             
+            # ===== TRADING HOURS COMPLIANCE TRACKING =====
+            force_flat_time_str = risk_policy.get("force_flat_time_utc", "21:50")
+            force_flat_hour, force_flat_minute = map(int, force_flat_time_str.split(":"))
+            allow_overnight = risk_policy.get("allow_overnight", False)
+            
+            # Trade timing analysis
+            trade_times = []  # List of all trade entry/exit times
+            overnight_positions = []  # Positions held overnight
+            late_trades = []  # Trades closed after force flat time
+            trade_durations = []  # All trade durations in minutes
+            positions_tracker = {}  # Track open positions by ticket
+            entry_hour_distribution = {}  # Hours of entries
+            exit_hour_distribution = {}  # Hours of exits
+            weekend_trades = []  # Trades during weekend/Asia open
+            
             max_risk_per_trade = initial_allocation * (risk_policy.get("max_risk_per_trade_pct", 1.0) / 100)
             max_intraday_loss = initial_allocation * (risk_policy.get("max_intraday_loss_pct", 3.0) / 100)
             
@@ -1256,9 +1271,89 @@ class HullRiskEngine:
                             deal_time = datetime.fromisoformat(deal_time.replace('Z', '+00:00'))
                         except ValueError:
                             deal_time = None
+                    elif isinstance(deal_time, (int, float)):
+                        deal_time = datetime.fromtimestamp(deal_time, tz=timezone.utc)
+                    
                     if deal_time:
                         date_key = deal_time.strftime("%Y-%m-%d")
                         daily_pnl[date_key] = daily_pnl.get(date_key, 0) + profit
+                        
+                        # ===== TRADING HOURS COMPLIANCE TRACKING =====
+                        hour_key = deal_time.hour
+                        position_id = deal.get("position_id") or deal.get("position") or ticket
+                        entry_type = deal.get("entry", -1)
+                        
+                        # Track entry times (entry=0 is IN)
+                        if entry_type == 0 or (entry_type == -1 and deal_type in [0, 1]):
+                            entry_hour_distribution[hour_key] = entry_hour_distribution.get(hour_key, 0) + 1
+                            positions_tracker[position_id] = {
+                                "symbol": symbol,
+                                "volume": volume,
+                                "entry_time": deal_time,
+                                "entry_price": deal.get("price", 0)
+                            }
+                            
+                            # Check if entry is during prohibited period (Sunday Asia open)
+                            day_of_week = deal_time.weekday()  # 0=Monday, 6=Sunday
+                            if day_of_week == 6:  # Sunday
+                                weekend_trades.append({
+                                    "ticket": position_id,
+                                    "symbol": symbol,
+                                    "time": deal_time.isoformat(),
+                                    "issue": "Entry on Sunday (Asia open risk)"
+                                })
+                            
+                            # Check if entry is after force flat time
+                            if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
+                                late_trades.append({
+                                    "ticket": position_id,
+                                    "symbol": symbol,
+                                    "time": deal_time.isoformat(),
+                                    "issue": f"Entry after force flat ({force_flat_time_str} UTC)"
+                                })
+                        
+                        # Track exit times (entry=1 is OUT)
+                        elif entry_type == 1:
+                            exit_hour_distribution[hour_key] = exit_hour_distribution.get(hour_key, 0) + 1
+                            
+                            if position_id in positions_tracker:
+                                entry_data = positions_tracker[position_id]
+                                entry_time = entry_data["entry_time"]
+                                
+                                # Calculate trade duration
+                                duration_minutes = (deal_time - entry_time).total_seconds() / 60
+                                trade_durations.append({
+                                    "ticket": position_id,
+                                    "symbol": symbol,
+                                    "entry_time": entry_time.isoformat(),
+                                    "exit_time": deal_time.isoformat(),
+                                    "duration_minutes": round(duration_minutes, 1),
+                                    "duration_hours": round(duration_minutes / 60, 2),
+                                    "profit": profit
+                                })
+                                
+                                # Check for overnight position (different calendar days)
+                                if entry_time.date() != deal_time.date():
+                                    overnight_positions.append({
+                                        "ticket": position_id,
+                                        "symbol": symbol,
+                                        "entry_date": entry_time.date().isoformat(),
+                                        "exit_date": deal_time.date().isoformat(),
+                                        "duration_hours": round(duration_minutes / 60, 1),
+                                        "profit": profit,
+                                        "issue": "OVERNIGHT POSITION - Day trading violation"
+                                    })
+                                
+                                # Check if exit was after force flat time
+                                if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
+                                    late_trades.append({
+                                        "ticket": position_id,
+                                        "symbol": symbol,
+                                        "time": deal_time.isoformat(),
+                                        "issue": f"Exit after force flat ({force_flat_time_str} UTC)"
+                                    })
+                                
+                                del positions_tracker[position_id]
                 
                 # Symbol-level aggregation - cache instrument specs
                 if symbol not in symbol_analysis:
@@ -1407,6 +1502,36 @@ class HullRiskEngine:
                     "max_daily_loss_allowed": round(max_intraday_loss, 2),
                     "breaches": daily_loss_breaches[:5],  # Top 5
                     "status": "PASS" if len(daily_loss_breaches) == 0 else "FAIL"
+                },
+                # ===== TRADING HOURS COMPLIANCE (DAY TRADING STRICT) =====
+                "trading_hours_compliance": {
+                    "overnight_positions": len(overnight_positions),
+                    "late_trades": len(late_trades),
+                    "weekend_trades": len(weekend_trades),
+                    "force_flat_time": force_flat_time_str + " UTC",
+                    "allow_overnight": allow_overnight,
+                    "status": "PASS" if (len(overnight_positions) == 0 and len(late_trades) == 0) else "FAIL",
+                    "violations": {
+                        "overnight": overnight_positions[:10],  # Top 10
+                        "late": late_trades[:10],
+                        "weekend": weekend_trades[:10]
+                    }
+                },
+                # ===== TRADE DURATION ANALYSIS =====
+                "trade_duration_analysis": {
+                    "total_trades_with_duration": len(trade_durations),
+                    "avg_duration_minutes": round(sum(t["duration_minutes"] for t in trade_durations) / len(trade_durations), 1) if trade_durations else 0,
+                    "max_duration_hours": round(max((t["duration_hours"] for t in trade_durations), default=0), 2),
+                    "min_duration_minutes": round(min((t["duration_minutes"] for t in trade_durations), default=0), 1),
+                    "durations": sorted(trade_durations, key=lambda x: -x["duration_minutes"])[:10],  # Top 10 longest trades
+                    "day_trades_pct": round(len([t for t in trade_durations if t["duration_hours"] < 16]) / len(trade_durations) * 100, 1) if trade_durations else 100
+                },
+                # ===== ENTRY/EXIT HOUR DISTRIBUTION =====
+                "time_distribution": {
+                    "entry_hours": entry_hour_distribution,
+                    "exit_hours": exit_hour_distribution,
+                    "peak_entry_hour": max(entry_hour_distribution, key=entry_hour_distribution.get) if entry_hour_distribution else None,
+                    "peak_exit_hour": max(exit_hour_distribution, key=exit_hour_distribution.get) if exit_hour_distribution else None
                 }
             }
             
@@ -1458,6 +1583,51 @@ class HullRiskEngine:
                         "severity": "CRITICAL",
                         "message": f"{breach['date']}: Lost ${abs(breach['loss']):,.0f}, limit was ${max_intraday_loss:,.0f}"
                     })
+            
+            # ===== TRADING HOURS VIOLATIONS =====
+            # Overnight positions are critical violations
+            if len(overnight_positions) > 0:
+                action_items.append({
+                    "priority": "CRITICAL",
+                    "category": "trading_hours",
+                    "issue": f"{len(overnight_positions)} OVERNIGHT POSITIONS DETECTED - Day trading rule violated",
+                    "fix": "ALL positions must be closed by 21:50 UTC. NO EXCEPTIONS."
+                })
+                for pos in overnight_positions[:3]:
+                    alerts.append({
+                        "type": "OVERNIGHT_POSITION",
+                        "severity": "CRITICAL",
+                        "message": f"🚨 {pos['symbol']} held overnight: {pos['entry_date']} → {pos['exit_date']} ({pos['duration_hours']}h)"
+                    })
+            
+            # Late trades (after force flat time)
+            if len(late_trades) > 0:
+                action_items.append({
+                    "priority": "HIGH",
+                    "category": "trading_hours",
+                    "issue": f"{len(late_trades)} trades executed after force flat time ({force_flat_time_str} UTC)",
+                    "fix": "Stop all trading by 21:50 UTC to avoid overnight gap risk"
+                })
+                for trade in late_trades[:2]:
+                    alerts.append({
+                        "type": "LATE_TRADE",
+                        "severity": "WARNING",
+                        "message": f"⏰ {trade['symbol']} traded at {trade['time'][:19]} - after force flat"
+                    })
+            
+            # Weekend/Asia open trades
+            if len(weekend_trades) > 0:
+                action_items.append({
+                    "priority": "HIGH",
+                    "category": "trading_hours",
+                    "issue": f"{len(weekend_trades)} trades during high-risk periods (Sunday Asia open)",
+                    "fix": "Avoid trading Sunday 17:00-22:00 EST due to extreme volatility"
+                })
+                alerts.append({
+                    "type": "WEEKEND_RISK",
+                    "severity": "WARNING",
+                    "message": f"🌏 {len(weekend_trades)} trades during Sunday Asia open (highest volatility period)"
+                })
             
             # ===== WHAT-IF SIMULATION DATA =====
             # Calculate projected scores at different equity levels
@@ -1524,6 +1694,33 @@ class HullRiskEngine:
                     "breach_days": len(daily_loss_breaches),
                     "breaches_detail": daily_loss_breaches[:5],
                     "penalty_applied": min(40, len(daily_loss_breaches) * 20)
+                },
+                # ===== DAY TRADING COMPLIANCE (STRICT) =====
+                "trading_hours": {
+                    "policy": "ALL positions must be closed by force flat time. NO overnight positions.",
+                    "force_flat_time": f"{force_flat_time_str} UTC (16:50 NY)",
+                    "overnight_positions_found": len(overnight_positions),
+                    "late_trades_found": len(late_trades),
+                    "weekend_trades_found": len(weekend_trades),
+                    "overnight_violations": overnight_positions[:5],
+                    "late_trade_violations": late_trades[:5],
+                    "penalty_applied": min(45, len(overnight_positions) * 15),
+                    "status": "COMPLIANT" if len(overnight_positions) == 0 else "NON-COMPLIANT"
+                },
+                "trade_duration": {
+                    "total_trades_analyzed": len(trade_durations),
+                    "average_duration_minutes": round(sum(t["duration_minutes"] for t in trade_durations) / len(trade_durations), 1) if trade_durations else 0,
+                    "longest_trade_hours": round(max((t["duration_hours"] for t in trade_durations), default=0), 2),
+                    "shortest_trade_minutes": round(min((t["duration_minutes"] for t in trade_durations), default=0), 1),
+                    "day_trades_percentage": round(len([t for t in trade_durations if t["duration_hours"] < 16]) / len(trade_durations) * 100, 1) if trade_durations else 100,
+                    "longest_trades": sorted(trade_durations, key=lambda x: -x["duration_minutes"])[:5]
+                },
+                "trading_session_analysis": {
+                    "entry_hours_utc": dict(sorted(entry_hour_distribution.items())),
+                    "exit_hours_utc": dict(sorted(exit_hour_distribution.items())),
+                    "most_active_entry_hour": max(entry_hour_distribution, key=entry_hour_distribution.get) if entry_hour_distribution else None,
+                    "most_active_exit_hour": max(exit_hour_distribution, key=exit_hour_distribution.get) if exit_hour_distribution else None,
+                    "trades_after_force_flat": len([t for t in late_trades if 'Exit' not in t.get('issue', '')])
                 }
             }
             

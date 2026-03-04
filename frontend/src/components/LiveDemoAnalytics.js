@@ -1868,8 +1868,119 @@ export default function LiveDemoAnalytics() {
                             <td>{riskAnalysis.compliance_details?.daily_loss?.breach_days === 0 ? '100%' : 'BREACHED'}</td>
                             <td className="lda-penalty-cell">-{riskAnalysis.compliance_details?.daily_loss?.penalty_applied} pts</td>
                           </tr>
+                          {/* 🚨 TRADING HOURS COMPLIANCE (DAY TRADING) */}
+                          <tr className={riskAnalysis.compliance_details?.trading_hours?.overnight_positions_found > 0 ? 'breach-row critical' : ''}>
+                            <td><strong>🚨 Day Trading</strong></td>
+                            <td>{riskAnalysis.compliance_details?.trading_hours?.force_flat_time || '21:50 UTC'}</td>
+                            <td className="lda-calc-cell">{riskAnalysis.compliance_details?.trading_hours?.policy || 'NO overnight positions'}</td>
+                            <td>
+                              {riskAnalysis.compliance_details?.trading_hours?.overnight_positions_found || 0} overnight
+                              {riskAnalysis.compliance_details?.trading_hours?.late_trades_found > 0 && 
+                                `, ${riskAnalysis.compliance_details?.trading_hours?.late_trades_found} late`}
+                            </td>
+                            <td>
+                              <span className={`lda-status-badge ${riskAnalysis.compliance_details?.trading_hours?.status === 'COMPLIANT' ? 'pass' : 'fail'}`}>
+                                {riskAnalysis.compliance_details?.trading_hours?.status || 'N/A'}
+                              </span>
+                            </td>
+                            <td className="lda-penalty-cell">-{riskAnalysis.compliance_details?.trading_hours?.penalty_applied || 0} pts</td>
+                          </tr>
                         </tbody>
                       </table>
+                      
+                      {/* 📊 TRADE DURATION ANALYSIS */}
+                      {riskAnalysis.compliance_details?.trade_duration && (
+                        <div className="lda-trading-hours-analysis">
+                          <h5>📊 Trade Duration Analysis</h5>
+                          <div className="lda-duration-metrics">
+                            <div className="lda-metric-card">
+                              <span className="lda-metric-label">Trades Analyzed</span>
+                              <span className="lda-metric-value">{riskAnalysis.compliance_details.trade_duration.total_trades_analyzed}</span>
+                            </div>
+                            <div className="lda-metric-card">
+                              <span className="lda-metric-label">Avg Duration</span>
+                              <span className="lda-metric-value">{riskAnalysis.compliance_details.trade_duration.average_duration_minutes} min</span>
+                            </div>
+                            <div className="lda-metric-card">
+                              <span className="lda-metric-label">Longest Trade</span>
+                              <span className="lda-metric-value">{riskAnalysis.compliance_details.trade_duration.longest_trade_hours}h</span>
+                            </div>
+                            <div className="lda-metric-card">
+                              <span className="lda-metric-label">Day Trades %</span>
+                              <span className={`lda-metric-value ${riskAnalysis.compliance_details.trade_duration.day_trades_percentage < 95 ? 'warning' : ''}`}>
+                                {riskAnalysis.compliance_details.trade_duration.day_trades_percentage}%
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Longest trades table */}
+                          {riskAnalysis.compliance_details.trade_duration.longest_trades?.length > 0 && (
+                            <div className="lda-longest-trades">
+                              <h6>Top 5 Longest Trades</h6>
+                              <table className="lda-duration-table">
+                                <thead>
+                                  <tr>
+                                    <th>Symbol</th>
+                                    <th>Entry Time</th>
+                                    <th>Exit Time</th>
+                                    <th>Duration</th>
+                                    <th>P&L</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {riskAnalysis.compliance_details.trade_duration.longest_trades.slice(0, 5).map((trade, i) => (
+                                    <tr key={i} className={trade.duration_hours > 16 ? 'breach-row' : ''}>
+                                      <td>{trade.symbol}</td>
+                                      <td>{trade.entry_time?.slice(0, 16).replace('T', ' ')}</td>
+                                      <td>{trade.exit_time?.slice(0, 16).replace('T', ' ')}</td>
+                                      <td className={trade.duration_hours > 16 ? 'lda-breach-value' : ''}>
+                                        {trade.duration_hours}h ({trade.duration_minutes}m)
+                                      </td>
+                                      <td className={trade.profit >= 0 ? 'lda-profit' : 'lda-loss'}>
+                                        ${trade.profit?.toLocaleString()}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* ⚠️ OVERNIGHT POSITION VIOLATIONS */}
+                      {riskAnalysis.compliance_details?.trading_hours?.overnight_violations?.length > 0 && (
+                        <div className="lda-overnight-violations">
+                          <h5>⚠️ Overnight Position Violations</h5>
+                          <div className="lda-violation-warning">
+                            <p>🚨 CRITICAL: The following trades violated the NO OVERNIGHT POSITIONS rule:</p>
+                          </div>
+                          <table className="lda-violations-table">
+                            <thead>
+                              <tr>
+                                <th>Symbol</th>
+                                <th>Entry Date</th>
+                                <th>Exit Date</th>
+                                <th>Duration</th>
+                                <th>P&L</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {riskAnalysis.compliance_details.trading_hours.overnight_violations.map((v, i) => (
+                                <tr key={i} className="breach-row critical">
+                                  <td>{v.symbol}</td>
+                                  <td>{v.entry_date}</td>
+                                  <td>{v.exit_date}</td>
+                                  <td>{v.duration_hours}h</td>
+                                  <td className={v.profit >= 0 ? 'lda-profit' : 'lda-loss'}>
+                                    ${v.profit?.toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                       
                       {/* Per-Instrument Compliance */}
                       {riskAnalysis.compliance_details?.lot_size?.by_instrument?.length > 0 && (

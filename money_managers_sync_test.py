@@ -27,7 +27,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://risk-engine-v2.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-risk-deep.preview.emergentagent.com/api"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

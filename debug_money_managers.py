@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 def debug_endpoints():
-    base_url = "https://risk-engine-v2.preview.emergentagent.com/api"
+    base_url = "https://fidus-risk-deep.preview.emergentagent.com/api"
     session = requests.Session()
     
     # Authenticate

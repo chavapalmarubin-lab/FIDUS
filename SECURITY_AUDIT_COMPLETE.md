@@ -95,7 +95,7 @@ After discovering the GitHub repository was made public (likely for Render/Mongo
 
 ✅ Frontend .env: Exists and secured
    - REACT_APP_BACKEND_URL: Configured
-   - Pointing to: https://risk-engine-v2.preview.emergentagent.com
+   - Pointing to: https://fidus-risk-deep.preview.emergentagent.com
 
 ✅ .gitignore: Properly configured
    - .env files excluded

@@ -23,7 +23,7 @@ from typing import Dict, Any, Optional
 
 class FIDUSAnalyticsTest:
     def __init__(self):
-        self.base_url = "https://risk-engine-v2.preview.emergentagent.com/api"
+        self.base_url = "https://fidus-risk-deep.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         

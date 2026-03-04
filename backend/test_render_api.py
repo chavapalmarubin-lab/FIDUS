@@ -4,7 +4,7 @@ Test Render Production API
 import requests
 import json
 
-BACKEND_URL = "https://risk-engine-v2.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-risk-deep.preview.emergentagent.com"
 
 print("="*80)
 print("TESTING RENDER PRODUCTION API")

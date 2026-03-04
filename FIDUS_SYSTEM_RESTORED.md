@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://risk-engine-v2.preview.emergentagent.com`
+`https://fidus-risk-deep.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

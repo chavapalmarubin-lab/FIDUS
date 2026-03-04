@@ -29,7 +29,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://risk-engine-v2.preview.emergentagent.com/api"
+BACKEND_URL = "https://fidus-risk-deep.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 
