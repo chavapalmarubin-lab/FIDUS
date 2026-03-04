@@ -250,19 +250,21 @@ class HullRiskEngine:
         
         If no deals are found within the date range, it will retry without the date filter
         to capture historical data.
+        
+        Returns deals SORTED BY TIME (ascending) for proper FIFO matching.
         """
         try:
             query = {"account": account}
             if start_date:
                 query["time"] = {"$gte": start_date}
             
-            # Try mt5_deals first (primary collection)
-            deals = await self.db.mt5_deals.find(query).to_list(length=max_deals)
+            # Try mt5_deals first (primary collection) - SORT BY TIME
+            deals = await self.db.mt5_deals.find(query).sort("time", 1).to_list(length=max_deals)
             
             # If no deals found with date filter, try without date filter
             if not deals and start_date:
                 logger.info(f"No deals in mt5_deals for account {account} in date range, trying without date filter...")
-                deals = await self.db.mt5_deals.find({"account": account}).to_list(length=max_deals)
+                deals = await self.db.mt5_deals.find({"account": account}).sort("time", 1).to_list(length=max_deals)
             
             # If still no deals found, check mt5_deals_history (used by demo accounts)
             if not deals:
@@ -270,11 +272,11 @@ class HullRiskEngine:
                 query_history = {"account": account}
                 if start_date:
                     query_history["time"] = {"$gte": start_date}
-                deals = await self.db.mt5_deals_history.find(query_history).to_list(length=max_deals)
+                deals = await self.db.mt5_deals_history.find(query_history).sort("time", 1).to_list(length=max_deals)
                 
                 # Try without date filter for history too
                 if not deals and start_date:
-                    deals = await self.db.mt5_deals_history.find({"account": account}).to_list(length=max_deals)
+                    deals = await self.db.mt5_deals_history.find({"account": account}).sort("time", 1).to_list(length=max_deals)
                 
                 if deals:
                     logger.info(f"Found {len(deals)} deals in mt5_deals_history for account {account}")
@@ -381,21 +383,36 @@ class HullRiskEngine:
     # =========================================================================
     
     async def get_risk_policy(self, account: int = None) -> Dict[str, Any]:
-        """Get risk policy for an account or global default"""
+        """Get risk policy for an account or global default
+        
+        Policy is merged with DEFAULT_RISK_POLICY to ensure all fields have values.
+        DB values take precedence over defaults.
+        """
         try:
+            # Start with defaults
+            policy = DEFAULT_RISK_POLICY.copy()
+            
             if account:
-                policy = await self.db.risk_policies.find_one({"account": account})
-                if policy:
-                    policy.pop("_id", None)
+                db_policy = await self.db.risk_policies.find_one({"account": account})
+                if db_policy:
+                    db_policy.pop("_id", None)
+                    # Merge DB values on top of defaults
+                    for key, value in db_policy.items():
+                        if value is not None:  # Only override if DB has a non-None value
+                            policy[key] = value
                     return policy
             
             # Global policy
             global_policy = await self.db.risk_policies.find_one({"account": None, "is_global": True})
             if global_policy:
                 global_policy.pop("_id", None)
-                return global_policy
+                # Merge global policy on top of defaults
+                for key, value in global_policy.items():
+                    if value is not None:
+                        policy[key] = value
+                return policy
             
-            return DEFAULT_RISK_POLICY.copy()
+            return policy
             
         except Exception as e:
             logger.error(f"Error getting risk policy: {e}")
@@ -1018,24 +1035,28 @@ class HullRiskEngine:
         
         Detection: Look for positions that:
         1. Opened on day N and closed on day N+1 or later
-        2. Positions with open time before force_flat and close time after next day's open
+        2. Uses FIFO matching by symbol when position_id is not available
         """
-        if risk_policy.get("allow_overnight", True):
-            return 0  # Overnight allowed, no breaches
-        
-        force_flat_time_str = risk_policy.get("force_flat_time_utc", "21:50")
-        force_flat_hour, force_flat_minute = map(int, force_flat_time_str.split(":"))
+        # FIDUS DEFAULT: No overnight allowed (day trading only)
+        if risk_policy.get("allow_overnight", False):
+            return 0  # Overnight explicitly allowed, no breaches
         
         overnight_count = 0
-        positions_by_ticket = {}
+        positions_by_ticket = {}  # For position_id-based matching
+        symbol_entry_queue = {}   # For FIFO matching by symbol
         
         for deal in deals:
-            ticket = deal.get("position_id") or deal.get("position") or deal.get("ticket")
-            if not ticket:
+            symbol = deal.get("symbol", "")
+            if not symbol:
                 continue
             
-            # Track position open/close
-            deal_type = deal.get("type", deal.get("entry", ""))
+            raw_position_id = deal.get("position_id") or deal.get("position")
+            ticket = deal.get("ticket")
+            
+            # Determine if we have a valid position_id for matching
+            use_fifo_matching = raw_position_id is None
+            position_key = raw_position_id if not use_fifo_matching else ticket
+            
             deal_time = deal.get("time")
             
             # Convert time to datetime if it's a timestamp
@@ -1050,48 +1071,49 @@ class HullRiskEngine:
             if deal_time is None:
                 continue
             
-            # Track entries (type 0 = BUY, type 1 = SELL for entries)
             # In MT5: entry=0 is IN, entry=1 is OUT
             entry_type = deal.get("entry", -1)
             
-            if entry_type == 0 or "in" in str(deal_type).lower() or deal_type in [0, 1]:
-                # Position opened
-                positions_by_ticket[ticket] = {
+            if entry_type == 0:  # Position opened
+                entry_data = {
                     "open_time": deal_time,
-                    "symbol": deal.get("symbol"),
-                    "volume": deal.get("volume", deal.get("lots", 0))
+                    "symbol": symbol,
+                    "ticket": ticket
                 }
-            elif entry_type == 1 or "out" in str(deal_type).lower():
-                # Position closed
-                if ticket in positions_by_ticket:
-                    open_time = positions_by_ticket[ticket]["open_time"]
+                
+                if use_fifo_matching:
+                    # FIFO queue by symbol
+                    if symbol not in symbol_entry_queue:
+                        symbol_entry_queue[symbol] = []
+                    symbol_entry_queue[symbol].append(entry_data)
+                else:
+                    # Direct position_id matching
+                    positions_by_ticket[position_key] = entry_data
+                    
+            elif entry_type == 1:  # Position closed
+                entry_data = None
+                
+                if use_fifo_matching:
+                    # FIFO matching by symbol
+                    if symbol in symbol_entry_queue and symbol_entry_queue[symbol]:
+                        entry_data = symbol_entry_queue[symbol].pop(0)
+                else:
+                    # Direct position_id matching
+                    if position_key in positions_by_ticket:
+                        entry_data = positions_by_ticket[position_key]
+                        del positions_by_ticket[position_key]
+                
+                if entry_data:
+                    open_time = entry_data["open_time"]
                     close_time = deal_time
                     
-                    # Check if held overnight
-                    # Overnight = opened before force_flat on day N, closed after market open on day N+1
+                    # Check if held overnight (different calendar days)
                     open_date = open_time.date()
                     close_date = close_time.date()
                     
                     if close_date > open_date:
-                        # Position was held overnight
                         overnight_count += 1
-                        logger.warning(f"⚠️ OVERNIGHT BREACH: Ticket {ticket} ({positions_by_ticket[ticket].get('symbol')})"
-                                      f" opened {open_time.isoformat()} closed {close_time.isoformat()}")
-                    elif close_date == open_date:
-                        # Same day - check if past force flat time
-                        force_flat_datetime = datetime(
-                            open_time.year, open_time.month, open_time.day,
-                            force_flat_hour, force_flat_minute, tzinfo=timezone.utc
-                        )
-                        if open_time < force_flat_datetime and close_time > force_flat_datetime:
-                            # Opened before force flat, closed after (same day but late)
-                            # This is technically OK but very close to breach
-                            pass
-                    
-                    del positions_by_ticket[ticket]
-        
-        # Any positions still open (not closed in the deals) might be overnight violations
-        # But we can't determine this without current position data
+                        logger.debug(f"⚠️ OVERNIGHT BREACH: {symbol} opened {open_time.isoformat()} closed {close_time.isoformat()}")
         
         return overnight_count
     

@@ -18,13 +18,20 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 ### Completed Features (Dec 2025 - Mar 2026)
 
 #### Trading Hours Compliance - Day Trading Rules (Mar 4, 2026) ✅
-- **Feature:** Strict day-trading-only compliance enforcement
+- **Feature:** Strict day-trading-only compliance enforcement with full penalty integration
 - **FIDUS Rule:** NO overnight positions allowed - all trades must be closed by force_flat_time
+- **Bug Fixes Applied:**
+  1. Fixed FIFO matching - deals now sorted by time for accurate entry/exit pairing
+  2. Fixed risk policy merge - defaults now properly applied when DB values missing
+  3. Fixed overnight detection in `_count_overnight_breaches` - now uses FIFO matching
+  4. Fixed date filtering - fallback to historical data when no recent trades
 - **Components Built:**
   1. **Overnight Breach Detection:**
      - Detects positions held past midnight (different calendar days)
+     - Uses FIFO matching by symbol when position_id not available
      - Penalty: -15 points per breach (cap -45)
      - Logged in compliance_details.trading_hours.overnight_violations
+     - **Now properly included in Risk Control Score**
   2. **Late Trade Detection:**
      - Detects trades closed after 21:50 UTC (force_flat_time)
      - Shows in Active Risk Alerts as WARNING severity
@@ -42,21 +49,22 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
      - Shows 21:50 UTC (16:50 NY) force flat time
      - Breaches count and COMPLIANT/NON-COMPLIANT status
      - Overnight Violations table (if any)
+- **Verified Results:**
+  - Account 2210: 332 trades, 213 overnight, Score 0 (Critical), -45 penalty
+  - Account 2217: 693 trades, 0 overnight, Score 100 (Strong), COMPLIANT
+  - Account 886557: 79 trades, 18 overnight, Score 55 (Weak), -45 penalty
 - **API Response Structure:**
   - `compliance_details.trading_hours.overnight_positions_found`
   - `compliance_details.trading_hours.late_trades_found`
   - `compliance_details.trading_hours.force_flat_time`
   - `compliance_details.trading_hours.status` (COMPLIANT/NON-COMPLIANT)
   - `compliance_details.trading_hours.penalty_applied`
-  - `compliance_details.trading_hours.overnight_violations[]`
-  - `compliance_details.trading_hours.late_trade_violations[]`
+  - `risk_control_score.breach_summary` now includes "Overnight breaches: X (-Y)"
 - **Test Coverage:**
   - `/app/backend/tests/test_trading_hours_compliance.py` - 11 tests (all passing)
-  - API endpoint validation, overnight detection logic, penalty calculations
 - **Files Modified:**
-  - `/app/backend/services/hull_risk_engine.py` - Lines 1507-1708: compliance logic
-  - `/app/frontend/src/components/LiveDemoAnalytics.js` - Lines 1872-1982: UI display
-- **Status:** COMPLETE - 100% test pass rate (11/11 backend + all frontend UI verified)
+  - `/app/backend/services/hull_risk_engine.py` - get_deals_for_account, get_risk_policy, _count_overnight_breaches, FIFO matching
+- **Status:** COMPLETE - 100% test pass rate, both Trading Analytics and Demo Analytics verified
 
 #### Lucrum Wallet & Capital Allocation Management (Mar 3, 2026) ✅
 - **Feature:** Track unallocated capital during high volatility periods
