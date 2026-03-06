@@ -20,7 +20,7 @@ from pymongo import MongoClient
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-risk-deep.preview.emergentagent.com"
+BACKEND_URL = "https://risk-engine-hub-1.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

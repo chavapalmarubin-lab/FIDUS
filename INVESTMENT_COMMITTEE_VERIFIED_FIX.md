@@ -22,7 +22,7 @@
 ```python
 cors_origins = [
     "https://fidus-investment-platform.onrender.com",  # ✅ PRESENT
-    "https://fidus-risk-deep.preview.emergentagent.com",
+    "https://risk-engine-hub-1.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:3001"
 ]

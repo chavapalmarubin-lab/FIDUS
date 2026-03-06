@@ -236,6 +236,97 @@ async def rename_manager(old_name: str, new_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+from pydantic import BaseModel
+
+class AllocationDateUpdate(BaseModel):
+    account: int
+    allocation_start_date: str  # ISO format date string
+
+@router.post("/accounts/allocation-date")
+async def update_allocation_start_date(data: AllocationDateUpdate):
+    """
+    Update the allocation start date for an account.
+    This date is used to calculate PnL from the time of funding.
+    """
+    try:
+        db = await get_database()
+        
+        # Parse the date
+        try:
+            parsed_date = datetime.fromisoformat(data.allocation_start_date.replace('Z', '+00:00'))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)")
+        
+        # Update the account
+        result = await db.mt5_accounts.update_one(
+            {"account": data.account},
+            {"$set": {
+                "allocation_start_date": parsed_date,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail=f"Account {data.account} not found")
+        
+        logger.info(f"✅ Updated allocation_start_date for account {data.account} to {parsed_date}")
+        
+        return {
+            "success": True,
+            "message": f"Allocation start date updated for account {data.account}",
+            "allocation_start_date": parsed_date.isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error updating allocation date: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/managers/allocation-date")
+async def update_manager_allocation_date(manager_name: str, allocation_start_date: str):
+    """
+    Update the allocation start date for all accounts assigned to a manager.
+    """
+    try:
+        db = await get_database()
+        
+        # Parse the date
+        try:
+            parsed_date = datetime.fromisoformat(allocation_start_date.replace('Z', '+00:00'))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format (YYYY-MM-DD)")
+        
+        # Update all accounts for this manager
+        result = await db.mt5_accounts.update_many(
+            {"manager_name": manager_name},
+            {"$set": {
+                "allocation_start_date": parsed_date,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail=f"No accounts found for manager '{manager_name}'")
+        
+        logger.info(f"✅ Updated allocation_start_date for manager '{manager_name}' - {result.modified_count} accounts updated")
+        
+        return {
+            "success": True,
+            "message": f"Allocation start date updated for {result.modified_count} accounts",
+            "manager_name": manager_name,
+            "allocation_start_date": parsed_date.isoformat(),
+            "accounts_updated": result.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error updating manager allocation date: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/derived/money-managers")
 async def get_money_managers_derived():
     """
@@ -270,6 +361,7 @@ async def get_money_managers_derived():
                     "balance": "$balance",
                     "equity": "$equity",
                     "initial_allocation": "$initial_allocation",
+                    "allocation_start_date": "$allocation_start_date",
                     "status": "$status"
                 }},
                 "total_allocation": {"$sum": "$initial_allocation"},
@@ -280,7 +372,9 @@ async def get_money_managers_derived():
                 "brokers": {"$addToSet": "$broker"},
                 "active_accounts": {
                     "$sum": {"$cond": [{"$eq": ["$status", "active"]}, 1, 0]}
-                }
+                },
+                # Get earliest allocation date for the manager
+                "earliest_allocation_date": {"$min": "$allocation_start_date"}
             }},
             # Join with money_managers collection for metadata ONLY
             {"$lookup": {
@@ -324,9 +418,14 @@ async def get_money_managers_derived():
                     "account": acc.get('account'),
                     "name": f"{acc.get('fund_type', 'Unknown')} - {acc.get('broker', 'Unknown')}",
                     "allocation": acc.get('initial_allocation', 0) or 0,
+                    "allocation_start_date": acc.get('allocation_start_date'),
                     "balance": acc.get('balance', 0) or 0,
                     "equity": acc.get('equity', 0) or 0
                 })
+            
+            # Get earliest allocation date (for display at manager level)
+            earliest_alloc_date = manager.get('earliest_allocation_date')
+            allocation_start_date_str = earliest_alloc_date.isoformat() if earliest_alloc_date else None
             
             manager_data[manager_name] = {
                 "manager_name": manager_name,
@@ -338,6 +437,7 @@ async def get_money_managers_derived():
                 "assigned_accounts": manager['accounts'],  # Frontend expects this field
                 "account_details": account_details,  # Frontend expects this for displaying account list
                 "total_allocation": allocation,
+                "allocation_start_date": allocation_start_date_str,  # Earliest allocation date for the manager
                 "total_balance": balance,
                 "total_equity": equity,
                 "total_pnl": pnl,

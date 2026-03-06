@@ -17,6 +17,30 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Money Manager Allocation Start Date Feature (Mar 6, 2026) ✅
+- **Feature:** Track allocation start dates for money managers to evaluate PnL from time of funding
+- **Components Built:**
+  1. **Backend API:**
+     - Updated `/api/v2/derived/money-managers` to include `allocation_start_date` field
+     - New endpoint: `POST /api/v2/accounts/allocation-date` - Update single account's date
+     - New endpoint: `POST /api/v2/managers/allocation-date` - Update all accounts for a manager
+  2. **Frontend Display:**
+     - Added "Allocation Date" field on Money Manager cards with calendar icon
+     - Added "Alloc Date" column in Manager Comparison Table
+     - Added edit functionality in manager details modal with date picker
+- **Files Modified:**
+  - `/app/backend/routes/single_source_api.py` - API endpoints and aggregation pipeline
+  - `/app/frontend/src/components/MoneyManagersDashboard.js` - UI components
+- **Status:** COMPLETE - UI displays correctly, edit functionality working
+
+#### Trading Statistics Fix - Demo Analytics (Mar 6, 2026) ✅
+- **Bug:** "Trading Statistics" section in Deep Dive tab was showing all zeros
+- **Root Cause:** `live_demo_analytics_service.py` only checked `mt5_deals` collection, but demo accounts may have deals in `mt5_deals_history`
+- **Fix:** Updated service to check both collections and filter out non-trading operations
+- **Files Modified:**
+  - `/app/backend/services/live_demo_analytics_service.py` - Added fallback to mt5_deals_history
+- **Status:** COMPLETE - Trading statistics now showing correct data (500 total trades, 174 wins, etc.)
+
 #### Trading Hours Compliance - Day Trading Rules (Mar 4, 2026) ✅
 - **Feature:** Strict day-trading-only compliance enforcement with full penalty integration
 - **FIDUS Rule:** NO overnight positions allowed - all trades must be closed by force_flat_time
@@ -410,11 +434,12 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 ### P1
 - [ ] Fix root cause in agent creation script to properly hash passwords
 - [ ] Fix login for other affected referral agents
+- [ ] Create backend regression tests for data contamination bug
 
 ### P2
 - [ ] Enable live data sync for VIKING CORE & PRO strategies
 - [ ] Verify pagination on VIKING "Orders" tab with large datasets
-- [ ] Refactor VikingDashboard.js into smaller components
+- [ ] Refactor VikingDashboard.js, CashFlowManagement.js, LiveDemoAnalytics.js into smaller components
 - [ ] Address Lucrum MT5 Bridge duplicate key errors
 - [ ] Backend notification system for Risk Alerts (email, push)
 

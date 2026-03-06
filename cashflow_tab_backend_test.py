@@ -25,7 +25,7 @@ from typing import Dict, Any, List, Optional
 class CashFlowTabTester:
     def __init__(self):
         # Use the frontend URL from .env file
-        self.base_url = "https://fidus-risk-deep.preview.emergentagent.com/api"
+        self.base_url = "https://risk-engine-hub-1.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.admin_token = None
         self.test_results = []

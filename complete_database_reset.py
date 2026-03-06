@@ -47,7 +47,7 @@ class DatabaseReset:
             raise
         
         # API configuration
-        self.base_url = "https://fidus-risk-deep.preview.emergentagent.com"
+        self.base_url = "https://risk-engine-hub-1.preview.emergentagent.com"
         self.admin_token = None
     
     def get_admin_token(self):

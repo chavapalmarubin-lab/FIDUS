@@ -18,7 +18,8 @@ import {
   RefreshCw,
   Plus,
   ExternalLink,
-  Activity
+  Activity,
+  Calendar
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import apiAxios from "../utils/apiAxios";
@@ -35,6 +36,11 @@ const MoneyManagersDashboard = () => {
   const [mt5Performance, setMt5Performance] = useState([]);
   const [mt5Loading, setMt5Loading] = useState(false);
   const [mt5Period, setMt5Period] = useState('30d'); // 7d, 30d, 90d
+  
+  // Allocation date edit state
+  const [editingAllocationDate, setEditingAllocationDate] = useState(false);
+  const [newAllocationDate, setNewAllocationDate] = useState('');
+  const [savingDate, setSavingDate] = useState(false);
 
   useEffect(() => {
     fetchManagers();
@@ -94,6 +100,38 @@ const MoneyManagersDashboard = () => {
     fetchMT5Performance();
   }, [mt5Period]);
 
+  // Save allocation date for a manager
+  const saveAllocationDate = async (managerName) => {
+    if (!newAllocationDate) {
+      alert('Please select a date');
+      return;
+    }
+    
+    setSavingDate(true);
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/v2/managers/allocation-date?manager_name=${encodeURIComponent(managerName)}&allocation_start_date=${newAllocationDate}`,
+        { method: 'POST' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Allocation date saved:', data);
+        // Refresh managers data
+        fetchManagers();
+        setEditingAllocationDate(false);
+        setNewAllocationDate('');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to save: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error saving allocation date:', err);
+      alert('Failed to save allocation date');
+    } finally {
+      setSavingDate(false);
+    }
+  };
 
   // PHASE 3: Mock data generator REMOVED - using real API data only
 
@@ -108,6 +146,20 @@ const MoneyManagersDashboard = () => {
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(2)}%`;
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Not set';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch {
+      return 'Not set';
+    }
   };
 
   const getExecutionTypeIcon = (type) => {
@@ -370,6 +422,17 @@ const MoneyManagersDashboard = () => {
                           </span>
                         </div>
                         
+                        {/* Allocation Start Date */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            Allocation Date:
+                          </span>
+                          <span className="text-purple-400 font-medium">
+                            {formatDate(manager.allocation_start_date)}
+                          </span>
+                        </div>
+                        
                         {/* NEW: Withdrawals */}
                         <div className="flex items-center justify-between">
                           <span className="text-slate-400 text-sm">Withdrawals:</span>
@@ -476,10 +539,10 @@ const MoneyManagersDashboard = () => {
                     <tr className="border-b border-slate-600">
                       <th className="text-left text-slate-400 font-medium py-3">Manager</th>
                       <th className="text-left text-slate-400 font-medium py-3">Execution</th>
+                      <th className="text-center text-slate-400 font-medium py-3">Alloc Date</th>
                       <th className="text-right text-slate-400 font-medium py-3">Accounts</th>
                       <th className="text-right text-slate-400 font-medium py-3">Allocated</th>
                       <th className="text-right text-slate-400 font-medium py-3">Equity</th>
-                      <th className="text-right text-slate-400 font-medium py-3">Withdrawals</th>
                       <th className="text-right text-slate-400 font-medium py-3">TRUE P&L</th>
                       <th className="text-right text-slate-400 font-medium py-3">Win Rate</th>
                       <th className="text-right text-slate-400 font-medium py-3">PF</th>
@@ -511,6 +574,9 @@ const MoneyManagersDashboard = () => {
                               {manager.execution_type === 'copy_trade' ? 'Copy' : 'MAM'}
                             </Badge>
                           </td>
+                          <td className="py-4 text-center text-purple-400 text-sm">
+                            {formatDate(manager.allocation_start_date)}
+                          </td>
                           <td className="py-4 text-right text-white">
                             {manager.assigned_accounts?.length || 0}
                           </td>
@@ -519,9 +585,6 @@ const MoneyManagersDashboard = () => {
                           </td>
                           <td className="py-4 text-right text-cyan-400 font-medium">
                             {formatCurrency(manager.total_equity || 0)}
-                          </td>
-                          <td className="py-4 text-right text-blue-400 font-medium">
-                            {formatCurrency(performance.total_withdrawals || 0)}
                           </td>
                           <td className={`py-4 text-right font-medium ${
                             performance.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'
@@ -610,6 +673,64 @@ const MoneyManagersDashboard = () => {
                       <Badge className={`${getRiskProfileColor(selectedManager.risk_profile)} bg-transparent border`}>
                         {selectedManager.risk_profile}
                       </Badge>
+                    </div>
+                    
+                    {/* Allocation Start Date - Editable */}
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-700">
+                      <span className="text-slate-400 flex items-center">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        Allocation Start Date:
+                      </span>
+                      {editingAllocationDate ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="date"
+                            value={newAllocationDate}
+                            onChange={(e) => setNewAllocationDate(e.target.value)}
+                            className="px-2 py-1 bg-slate-700 border border-slate-600 text-white text-sm rounded"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => saveAllocationDate(selectedManager.manager_name)}
+                            disabled={savingDate}
+                            className="bg-green-600 hover:bg-green-700 text-white h-7"
+                          >
+                            {savingDate ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingAllocationDate(false);
+                              setNewAllocationDate('');
+                            }}
+                            className="text-white h-7"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-purple-400 font-medium">
+                            {formatDate(selectedManager.allocation_start_date)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingAllocationDate(true);
+                              // Pre-fill with existing date if available
+                              if (selectedManager.allocation_start_date) {
+                                const d = new Date(selectedManager.allocation_start_date);
+                                setNewAllocationDate(d.toISOString().split('T')[0]);
+                              }
+                            }}
+                            className="text-cyan-400 h-7 px-2"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

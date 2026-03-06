@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL - Using the URL from frontend/.env
-BACKEND_URL = "https://fidus-risk-deep.preview.emergentagent.com/api"
+BACKEND_URL = "https://risk-engine-hub-1.preview.emergentagent.com/api"
 
 # Test Configuration
 TEST_CLIENT_ID = "client_003"  # Salvador Palma

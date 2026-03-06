@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 
 # Backend URL Configuration
-BACKEND_URL = "https://fidus-risk-deep.preview.emergentagent.com/api"
+BACKEND_URL = "https://risk-engine-hub-1.preview.emergentagent.com/api"
 
 class AlejandroDiagnostic:
     def __init__(self):

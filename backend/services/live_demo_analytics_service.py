@@ -166,9 +166,37 @@ class LiveDemoAnalyticsService:
             return_pct = (total_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
             
             # Get deal history for risk metrics
+            # Check both mt5_deals AND mt5_deals_history (demo accounts may use either)
             deals = await self.db.mt5_deals.find({
                 "account": account_num
             }).sort("time", -1).limit(500).to_list(length=500)
+            
+            # If no deals in primary collection, check mt5_deals_history
+            if not deals:
+                logger.info(f"No deals in mt5_deals for account {account_num}, checking mt5_deals_history...")
+                deals = await self.db.mt5_deals_history.find({
+                    "account": account_num
+                }).sort("time", -1).limit(500).to_list(length=500)
+                if deals:
+                    logger.info(f"Found {len(deals)} deals in mt5_deals_history for account {account_num}")
+            
+            # Filter out non-trading operations (deposits/withdrawals)
+            trading_deals = []
+            for deal in deals:
+                symbol = deal.get("symbol", "")
+                deal_type = deal.get("type", 0)
+                comment = deal.get("comment", "").lower()
+                
+                # Skip balance operations (deposits/withdrawals)
+                if not symbol and deal_type == 2 and ("deposit" in comment or "withdraw" in comment):
+                    continue
+                # Skip deals without a symbol (non-trading operations)
+                if not symbol:
+                    continue
+                    
+                trading_deals.append(deal)
+            
+            deals = trading_deals
             
             # Calculate trading statistics
             total_trades = len(deals)

@@ -22,7 +22,7 @@ import os
 from pymongo import MongoClient
 
 class SalvadorVTMarketsCorrection:
-    def __init__(self, base_url="https://fidus-risk-deep.preview.emergentagent.com"):
+    def __init__(self, base_url="https://risk-engine-hub-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
