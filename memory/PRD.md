@@ -22,20 +22,37 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 - **Thresholds Implemented:**
   - **5% Drawdown = WARNING** (-30 points, reduce risk)
   - **10% Drawdown = CRITICAL/STOP** (-60 points, review strategy immediately)
+- **CRITICAL FIX - Proper Drawdown Calculation:**
+  - **Problem:** Previous implementation showed 0% drawdown for all strategies (incorrect)
+  - **Root Cause:** Was comparing `current equity` to `max(initial, current)` which always = 0 when profitable
+  - **Solution:** Now builds EQUITY CURVE from deal history and calculates:
+    - **Maximum Historical Drawdown:** Largest peak-to-trough decline ever recorded
+    - **Current Drawdown:** Current equity vs the highest equity ever reached
+    - Uses the WORSE of the two for risk scoring
 - **Backend Changes:**
   1. Updated `DEFAULT_RISK_POLICY` to include `drawdown_warning_pct` (5%) and `drawdown_critical_pct` (10%)
   2. Redesigned `RISK_SCORE_PENALTIES` to heavily weight drawdown breaches
-  3. Refactored `calculate_risk_control_score()` to evaluate drawdown FIRST before other factors
+  3. Refactored `calculate_risk_control_score()` to build equity curve and calculate true max drawdown
   4. Updated `_calculate_drawdown_compliance()` with new status levels: healthy/caution/warning/critical
-  5. Added new `drawdown` object in API response with all relevant metrics
+  5. Added `max_pct`, `current_pct`, and `effective_pct` to drawdown API response
+  6. Fixed `live_demo_analytics_service.py` to calculate max drawdown from equity curve
 - **Frontend Changes:**
-  1. Added prominent **Drawdown Alert Banner** at top of Risk Limits section
-  2. Updated **Risk Policy card** to show DD Warning (5%) and DD Critical (10%) first
-  3. Added **DRAWDOWN (Primary Risk Metric)** as first card in Compliance Summary spanning 2 columns
-  4. Color-coded status indicators: Green (healthy), Yellow (caution), Orange (warning), Red (critical)
+  1. Added prominent **Drawdown Alert Banner** showing MAX drawdown prominently
+  2. Shows "(Current: X%)" below the max drawdown value
+  3. Updated **Risk Policy card** to show DD Warning (5%) and DD Critical (10%) first
+  4. Added **DRAWDOWN (Primary Risk Metric)** as first card in Compliance Summary
+  5. Shows both Current and Max drawdown values with appropriate coloring
+  6. Status correctly shows CRITICAL when max drawdown exceeds threshold
 - **Files Modified:**
-  - `/app/backend/services/hull_risk_engine.py` - Core risk scoring logic
+  - `/app/backend/services/hull_risk_engine.py` - Equity curve drawdown calculation
+  - `/app/backend/services/live_demo_analytics_service.py` - Equity curve drawdown calculation
   - `/app/frontend/src/components/LiveDemoAnalytics.js` - UI components
+- **Verified Results:**
+  - GOLD DAY TRADING: Max 11.65% (CRITICAL), Current 2.15%
+  - CRYPTO BITCOIN: Max 0.05% (HEALTHY)
+  - JOEL ALVES NASDAQ: Max 2.03% (HEALTHY)
+  - JOEL ALVES GOLD: Max 10.42% (CRITICAL), Current 6.6%
+  - UNO14: Max 2.26% (HEALTHY), Current 4.88%
 - **Status:** COMPLETE - Verified via API and screenshots
 
 #### Money Manager Allocation Start Date Feature (Mar 6, 2026) ✅

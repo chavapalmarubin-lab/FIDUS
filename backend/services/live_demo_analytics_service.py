@@ -209,13 +209,59 @@ class LiveDemoAnalyticsService:
             gross_loss = abs(sum(d.get("profit", 0) for d in deals if d.get("profit", 0) < 0))
             profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else (999.99 if gross_profit > 0 else 0)
             
-            # Calculate drawdown (simplified)
-            max_drawdown_pct = account.get("max_drawdown_pct", 0)
-            if not max_drawdown_pct and initial_allocation > 0:
-                # Calculate from equity vs peak
-                peak_equity = max(initial_allocation, current_equity)
-                drawdown = peak_equity - current_equity
-                max_drawdown_pct = (drawdown / peak_equity * 100) if peak_equity > 0 else 0
+            # ================================================================
+            # CALCULATE TRUE MAXIMUM DRAWDOWN FROM EQUITY CURVE
+            # This is the paramount risk metric for leveraged day trading
+            # ================================================================
+            max_drawdown_pct = 0.0
+            current_drawdown_pct = 0.0
+            peak_equity = initial_allocation
+            
+            if deals and initial_allocation > 0:
+                # Sort deals chronologically (oldest first) to build equity curve
+                sorted_deals = sorted(deals, key=lambda d: d.get("time", 0))
+                
+                # Build equity curve by accumulating profits
+                equity_curve = [initial_allocation]
+                running_equity = initial_allocation
+                
+                for deal in sorted_deals:
+                    profit = deal.get("profit", 0)
+                    swap = deal.get("swap", 0)
+                    commission = deal.get("commission", 0)
+                    
+                    # Add all P&L components
+                    running_equity += profit + swap + commission
+                    equity_curve.append(running_equity)
+                
+                # Calculate maximum drawdown from equity curve
+                running_peak = initial_allocation
+                max_dd_amount = 0
+                
+                for equity_point in equity_curve:
+                    # Update peak if we have a new high
+                    if equity_point > running_peak:
+                        running_peak = equity_point
+                    
+                    # Calculate drawdown from peak
+                    dd_amount = running_peak - equity_point
+                    if dd_amount > max_dd_amount:
+                        max_dd_amount = dd_amount
+                
+                # Convert to percentage
+                if running_peak > 0:
+                    max_drawdown_pct = (max_dd_amount / running_peak) * 100
+                
+                # Also calculate current drawdown from the highest point
+                peak_equity = running_peak
+                if peak_equity > 0 and current_equity > 0:
+                    current_drawdown_pct = max(0, ((peak_equity - current_equity) / peak_equity) * 100)
+                
+                logger.info(f"Account {account_num}: Peak=${peak_equity:.2f}, Current=${current_equity:.2f}, Max DD={max_drawdown_pct:.2f}%, Current DD={current_drawdown_pct:.2f}%")
+            
+            # Fallback: if we couldn't calculate from deals, use stored value or estimate
+            if max_drawdown_pct == 0 and account.get("max_drawdown_pct"):
+                max_drawdown_pct = account.get("max_drawdown_pct", 0)
             
             # Calculate risk-adjusted metrics (simplified)
             # These would normally require daily returns data
@@ -236,6 +282,8 @@ class LiveDemoAnalyticsService:
                 "win_rate": round(win_rate, 2),
                 "profit_factor": round(min(profit_factor, 999.99), 2),
                 "max_drawdown_pct": round(max_drawdown_pct, 2),
+                "current_drawdown_pct": round(current_drawdown_pct, 2),
+                "peak_equity": round(peak_equity, 2),
                 "sharpe_ratio": round(sharpe_ratio, 2),
                 "sortino_ratio": round(sortino_ratio, 2),
                 "calmar_ratio": round(calmar_ratio, 2),

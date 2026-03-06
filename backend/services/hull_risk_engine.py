@@ -815,44 +815,92 @@ class HullRiskEngine:
             
             # ============================================================
             # STEP 1: DRAWDOWN CALCULATION - THE PRIMARY RISK METRIC
+            # Calculate TRUE Maximum Drawdown from equity curve (deals)
             # ============================================================
             current_dd_pct = 0
-            if peak_equity > 0:
-                current_dd_pct = max(0, ((peak_equity - equity) / peak_equity) * 100)
-            elif initial_allocation > 0:
-                current_dd_pct = max(0, ((initial_allocation - equity) / initial_allocation) * 100)
+            max_dd_pct = 0
+            calculated_peak_equity = peak_equity
+            
+            # Build equity curve from deals to calculate real drawdown
+            if deals and initial_allocation > 0:
+                # Sort deals chronologically (oldest first)
+                sorted_deals = sorted(deals, key=lambda d: d.get("time", 0))
+                
+                # Build equity curve by accumulating profits
+                running_equity = initial_allocation
+                running_peak = initial_allocation
+                max_dd_amount = 0
+                
+                for deal in sorted_deals:
+                    profit = deal.get("profit", 0)
+                    swap = deal.get("swap", 0)
+                    commission = deal.get("commission", 0)
+                    
+                    # Add all P&L components
+                    running_equity += profit + swap + commission
+                    
+                    # Update peak if we have a new high
+                    if running_equity > running_peak:
+                        running_peak = running_equity
+                    
+                    # Calculate drawdown from peak
+                    dd_amount = running_peak - running_equity
+                    if dd_amount > max_dd_amount:
+                        max_dd_amount = dd_amount
+                
+                # Calculate max drawdown percentage
+                if running_peak > 0:
+                    max_dd_pct = (max_dd_amount / running_peak) * 100
+                
+                # Use the calculated peak
+                calculated_peak_equity = running_peak
+                
+                # Current drawdown = peak - current equity
+                if calculated_peak_equity > 0 and equity > 0:
+                    current_dd_pct = max(0, ((calculated_peak_equity - equity) / calculated_peak_equity) * 100)
+                
+                logger.info(f"Account {account}: Peak=${calculated_peak_equity:.2f}, Current=${equity:.2f}, Max DD={max_dd_pct:.2f}%, Current DD={current_dd_pct:.2f}%")
+            else:
+                # Fallback: simple calculation from stored values
+                if peak_equity > 0:
+                    current_dd_pct = max(0, ((peak_equity - equity) / peak_equity) * 100)
+                elif initial_allocation > 0:
+                    current_dd_pct = max(0, ((initial_allocation - equity) / initial_allocation) * 100)
+            
+            # Use the WORSE of current drawdown vs max historical drawdown
+            effective_dd_pct = max(current_dd_pct, max_dd_pct)
             
             # Get drawdown thresholds from policy
             dd_warning_threshold = risk_policy.get("drawdown_warning_pct", 5.0)
             dd_critical_threshold = risk_policy.get("drawdown_critical_pct", 10.0)
             
-            # Determine drawdown status
-            if current_dd_pct >= dd_critical_threshold:
+            # Determine drawdown status based on BOTH current and max drawdown
+            if effective_dd_pct >= dd_critical_threshold:
                 drawdown_status = "critical"
                 drawdown_penalty = RISK_SCORE_PENALTIES["drawdown_critical_breach"]
                 score -= drawdown_penalty
-                breach_details.insert(0, f"⛔ CRITICAL DRAWDOWN: {current_dd_pct:.1f}% (threshold: {dd_critical_threshold}%) (-{drawdown_penalty})")
+                breach_details.insert(0, f"⛔ CRITICAL DRAWDOWN: {effective_dd_pct:.1f}% (threshold: {dd_critical_threshold}%) (-{drawdown_penalty})")
                 drawdown_alerts.append({
                     "severity": "CRITICAL",
-                    "message": f"STOP TRADING - Drawdown at {current_dd_pct:.1f}% exceeds {dd_critical_threshold}% limit. Review strategy immediately.",
+                    "message": f"STOP TRADING - Drawdown at {effective_dd_pct:.1f}% exceeds {dd_critical_threshold}% limit. Review strategy immediately.",
                     "action_required": "STOP"
                 })
-            elif current_dd_pct >= dd_warning_threshold:
+            elif effective_dd_pct >= dd_warning_threshold:
                 drawdown_status = "warning"
                 drawdown_penalty = RISK_SCORE_PENALTIES["drawdown_warning_breach"]
                 score -= drawdown_penalty
-                breach_details.insert(0, f"⚠️ WARNING DRAWDOWN: {current_dd_pct:.1f}% (threshold: {dd_warning_threshold}%) (-{drawdown_penalty})")
+                breach_details.insert(0, f"⚠️ WARNING DRAWDOWN: {effective_dd_pct:.1f}% (threshold: {dd_warning_threshold}%) (-{drawdown_penalty})")
                 drawdown_alerts.append({
                     "severity": "WARNING",
-                    "message": f"Drawdown at {current_dd_pct:.1f}% - approaching critical level. Reduce position sizes.",
+                    "message": f"Drawdown at {effective_dd_pct:.1f}% - approaching critical level. Reduce position sizes.",
                     "action_required": "REDUCE_RISK"
                 })
-            elif current_dd_pct >= 3.0:
+            elif effective_dd_pct >= 3.0:
                 drawdown_status = "caution"
                 # No penalty, but flag for awareness
                 drawdown_alerts.append({
                     "severity": "CAUTION",
-                    "message": f"Drawdown at {current_dd_pct:.1f}% - monitor closely.",
+                    "message": f"Drawdown at {effective_dd_pct:.1f}% - monitor closely.",
                     "action_required": "MONITOR"
                 })
             else:
@@ -951,11 +999,13 @@ class HullRiskEngine:
                 # ============================================================
                 "drawdown": {
                     "current_pct": round(current_dd_pct, 2),
+                    "max_pct": round(max_dd_pct, 2),  # Maximum historical drawdown
+                    "effective_pct": round(effective_dd_pct, 2),  # Worse of current or max
                     "status": drawdown_status,
                     "warning_threshold": dd_warning_threshold,
                     "critical_threshold": dd_critical_threshold,
                     "alerts": drawdown_alerts,
-                    "peak_equity": peak_equity,
+                    "peak_equity": calculated_peak_equity,
                     "current_equity": equity,
                     "initial_allocation": initial_allocation,
                     "is_critical": drawdown_status == "critical",

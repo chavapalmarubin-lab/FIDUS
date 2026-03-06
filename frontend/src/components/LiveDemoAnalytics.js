@@ -1720,8 +1720,23 @@ export default function LiveDemoAnalytics() {
                           color: 'white',
                           fontFamily: 'monospace'
                         }}>
-                          {riskAnalysis.risk_control_score.drawdown.current_pct?.toFixed(2)}% Drawdown
+                          {/* Show Max DD if it triggered the alert, otherwise show Current DD */}
+                          {riskAnalysis.risk_control_score.drawdown.max_pct > riskAnalysis.risk_control_score.drawdown.current_pct ? (
+                            <>Max: {riskAnalysis.risk_control_score.drawdown.max_pct?.toFixed(2)}%</>
+                          ) : (
+                            <>{riskAnalysis.risk_control_score.drawdown.current_pct?.toFixed(2)}%</>
+                          )} Drawdown
                         </div>
+                        {/* Show both current and max if they differ */}
+                        {riskAnalysis.risk_control_score.drawdown.max_pct > riskAnalysis.risk_control_score.drawdown.current_pct && (
+                          <div style={{ 
+                            fontSize: '14px', 
+                            color: '#94a3b8',
+                            marginTop: '2px'
+                          }}>
+                            (Current: {riskAnalysis.risk_control_score.drawdown.current_pct?.toFixed(2)}%)
+                          </div>
+                        )}
                         {riskAnalysis.risk_control_score.drawdown.alerts?.[0]?.message && (
                           <div style={{ 
                             fontSize: '13px', 
@@ -1861,20 +1876,40 @@ export default function LiveDemoAnalytics() {
                                riskAnalysis.risk_control_score?.drawdown?.is_warning ? '#f97316' :
                                riskAnalysis.risk_control_score?.drawdown?.status === 'caution' ? '#eab308' : '#10b981'
                       }}>
-                        {riskAnalysis.risk_control_score?.drawdown?.current_pct?.toFixed(2) || '0.00'}%
+                        {/* Show the EFFECTIVE drawdown (max of current and historical max) */}
+                        {riskAnalysis.risk_control_score?.drawdown?.effective_pct?.toFixed(2) || 
+                         riskAnalysis.risk_control_score?.drawdown?.max_pct?.toFixed(2) ||
+                         riskAnalysis.risk_control_score?.drawdown?.current_pct?.toFixed(2) || '0.00'}%
                       </div>
-                      <div className="lda-compliance-detail">
-                        <span style={{ 
-                          fontWeight: 'bold',
-                          color: riskAnalysis.risk_control_score?.drawdown?.status === 'healthy' ? '#10b981' :
-                                 riskAnalysis.risk_control_score?.drawdown?.status === 'caution' ? '#eab308' :
-                                 riskAnalysis.risk_control_score?.drawdown?.is_warning ? '#f97316' : '#ef4444'
-                        }}>
-                          {riskAnalysis.risk_control_score?.components?.drawdown?.status || 'HEALTHY'}
-                        </span>
-                        <span style={{ marginLeft: '12px', color: '#94a3b8' }}>
-                          Warning: {riskAnalysis.risk_policy?.drawdown_warning_pct || 5}% | Critical: {riskAnalysis.risk_policy?.drawdown_critical_pct || 10}%
-                        </span>
+                      <div className="lda-compliance-detail" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div>
+                          <span style={{ color: '#94a3b8' }}>Current: </span>
+                          <span style={{ color: '#10b981', fontWeight: '500' }}>
+                            {riskAnalysis.risk_control_score?.drawdown?.current_pct?.toFixed(2) || '0.00'}%
+                          </span>
+                          <span style={{ color: '#94a3b8', marginLeft: '12px' }}>Max: </span>
+                          <span style={{ 
+                            fontWeight: '500',
+                            color: (riskAnalysis.risk_control_score?.drawdown?.max_pct || 0) >= 10 ? '#ef4444' :
+                                   (riskAnalysis.risk_control_score?.drawdown?.max_pct || 0) >= 5 ? '#f97316' : '#10b981'
+                          }}>
+                            {riskAnalysis.risk_control_score?.drawdown?.max_pct?.toFixed(2) || '0.00'}%
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ 
+                            fontWeight: 'bold',
+                            color: riskAnalysis.risk_control_score?.drawdown?.status === 'healthy' ? '#10b981' :
+                                   riskAnalysis.risk_control_score?.drawdown?.status === 'caution' ? '#eab308' :
+                                   riskAnalysis.risk_control_score?.drawdown?.status === 'warning' ? '#f97316' : '#ef4444'
+                          }}>
+                            {/* Use the main drawdown status, not the component status */}
+                            {riskAnalysis.risk_control_score?.drawdown?.status?.toUpperCase() || 'HEALTHY'}
+                          </span>
+                          <span style={{ marginLeft: '12px', color: '#64748b', fontSize: '12px' }}>
+                            Warn: {riskAnalysis.risk_policy?.drawdown_warning_pct || 5}% | Crit: {riskAnalysis.risk_policy?.drawdown_critical_pct || 10}%
+                          </span>
+                        </div>
                       </div>
                     </div>
 
