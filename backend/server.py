@@ -24102,6 +24102,41 @@ async def get_risk_control_score(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
+@api_router.get("/admin/risk-engine/drawdown-analysis/{account}")
+async def get_drawdown_analysis(
+    account: int,
+    period_days: int = 90,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    QUANTITATIVE DRAWDOWN TRIGGER ANALYSIS
+    ======================================
+    Identifies exactly which trades triggered drawdown events.
+    Critical for algorithm-driven funds to optimize bot parameters.
+    
+    Returns:
+    - Drawdown events (when DD exceeded thresholds)
+    - Triggering trades for each event (ticket, symbol, time, P&L)
+    - Pattern analysis (worst symbols, worst hours, position sizing issues)
+    - Bot optimization recommendations
+    
+    Use this to:
+    1. Send detailed reports to money managers
+    2. Identify systematic issues in trading algorithms
+    3. Generate parameter adjustments for bots
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        analysis = await engine.analyze_drawdown_triggers(account, period_days)
+        return analysis
+    except Exception as e:
+        logger.error(f"Error in drawdown analysis: {e}")
+        return {"success": False, "error": str(e)}
+
+
 @api_router.get("/admin/risk-engine/narrative")
 async def get_risk_profile_narrative(
     period_days: int = 30,

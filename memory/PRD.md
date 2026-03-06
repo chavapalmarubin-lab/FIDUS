@@ -55,6 +55,40 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
   - UNO14: Max 2.26% (HEALTHY), Current 4.88%
 - **Status:** COMPLETE - Verified via API and screenshots
 
+#### Quantitative Drawdown Trigger Analysis (Mar 6, 2026) ✅
+- **Feature:** Algorithm-driven analysis identifying exactly which trades triggered drawdowns, enabling bot optimization
+- **Purpose:** Allow money managers to reprogram bots based on data-driven insights
+- **Backend Implementation:**
+  1. New function `analyze_drawdown_triggers()` in hull_risk_engine.py
+  2. Builds equity curve from deal history to identify drawdown events
+  3. Pattern analysis: worst symbols, worst trading hours, position sizing, direction bias, losing streaks
+  4. Generates actionable bot recommendations with specific parameter suggestions
+  5. New API endpoint: `/api/admin/risk-engine/drawdown-analysis/{account}`
+- **Analysis Components:**
+  - **Drawdown Events:** Identifies when DD crossed warning/critical thresholds
+  - **Triggering Trades:** Lists exact trades that caused each drawdown (ticket, symbol, time, P&L)
+  - **Worst Symbols:** Ranks symbols by total losses (e.g., XAUUSD: 102 trades, $13,998 loss)
+  - **Dangerous Hours:** Identifies worst trading hours in UTC (e.g., 20:00 UTC: $3,105 loss)
+  - **Position Size Analysis:** Compares DD trade sizes to average sizes
+  - **Direction Bias:** BUY vs SELL loss analysis
+  - **Streak Analysis:** Consecutive loss detection
+- **Bot Recommendations Generated:**
+  - CRITICAL: `auto_close_dd_threshold: 5.0`
+  - HIGH: `max_position_xauusd: reduce by 50%`
+  - HIGH: `blocked_hours: [20, 14, 18]`
+  - HIGH: `max_consecutive_losses_before_pause: 3`
+  - MEDIUM: `sell_size_multiplier: 0.5`
+- **Frontend Display:**
+  - Summary stats (Critical/Warning events, trades analyzed)
+  - Bot optimization recommendations with parameter suggestions
+  - Pattern analysis grids (worst symbols, dangerous hours)
+  - Drawdown events timeline with triggering trade details
+- **Files Modified:**
+  - `/app/backend/services/hull_risk_engine.py` - Analysis functions
+  - `/app/backend/server.py` - New API endpoint
+  - `/app/frontend/src/components/LiveDemoAnalytics.js` - UI components
+- **Status:** COMPLETE - Fully functional quantitative analysis for bot optimization
+
 #### Money Manager Allocation Start Date Feature (Mar 6, 2026) ✅
 - **Feature:** Track allocation start dates for money managers to evaluate PnL from time of funding
 - **Components Built:**

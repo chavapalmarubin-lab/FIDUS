@@ -88,6 +88,10 @@ export default function LiveDemoAnalytics() {
   const [allocationResult, setAllocationResult] = useState(null);
   const [allocationLoading, setAllocationLoading] = useState(false);
   
+  // Drawdown Analysis State (Quant-driven)
+  const [drawdownAnalysis, setDrawdownAnalysis] = useState(null);
+  const [drawdownAnalysisLoading, setDrawdownAnalysisLoading] = useState(false);
+  
   const chatEndRef = useRef(null);
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -181,6 +185,11 @@ export default function LiveDemoAnalytics() {
   useEffect(() => {
     if (deepDiveManager && (activeTab === 'deepdive' || activeTab === 'risklimits')) {
       fetchRiskAnalysis(deepDiveManager.account);
+      // Also reset and fetch drawdown analysis when manager changes
+      setDrawdownAnalysis(null);
+      if (activeTab === 'risklimits') {
+        fetchDrawdownAnalysis(deepDiveManager.account);
+      }
     }
   }, [deepDiveManager, activeTab]);
 
@@ -294,6 +303,48 @@ export default function LiveDemoAnalytics() {
       console.error('Error calculating max lots:', err);
     }
   };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DRAWDOWN TRIGGER ANALYSIS (Quant-driven analysis for bot optimization)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const fetchDrawdownAnalysis = async (accountId) => {
+    if (!accountId) return;
+    
+    try {
+      setDrawdownAnalysisLoading(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/risk-engine/drawdown-analysis/${accountId}?period_days=90`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setDrawdownAnalysis(data);
+        console.log('Drawdown analysis loaded:', data);
+      } else {
+        console.error('Drawdown analysis error:', data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching drawdown analysis:', err);
+    } finally {
+      setDrawdownAnalysisLoading(false);
+    }
+  };
+
+  // Fetch drawdown analysis when risk limits tab is selected
+  useEffect(() => {
+    if (activeTab === 'riskLimits' && deepDiveManager?.account && !drawdownAnalysis) {
+      fetchDrawdownAnalysis(deepDiveManager.account);
+    }
+  }, [activeTab, deepDiveManager]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // AI STRATEGY ADVISOR FUNCTIONS
@@ -2009,6 +2060,200 @@ export default function LiveDemoAnalytics() {
                     </div>
                   </div>
                 )}
+
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {/* QUANTITATIVE DRAWDOWN ANALYSIS - FOR BOT OPTIMIZATION */}
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                <div className="lda-drawdown-analysis-section" data-testid="drawdown-analysis" style={{
+                  background: 'linear-gradient(135deg, #1e1e2e 0%, #252540 100%)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginTop: '20px',
+                  border: '1px solid rgba(139, 92, 246, 0.3)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h4 style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                      <BarChart3 size={20} />
+                      Quantitative Drawdown Analysis
+                      <span style={{ fontSize: '11px', background: '#7c3aed', padding: '2px 8px', borderRadius: '4px', color: 'white' }}>
+                        BOT OPTIMIZATION
+                      </span>
+                    </h4>
+                    <button 
+                      onClick={() => fetchDrawdownAnalysis(deepDiveManager?.account)}
+                      disabled={drawdownAnalysisLoading}
+                      style={{
+                        background: 'rgba(139, 92, 246, 0.2)',
+                        border: '1px solid #7c3aed',
+                        color: '#a78bfa',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      {drawdownAnalysisLoading ? 'Analyzing...' : 'Refresh Analysis'}
+                    </button>
+                  </div>
+                  
+                  {drawdownAnalysisLoading ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                      <Loader2 size={32} className="spin" style={{ marginBottom: '12px' }} />
+                      <p>Analyzing {deepDiveManager?.total_trades || 0} trades for drawdown triggers...</p>
+                    </div>
+                  ) : drawdownAnalysis ? (
+                    <div>
+                      {/* Summary Stats */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>{drawdownAnalysis.critical_events || 0}</div>
+                          <div style={{ fontSize: '11px', color: '#f87171' }}>CRITICAL Events</div>
+                        </div>
+                        <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316' }}>{drawdownAnalysis.warning_events || 0}</div>
+                          <div style={{ fontSize: '11px', color: '#fb923c' }}>WARNING Events</div>
+                        </div>
+                        <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>{drawdownAnalysis.total_deals_analyzed || 0}</div>
+                          <div style={{ fontSize: '11px', color: '#60a5fa' }}>Trades Analyzed</div>
+                        </div>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>{drawdownAnalysis.analysis_period_days || 90}</div>
+                          <div style={{ fontSize: '11px', color: '#34d399' }}>Days Period</div>
+                        </div>
+                      </div>
+
+                      {/* Bot Recommendations - PRIMARY */}
+                      {drawdownAnalysis.bot_recommendations?.length > 0 && (
+                        <div style={{ marginBottom: '20px' }}>
+                          <h5 style={{ color: '#fbbf24', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Zap size={16} />
+                            Bot Optimization Recommendations
+                          </h5>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {drawdownAnalysis.bot_recommendations.map((rec, i) => (
+                              <div key={i} style={{
+                                background: rec.priority === 'CRITICAL' ? 'rgba(239, 68, 68, 0.15)' :
+                                            rec.priority === 'HIGH' ? 'rgba(249, 115, 22, 0.15)' :
+                                            'rgba(59, 130, 246, 0.15)',
+                                border: `1px solid ${rec.priority === 'CRITICAL' ? '#ef4444' : rec.priority === 'HIGH' ? '#f97316' : '#3b82f6'}`,
+                                borderRadius: '8px',
+                                padding: '12px'
+                              }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                  <span style={{
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    background: rec.priority === 'CRITICAL' ? '#ef4444' : rec.priority === 'HIGH' ? '#f97316' : '#3b82f6',
+                                    color: 'white'
+                                  }}>
+                                    {rec.priority}
+                                  </span>
+                                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>{rec.category}</span>
+                                </div>
+                                <p style={{ color: '#e2e8f0', fontSize: '13px', margin: '0 0 6px 0' }}>{rec.recommendation}</p>
+                                {rec.parameter_suggestion && (
+                                  <code style={{
+                                    display: 'block',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    padding: '6px 10px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    color: '#a78bfa',
+                                    fontFamily: 'monospace'
+                                  }}>
+                                    {rec.parameter_suggestion}
+                                  </code>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pattern Analysis */}
+                      {drawdownAnalysis.pattern_analysis?.has_patterns && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                          {/* Worst Symbols */}
+                          <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '12px' }}>
+                            <h6 style={{ color: '#f87171', fontSize: '12px', marginBottom: '8px' }}>Worst Performing Symbols</h6>
+                            {drawdownAnalysis.pattern_analysis.worst_symbols?.slice(0, 3).map((s, i) => (
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{s.symbol}</span>
+                                <span style={{ color: '#f87171' }}>{s.loss_count} trades / ${s.total_loss?.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Worst Hours */}
+                          <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '12px' }}>
+                            <h6 style={{ color: '#fbbf24', fontSize: '12px', marginBottom: '8px' }}>Dangerous Trading Hours (UTC)</h6>
+                            {drawdownAnalysis.pattern_analysis.worst_trading_hours_utc?.slice(0, 3).map((h, i) => (
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{h.hour}:00 UTC</span>
+                                <span style={{ color: '#fbbf24' }}>{h.loss_count} trades / ${h.total_loss?.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Drawdown Events Timeline */}
+                      {drawdownAnalysis.drawdown_events?.length > 0 && (
+                        <div>
+                          <h5 style={{ color: '#94a3b8', marginBottom: '12px' }}>Drawdown Events Timeline</h5>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {drawdownAnalysis.drawdown_events.slice(0, 5).map((event, i) => (
+                              <div key={i} style={{
+                                background: event.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(249, 115, 22, 0.1)',
+                                border: `1px solid ${event.severity === 'CRITICAL' ? '#ef4444' : '#f97316'}`,
+                                borderRadius: '8px',
+                                padding: '12px'
+                              }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                  <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    background: event.severity === 'CRITICAL' ? '#ef4444' : '#f97316',
+                                    color: 'white'
+                                  }}>
+                                    {event.severity} #{event.event_id}
+                                  </span>
+                                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444' }}>
+                                    -{event.max_dd_pct?.toFixed(2)}%
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#94a3b8', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                  <div>Loss Amount: <span style={{ color: '#f87171' }}>${event.loss_amount?.toLocaleString()}</span></div>
+                                  <div>Trades in DD: <span style={{ color: '#fbbf24' }}>{event.total_trades_in_dd}</span></div>
+                                </div>
+                                {event.triggering_trades?.length > 0 && (
+                                  <div style={{ marginTop: '8px', fontSize: '11px' }}>
+                                    <div style={{ color: '#64748b', marginBottom: '4px' }}>Top Triggering Trades:</div>
+                                    {event.triggering_trades.slice(0, 3).map((t, ti) => (
+                                      <div key={ti} style={{ color: '#94a3b8', padding: '2px 0' }}>
+                                        • {t.symbol} {t.type} {t.volume} lots → <span style={{ color: '#f87171' }}>${t.total_pnl?.toFixed(2)}</span>
+                                        <span style={{ color: '#64748b' }}> (DD +{t.dd_contribution_pct}%)</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                      <p>Click "Refresh Analysis" to load drawdown trigger analysis</p>
+                    </div>
+                  )}
+                </div>
 
                 {/* ═══════════════════════════════════════════════════════════════════════ */}
                 {/* COMPLIANCE DETAILS TABLE (Expandable) */}

@@ -1036,6 +1036,414 @@ class HullRiskEngine:
             "error": error
         }
     
+    async def analyze_drawdown_triggers(
+        self,
+        account: int,
+        period_days: int = 90
+    ) -> Dict[str, Any]:
+        """
+        QUANTITATIVE DRAWDOWN ANALYSIS
+        ==============================
+        Identifies exactly which trades triggered drawdown events.
+        This is critical for algorithm-driven funds to optimize bot parameters.
+        
+        Returns:
+        - Drawdown events (when DD exceeded thresholds)
+        - Triggering trades for each event
+        - Pattern analysis (symbols, time of day, lot sizes, trade direction)
+        - Bot optimization recommendations
+        """
+        try:
+            risk_policy = await self.get_risk_policy(account)
+            dd_warning = risk_policy.get("drawdown_warning_pct", 5.0)
+            dd_critical = risk_policy.get("drawdown_critical_pct", 10.0)
+            
+            # Get account info
+            account_info = await self.db.mt5_accounts.find_one({"account": account})
+            if not account_info:
+                return {"success": False, "error": "Account not found"}
+            
+            initial_allocation = account_info.get("initial_allocation", 0)
+            if initial_allocation <= 0:
+                initial_allocation = account_info.get("equity", 100000)
+            
+            # Get all deals for the period
+            start_date = datetime.now(timezone.utc) - timedelta(days=period_days)
+            deals = await self.get_deals_for_account(account, start_date, max_deals=5000)
+            
+            if not deals:
+                return {"success": False, "error": "No deals found for analysis"}
+            
+            # Sort deals chronologically
+            sorted_deals = sorted(deals, key=lambda d: d.get("time", 0))
+            
+            # Build equity curve and identify drawdown events
+            running_equity = initial_allocation
+            running_peak = initial_allocation
+            peak_timestamp = None
+            
+            drawdown_events = []
+            current_dd_event = None
+            dd_triggering_trades = []
+            
+            # Track statistics for pattern analysis
+            all_dd_trades = []  # All trades that contributed to drawdowns
+            
+            for i, deal in enumerate(sorted_deals):
+                profit = deal.get("profit", 0)
+                swap = deal.get("swap", 0)
+                commission = deal.get("commission", 0)
+                total_pnl = profit + swap + commission
+                
+                prev_equity = running_equity
+                running_equity += total_pnl
+                
+                # Check if this is a new peak
+                if running_equity > running_peak:
+                    # If we were in a drawdown, close that event
+                    if current_dd_event:
+                        current_dd_event["recovery_date"] = deal.get("time")
+                        current_dd_event["recovery_equity"] = running_equity
+                        current_dd_event["triggering_trades"] = dd_triggering_trades.copy()
+                        current_dd_event["total_trades_in_dd"] = len(dd_triggering_trades)
+                        drawdown_events.append(current_dd_event)
+                        current_dd_event = None
+                        dd_triggering_trades = []
+                    
+                    running_peak = running_equity
+                    peak_timestamp = deal.get("time")
+                
+                # Calculate current drawdown percentage
+                if running_peak > 0:
+                    dd_pct = ((running_peak - running_equity) / running_peak) * 100
+                else:
+                    dd_pct = 0
+                
+                # Check if this trade pushed us into/deeper into drawdown
+                if total_pnl < 0 and dd_pct > 0:
+                    trade_info = {
+                        "ticket": deal.get("ticket"),
+                        "time": deal.get("time"),
+                        "symbol": deal.get("symbol", ""),
+                        "type": "BUY" if deal.get("type") == 0 else "SELL",
+                        "volume": deal.get("volume", 0),
+                        "price": deal.get("price", 0),
+                        "profit": profit,
+                        "swap": swap,
+                        "commission": commission,
+                        "total_pnl": total_pnl,
+                        "equity_before": prev_equity,
+                        "equity_after": running_equity,
+                        "dd_pct_after": round(dd_pct, 2),
+                        "dd_contribution_pct": round(abs(total_pnl) / running_peak * 100, 3) if running_peak > 0 else 0
+                    }
+                    
+                    dd_triggering_trades.append(trade_info)
+                    all_dd_trades.append(trade_info)
+                    
+                    # Check if this trade triggered a warning/critical threshold
+                    prev_dd_pct = ((running_peak - prev_equity) / running_peak * 100) if running_peak > 0 else 0
+                    
+                    # Start new drawdown event if we crossed a threshold
+                    if not current_dd_event:
+                        if dd_pct >= dd_warning:
+                            current_dd_event = {
+                                "event_id": len(drawdown_events) + 1,
+                                "start_date": peak_timestamp,
+                                "peak_equity": running_peak,
+                                "severity": "CRITICAL" if dd_pct >= dd_critical else "WARNING",
+                                "max_dd_pct": dd_pct,
+                                "trough_equity": running_equity,
+                                "trough_date": deal.get("time"),
+                                "first_trigger_trade": trade_info
+                            }
+                    else:
+                        # Update existing event if DD got worse
+                        if dd_pct > current_dd_event["max_dd_pct"]:
+                            current_dd_event["max_dd_pct"] = dd_pct
+                            current_dd_event["trough_equity"] = running_equity
+                            current_dd_event["trough_date"] = deal.get("time")
+                            if dd_pct >= dd_critical and current_dd_event["severity"] == "WARNING":
+                                current_dd_event["severity"] = "CRITICAL"
+                                current_dd_event["critical_trigger_trade"] = trade_info
+            
+            # Close any open drawdown event
+            if current_dd_event:
+                current_dd_event["triggering_trades"] = dd_triggering_trades
+                current_dd_event["total_trades_in_dd"] = len(dd_triggering_trades)
+                current_dd_event["status"] = "ONGOING"
+                drawdown_events.append(current_dd_event)
+            
+            # ================================================================
+            # PATTERN ANALYSIS - Identify what's causing drawdowns
+            # ================================================================
+            pattern_analysis = self._analyze_drawdown_patterns(all_dd_trades, sorted_deals)
+            
+            # ================================================================
+            # BOT OPTIMIZATION RECOMMENDATIONS
+            # ================================================================
+            recommendations = self._generate_bot_recommendations(
+                pattern_analysis, 
+                drawdown_events, 
+                dd_warning, 
+                dd_critical
+            )
+            
+            return {
+                "success": True,
+                "account": account,
+                "analysis_period_days": period_days,
+                "total_deals_analyzed": len(sorted_deals),
+                "initial_allocation": initial_allocation,
+                "current_equity": running_equity,
+                "peak_equity": running_peak,
+                "thresholds": {
+                    "warning": dd_warning,
+                    "critical": dd_critical
+                },
+                "drawdown_events": [
+                    {
+                        **event,
+                        "max_dd_pct": round(event["max_dd_pct"], 2),
+                        "loss_amount": round(event["peak_equity"] - event["trough_equity"], 2),
+                        "triggering_trades": event.get("triggering_trades", [])[:10]  # Limit to top 10
+                    }
+                    for event in drawdown_events
+                ],
+                "total_drawdown_events": len(drawdown_events),
+                "critical_events": len([e for e in drawdown_events if e["severity"] == "CRITICAL"]),
+                "warning_events": len([e for e in drawdown_events if e["severity"] == "WARNING"]),
+                "pattern_analysis": pattern_analysis,
+                "bot_recommendations": recommendations,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing drawdown triggers: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def _analyze_drawdown_patterns(
+        self, 
+        dd_trades: List[Dict], 
+        all_trades: List[Dict]
+    ) -> Dict[str, Any]:
+        """
+        Analyze patterns in trades that caused drawdowns.
+        Helps identify systematic issues in bot algorithms.
+        """
+        if not dd_trades:
+            return {"has_patterns": False, "message": "No drawdown trades to analyze"}
+        
+        # 1. Symbol Analysis - Which instruments cause most drawdowns?
+        symbol_losses = {}
+        for trade in dd_trades:
+            symbol = trade.get("symbol", "UNKNOWN")
+            if symbol not in symbol_losses:
+                symbol_losses[symbol] = {"count": 0, "total_loss": 0, "avg_dd_contribution": 0}
+            symbol_losses[symbol]["count"] += 1
+            symbol_losses[symbol]["total_loss"] += abs(trade.get("total_pnl", 0))
+            symbol_losses[symbol]["avg_dd_contribution"] += trade.get("dd_contribution_pct", 0)
+        
+        # Calculate averages and sort
+        for symbol in symbol_losses:
+            if symbol_losses[symbol]["count"] > 0:
+                symbol_losses[symbol]["avg_dd_contribution"] /= symbol_losses[symbol]["count"]
+        
+        worst_symbols = sorted(
+            symbol_losses.items(), 
+            key=lambda x: x[1]["total_loss"], 
+            reverse=True
+        )[:5]
+        
+        # 2. Time Analysis - What time of day do drawdowns occur?
+        hour_distribution = {}
+        for trade in dd_trades:
+            trade_time = trade.get("time")
+            if trade_time:
+                if isinstance(trade_time, (int, float)):
+                    hour = datetime.fromtimestamp(trade_time, tz=timezone.utc).hour
+                else:
+                    hour = trade_time.hour if hasattr(trade_time, 'hour') else 12
+                if hour not in hour_distribution:
+                    hour_distribution[hour] = {"count": 0, "total_loss": 0}
+                hour_distribution[hour]["count"] += 1
+                hour_distribution[hour]["total_loss"] += abs(trade.get("total_pnl", 0))
+        
+        worst_hours = sorted(
+            hour_distribution.items(),
+            key=lambda x: x[1]["total_loss"],
+            reverse=True
+        )[:5]
+        
+        # 3. Position Size Analysis - Are larger positions causing issues?
+        volumes = [t.get("volume", 0) for t in dd_trades]
+        avg_dd_volume = sum(volumes) / len(volumes) if volumes else 0
+        
+        all_volumes = [t.get("volume", 0) for t in all_trades if t.get("volume", 0) > 0]
+        avg_all_volume = sum(all_volumes) / len(all_volumes) if all_volumes else 0
+        
+        volume_analysis = {
+            "avg_dd_trade_volume": round(avg_dd_volume, 4),
+            "avg_all_trade_volume": round(avg_all_volume, 4),
+            "volume_ratio": round(avg_dd_volume / avg_all_volume, 2) if avg_all_volume > 0 else 0,
+            "oversized_trades": avg_dd_volume > avg_all_volume * 1.5
+        }
+        
+        # 4. Trade Direction Analysis - Are BUYs or SELLs causing more issues?
+        buy_losses = sum(abs(t.get("total_pnl", 0)) for t in dd_trades if t.get("type") == "BUY")
+        sell_losses = sum(abs(t.get("total_pnl", 0)) for t in dd_trades if t.get("type") == "SELL")
+        buy_count = sum(1 for t in dd_trades if t.get("type") == "BUY")
+        sell_count = sum(1 for t in dd_trades if t.get("type") == "SELL")
+        
+        direction_analysis = {
+            "buy_losses": round(buy_losses, 2),
+            "sell_losses": round(sell_losses, 2),
+            "buy_count": buy_count,
+            "sell_count": sell_count,
+            "dominant_losing_direction": "BUY" if buy_losses > sell_losses else "SELL",
+            "direction_bias": round(abs(buy_losses - sell_losses) / max(buy_losses + sell_losses, 1) * 100, 1)
+        }
+        
+        # 5. Consecutive Loss Analysis - Are there losing streaks?
+        max_consecutive = 0
+        current_streak = 0
+        consecutive_loss_periods = []
+        
+        for trade in dd_trades:
+            if trade.get("total_pnl", 0) < 0:
+                current_streak += 1
+                if current_streak > max_consecutive:
+                    max_consecutive = current_streak
+            else:
+                if current_streak >= 3:
+                    consecutive_loss_periods.append(current_streak)
+                current_streak = 0
+        
+        streak_analysis = {
+            "max_consecutive_losses": max_consecutive,
+            "loss_streak_periods": len(consecutive_loss_periods),
+            "avg_streak_length": round(sum(consecutive_loss_periods) / len(consecutive_loss_periods), 1) if consecutive_loss_periods else 0
+        }
+        
+        return {
+            "has_patterns": True,
+            "total_dd_trades": len(dd_trades),
+            "worst_symbols": [
+                {
+                    "symbol": s[0],
+                    "loss_count": s[1]["count"],
+                    "total_loss": round(s[1]["total_loss"], 2),
+                    "avg_dd_contribution": round(s[1]["avg_dd_contribution"], 3)
+                }
+                for s in worst_symbols
+            ],
+            "worst_trading_hours_utc": [
+                {
+                    "hour": h[0],
+                    "loss_count": h[1]["count"],
+                    "total_loss": round(h[1]["total_loss"], 2)
+                }
+                for h in worst_hours
+            ],
+            "volume_analysis": volume_analysis,
+            "direction_analysis": direction_analysis,
+            "streak_analysis": streak_analysis
+        }
+    
+    def _generate_bot_recommendations(
+        self,
+        patterns: Dict[str, Any],
+        events: List[Dict],
+        dd_warning: float,
+        dd_critical: float
+    ) -> List[Dict[str, Any]]:
+        """
+        Generate actionable recommendations for bot optimization
+        based on drawdown pattern analysis.
+        """
+        recommendations = []
+        
+        if not patterns.get("has_patterns"):
+            return [{"priority": "INFO", "category": "GENERAL", "recommendation": "Insufficient data for pattern analysis"}]
+        
+        # 1. Symbol-based recommendations
+        worst_symbols = patterns.get("worst_symbols", [])
+        if worst_symbols:
+            top_loser = worst_symbols[0]
+            if top_loser["loss_count"] >= 3:
+                recommendations.append({
+                    "priority": "HIGH",
+                    "category": "SYMBOL_FILTER",
+                    "recommendation": f"Review {top_loser['symbol']} trading logic - {top_loser['loss_count']} trades caused ${top_loser['total_loss']:,.2f} in losses",
+                    "action": f"Consider reducing position size or adding filters for {top_loser['symbol']}",
+                    "parameter_suggestion": f"max_position_{top_loser['symbol'].lower()}: reduce by 50%"
+                })
+        
+        # 2. Time-based recommendations
+        worst_hours = patterns.get("worst_trading_hours_utc", [])
+        if worst_hours:
+            dangerous_hours = [h for h in worst_hours if h["loss_count"] >= 3]
+            if dangerous_hours:
+                hours_str = ", ".join([f"{h['hour']}:00 UTC" for h in dangerous_hours[:3]])
+                recommendations.append({
+                    "priority": "HIGH",
+                    "category": "TIME_FILTER",
+                    "recommendation": f"Avoid trading during high-loss hours: {hours_str}",
+                    "action": "Add time-based filters to bot configuration",
+                    "parameter_suggestion": f"blocked_hours: [{', '.join([str(h['hour']) for h in dangerous_hours[:3]])}]"
+                })
+        
+        # 3. Volume-based recommendations
+        vol_analysis = patterns.get("volume_analysis", {})
+        if vol_analysis.get("oversized_trades"):
+            recommendations.append({
+                "priority": "CRITICAL",
+                "category": "POSITION_SIZE",
+                "recommendation": f"Drawdown trades are {vol_analysis['volume_ratio']:.1f}x larger than average - reduce position sizing",
+                "action": "Implement dynamic position sizing based on recent volatility",
+                "parameter_suggestion": f"max_lot_size: {vol_analysis['avg_all_volume']:.4f}"
+            })
+        
+        # 4. Direction-based recommendations
+        dir_analysis = patterns.get("direction_analysis", {})
+        if dir_analysis.get("direction_bias", 0) > 30:
+            losing_dir = dir_analysis["dominant_losing_direction"]
+            recommendations.append({
+                "priority": "MEDIUM",
+                "category": "DIRECTION_BIAS",
+                "recommendation": f"{losing_dir} trades causing {dir_analysis['direction_bias']:.0f}% more losses - review {losing_dir} entry logic",
+                "action": f"Add confirmation filters for {losing_dir} entries or reduce {losing_dir} position sizes",
+                "parameter_suggestion": f"{'buy' if losing_dir == 'BUY' else 'sell'}_size_multiplier: 0.5"
+            })
+        
+        # 5. Streak-based recommendations
+        streak_analysis = patterns.get("streak_analysis", {})
+        if streak_analysis.get("max_consecutive_losses", 0) >= 5:
+            recommendations.append({
+                "priority": "HIGH",
+                "category": "RISK_MANAGEMENT",
+                "recommendation": f"Detected {streak_analysis['max_consecutive_losses']} consecutive losses - implement circuit breaker",
+                "action": "Add automatic trading pause after N consecutive losses",
+                "parameter_suggestion": f"max_consecutive_losses_before_pause: 3"
+            })
+        
+        # 6. Drawdown threshold recommendations
+        critical_events = [e for e in events if e["severity"] == "CRITICAL"]
+        if len(critical_events) >= 2:
+            recommendations.append({
+                "priority": "CRITICAL",
+                "category": "DRAWDOWN_CONTROL",
+                "recommendation": f"{len(critical_events)} CRITICAL drawdown events detected - implement hard stop",
+                "action": f"Add automatic position closure when drawdown reaches {dd_warning}%",
+                "parameter_suggestion": f"auto_close_dd_threshold: {dd_warning}"
+            })
+        
+        # Sort by priority
+        priority_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
+        recommendations.sort(key=lambda x: priority_order.get(x["priority"], 5))
+        
+        return recommendations
+
     async def _calculate_risk_per_trade_compliance(
         self,
         deals: List[Dict],
