@@ -140,26 +140,36 @@ DEFAULT_INSTRUMENT_SPECS = {
 # FIDUS RISK POLICY DEFAULTS (Hull-style discipline)
 # These are platform defaults, overrideable per strategy/account
 # ============================================================================
+# CRITICAL: DRAWDOWN IS THE PARAMOUNT RISK METRIC FOR DAY TRADING WITH LEVERAGE
+# - 5% Drawdown = WARNING (Yellow Alert)
+# - 10% Drawdown = STOP/CRITICAL (Red Alert - Strategy Review Required)
+# ============================================================================
 
 DEFAULT_RISK_POLICY = {
-    # A) Loss limits (Hull-style "survival first")
+    # A) DRAWDOWN LIMITS - PRIMARY RISK CONTROLS (most important due to leverage)
+    "drawdown_warning_pct": 5.0,        # 5% drawdown = WARNING alert
+    "drawdown_critical_pct": 10.0,      # 10% drawdown = CRITICAL/STOP - must review strategy
+    "max_monthly_drawdown_pct": 10.0,   # 10% monthly DD limit (triggers score penalty)
+    
+    # B) Loss limits (Hull-style "survival first") - Secondary
     "max_risk_per_trade_pct": 1.0,      # 1% of equity (range 0.25-2.0%)
     "max_intraday_loss_pct": 3.0,       # 3% daily stop (range 1.0-5.0%)
     "max_weekly_loss_pct": 6.0,         # 6% weekly (range 3.0-10.0%)
-    "max_monthly_drawdown_pct": 10.0,   # 10% monthly DD (range 6.0-15.0%)
     
-    # B) Margin / leverage controls (secondary constraint)
+    # C) Margin / leverage controls (secondary constraint)
     "leverage": 200,                     # 200:1 static
     "max_margin_usage_pct": 25.0,       # 25% of equity (range 10-35%)
     "max_single_instrument_notional_x": 10,  # Max 10x equity per symbol (range 5-15x)
     "max_total_portfolio_notional_x": 20,    # Max 20x equity total (range 10-30x)
     
-    # C) Time risk (FIDUS = intraday only)
+    # D) Time risk (FIDUS = intraday only)
     "allow_overnight": False,           # No overnight exposure
     "force_flat_time_utc": "21:50",     # 16:50 NY time = 21:50 UTC (10 min before rollover)
     
     # Allowed ranges for UI validation
     "ranges": {
+        "drawdown_warning_pct": [3.0, 8.0],     # Warning threshold range
+        "drawdown_critical_pct": [8.0, 15.0],   # Critical threshold range
         "max_risk_per_trade_pct": [0.25, 2.0],
         "max_intraday_loss_pct": [1.0, 5.0],
         "max_weekly_loss_pct": [3.0, 10.0],
@@ -181,29 +191,46 @@ ATR_MULTIPLIERS = {
 
 # Risk Control Score penalty weights (deterministic formula)
 # Start at 100, subtract penalties, clamp to 0-100
+# ============================================================================
+# DRAWDOWN IS PARAMOUNT - Heaviest penalties for drawdown breaches
+# ============================================================================
 RISK_SCORE_PENALTIES = {
-    "lot_breach_per_trade": 6,       # -6 per breach (cap -30)
-    "lot_breach_cap": 30,
-    "risk_per_trade_breach": 8,      # -8 per breach (cap -40)
-    "risk_breach_cap": 40,
-    "margin_breach_first_day": 10,   # -10 first day
-    "margin_breach_additional": 5,   # -5 each additional (cap -25)
-    "margin_breach_cap": 25,
-    "daily_loss_breach": 20,         # -20 per day (cap -40)
-    "daily_loss_breach_cap": 40,
-    "weekly_loss_breach": 25,        # -25 per week (cap -50)
-    "weekly_loss_breach_cap": 50,
-    "monthly_drawdown_breach": 40,   # -40 one-time
-    "overnight_breach": 15,          # -15 per event (cap -45)
-    "overnight_breach_cap": 45
+    # DRAWDOWN PENALTIES - PRIMARY (most severe due to leverage risk)
+    "drawdown_warning_breach": 30,       # -30 for exceeding 5% drawdown
+    "drawdown_critical_breach": 60,      # -60 for exceeding 10% drawdown (automatic CRITICAL)
+    "monthly_drawdown_breach": 40,       # -40 for monthly DD breach (legacy)
+    
+    # SECONDARY PENALTIES - Still important but less weight than drawdown
+    "lot_breach_per_trade": 4,           # -4 per breach (cap -20) - reduced from 6
+    "lot_breach_cap": 20,
+    "risk_per_trade_breach": 5,          # -5 per breach (cap -25) - reduced from 8
+    "risk_breach_cap": 25,
+    "margin_breach_first_day": 8,        # -8 first day - reduced from 10
+    "margin_breach_additional": 4,       # -4 each additional (cap -20)
+    "margin_breach_cap": 20,
+    "daily_loss_breach": 15,             # -15 per day (cap -30) - reduced from 20
+    "daily_loss_breach_cap": 30,
+    "weekly_loss_breach": 20,            # -20 per week (cap -40) - reduced from 25
+    "weekly_loss_breach_cap": 40,
+    "overnight_breach": 10,              # -10 per event (cap -30) - reduced from 15
+    "overnight_breach_cap": 30
 }
 
-# Risk score thresholds and labels
+# Risk score thresholds and labels - Adjusted for drawdown focus
+# With drawdown as primary: any >10% DD should be Critical
 RISK_SCORE_LABELS = {
-    "strong": {"min": 80, "color": "#10B981", "label": "Strong"},
-    "moderate": {"min": 60, "color": "#F59E0B", "label": "Moderate"},
-    "weak": {"min": 40, "color": "#F97316", "label": "Weak"},
-    "critical": {"min": 0, "color": "#EF4444", "label": "Critical"}
+    "strong": {"min": 80, "color": "#10B981", "label": "Strong"},      # <5% DD, no major breaches
+    "moderate": {"min": 60, "color": "#F59E0B", "label": "Moderate"},  # Minor breaches
+    "weak": {"min": 40, "color": "#F97316", "label": "Weak"},          # 5-10% DD or multiple breaches
+    "critical": {"min": 0, "color": "#EF4444", "label": "Critical"}    # >10% DD - STOP AND REVIEW
+}
+
+# DRAWDOWN STATUS LEVELS - For UI display
+DRAWDOWN_STATUS = {
+    "healthy": {"max_pct": 3.0, "color": "#10B981", "label": "Healthy", "icon": "check-circle"},
+    "caution": {"max_pct": 5.0, "color": "#F59E0B", "label": "Caution", "icon": "alert-triangle"},
+    "warning": {"max_pct": 10.0, "color": "#F97316", "label": "WARNING", "icon": "alert-circle"},
+    "critical": {"max_pct": 100.0, "color": "#EF4444", "label": "CRITICAL - STOP", "icon": "x-circle"}
 }
 
 # Alert severity thresholds
@@ -740,20 +767,26 @@ class HullRiskEngine:
         """
         Calculate composite Risk Control score (0-100) using deterministic penalty system
         
-        Penalty deductions:
-        - Lot breach: -6 each (cap -30)
-        - Risk-per-trade breach: -8 each (cap -40)
-        - Margin breach: -10 first day, -5 additional (cap -25)
-        - Daily loss breach: -20 each (cap -40)
-        - Weekly loss breach: -25 each (cap -50)
-        - Monthly drawdown breach: -40 one-time
-        - Overnight breach: -15 each (cap -45)
+        ============================================================================
+        DRAWDOWN IS THE PARAMOUNT RISK FACTOR (due to leverage in forex day trading)
+        ============================================================================
+        
+        PRIMARY PENALTY (Drawdown) - Applied FIRST:
+        - 5% drawdown (WARNING): -30 points
+        - 10% drawdown (CRITICAL): -60 points (automatic CRITICAL status)
+        
+        SECONDARY PENALTIES (only if drawdown is healthy):
+        - Lot breach: -4 each (cap -20)
+        - Risk-per-trade breach: -5 each (cap -25)
+        - Margin breach: -8 first day, -4 additional (cap -20)
+        - Daily loss breach: -15 each (cap -30)
+        - Overnight breach: -10 each (cap -30)
         
         Labels:
-        - 80-100: Strong
-        - 60-79: Moderate
-        - 40-59: Weak
-        - 0-39: Critical
+        - 80-100: Strong (drawdown <5%, minimal breaches)
+        - 60-79: Moderate (some breaches)
+        - 40-59: Weak (5-10% drawdown OR multiple breaches)
+        - 0-39: Critical (>10% drawdown - STOP AND REVIEW STRATEGY)
         """
         try:
             risk_policy = await self.get_risk_policy(account)
@@ -766,6 +799,11 @@ class HullRiskEngine:
             equity = account_info.get("equity", 0)
             initial_allocation = account_info.get("initial_allocation", equity)
             
+            # Use peak equity if available, otherwise use initial allocation
+            peak_equity = account_info.get("peak_equity", initial_allocation)
+            if peak_equity < initial_allocation:
+                peak_equity = initial_allocation
+            
             # Get deals for the period (checks both mt5_deals AND mt5_deals_history)
             start_date = datetime.now(timezone.utc) - timedelta(days=period_days)
             deals = await self.get_deals_for_account(account, start_date, max_deals=1000)
@@ -773,8 +811,58 @@ class HullRiskEngine:
             # ===== Calculate breaches and penalties =====
             score = 100  # Start at 100
             breach_details = []
+            drawdown_alerts = []
             
-            # 1) Lot breach penalties
+            # ============================================================
+            # STEP 1: DRAWDOWN CALCULATION - THE PRIMARY RISK METRIC
+            # ============================================================
+            current_dd_pct = 0
+            if peak_equity > 0:
+                current_dd_pct = max(0, ((peak_equity - equity) / peak_equity) * 100)
+            elif initial_allocation > 0:
+                current_dd_pct = max(0, ((initial_allocation - equity) / initial_allocation) * 100)
+            
+            # Get drawdown thresholds from policy
+            dd_warning_threshold = risk_policy.get("drawdown_warning_pct", 5.0)
+            dd_critical_threshold = risk_policy.get("drawdown_critical_pct", 10.0)
+            
+            # Determine drawdown status
+            if current_dd_pct >= dd_critical_threshold:
+                drawdown_status = "critical"
+                drawdown_penalty = RISK_SCORE_PENALTIES["drawdown_critical_breach"]
+                score -= drawdown_penalty
+                breach_details.insert(0, f"⛔ CRITICAL DRAWDOWN: {current_dd_pct:.1f}% (threshold: {dd_critical_threshold}%) (-{drawdown_penalty})")
+                drawdown_alerts.append({
+                    "severity": "CRITICAL",
+                    "message": f"STOP TRADING - Drawdown at {current_dd_pct:.1f}% exceeds {dd_critical_threshold}% limit. Review strategy immediately.",
+                    "action_required": "STOP"
+                })
+            elif current_dd_pct >= dd_warning_threshold:
+                drawdown_status = "warning"
+                drawdown_penalty = RISK_SCORE_PENALTIES["drawdown_warning_breach"]
+                score -= drawdown_penalty
+                breach_details.insert(0, f"⚠️ WARNING DRAWDOWN: {current_dd_pct:.1f}% (threshold: {dd_warning_threshold}%) (-{drawdown_penalty})")
+                drawdown_alerts.append({
+                    "severity": "WARNING",
+                    "message": f"Drawdown at {current_dd_pct:.1f}% - approaching critical level. Reduce position sizes.",
+                    "action_required": "REDUCE_RISK"
+                })
+            elif current_dd_pct >= 3.0:
+                drawdown_status = "caution"
+                # No penalty, but flag for awareness
+                drawdown_alerts.append({
+                    "severity": "CAUTION",
+                    "message": f"Drawdown at {current_dd_pct:.1f}% - monitor closely.",
+                    "action_required": "MONITOR"
+                })
+            else:
+                drawdown_status = "healthy"
+            
+            # ============================================================
+            # STEP 2: SECONDARY PENALTIES (only apply if not already critical)
+            # ============================================================
+            
+            # 2a) Lot breach penalties
             lot_breaches = await self._count_lot_breaches(deals, equity, risk_policy)
             lot_penalty = min(lot_breaches * RISK_SCORE_PENALTIES["lot_breach_per_trade"], 
                              RISK_SCORE_PENALTIES["lot_breach_cap"])
@@ -782,7 +870,7 @@ class HullRiskEngine:
             if lot_breaches > 0:
                 breach_details.append(f"Lot breaches: {lot_breaches} (-{lot_penalty})")
             
-            # 2) Risk-per-trade breach penalties
+            # 2b) Risk-per-trade breach penalties
             risk_breaches = self._count_risk_breaches(deals, initial_allocation, risk_policy)
             risk_penalty = min(risk_breaches * RISK_SCORE_PENALTIES["risk_per_trade_breach"],
                               RISK_SCORE_PENALTIES["risk_breach_cap"])
@@ -790,7 +878,7 @@ class HullRiskEngine:
             if risk_breaches > 0:
                 breach_details.append(f"Risk breaches: {risk_breaches} (-{risk_penalty})")
             
-            # 3) Margin breach penalties
+            # 2c) Margin breach penalties
             margin_breach_days = self._count_margin_breach_days(account_info, risk_policy)
             if margin_breach_days > 0:
                 margin_penalty = RISK_SCORE_PENALTIES["margin_breach_first_day"]
@@ -800,7 +888,7 @@ class HullRiskEngine:
                 score -= margin_penalty
                 breach_details.append(f"Margin breaches: {margin_breach_days} days (-{margin_penalty})")
             
-            # 4) Daily loss breach penalties (from account history if available)
+            # 2d) Daily loss breach penalties
             daily_breaches = self._count_daily_loss_breaches(account_info, deals, risk_policy)
             daily_penalty = min(daily_breaches * RISK_SCORE_PENALTIES["daily_loss_breach"],
                                RISK_SCORE_PENALTIES["daily_loss_breach_cap"])
@@ -808,17 +896,7 @@ class HullRiskEngine:
             if daily_breaches > 0:
                 breach_details.append(f"Daily loss breaches: {daily_breaches} (-{daily_penalty})")
             
-            # 5) Drawdown / Monthly breach check
-            current_dd_pct = 0
-            if initial_allocation > 0:
-                current_dd_pct = max(0, ((initial_allocation - equity) / initial_allocation) * 100)
-            
-            max_monthly_dd = risk_policy.get("max_monthly_drawdown_pct", 10.0)
-            if current_dd_pct > max_monthly_dd:
-                score -= RISK_SCORE_PENALTIES["monthly_drawdown_breach"]
-                breach_details.append(f"Monthly DD breach: {current_dd_pct:.1f}% > {max_monthly_dd}% (-40)")
-            
-            # 6) Overnight breach penalties (if we track overnight positions)
+            # 2e) Overnight breach penalties
             overnight_breaches = self._count_overnight_breaches(deals, risk_policy)
             overnight_penalty = min(overnight_breaches * RISK_SCORE_PENALTIES["overnight_breach"],
                                    RISK_SCORE_PENALTIES["overnight_breach_cap"])
@@ -829,8 +907,14 @@ class HullRiskEngine:
             # Clamp score to 0-100
             composite_score = max(0, min(100, score))
             
-            # Determine label based on thresholds
-            if composite_score >= RISK_SCORE_LABELS["strong"]["min"]:
+            # ============================================================
+            # STEP 3: DETERMINE FINAL LABEL (Drawdown overrides other factors)
+            # ============================================================
+            # If drawdown is critical, force Critical label regardless of score
+            if drawdown_status == "critical":
+                label = "Critical"
+                color = "#EF4444"  # Red
+            elif composite_score >= RISK_SCORE_LABELS["strong"]["min"]:
                 label = RISK_SCORE_LABELS["strong"]["label"]
                 color = RISK_SCORE_LABELS["strong"]["color"]
             elif composite_score >= RISK_SCORE_LABELS["moderate"]["min"]:
@@ -843,7 +927,7 @@ class HullRiskEngine:
                 label = RISK_SCORE_LABELS["critical"]["label"]
                 color = RISK_SCORE_LABELS["critical"]["color"]
             
-            # Also compute the older component metrics for backward compatibility
+            # Compute component metrics for detailed view
             risk_compliance = await self._calculate_risk_per_trade_compliance(
                 deals, initial_allocation, risk_policy
             )
@@ -862,6 +946,21 @@ class HullRiskEngine:
                 "color": color,
                 "breach_summary": breach_details,
                 "total_penalty_points": round(100 - composite_score, 1),
+                # ============================================================
+                # DRAWDOWN - PRIMARY RISK METRIC (prominently displayed)
+                # ============================================================
+                "drawdown": {
+                    "current_pct": round(current_dd_pct, 2),
+                    "status": drawdown_status,
+                    "warning_threshold": dd_warning_threshold,
+                    "critical_threshold": dd_critical_threshold,
+                    "alerts": drawdown_alerts,
+                    "peak_equity": peak_equity,
+                    "current_equity": equity,
+                    "initial_allocation": initial_allocation,
+                    "is_critical": drawdown_status == "critical",
+                    "is_warning": drawdown_status == "warning"
+                },
                 "components": {
                     "risk_per_trade": risk_compliance,
                     "margin_usage": margin_compliance,
@@ -1175,34 +1274,59 @@ class HullRiskEngine:
         initial_allocation: float,
         risk_policy: Dict
     ) -> Dict[str, Any]:
-        """Calculate drawdown compliance"""
+        """
+        Calculate drawdown compliance - THE PARAMOUNT RISK METRIC
+        
+        Thresholds (FIDUS day trading with leverage):
+        - <3%: Healthy (score 100)
+        - 3-5%: Caution (score 80)
+        - 5-10%: WARNING (score 40)
+        - >10%: CRITICAL - STOP (score 0)
+        """
         equity = account_info.get("equity", 0)
-        # Note: max_drawdown_pct from account_info could be used for historical analysis
-        _ = account_info.get("max_drawdown_pct", 0)  # Reserved for future use
+        peak_equity = account_info.get("peak_equity", initial_allocation)
+        
+        # Use peak equity for more accurate drawdown calculation
+        reference_equity = max(peak_equity, initial_allocation) if peak_equity > 0 else initial_allocation
         
         # Calculate current drawdown from peak
-        if initial_allocation > 0:
-            current_dd_pct = max(0, ((initial_allocation - equity) / initial_allocation) * 100)
+        if reference_equity > 0:
+            current_dd_pct = max(0, ((reference_equity - equity) / reference_equity) * 100)
         else:
             current_dd_pct = 0
         
-        max_intraday_loss_pct = risk_policy.get("max_intraday_loss_pct", 3.0)
+        # Get thresholds from policy
+        dd_warning = risk_policy.get("drawdown_warning_pct", 5.0)
+        dd_critical = risk_policy.get("drawdown_critical_pct", 10.0)
         
-        # Score based on drawdown relative to limit
-        if current_dd_pct <= max_intraday_loss_pct:
+        # Score based on drawdown - STRICT thresholds for day trading
+        if current_dd_pct < 3.0:
             score = 100
-        elif current_dd_pct <= max_intraday_loss_pct * 2:
-            score = 60
-        elif current_dd_pct <= max_intraday_loss_pct * 3:
-            score = 30
+            status = "HEALTHY"
+            status_color = "#10B981"  # Green
+        elif current_dd_pct < dd_warning:
+            score = 80
+            status = "CAUTION"
+            status_color = "#F59E0B"  # Yellow
+        elif current_dd_pct < dd_critical:
+            score = 40
+            status = "WARNING"
+            status_color = "#F97316"  # Orange
         else:
             score = 0
+            status = "CRITICAL - STOP"
+            status_color = "#EF4444"  # Red
         
         return {
             "score": round(score, 1),
-            "detail": f"Current DD: {current_dd_pct:.1f}% (max: {max_intraday_loss_pct}%)",
-            "current_drawdown_pct": round(current_dd_pct, 1),
-            "max_allowed_pct": max_intraday_loss_pct
+            "detail": f"Drawdown: {current_dd_pct:.2f}% | Status: {status}",
+            "current_drawdown_pct": round(current_dd_pct, 2),
+            "warning_threshold": dd_warning,
+            "critical_threshold": dd_critical,
+            "status": status,
+            "status_color": status_color,
+            "peak_equity": reference_equity,
+            "current_equity": equity
         }
     
     async def _calculate_position_size_compliance(

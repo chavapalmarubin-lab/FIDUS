@@ -11,7 +11,7 @@ import {
   ChevronRight, ChevronDown, Zap, Briefcase, PieChart as PieChartIcon,
   ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
   Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings,
-  CheckCircle
+  CheckCircle, XCircle, AlertCircle
 } from 'lucide-react';
 import './LiveDemoAnalytics.css';
 
@@ -1660,6 +1660,94 @@ export default function LiveDemoAnalytics() {
               </div>
             ) : riskAnalysis ? (
               <div className="lda-risk-analysis-full">
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {/* DRAWDOWN ALERT BANNER - PRIMARY RISK METRIC */}
+                {/* Due to leverage, drawdown is the paramount risk factor */}
+                {/* ═══════════════════════════════════════════════════════════════════════ */}
+                {riskAnalysis.risk_control_score?.drawdown && (
+                  <div 
+                    className={`lda-drawdown-banner ${riskAnalysis.risk_control_score.drawdown.status}`}
+                    data-testid="drawdown-alert-banner"
+                    style={{
+                      background: riskAnalysis.risk_control_score.drawdown.is_critical 
+                        ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)'
+                        : riskAnalysis.risk_control_score.drawdown.is_warning
+                        ? 'linear-gradient(135deg, #78350f 0%, #92400e 50%, #78350f 100%)'
+                        : riskAnalysis.risk_control_score.drawdown.status === 'caution'
+                        ? 'linear-gradient(135deg, #713f12 0%, #854d0e 50%, #713f12 100%)'
+                        : 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #064e3b 100%)',
+                      border: `2px solid ${
+                        riskAnalysis.risk_control_score.drawdown.is_critical ? '#ef4444' :
+                        riskAnalysis.risk_control_score.drawdown.is_warning ? '#f97316' :
+                        riskAnalysis.risk_control_score.drawdown.status === 'caution' ? '#eab308' : '#10b981'
+                      }`,
+                      borderRadius: '12px',
+                      padding: '16px 24px',
+                      marginBottom: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '20px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      {riskAnalysis.risk_control_score.drawdown.is_critical ? (
+                        <XCircle size={40} color="#ef4444" />
+                      ) : riskAnalysis.risk_control_score.drawdown.is_warning ? (
+                        <AlertTriangle size={40} color="#f97316" />
+                      ) : riskAnalysis.risk_control_score.drawdown.status === 'caution' ? (
+                        <AlertCircle size={40} color="#eab308" />
+                      ) : (
+                        <CheckCircle size={40} color="#10b981" />
+                      )}
+                      <div>
+                        <div style={{ 
+                          fontSize: '13px', 
+                          fontWeight: '600', 
+                          color: '#94a3b8',
+                          textTransform: 'uppercase',
+                          letterSpacing: '1px',
+                          marginBottom: '4px'
+                        }}>
+                          {riskAnalysis.risk_control_score.drawdown.is_critical ? '⛔ CRITICAL - STOP TRADING' :
+                           riskAnalysis.risk_control_score.drawdown.is_warning ? '⚠️ WARNING - REDUCE RISK' :
+                           riskAnalysis.risk_control_score.drawdown.status === 'caution' ? '⚡ CAUTION - MONITOR' :
+                           '✓ DRAWDOWN HEALTHY'}
+                        </div>
+                        <div style={{ 
+                          fontSize: '28px', 
+                          fontWeight: 'bold', 
+                          color: 'white',
+                          fontFamily: 'monospace'
+                        }}>
+                          {riskAnalysis.risk_control_score.drawdown.current_pct?.toFixed(2)}% Drawdown
+                        </div>
+                        {riskAnalysis.risk_control_score.drawdown.alerts?.[0]?.message && (
+                          <div style={{ 
+                            fontSize: '13px', 
+                            color: '#cbd5e1',
+                            marginTop: '4px'
+                          }}>
+                            {riskAnalysis.risk_control_score.drawdown.alerts[0].message}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>Thresholds</div>
+                      <div style={{ fontSize: '14px', color: '#f59e0b', fontWeight: '500' }}>
+                        Warning: {riskAnalysis.risk_control_score.drawdown.warning_threshold}%
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#ef4444', fontWeight: '500' }}>
+                        Critical: {riskAnalysis.risk_control_score.drawdown.critical_threshold}%
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                        Peak: {formatCurrency(riskAnalysis.risk_control_score.drawdown.peak_equity)} → Current: {formatCurrency(riskAnalysis.risk_control_score.drawdown.current_equity)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Strategy Info Header */}
                 <div className="lda-risk-strategy-info">
                   <div className="lda-strategy-name">
@@ -1684,10 +1772,34 @@ export default function LiveDemoAnalytics() {
 
                 {/* Risk Policy & Score Row */}
                 <div className="lda-risk-policy-score-row">
-                  {/* Active Risk Policy */}
+                  {/* Active Risk Policy - DRAWDOWN FIRST (PRIMARY) */}
                   <div className="lda-risk-policy-card-compact">
-                    <h4>Active Risk Policy</h4>
+                    <h4>Risk Policy (Drawdown Priority)</h4>
                     <div className="lda-policy-items">
+                      <div className="lda-policy-item" style={{ 
+                        background: 'rgba(249, 115, 22, 0.1)', 
+                        border: '1px solid #f97316',
+                        borderRadius: '6px',
+                        padding: '8px',
+                        marginBottom: '8px'
+                      }}>
+                        <span className="label" style={{ color: '#f97316', fontWeight: '600' }}>⚠️ DD Warning</span>
+                        <span className="value" style={{ color: '#f97316', fontWeight: 'bold' }}>
+                          {riskAnalysis.risk_policy?.drawdown_warning_pct || 5}%
+                        </span>
+                      </div>
+                      <div className="lda-policy-item" style={{ 
+                        background: 'rgba(239, 68, 68, 0.1)', 
+                        border: '1px solid #ef4444',
+                        borderRadius: '6px',
+                        padding: '8px',
+                        marginBottom: '8px'
+                      }}>
+                        <span className="label" style={{ color: '#ef4444', fontWeight: '600' }}>⛔ DD Critical</span>
+                        <span className="value" style={{ color: '#ef4444', fontWeight: 'bold' }}>
+                          {riskAnalysis.risk_policy?.drawdown_critical_pct || 10}%
+                        </span>
+                      </div>
                       <div className="lda-policy-item">
                         <span className="label">Max Risk/Trade</span>
                         <span className="value">{riskAnalysis.risk_policy?.max_risk_per_trade_pct || 1}%</span>
@@ -1695,10 +1807,6 @@ export default function LiveDemoAnalytics() {
                       <div className="lda-policy-item">
                         <span className="label">Max Daily Loss</span>
                         <span className="value">{riskAnalysis.risk_policy?.max_intraday_loss_pct || 3}%</span>
-                      </div>
-                      <div className="lda-policy-item">
-                        <span className="label">Max Margin</span>
-                        <span className="value">{riskAnalysis.risk_policy?.max_margin_usage_pct || 25}%</span>
                       </div>
                     </div>
                   </div>
@@ -1719,6 +1827,57 @@ export default function LiveDemoAnalytics() {
                 <div className="lda-compliance-summary">
                   <h4>Compliance Summary</h4>
                   <div className="lda-compliance-cards">
+                    {/* DRAWDOWN COMPLIANCE - PRIMARY (First card, larger) */}
+                    <div 
+                      className={`lda-compliance-card ${
+                        riskAnalysis.risk_control_score?.drawdown?.status === 'healthy' ? 'pass' : 
+                        riskAnalysis.risk_control_score?.drawdown?.status === 'caution' ? 'warning' : 
+                        'fail'
+                      }`}
+                      style={{ 
+                        gridColumn: 'span 2',
+                        background: riskAnalysis.risk_control_score?.drawdown?.is_critical 
+                          ? 'rgba(239, 68, 68, 0.15)' 
+                          : riskAnalysis.risk_control_score?.drawdown?.is_warning 
+                          ? 'rgba(249, 115, 22, 0.15)'
+                          : undefined
+                      }}
+                    >
+                      <div className="lda-compliance-header">
+                        <span className="lda-compliance-icon">
+                          {riskAnalysis.risk_control_score?.drawdown?.status === 'healthy' ? (
+                            <CheckCircle size={24} color="#10b981" />
+                          ) : riskAnalysis.risk_control_score?.drawdown?.is_critical ? (
+                            <XCircle size={24} color="#ef4444" />
+                          ) : (
+                            <AlertTriangle size={24} color="#f97316" />
+                          )}
+                        </span>
+                        <h5 style={{ fontSize: '16px' }}>📊 DRAWDOWN (Primary Risk Metric)</h5>
+                      </div>
+                      <div className="lda-compliance-value" style={{ 
+                        fontSize: '32px',
+                        color: riskAnalysis.risk_control_score?.drawdown?.is_critical ? '#ef4444' :
+                               riskAnalysis.risk_control_score?.drawdown?.is_warning ? '#f97316' :
+                               riskAnalysis.risk_control_score?.drawdown?.status === 'caution' ? '#eab308' : '#10b981'
+                      }}>
+                        {riskAnalysis.risk_control_score?.drawdown?.current_pct?.toFixed(2) || '0.00'}%
+                      </div>
+                      <div className="lda-compliance-detail">
+                        <span style={{ 
+                          fontWeight: 'bold',
+                          color: riskAnalysis.risk_control_score?.drawdown?.status === 'healthy' ? '#10b981' :
+                                 riskAnalysis.risk_control_score?.drawdown?.status === 'caution' ? '#eab308' :
+                                 riskAnalysis.risk_control_score?.drawdown?.is_warning ? '#f97316' : '#ef4444'
+                        }}>
+                          {riskAnalysis.risk_control_score?.components?.drawdown?.status || 'HEALTHY'}
+                        </span>
+                        <span style={{ marginLeft: '12px', color: '#94a3b8' }}>
+                          Warning: {riskAnalysis.risk_policy?.drawdown_warning_pct || 5}% | Critical: {riskAnalysis.risk_policy?.drawdown_critical_pct || 10}%
+                        </span>
+                      </div>
+                    </div>
+
                     <div className={`lda-compliance-card ${riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'PASS' ? 'pass' : riskAnalysis.compliance_summary?.lot_size_compliance?.status === 'WARNING' ? 'warning' : 'fail'}`}>
                       <div className="lda-compliance-header">
                         <span className="lda-compliance-icon">

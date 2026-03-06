@@ -17,6 +17,27 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Drawdown as Paramount Risk Metric (Mar 6, 2026) ✅
+- **Feature:** Complete overhaul of risk scoring to make drawdown the PRIMARY risk metric for day trading with leverage
+- **Thresholds Implemented:**
+  - **5% Drawdown = WARNING** (-30 points, reduce risk)
+  - **10% Drawdown = CRITICAL/STOP** (-60 points, review strategy immediately)
+- **Backend Changes:**
+  1. Updated `DEFAULT_RISK_POLICY` to include `drawdown_warning_pct` (5%) and `drawdown_critical_pct` (10%)
+  2. Redesigned `RISK_SCORE_PENALTIES` to heavily weight drawdown breaches
+  3. Refactored `calculate_risk_control_score()` to evaluate drawdown FIRST before other factors
+  4. Updated `_calculate_drawdown_compliance()` with new status levels: healthy/caution/warning/critical
+  5. Added new `drawdown` object in API response with all relevant metrics
+- **Frontend Changes:**
+  1. Added prominent **Drawdown Alert Banner** at top of Risk Limits section
+  2. Updated **Risk Policy card** to show DD Warning (5%) and DD Critical (10%) first
+  3. Added **DRAWDOWN (Primary Risk Metric)** as first card in Compliance Summary spanning 2 columns
+  4. Color-coded status indicators: Green (healthy), Yellow (caution), Orange (warning), Red (critical)
+- **Files Modified:**
+  - `/app/backend/services/hull_risk_engine.py` - Core risk scoring logic
+  - `/app/frontend/src/components/LiveDemoAnalytics.js` - UI components
+- **Status:** COMPLETE - Verified via API and screenshots
+
 #### Money Manager Allocation Start Date Feature (Mar 6, 2026) ✅
 - **Feature:** Track allocation start dates for money managers to evaluate PnL from time of funding
 - **Components Built:**
