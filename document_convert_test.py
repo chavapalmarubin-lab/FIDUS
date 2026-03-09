@@ -37,7 +37,7 @@ import io
 import base64
 
 # Configuration
-BACKEND_URL = "https://risk-engine-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://equity-peak-tracker.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
 

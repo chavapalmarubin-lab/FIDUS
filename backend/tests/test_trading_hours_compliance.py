@@ -22,7 +22,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 import asyncio
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://risk-engine-hub-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://equity-peak-tracker.preview.emergentagent.com')
 
 
 class TestTradingHoursComplianceAPI:

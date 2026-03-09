@@ -265,13 +265,13 @@ After successful deployment:
 
 1. **Check backend API**:
    ```
-   curl https://risk-engine-hub-1.preview.emergentagent.com/api/system/status
+   curl https://equity-peak-tracker.preview.emergentagent.com/api/system/status
    ```
    Should show services operational
 
 2. **Check MT5 accounts endpoint**:
    ```
-   curl https://risk-engine-hub-1.preview.emergentagent.com/api/mt5/admin/accounts
+   curl https://equity-peak-tracker.preview.emergentagent.com/api/mt5/admin/accounts
    ```
    (Requires authentication)
 

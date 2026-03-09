@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://risk-engine-hub-1.preview.emergentagent.com`
+`https://equity-peak-tracker.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

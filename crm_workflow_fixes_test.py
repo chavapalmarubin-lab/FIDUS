@@ -35,7 +35,7 @@ import uuid
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://risk-engine-hub-1.preview.emergentagent.com"
+BACKEND_URL = "https://equity-peak-tracker.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

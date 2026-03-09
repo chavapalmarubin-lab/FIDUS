@@ -17,6 +17,16 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ### Completed Features (Dec 2025 - Mar 2026)
 
+#### Lucrum Wallet Calculation Fix (Mar 9, 2026) ✅
+- **Bug:** Cash Flow dashboard showed wrong "Lucrum Wallet (Unallocated)" balance ($407,316 instead of $82,316.36)
+- **Root Cause:** The `lucrum_wallet` collection stored the TOTAL capital deposited, not the UNALLOCATED amount after allocations
+- **Fix Applied:** Updated the wallet balance in MongoDB to reflect the correct calculation:
+  - Total Capital Deposited: $407,316.36
+  - Total Allocated to Managers: $325,000.00
+  - **Correct Unallocated Amount: $82,316.36**
+- **Verification:** API `/api/admin/lucrum-wallet` now returns correct values
+- **Status:** COMPLETE - Backend fix verified via curl
+
 #### Drawdown as Paramount Risk Metric (Mar 6, 2026) ✅
 - **Feature:** Complete overhaul of risk scoring to make drawdown the PRIMARY risk metric for day trading with leverage
 - **Thresholds Implemented:**
