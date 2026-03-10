@@ -249,6 +249,28 @@ ALERT_SEVERITY = {
     }
 }
 
+# =============================================================================
+# CUSTOM ACCOUNT POLICY OVERRIDES
+# =============================================================================
+# Some accounts have specific trading styles that require different rules
+# These override the DEFAULT_RISK_POLICY for specific accounts
+
+ACCOUNT_POLICY_OVERRIDES = {
+    # JOEL ALVES NASDAQ (Account 2215) - Trades NASDAQ after hours
+    # - His strategy intentionally trades after the normal force flat time
+    # - Instead of penalizing late trades, we monitor TRADE DURATION
+    # - Flag trades that exceed 4 hours (since he should be day trading, just later)
+    2215: {
+        "account_name": "JOEL ALVES NASDAQ",
+        "allow_overnight": True,              # Allow after-hours trading
+        "skip_force_flat_penalty": True,      # Don't penalize for trading after 21:50 UTC
+        "max_trade_duration_hours": 4,        # Flag trades longer than 4 hours
+        "trade_duration_penalty": 10,         # -10 points per trade exceeding duration
+        "trade_duration_penalty_cap": 30,     # Cap at -30 points
+        "notes": "After-hours NASDAQ trader - monitor duration instead of cutoff time"
+    }
+}
+
 
 class HullRiskEngine:
     """
@@ -944,13 +966,27 @@ class HullRiskEngine:
             if daily_breaches > 0:
                 breach_details.append(f"Daily loss breaches: {daily_breaches} (-{daily_penalty})")
             
-            # 2e) Overnight breach penalties
-            overnight_breaches = self._count_overnight_breaches(deals, risk_policy)
+            # 2e) Overnight breach penalties (check for account-specific overrides)
+            overnight_breaches = self._count_overnight_breaches(deals, risk_policy, account)
             overnight_penalty = min(overnight_breaches * RISK_SCORE_PENALTIES["overnight_breach"],
                                    RISK_SCORE_PENALTIES["overnight_breach_cap"])
             score -= overnight_penalty
             if overnight_breaches > 0:
                 breach_details.append(f"Overnight breaches: {overnight_breaches} (-{overnight_penalty})")
+            
+            # 2f) Trade duration breach penalties (for accounts with max_trade_duration_hours)
+            account_override = ACCOUNT_POLICY_OVERRIDES.get(account, {})
+            if account_override.get("max_trade_duration_hours"):
+                duration_breaches = self._count_trade_duration_breaches(
+                    deals, 
+                    account_override.get("max_trade_duration_hours")
+                )
+                duration_penalty_per = account_override.get("trade_duration_penalty", 10)
+                duration_penalty_cap = account_override.get("trade_duration_penalty_cap", 30)
+                duration_penalty = min(duration_breaches * duration_penalty_per, duration_penalty_cap)
+                score -= duration_penalty
+                if duration_breaches > 0:
+                    breach_details.append(f"Trade duration breaches (>{account_override.get('max_trade_duration_hours')}h): {duration_breaches} (-{duration_penalty})")
             
             # Clamp score to 0-100
             composite_score = max(0, min(100, score))
@@ -1602,7 +1638,8 @@ class HullRiskEngine:
     def _count_overnight_breaches(
         self,
         deals: List[Dict],
-        risk_policy: Dict
+        risk_policy: Dict,
+        account: int = None
     ) -> int:
         """
         Count overnight position breaches (positions held past force-flat time)
@@ -1613,10 +1650,21 @@ class HullRiskEngine:
         - Asia market opening (Sunday 5PM EST = Monday Asia open) is highest volatility
         - Gap risk is unacceptable for FIDUS
         
+        EXCEPTION: Some accounts have custom rules (see ACCOUNT_POLICY_OVERRIDES)
+        - Account 2215 (JOEL ALVES NASDAQ): Allowed to trade after hours
+        
         Detection: Look for positions that:
         1. Opened on day N and closed on day N+1 or later
         2. Uses FIFO matching by symbol when position_id is not available
         """
+        # Check for account-specific overrides
+        account_override = ACCOUNT_POLICY_OVERRIDES.get(account, {}) if account else {}
+        
+        # If this account has skip_force_flat_penalty, don't count overnight breaches
+        if account_override.get("skip_force_flat_penalty", False):
+            logger.info(f"⏭️ Account {account} ({account_override.get('account_name', 'Unknown')}): Skipping overnight breach check (after-hours trader)")
+            return 0
+        
         # FIDUS DEFAULT: No overnight allowed (day trading only)
         if risk_policy.get("allow_overnight", False):
             return 0  # Overnight explicitly allowed, no breaches
@@ -1696,6 +1744,93 @@ class HullRiskEngine:
                         logger.debug(f"⚠️ OVERNIGHT BREACH: {symbol} opened {open_time.isoformat()} closed {close_time.isoformat()}")
         
         return overnight_count
+    
+    def _count_trade_duration_breaches(
+        self,
+        deals: List[Dict],
+        max_duration_hours: float
+    ) -> int:
+        """
+        Count trades that exceed the maximum allowed duration.
+        
+        Used for accounts that trade after hours (like JOEL ALVES NASDAQ)
+        where we monitor trade duration instead of force flat time.
+        
+        Args:
+            deals: List of deal records
+            max_duration_hours: Maximum allowed trade duration in hours
+            
+        Returns:
+            Number of trades exceeding the duration limit
+        """
+        duration_breaches = 0
+        positions_by_ticket = {}  # For position_id-based matching
+        symbol_entry_queue = {}   # For FIFO matching by symbol
+        
+        for deal in deals:
+            symbol = deal.get("symbol", "")
+            if not symbol:
+                continue
+            
+            raw_position_id = deal.get("position_id") or deal.get("position")
+            ticket = deal.get("ticket")
+            
+            use_fifo_matching = raw_position_id is None
+            position_key = raw_position_id if not use_fifo_matching else ticket
+            
+            deal_time = deal.get("time")
+            
+            # Convert time to datetime if needed
+            if isinstance(deal_time, (int, float)):
+                deal_time = datetime.fromtimestamp(deal_time, tz=timezone.utc)
+            elif isinstance(deal_time, str):
+                try:
+                    deal_time = datetime.fromisoformat(deal_time.replace('Z', '+00:00'))
+                except:
+                    continue
+            
+            if deal_time is None:
+                continue
+            
+            entry_type = deal.get("entry", -1)
+            
+            if entry_type == 0:  # Position opened
+                entry_data = {
+                    "open_time": deal_time,
+                    "symbol": symbol,
+                    "ticket": ticket
+                }
+                
+                if use_fifo_matching:
+                    if symbol not in symbol_entry_queue:
+                        symbol_entry_queue[symbol] = []
+                    symbol_entry_queue[symbol].append(entry_data)
+                else:
+                    positions_by_ticket[position_key] = entry_data
+                    
+            elif entry_type == 1:  # Position closed
+                entry_data = None
+                
+                if use_fifo_matching:
+                    if symbol in symbol_entry_queue and symbol_entry_queue[symbol]:
+                        entry_data = symbol_entry_queue[symbol].pop(0)
+                else:
+                    if position_key in positions_by_ticket:
+                        entry_data = positions_by_ticket[position_key]
+                        del positions_by_ticket[position_key]
+                
+                if entry_data:
+                    open_time = entry_data["open_time"]
+                    close_time = deal_time
+                    
+                    # Calculate duration in hours
+                    duration = (close_time - open_time).total_seconds() / 3600
+                    
+                    if duration > max_duration_hours:
+                        duration_breaches += 1
+                        logger.debug(f"⚠️ DURATION BREACH: {symbol} held for {duration:.2f}h (max: {max_duration_hours}h)")
+        
+        return duration_breaches
     
     def _calculate_margin_compliance(
         self,
@@ -1881,6 +2016,12 @@ class HullRiskEngine:
             force_flat_hour, force_flat_minute = map(int, force_flat_time_str.split(":"))
             allow_overnight = risk_policy.get("allow_overnight", False)
             
+            # Check for account-specific overrides (e.g., JOEL ALVES NASDAQ trades after hours)
+            account_override = ACCOUNT_POLICY_OVERRIDES.get(account, {})
+            skip_force_flat_penalty = account_override.get("skip_force_flat_penalty", False)
+            max_trade_duration_hours = account_override.get("max_trade_duration_hours")
+            trade_duration_breaches = []  # Track trades exceeding duration limit
+            
             # Trade timing analysis
             trade_times = []  # List of all trade entry/exit times
             overnight_positions = []  # Positions held overnight
@@ -1963,13 +2104,15 @@ class HullRiskEngine:
                                 })
                             
                             # Check if entry is after force flat time
-                            if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
-                                late_trades.append({
-                                    "ticket": ticket,
-                                    "symbol": symbol,
-                                    "time": deal_time.isoformat(),
-                                    "issue": f"Entry after force flat ({force_flat_time_str} UTC)"
-                                })
+                            # Skip this check for accounts with skip_force_flat_penalty (e.g., JOEL ALVES NASDAQ)
+                            if not skip_force_flat_penalty:
+                                if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
+                                    late_trades.append({
+                                        "ticket": ticket,
+                                        "symbol": symbol,
+                                        "time": deal_time.isoformat(),
+                                        "issue": f"Entry after force flat ({force_flat_time_str} UTC)"
+                                    })
                         
                         # Track exit times (entry=1 is OUT)
                         elif entry_type == 1:
@@ -2019,12 +2162,27 @@ class HullRiskEngine:
                                     })
                             
                             # Check if exit was after force flat time (regardless of matching)
-                            if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
-                                late_trades.append({
-                                    "ticket": ticket,
+                            # Skip this check for accounts with skip_force_flat_penalty
+                            if not skip_force_flat_penalty:
+                                if hour_key > force_flat_hour or (hour_key == force_flat_hour and deal_time.minute >= force_flat_minute):
+                                    late_trades.append({
+                                        "ticket": ticket,
+                                        "symbol": symbol,
+                                        "time": deal_time.isoformat(),
+                                        "issue": f"Exit after force flat ({force_flat_time_str} UTC)"
+                                    })
+                            
+                            # Check trade duration for accounts with max_trade_duration_hours
+                            if max_trade_duration_hours and duration_minutes > (max_trade_duration_hours * 60):
+                                trade_duration_breaches.append({
+                                    "ticket": matched_ticket,
                                     "symbol": symbol,
-                                    "time": deal_time.isoformat(),
-                                    "issue": f"Exit after force flat ({force_flat_time_str} UTC)"
+                                    "entry_time": entry_time.isoformat(),
+                                    "exit_time": deal_time.isoformat(),
+                                    "duration_hours": round(duration_minutes / 60, 2),
+                                    "max_allowed_hours": max_trade_duration_hours,
+                                    "profit": profit,
+                                    "issue": f"Trade held for {duration_minutes/60:.1f}h (max: {max_trade_duration_hours}h)"
                                 })
                 
                 # Symbol-level aggregation - cache instrument specs
@@ -2272,8 +2430,8 @@ class HullRiskEngine:
                         "message": f"🚨 {pos['symbol']} held overnight: {pos['entry_date']} → {pos['exit_date']} ({pos['duration_hours']}h)"
                     })
             
-            # Late trades (after force flat time)
-            if len(late_trades) > 0:
+            # Late trades (after force flat time) - Skip for accounts with skip_force_flat_penalty
+            if len(late_trades) > 0 and not skip_force_flat_penalty:
                 action_items.append({
                     "priority": "HIGH",
                     "category": "trading_hours",
@@ -2285,6 +2443,21 @@ class HullRiskEngine:
                         "type": "LATE_TRADE",
                         "severity": "WARNING",
                         "message": f"⏰ {trade['symbol']} traded at {trade['time'][:19]} - after force flat"
+                    })
+            
+            # Trade duration breaches (for accounts with max_trade_duration_hours like JOEL ALVES NASDAQ)
+            if len(trade_duration_breaches) > 0:
+                action_items.append({
+                    "priority": "HIGH",
+                    "category": "trade_duration",
+                    "issue": f"{len(trade_duration_breaches)} trades exceeded {max_trade_duration_hours}h duration limit",
+                    "fix": f"Close positions within {max_trade_duration_hours} hours to maintain day trading discipline"
+                })
+                for breach in trade_duration_breaches[:2]:
+                    alerts.append({
+                        "type": "DURATION_BREACH",
+                        "severity": "WARNING",
+                        "message": f"⏱️ {breach['symbol']} held for {breach['duration_hours']:.1f}h (max: {max_trade_duration_hours}h)"
                     })
             
             # Weekend/Asia open trades
@@ -2368,16 +2541,18 @@ class HullRiskEngine:
                     "penalty_applied": min(40, len(daily_loss_breaches) * 20)
                 },
                 # ===== DAY TRADING COMPLIANCE (STRICT) =====
+                # Account-specific override for after-hours traders (e.g., JOEL ALVES NASDAQ)
                 "trading_hours": {
-                    "policy": "ALL positions must be closed by force flat time. NO overnight positions.",
-                    "force_flat_time": f"{force_flat_time_str} UTC (16:50 NY)",
+                    "policy": "After-hours trading allowed - Monitor TRADE DURATION instead" if skip_force_flat_penalty else "ALL positions must be closed by force flat time. NO overnight positions.",
+                    "force_flat_time": "N/A (after-hours trader)" if skip_force_flat_penalty else f"{force_flat_time_str} UTC (16:50 NY)",
+                    "account_override": account_override.get("account_name") if skip_force_flat_penalty else None,
                     "overnight_positions_found": len(overnight_positions),
                     "late_trades_found": len(late_trades),
                     "weekend_trades_found": len(weekend_trades),
-                    "overnight_violations": overnight_positions[:5],
-                    "late_trade_violations": late_trades[:5],
-                    "penalty_applied": min(45, len(overnight_positions) * 15),
-                    "status": "COMPLIANT" if len(overnight_positions) == 0 else "NON-COMPLIANT"
+                    "overnight_violations": overnight_positions[:5] if not skip_force_flat_penalty else [],
+                    "late_trade_violations": late_trades[:5] if not skip_force_flat_penalty else [],
+                    "penalty_applied": 0 if skip_force_flat_penalty else min(45, len(overnight_positions) * 15),
+                    "status": "COMPLIANT" if skip_force_flat_penalty or len(overnight_positions) == 0 else "NON-COMPLIANT"
                 },
                 "trade_duration": {
                     "total_trades_analyzed": len(trade_durations),
@@ -2385,7 +2560,12 @@ class HullRiskEngine:
                     "longest_trade_hours": round(max((t["duration_hours"] for t in trade_durations), default=0), 2),
                     "shortest_trade_minutes": round(min((t["duration_minutes"] for t in trade_durations), default=0), 1),
                     "day_trades_percentage": round(len([t for t in trade_durations if t["duration_hours"] < 16]) / len(trade_durations) * 100, 1) if trade_durations else 100,
-                    "longest_trades": sorted(trade_durations, key=lambda x: -x["duration_minutes"])[:5]
+                    "longest_trades": sorted(trade_durations, key=lambda x: -x["duration_minutes"])[:5],
+                    # Add trade duration breach info for accounts with custom rules
+                    "max_duration_hours": max_trade_duration_hours,
+                    "duration_breaches": len(trade_duration_breaches) if max_trade_duration_hours else 0,
+                    "duration_breach_details": trade_duration_breaches[:5] if max_trade_duration_hours else [],
+                    "duration_policy": f"Trades must not exceed {max_trade_duration_hours}h" if max_trade_duration_hours else "No duration limit"
                 },
                 "trading_session_analysis": {
                     "entry_hours_utc": dict(sorted(entry_hour_distribution.items())),
