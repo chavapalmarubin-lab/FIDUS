@@ -2797,3 +2797,280 @@
   .ngt-strategy-metrics { justify-content: center; }
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COPY RATIO SECTION - Social Trading Risk Control
+═══════════════════════════════════════════════════════════════════════════════ */
+
+.ngt-copy-ratio-section {
+  margin-top: 24px;
+  padding: 24px;
+  background: rgba(var(--ngt-accent-rgb), 0.05);
+  border: 1px solid rgba(var(--ngt-accent-rgb), 0.2);
+  border-radius: var(--ngt-radius-lg);
+}
+
+.ngt-copy-ratio-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ngt-text-primary);
+  margin: 0 0 20px 0;
+}
+
+.ngt-copy-ratio-section .section-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ngt-text-muted);
+  margin-left: auto;
+}
+
+.ngt-copy-ratio-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--ngt-text-muted);
+}
+
+.ngt-copy-ratio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ngt-copy-ratio-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--ngt-radius-md);
+}
+
+.ngt-ratio-current,
+.ngt-ratio-recommended {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ngt-ratio-current .label,
+.ngt-ratio-recommended .label {
+  font-size: 12px;
+  color: var(--ngt-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ngt-ratio-current .value,
+.ngt-ratio-recommended .value {
+  font-size: 48px;
+  font-weight: 700;
+  font-family: var(--ngt-font-mono);
+  color: var(--ngt-text-primary);
+}
+
+.ngt-ratio-current .source {
+  font-size: 11px;
+  color: var(--ngt-text-muted);
+}
+
+.ngt-ratio-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ngt-ratio-arrow .increase { color: #10B981; }
+.ngt-ratio-arrow .decrease { color: #EF4444; }
+.ngt-ratio-arrow .maintain { color: #6B7280; }
+
+.ngt-ratio-recommended .urgency-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ngt-ratio-recommended .urgency-badge.ok,
+.ngt-ratio-recommended .urgency-badge.info {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.ngt-ratio-recommended .urgency-badge.low {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.ngt-ratio-recommended .urgency-badge.medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.ngt-ratio-recommended .urgency-badge.high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+}
+
+.ngt-ratio-recommended .urgency-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.ngt-lot-analysis-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--ngt-radius-md);
+}
+
+.ngt-lot-analysis-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ngt-lot-analysis-stats .label {
+  font-size: 11px;
+  color: var(--ngt-text-muted);
+  text-transform: uppercase;
+}
+
+.ngt-lot-analysis-stats .value {
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--ngt-font-mono);
+  color: var(--ngt-text-primary);
+}
+
+.ngt-copy-ratio-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: var(--ngt-radius-md);
+}
+
+.ngt-copy-ratio-reasons .reason {
+  font-size: 13px;
+  color: #93c5fd;
+  padding-left: 16px;
+  position: relative;
+}
+
+.ngt-copy-ratio-reasons .reason::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+}
+
+.ngt-copy-ratio-actions {
+  padding: 16px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--ngt-radius-md);
+}
+
+.ngt-copy-ratio-actions h5 {
+  font-size: 12px;
+  color: #fbbf24;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ngt-copy-ratio-actions .action-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--ngt-radius-sm);
+  border-left: 3px solid #fbbf24;
+}
+
+.ngt-copy-ratio-actions .action-item.priority-high {
+  border-left-color: #f87171;
+}
+
+.ngt-copy-ratio-actions .action-item.priority-medium {
+  border-left-color: #fbbf24;
+}
+
+.ngt-copy-ratio-actions .action-item.priority-low {
+  border-left-color: #60a5fa;
+}
+
+.ngt-copy-ratio-actions .action-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ngt-text-primary);
+}
+
+.ngt-copy-ratio-actions .action-impact {
+  font-size: 12px;
+  color: var(--ngt-text-muted);
+}
+
+.ngt-valid-ratios {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ngt-valid-ratios .label {
+  font-size: 12px;
+  color: var(--ngt-text-muted);
+  text-transform: uppercase;
+}
+
+.ngt-valid-ratios .ratio-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ngt-valid-ratios .ratio-chip {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--ngt-font-mono);
+  color: var(--ngt-text-muted);
+}
+
+.ngt-valid-ratios .ratio-chip.recommended {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10B981;
+  color: #34d399;
+}
+
+.ngt-valid-ratios .ratio-chip.current {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3B82F6;
+  color: #60a5fa;
+}
+
+.ngt-copy-ratio-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--ngt-text-muted);
+}
+

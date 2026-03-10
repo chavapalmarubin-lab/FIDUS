@@ -11,7 +11,7 @@ import {
   ChevronRight, ChevronDown, Zap, Briefcase, PieChart as PieChartIcon,
   ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
   Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings,
-  CheckCircle
+  CheckCircle, Copy, ArrowUpCircle, ArrowDownCircle, MinusCircle
 } from 'lucide-react';
 import './NextGenTradingAnalytics.css';
 
@@ -68,6 +68,10 @@ export default function NextGenTradingAnalytics() {
   const [calcEquity, setCalcEquity] = useState(100000);
   const [calcStopDistance, setCalcStopDistance] = useState(10);
   const [calcResult, setCalcResult] = useState(null);
+  
+  // Copy Ratio State
+  const [copyRatioData, setCopyRatioData] = useState(null);
+  const [copyRatioLoading, setCopyRatioLoading] = useState(false);
   
   // AI Advisor State
   const [aiChatMessages, setAiChatMessages] = useState([]);
@@ -175,6 +179,10 @@ export default function NextGenTradingAnalytics() {
   useEffect(() => {
     if (deepDiveManager && (activeTab === 'deepdive' || activeTab === 'risklimits')) {
       fetchRiskAnalysis(deepDiveManager.account);
+      // Also fetch copy ratio when on risklimits tab
+      if (activeTab === 'risklimits') {
+        fetchCopyRatioRecommendation(deepDiveManager.account);
+      }
     }
   }, [deepDiveManager, activeTab]);
 
@@ -256,6 +264,35 @@ export default function NextGenTradingAnalytics() {
       }
     } catch (err) {
       console.error('Error calculating max lots:', err);
+    }
+  };
+
+  // Copy Ratio Recommendation - fetched on-demand per strategy
+  const fetchCopyRatioRecommendation = async (account) => {
+    try {
+      setCopyRatioLoading(true);
+      setCopyRatioData(null);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/risk-engine/copy-ratio/${account}?period_days=${timePeriod}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setCopyRatioData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching copy ratio:', err);
+    } finally {
+      setCopyRatioLoading(false);
     }
   };
 
@@ -1866,6 +1903,103 @@ export default function NextGenTradingAnalytics() {
                     </div>
                   </div>
                 )}
+
+                {/* Copy Ratio Recommendation - Social Trading Risk Control */}
+                <div className="ngt-copy-ratio-section">
+                  <h4>
+                    <Copy size={18} />
+                    Copy Ratio Recommendation
+                    <span className="section-subtitle">Social Trading Risk Control</span>
+                  </h4>
+                  
+                  {copyRatioLoading ? (
+                    <div className="ngt-copy-ratio-loading">
+                      <Loader2 size={20} className="spin" />
+                      <span>Analyzing lot sizes...</span>
+                    </div>
+                  ) : copyRatioData ? (
+                    <div className="ngt-copy-ratio-content">
+                      <div className="ngt-copy-ratio-main">
+                        <div className="ngt-ratio-current">
+                          <span className="label">Current Ratio</span>
+                          <span className="value">{copyRatioData.current_copy_ratio?.toFixed(1)}</span>
+                          <span className="source">{copyRatioData.current_ratio_source}</span>
+                        </div>
+                        <div className="ngt-ratio-arrow">
+                          {copyRatioData.action === 'INCREASE' && <ArrowUpCircle size={32} className="increase" />}
+                          {copyRatioData.action === 'DECREASE' && <ArrowDownCircle size={32} className="decrease" />}
+                          {copyRatioData.action === 'MAINTAIN' && <MinusCircle size={32} className="maintain" />}
+                        </div>
+                        <div className="ngt-ratio-recommended">
+                          <span className="label">Recommended</span>
+                          <span className="value">{copyRatioData.recommended_ratio?.toFixed(1)}</span>
+                          <span className={`urgency-badge ${copyRatioData.urgency?.toLowerCase()}`}>
+                            {copyRatioData.urgency}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {copyRatioData.lot_analysis && (
+                        <div className="ngt-lot-analysis-stats">
+                          <div className="stat">
+                            <span className="label">Trades Analyzed</span>
+                            <span className="value">{copyRatioData.lot_analysis.total_trades_analyzed}</span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">Breaches</span>
+                            <span className="value">{copyRatioData.lot_analysis.trades_with_breaches}</span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">Breach Rate</span>
+                            <span className="value">{copyRatioData.lot_analysis.breach_rate}%</span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">Avg Breach</span>
+                            <span className="value">{copyRatioData.lot_analysis.average_breach_pct}%</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {copyRatioData.reasons?.length > 0 && (
+                        <div className="ngt-copy-ratio-reasons">
+                          {copyRatioData.reasons.map((reason, i) => (
+                            <span key={i} className="reason">{reason}</span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {copyRatioData.actionable_recommendations?.length > 0 && (
+                        <div className="ngt-copy-ratio-actions">
+                          <h5>Recommended Actions:</h5>
+                          {copyRatioData.actionable_recommendations.map((rec, i) => (
+                            <div key={i} className={`action-item priority-${rec.priority?.toLowerCase()}`}>
+                              <span className="action-text">{rec.action}</span>
+                              <span className="action-impact">{rec.impact}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="ngt-valid-ratios">
+                        <span className="label">Valid Ratios:</span>
+                        <div className="ratio-chips">
+                          {[1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1].map(r => (
+                            <span 
+                              key={r} 
+                              className={`ratio-chip ${r === copyRatioData.recommended_ratio ? 'recommended' : ''} ${r === copyRatioData.current_copy_ratio ? 'current' : ''}`}
+                            >
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ngt-copy-ratio-empty">
+                      <p>Select a strategy above to analyze copy ratio recommendations</p>
+                    </div>
+                  )}
+                </div>
 
                 {/* No Issues Message */}
                 {riskAnalysis.total_lot_breaches === 0 && riskAnalysis.total_risk_breaches === 0 && (
