@@ -22,8 +22,8 @@ import './NextGenTradingAnalytics.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Default strategy for Deep Dive (TradingHub Gold - Account 886557)
-const DEFAULT_DEEP_DIVE_ACCOUNT = 886557;
+// Default strategy for Deep Dive (JC PROVIDER - Account 2206)
+const DEFAULT_DEEP_DIVE_ACCOUNT = 2206;
 
 // Auto-refresh interval (30 seconds)
 const AUTO_REFRESH_INTERVAL = 30000;
@@ -121,7 +121,7 @@ export default function NextGenTradingAnalytics() {
         setManagers(data.managers);
         setLastRefresh(new Date());
         
-        // Set default deep dive manager (TradingHub Gold)
+        // Set default deep dive manager (JC PROVIDER)
         const defaultManager = data.managers.find(m => m.account === DEFAULT_DEEP_DIVE_ACCOUNT);
         if (defaultManager && !deepDiveManager) {
           setDeepDiveManager(defaultManager);
@@ -2049,7 +2049,7 @@ export default function NextGenTradingAnalytics() {
                           <button onClick={() => setAiInputMessage("Which strategies have concerning risk metrics?")}>
                             Risk concerns?
                           </button>
-                          <button onClick={() => setAiInputMessage("Compare TradingHub Gold vs other strategies")}>
+                          <button onClick={() => setAiInputMessage("Compare JC PROVIDER vs other strategies")}>
                             Compare strategies
                           </button>
                         </div>

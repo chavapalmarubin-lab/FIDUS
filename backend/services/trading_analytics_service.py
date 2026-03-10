@@ -32,47 +32,45 @@ class TradingAnalyticsService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         
-        # Fund structure mapping - FINAL 2025-12-18 (Per Chava's exact specifications)
-        # 5 ACTIVE MANAGERS:
-        # 1. alefloreztrader - SEPARATION accounts 897591, 897599 (https://ratings.multibankfx.com/widgets/ratings/4119)
-        # 2. Provider1-Assev - BALANCE account 897589 (https://ratings.mexatlantic.com/widgets/ratings/5201)
-        # 3. TradingHub Gold - BALANCE accounts 886557, 891215 (https://ratings.multibankfx.com/widgets/ratings/1359)
-        # 4. UNO14 Manager - BALANCE account 886602 MAM (https://www.fxblue.com/users/gestion_global)
-        # 5. CP Strategy - CORE accounts 897590, 885822 (https://ratings.mexatlantic.com/widgets/ratings/3157)
-        # INACTIVE: GoldenTrade account 886066 (keep in DB, don't delete)
+        # Fund structure mapping - UPDATED March 9, 2026 (LUCRUM Capital accounts)
+        # 3 ACTIVE MANAGERS (Final March 2026 Allocation):
+        # 1. JC PROVIDER - Account 2206 ($179,316.36) - Copies MEX Atlantic 86511 at 0.5 ratio
+        # 2. JARED COPIA - Account 20043 ($178,000) - Copies LUCRUM 2122 at 0.3 ratio
+        # 3. JOSE GOLD DAY-TRADE - Account 2208 ($50,000) - Copies LUCRUM 2210 at 0.5 ratio
+        # Total Allocated: $407,316.36
         self.FUND_STRUCTURE = {
-            "BALANCE": {
-                "aum": 100000,  # Client BALANCE allocation: $100,000
-                "accounts": [886557, 886602, 891215, 897589],  # All client BALANCE accounts
+            "Main Fund": {
+                "aum": 407316.36,  # Total March 2026 allocation
+                "accounts": [2206, 20043, 2208],
                 "managers": [
-                    {"id": "manager_uno14", "account": 886602, "name": "UNO14 Manager", "status": "active", "method": "MAM", "profile_url": "https://www.fxblue.com/users/gestion_global"},
-                    {"id": "manager_tradinghub_gold", "account": 886557, "name": "TradingHub Gold", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/1359?widgetKey=social_platform_ratings"},
-                    {"id": "manager_tradinghub_gold", "account": 891215, "name": "TradingHub Gold", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/1359?widgetKey=social_platform_ratings"},
-                    {"id": "manager_provider1_assev", "account": 897589, "name": "Provider1-Assev", "status": "active", "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/5201?widgetKey=social_platform_ratings"}
+                    {"id": "manager_jc_provider", "account": 2206, "name": "JC PROVIDER", "status": "active", "allocation": 179316.36, "notes": "Copies MEX Atlantic 86511 at 0.5 ratio"},
+                    {"id": "manager_jared_copia", "account": 20043, "name": "JARED COPIA", "status": "active", "allocation": 178000.00, "notes": "Copies LUCRUM 2122 at 0.3 ratio"},
+                    {"id": "manager_jose_gold_daytrade", "account": 2208, "name": "JOSE GOLD DAY-TRADE", "status": "active", "allocation": 50000.00, "notes": "Copies LUCRUM 2210 at 0.5 ratio"}
+                ]
+            },
+            "BALANCE": {
+                "aum": 178000.00,  # JARED COPIA allocation
+                "accounts": [20043],
+                "managers": [
+                    {"id": "manager_jared_copia", "account": 20043, "name": "JARED COPIA", "status": "active", "allocation": 178000.00}
                 ]
             },
             "CORE": {
-                "aum": 18151.41,  # Client CORE allocation: $18,151.41
-                "accounts": [885822, 891234, 897590],  # All client CORE accounts
+                "aum": 179316.36,  # JC PROVIDER allocation
+                "accounts": [2206],
                 "managers": [
-                    {"id": "manager_cp_strategy", "account": 885822, "name": "CP Strategy", "status": "active", "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/3157?widgetKey=social"},
-                    {"id": "manager_cp_strategy", "account": 897590, "name": "CP Strategy", "status": "active", "profile_url": "https://ratings.mexatlantic.com/widgets/ratings/3157?widgetKey=social"}
+                    {"id": "manager_jc_provider", "account": 2206, "name": "JC PROVIDER", "status": "active", "allocation": 179316.36}
                 ]
             },
             "SEPARATION": {
-                "aum": 0,  # Extracted profits - no client obligation
-                "accounts": [897591, 897599, 886528],
-                "managers": [
-                    {"id": "manager_alefloreztrader", "account": 897591, "name": "alefloreztrader", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/4119?widgetKey=social_platform_ratings"},
-                    {"id": "manager_alefloreztrader", "account": 897599, "name": "alefloreztrader", "status": "active", "profile_url": "https://ratings.multibankfx.com/widgets/ratings/4119?widgetKey=social_platform_ratings"}
-                ]
+                "aum": 0,  # No separation accounts active
+                "accounts": [],
+                "managers": []
             },
             "INACTIVE": {
                 "aum": 0,
-                "accounts": [886066],  # GoldenTrade - inactive but keep in database
-                "managers": [
-                    {"id": "manager_goldentrade", "account": 886066, "name": "GoldenTrade", "status": "inactive"}
-                ]
+                "accounts": [2209, 2205, 2199],  # Previously active accounts now zeroed
+                "managers": []
             }
         }
     
@@ -394,11 +392,11 @@ class TradingAnalyticsService:
         try:
             logger.info(f"📊 Calculating managers ranking for {period_days} days")
             
-            # Get all ACTIVE managers from BALANCE, CORE, and SEPARATION funds (exclude INACTIVE only)
+            # Get all ACTIVE managers from Main Fund (March 2026 allocation)
             # Track unique managers to avoid duplicates (some managers handle multiple accounts)
             unique_managers = {}  # Key: manager_id, Value: aggregated performance
             
-            for fund_name in ["BALANCE", "CORE", "SEPARATION"]:  # Process all active funds
+            for fund_name in ["Main Fund"]:  # Process active fund only
                 fund_config = self.FUND_STRUCTURE.get(fund_name)
                 if not fund_config:
                     continue
