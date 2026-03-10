@@ -250,6 +250,100 @@ ALERT_SEVERITY = {
 }
 
 # =============================================================================
+# COPY RATIO CONFIGURATION - Social Trading Risk Control
+# =============================================================================
+# The copy ratio is a powerful real-time risk control mechanism.
+# By adjusting the ratio, FIDUS can ensure positions sizes stay within risk limits.
+# A ratio of 0.5 means the copied trade will be 50% of the source trade size.
+
+VALID_COPY_RATIOS = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+
+# Copy ratio recommendation logic:
+# 1. If avg lot size breaches > 20% of allowed: reduce ratio by 0.1-0.2
+# 2. If avg lot size breaches > 50% of allowed: reduce ratio by 0.3-0.4
+# 3. If avg lot size breaches > 100% of allowed: reduce ratio by 0.5+
+# 4. Target: Keep lot sizes within 80-100% of FIDUS max allowed
+
+def get_recommended_copy_ratio(
+    current_ratio: float,
+    avg_breach_pct: float,
+    max_breach_pct: float,
+    risk_score: int
+) -> dict:
+    """
+    Calculate the recommended copy ratio based on lot size breaches.
+    
+    Args:
+        current_ratio: Currently configured copy ratio (0.1 to 1.0)
+        avg_breach_pct: Average percentage over allowed lot size (e.g., 25 = 25% over)
+        max_breach_pct: Maximum breach percentage in the period
+        risk_score: Current risk control score (0-100)
+        
+    Returns:
+        Dictionary with recommended ratio and explanation
+    """
+    recommended = current_ratio
+    reasons = []
+    urgency = "LOW"
+    
+    # If no breaches, might be able to increase ratio
+    if avg_breach_pct <= 0 and max_breach_pct <= 0:
+        if current_ratio < 0.9 and risk_score >= 80:
+            # Consider increasing ratio if consistently compliant
+            recommended = min(current_ratio + 0.1, 1.0)
+            reasons.append("No lot size breaches - ratio can potentially be increased")
+            urgency = "INFO"
+        else:
+            reasons.append("Current ratio is appropriate - no changes needed")
+            urgency = "OK"
+    
+    # Minor breaches (0-20% over): reduce by 0.1
+    elif avg_breach_pct <= 20:
+        recommended = max(current_ratio - 0.1, 0.1)
+        reasons.append(f"Minor lot breaches (avg {avg_breach_pct:.0f}% over limit)")
+        urgency = "LOW"
+    
+    # Moderate breaches (20-50% over): reduce by 0.2
+    elif avg_breach_pct <= 50:
+        recommended = max(current_ratio - 0.2, 0.1)
+        reasons.append(f"Moderate lot breaches (avg {avg_breach_pct:.0f}% over limit)")
+        urgency = "MEDIUM"
+    
+    # Significant breaches (50-100% over): reduce by 0.3
+    elif avg_breach_pct <= 100:
+        recommended = max(current_ratio - 0.3, 0.1)
+        reasons.append(f"Significant lot breaches (avg {avg_breach_pct:.0f}% over limit)")
+        urgency = "HIGH"
+    
+    # Severe breaches (>100% over): reduce by 0.4-0.5
+    else:
+        reduction = 0.4 if avg_breach_pct <= 150 else 0.5
+        recommended = max(current_ratio - reduction, 0.1)
+        reasons.append(f"Severe lot breaches (avg {avg_breach_pct:.0f}% over limit) - IMMEDIATE ACTION")
+        urgency = "CRITICAL"
+    
+    # Also check max breach (single worst trade)
+    if max_breach_pct > 150 and urgency not in ["HIGH", "CRITICAL"]:
+        urgency = "HIGH"
+        reasons.append(f"Max single breach was {max_breach_pct:.0f}% over limit")
+    
+    # Round to nearest valid ratio
+    recommended = min(VALID_COPY_RATIOS, key=lambda x: abs(x - recommended))
+    
+    # Calculate the change from current
+    ratio_change = recommended - current_ratio
+    
+    return {
+        "current_ratio": current_ratio,
+        "recommended_ratio": recommended,
+        "ratio_change": round(ratio_change, 2),
+        "reasons": reasons,
+        "urgency": urgency,
+        "action": "DECREASE" if ratio_change < 0 else ("INCREASE" if ratio_change > 0 else "MAINTAIN")
+    }
+
+
+# =============================================================================
 # CUSTOM ACCOUNT POLICY OVERRIDES
 # =============================================================================
 # Some accounts have specific trading styles that require different rules
@@ -2831,3 +2925,215 @@ class HullRiskEngine:
             "confidence_notes": ["Unable to generate analysis"],
             "error": reason
         }
+    
+    # =========================================================================
+    # COPY RATIO RECOMMENDATION ANALYSIS
+    # =========================================================================
+    
+    async def analyze_copy_ratio(
+        self,
+        account: int,
+        period_days: int = 30
+    ) -> Dict[str, Any]:
+        """
+        Analyze an account's trading behavior and recommend optimal copy ratio.
+        
+        The copy ratio is a real-time risk control mechanism used in Social Trading.
+        A ratio of 0.5 means copied trades will be 50% of the source trade size.
+        
+        This analysis:
+        1. Calculates average and max lot size breaches
+        2. Compares against FIDUS risk parameters
+        3. Recommends optimal copy ratio to stay within limits
+        4. Provides actionable recommendations
+        
+        Args:
+            account: MT5 account number
+            period_days: Analysis period in days
+            
+        Returns:
+            Dictionary with copy ratio analysis and recommendation
+        """
+        try:
+            # Get account info
+            account_info = await self.db.mt5_accounts.find_one({"account": account})
+            if not account_info:
+                return {"error": f"Account {account} not found"}
+            
+            manager_name = account_info.get("manager_name", f"Account {account}")
+            equity = account_info.get("equity", 0) or account_info.get("balance", 0)
+            initial_allocation = account_info.get("initial_allocation", equity)
+            notes = account_info.get("notes", "")
+            account_type = account_info.get("account_type", "real")
+            
+            # Extract current copy ratio from notes
+            current_ratio = 1.0  # Default to 1:1
+            import re
+            ratio_match = re.search(r'(\d+\.?\d*)\s*ratio|at\s*(\d+\.?\d*)\s*ratio|@\s*(\d+\.?\d*)', notes.lower())
+            if ratio_match:
+                ratio_str = ratio_match.group(1) or ratio_match.group(2) or ratio_match.group(3)
+                try:
+                    current_ratio = float(ratio_str)
+                except:
+                    current_ratio = 1.0
+            
+            # Get risk policy
+            risk_policy = await self.get_risk_policy(account)
+            
+            # Get deals for analysis
+            start_date = datetime.now(timezone.utc) - timedelta(days=period_days)
+            deals = await self.get_deals_for_account(account, start_date, max_deals=5000)
+            
+            if not deals:
+                return {
+                    "account": account,
+                    "manager_name": manager_name,
+                    "account_type": account_type,
+                    "current_copy_ratio": current_ratio,
+                    "recommended_ratio": current_ratio,
+                    "ratio_change": 0,
+                    "urgency": "INFO",
+                    "action": "MAINTAIN",
+                    "reasons": ["No trades found in analysis period - cannot calculate recommendation"],
+                    "lot_analysis": None,
+                    "valid_ratios": VALID_COPY_RATIOS
+                }
+            
+            # Analyze lot sizes vs FIDUS limits
+            lot_breaches = []
+            total_lots = 0
+            max_breach_pct = 0
+            
+            for deal in deals:
+                symbol = deal.get("symbol", "")
+                if not symbol:
+                    continue
+                
+                volume = deal.get("volume", 0)
+                if volume <= 0:
+                    continue
+                
+                total_lots += volume
+                
+                # Get instrument specs to calculate max allowed
+                specs = await self.get_instrument_specs(symbol)
+                
+                # Calculate max allowed lots based on risk policy
+                max_lots_calc = self.calculate_max_lots(
+                    equity if equity > 0 else initial_allocation,
+                    specs,
+                    risk_policy,
+                    specs.get("default_stop_distance", 10)
+                )
+                
+                max_allowed = max_lots_calc.get("max_lots", 1.0)
+                
+                if volume > max_allowed and max_allowed > 0:
+                    breach_pct = ((volume - max_allowed) / max_allowed) * 100
+                    lot_breaches.append({
+                        "symbol": symbol,
+                        "volume": volume,
+                        "max_allowed": max_allowed,
+                        "breach_pct": breach_pct,
+                        "time": deal.get("time")
+                    })
+                    max_breach_pct = max(max_breach_pct, breach_pct)
+            
+            # Calculate averages
+            avg_breach_pct = 0
+            if lot_breaches:
+                avg_breach_pct = sum(b["breach_pct"] for b in lot_breaches) / len(lot_breaches)
+            
+            # Calculate risk control score (simplified)
+            risk_score = await self.calculate_risk_control_score(account, period_days)
+            composite_score = risk_score.get("composite_score", 70)
+            
+            # Get copy ratio recommendation
+            recommendation = get_recommended_copy_ratio(
+                current_ratio,
+                avg_breach_pct,
+                max_breach_pct,
+                composite_score
+            )
+            
+            # Build detailed analysis
+            lot_analysis = {
+                "total_trades_analyzed": len(deals),
+                "trades_with_breaches": len(lot_breaches),
+                "breach_rate": round(len(lot_breaches) / len(deals) * 100, 1) if deals else 0,
+                "average_breach_pct": round(avg_breach_pct, 1),
+                "max_breach_pct": round(max_breach_pct, 1),
+                "worst_breaches": sorted(lot_breaches, key=lambda x: -x["breach_pct"])[:5]
+            }
+            
+            # Generate recommendations
+            actionable_recommendations = []
+            
+            if recommendation["action"] == "DECREASE":
+                actionable_recommendations.append({
+                    "priority": "HIGH" if recommendation["urgency"] in ["HIGH", "CRITICAL"] else "MEDIUM",
+                    "action": f"Reduce copy ratio from {current_ratio} to {recommendation['recommended_ratio']}",
+                    "impact": f"This will reduce trade sizes by {abs(recommendation['ratio_change'])*100:.0f}%",
+                    "implementation": f"Update Social Trading copier settings: Set 'Lot Multiplier' to {recommendation['recommended_ratio']}"
+                })
+            elif recommendation["action"] == "INCREASE":
+                actionable_recommendations.append({
+                    "priority": "LOW",
+                    "action": f"Consider increasing copy ratio from {current_ratio} to {recommendation['recommended_ratio']}",
+                    "impact": f"This would increase trade sizes by {abs(recommendation['ratio_change'])*100:.0f}%",
+                    "implementation": "Only increase if risk score remains above 80 for next 2 weeks"
+                })
+            
+            # Add symbol-specific recommendations if certain symbols breach more
+            symbol_breaches = {}
+            for breach in lot_breaches:
+                sym = breach["symbol"]
+                if sym not in symbol_breaches:
+                    symbol_breaches[sym] = {"count": 0, "avg_pct": 0}
+                symbol_breaches[sym]["count"] += 1
+                symbol_breaches[sym]["avg_pct"] += breach["breach_pct"]
+            
+            for sym, data in symbol_breaches.items():
+                data["avg_pct"] = data["avg_pct"] / data["count"]
+                if data["avg_pct"] > 50:
+                    actionable_recommendations.append({
+                        "priority": "MEDIUM",
+                        "action": f"Consider disabling {sym} in copier or setting symbol-specific max lot",
+                        "impact": f"{sym} has {data['count']} breaches averaging {data['avg_pct']:.0f}% over limit",
+                        "implementation": f"In Social Trading: Use 'Disable Symbols' feature for {sym} or set per-symbol max lot"
+                    })
+            
+            return {
+                "account": account,
+                "manager_name": manager_name,
+                "account_type": account_type,
+                "equity": round(equity, 2),
+                "initial_allocation": round(initial_allocation, 2),
+                "notes": notes,
+                "risk_control_score": composite_score,
+                
+                # Current configuration
+                "current_copy_ratio": current_ratio,
+                "current_ratio_source": "Extracted from account notes" if ratio_match else "Default (1.0)",
+                
+                # Recommendation
+                "recommended_ratio": recommendation["recommended_ratio"],
+                "ratio_change": recommendation["ratio_change"],
+                "urgency": recommendation["urgency"],
+                "action": recommendation["action"],
+                "reasons": recommendation["reasons"],
+                
+                # Analysis details
+                "lot_analysis": lot_analysis,
+                "actionable_recommendations": actionable_recommendations,
+                
+                # Reference
+                "valid_ratios": VALID_COPY_RATIOS,
+                "period_days": period_days,
+                "analysis_timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing copy ratio for account {account}: {e}")
+            return {"error": str(e), "account": account}
+

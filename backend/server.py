@@ -23954,6 +23954,109 @@ async def get_strategy_risk_analysis(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
+@api_router.get("/admin/risk-engine/copy-ratio/{account}")
+async def get_copy_ratio_recommendation(
+    account: int,
+    period_days: int = 30,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get copy ratio recommendation for Social Trading risk control.
+    
+    The copy ratio is a real-time risk control mechanism that scales trade sizes.
+    A ratio of 0.5 means copied trades will be 50% of the source trade size.
+    
+    This analysis:
+    1. Calculates average and max lot size breaches
+    2. Compares against FIDUS risk parameters (1% max risk per trade)
+    3. Recommends optimal copy ratio to stay within limits
+    4. Provides actionable recommendations for Social Trading settings
+    
+    Parameters:
+    - account: MT5 account number (real or demo)
+    - period_days: Analysis period (default 30 days)
+    
+    Returns:
+    - Current and recommended copy ratios
+    - Urgency level (OK, LOW, MEDIUM, HIGH, CRITICAL)
+    - Lot size breach analysis
+    - Actionable recommendations
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        analysis = await engine.analyze_copy_ratio(account, period_days)
+        return {"success": True, **analysis}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@api_router.get("/admin/risk-engine/copy-ratio-all")
+async def get_all_copy_ratio_recommendations(
+    period_days: int = 30,
+    include_demo: bool = True,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get copy ratio recommendations for ALL active accounts.
+    
+    Returns recommendations for both real money managers and live demo accounts,
+    useful for portfolio-wide risk assessment.
+    """
+    try:
+        from services.hull_risk_engine import HullRiskEngine
+        engine = HullRiskEngine(db)
+        
+        # Get all active accounts with allocations
+        query = {"status": "active", "initial_allocation": {"$gt": 0}}
+        if not include_demo:
+            query["account_type"] = {"$ne": "live_demo"}
+        
+        accounts = await db.mt5_accounts.find(query).to_list(length=100)
+        
+        results = []
+        for acc in accounts:
+            account_num = acc.get("account")
+            try:
+                # Use simplified analysis for bulk - skip full risk score calculation
+                analysis = await engine.analyze_copy_ratio(account_num, period_days)
+                if not analysis.get("error"):
+                    lot_analysis = analysis.get("lot_analysis") or {}
+                    results.append({
+                        "account": account_num,
+                        "manager_name": analysis.get("manager_name"),
+                        "account_type": analysis.get("account_type"),
+                        "current_ratio": analysis.get("current_copy_ratio"),
+                        "recommended_ratio": analysis.get("recommended_ratio"),
+                        "ratio_change": analysis.get("ratio_change"),
+                        "urgency": analysis.get("urgency"),
+                        "action": analysis.get("action"),
+                        "risk_score": analysis.get("risk_control_score"),
+                        "breach_rate": lot_analysis.get("breach_rate", 0)
+                    })
+            except Exception as inner_e:
+                logger.error(f"Error processing account {account_num}: {inner_e}")
+                continue
+        
+        # Sort by urgency
+        urgency_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4, "OK": 5}
+        results.sort(key=lambda x: urgency_order.get(x.get("urgency", "OK"), 5))
+        
+        return {
+            "success": True,
+            "total_accounts": len(results),
+            "accounts_needing_adjustment": len([r for r in results if r.get("action") == "DECREASE"]),
+            "recommendations": results,
+            "period_days": period_days,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error in copy-ratio-all: {e}")
+        return {"success": False, "error": str(e)}
+
+
 @api_router.get("/admin/risk-engine/what-if/{account}")
 async def get_what_if_analysis(
     account: int,
