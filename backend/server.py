@@ -3378,9 +3378,9 @@ async def get_corrected_mt5_accounts(current_user: dict = Depends(get_current_us
     """
     try:
         # ✅ CRITICAL: Only include accounts from the active allocation
-        # FIDUS Allocation Update - Feb 5, 2026: All operations moved to LUCRUM Capital
-        # Active accounts: 2206, 2209, 20043, 2205, 2199 (rebates)
-        active_allocation_accounts = [2206, 2209, 20043, 2205]
+        # FIDUS Allocation Update - March 9, 2026: Final allocation complete
+        # Active accounts: 2206, 2208, 20043, 2205, 2199 (rebates), 2209 (inactive)
+        active_allocation_accounts = [2206, 2208, 20043, 2205, 2209]
         
         # Get only active allocation accounts (excluding rebate account 2199)
         accounts = await db.mt5_accounts.find({
