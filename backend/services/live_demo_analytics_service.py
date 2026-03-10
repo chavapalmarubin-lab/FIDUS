@@ -159,6 +159,17 @@ class LiveDemoAnalyticsService:
             current_equity = account.get("equity", 0)
             current_balance = account.get("balance", 0)
             
+            # Get allocation start date for proper period tracking
+            allocation_start_date = account.get("allocation_start_date")
+            if allocation_start_date:
+                # Ensure timezone-aware
+                if allocation_start_date.tzinfo is None:
+                    allocation_start_date = allocation_start_date.replace(tzinfo=timezone.utc)
+                days_since_allocation = (datetime.now(timezone.utc) - allocation_start_date).days
+            else:
+                allocation_start_date = None
+                days_since_allocation = period_days
+            
             # Calculate P&L
             total_pnl = current_equity - initial_allocation if initial_allocation > 0 else account.get("profit", 0)
             
@@ -264,9 +275,9 @@ class LiveDemoAnalyticsService:
                 max_drawdown_pct = account.get("max_drawdown_pct", 0)
             
             # Calculate risk-adjusted metrics (simplified)
-            # These would normally require daily returns data
-            sharpe_ratio = self._estimate_sharpe_ratio(return_pct, max_drawdown_pct, period_days)
-            sortino_ratio = self._estimate_sortino_ratio(return_pct, max_drawdown_pct, period_days)
+            # Use days_since_allocation for accurate annualization
+            sharpe_ratio = self._estimate_sharpe_ratio(return_pct, max_drawdown_pct, days_since_allocation)
+            sortino_ratio = self._estimate_sortino_ratio(return_pct, max_drawdown_pct, days_since_allocation)
             calmar_ratio = (return_pct / max_drawdown_pct) if max_drawdown_pct > 0 else 0
             
             return {
@@ -276,6 +287,8 @@ class LiveDemoAnalyticsService:
                 "total_pnl": round(total_pnl, 2),
                 "return_percentage": round(return_pct, 2),
                 "profit_withdrawals": account.get("profit_withdrawals", 0),
+                "allocation_start_date": allocation_start_date.isoformat() if allocation_start_date else None,
+                "days_since_allocation": days_since_allocation,
                 "total_trades": total_trades,
                 "winning_trades": winning_trades,
                 "losing_trades": losing_trades,

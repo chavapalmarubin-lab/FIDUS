@@ -296,6 +296,17 @@ class TradingAnalyticsService:
             current_equity = equity
             true_pnl = current_equity - initial_allocation
             
+            # Get allocation start date from account data
+            allocation_start_date = account_data.get("allocation_start_date")
+            if allocation_start_date:
+                # Ensure the datetime is timezone-aware
+                if allocation_start_date.tzinfo is None:
+                    allocation_start_date = allocation_start_date.replace(tzinfo=timezone.utc)
+                # Calculate days since allocation for accurate period tracking
+                days_since_allocation = (datetime.now(timezone.utc) - allocation_start_date).days
+            else:
+                days_since_allocation = period_days
+            
             # Calculate return percentage
             return_percentage = (true_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
             
@@ -305,17 +316,39 @@ class TradingAnalyticsService:
             else:
                 drawdown_pct = 0
             
-            # Get trades for this account (last N days)
-            # NOTE: Using mt5_deals collection (standardized field names)
+            # Get trades for this account
+            # Use allocation_start_date if available, otherwise fall back to period_days
             end_date = datetime.now(timezone.utc)
-            start_date = end_date - timedelta(days=period_days)
+            if allocation_start_date:
+                # Use allocation start date for accurate P&L calculation
+                start_date = allocation_start_date
+                logger.info(f"📊 Using allocation_start_date {start_date} for account {account_num}")
+            else:
+                start_date = end_date - timedelta(days=period_days)
             
+            # Query both mt5_deals and mt5_deals_history for complete trade data
             trades_cursor = self.db.mt5_deals.find({
                 "account": account_num,
                 "type": 0,  # Only actual trades (type 0), not deposits/withdrawals
                 "time": {"$gte": start_date, "$lte": end_date}
             })
             trades = await trades_cursor.to_list(length=None)
+            
+            # Also check mt5_deals_history for older trades
+            history_cursor = self.db.mt5_deals_history.find({
+                "account": account_num,
+                "type": 0,
+                "time": {"$gte": start_date, "$lte": end_date}
+            })
+            history_trades = await history_cursor.to_list(length=None)
+            
+            # Combine and deduplicate trades by deal ID
+            all_trades_map = {}
+            for t in trades + history_trades:
+                deal_id = t.get("deal") or t.get("ticket")
+                if deal_id:
+                    all_trades_map[deal_id] = t
+            trades = list(all_trades_map.values())
             
             # Calculate trading statistics
             total_trades = len(trades)
@@ -357,6 +390,10 @@ class TradingAnalyticsService:
                 "return_percentage": round(return_percentage, 2),
                 "contribution_to_fund": round(contribution_to_fund, 2),
                 
+                # Allocation date tracking
+                "allocation_start_date": allocation_start_date.isoformat() if allocation_start_date else None,
+                "days_since_allocation": days_since_allocation,
+                
                 # Trading statistics
                 "total_trades": total_trades,
                 "winning_trades": len(winning_trades),
@@ -372,7 +409,7 @@ class TradingAnalyticsService:
                 
                 # Status
                 "status": "active" if true_pnl != 0 or total_trades > 0 else "inactive",
-                "period_days": period_days
+                "period_days": days_since_allocation  # Use actual days since allocation
             }
             
         except Exception as e:

@@ -25280,6 +25280,21 @@ async def get_live_demo_accounts():
         # Format response
         formatted_accounts = []
         for acc in demo_accounts:
+            # Handle allocation_start_date serialization
+            alloc_date = acc.get("allocation_start_date")
+            if alloc_date and isinstance(alloc_date, datetime):
+                alloc_date_str = alloc_date.isoformat()
+            else:
+                alloc_date_str = None
+            
+            # Calculate days since allocation
+            if alloc_date:
+                if alloc_date.tzinfo is None:
+                    alloc_date = alloc_date.replace(tzinfo=timezone.utc)
+                days_since_allocation = (datetime.now(timezone.utc) - alloc_date).days
+            else:
+                days_since_allocation = None
+            
             formatted_accounts.append({
                 "account": acc.get("account"),
                 "manager_name": acc.get("manager_name", "Manager Candidate"),
@@ -25287,6 +25302,8 @@ async def get_live_demo_accounts():
                 "equity": acc.get("equity", 0),
                 "profit": acc.get("profit", 0),
                 "initial_allocation": acc.get("initial_allocation", 0),
+                "allocation_start_date": alloc_date_str,
+                "days_since_allocation": days_since_allocation,
                 "platform": acc.get("platform", "MT5"),
                 "broker": acc.get("broker", "LUCRUM Capital"),
                 "server": acc.get("server", "Lucrumcapital-Live"),
