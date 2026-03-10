@@ -577,3 +577,294 @@
 .rule-warning-box strong {
   color: #fef3c7;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COPY RATIO SECTION
+═══════════════════════════════════════════════════════════════════════════════ */
+
+.copy-ratio-card {
+  margin-top: 24px;
+}
+
+.copy-ratio-card .risk-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copy-ratio-card .card-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+  margin-left: 8px;
+}
+
+.copy-ratio-card .refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.copy-ratio-card .refresh-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.copy-ratio-intro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  color: #93c5fd;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.copy-ratio-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: #888;
+}
+
+.copy-ratio-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.copy-ratio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.copy-ratio-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #888;
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.copy-ratio-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e5e5e5;
+}
+
+.copy-ratio-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.copy-ratio-table .account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.copy-ratio-table .manager-name {
+  font-weight: 500;
+  color: #fff;
+}
+
+.copy-ratio-table .account-num {
+  font-size: 11px;
+  color: #666;
+}
+
+.copy-ratio-table .type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.copy-ratio-table .type-badge.live_demo {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+.copy-ratio-table .type-badge.live_trading {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.copy-ratio-table .ratio-current {
+  font-family: 'SF Mono', monospace;
+  color: #888;
+}
+
+.copy-ratio-table .ratio-recommended {
+  font-family: 'SF Mono', monospace;
+  color: #fff;
+}
+
+.copy-ratio-table .action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.copy-ratio-table .action-badge.increase {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.copy-ratio-table .action-badge.decrease {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.copy-ratio-table .action-badge.maintain {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+}
+
+.copy-ratio-table .urgency-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.copy-ratio-table .urgency-badge.ok,
+.copy-ratio-table .urgency-badge.info {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.copy-ratio-table .urgency-badge.low {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.copy-ratio-table .urgency-badge.medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.copy-ratio-table .urgency-badge.high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+}
+
+.copy-ratio-table .urgency-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.copy-ratio-table .score-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'SF Mono', monospace;
+}
+
+.copy-ratio-table .score-badge.strong {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.copy-ratio-table .score-badge.moderate {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.copy-ratio-table .score-badge.weak {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+}
+
+.copy-ratio-table .score-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Urgency row highlights */
+.copy-ratio-table tr.urgency-critical {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.copy-ratio-table tr.urgency-high {
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.copy-ratio-legend {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.copy-ratio-legend h4 {
+  color: #888;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ratio-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ratio-chip {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  color: #93c5fd;
+  font-size: 12px;
+  font-family: 'SF Mono', monospace;
+}
+
+.legend-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #888;
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.legend-note svg {
+  color: #fbbf24;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+

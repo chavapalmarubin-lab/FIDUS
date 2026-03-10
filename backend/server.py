@@ -24021,7 +24021,7 @@ async def get_all_copy_ratio_recommendations(
             account_num = acc.get("account")
             try:
                 # Use simplified analysis for bulk - skip full risk score calculation
-                analysis = await engine.analyze_copy_ratio(account_num, period_days)
+                analysis = await engine.analyze_copy_ratio(account_num, period_days, skip_risk_score=True)
                 if not analysis.get("error"):
                     lot_analysis = analysis.get("lot_analysis") or {}
                     results.append({

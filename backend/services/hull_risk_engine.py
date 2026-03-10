@@ -2933,7 +2933,8 @@ class HullRiskEngine:
     async def analyze_copy_ratio(
         self,
         account: int,
-        period_days: int = 30
+        period_days: int = 30,
+        skip_risk_score: bool = False
     ) -> Dict[str, Any]:
         """
         Analyze an account's trading behavior and recommend optimal copy ratio.
@@ -2950,6 +2951,7 @@ class HullRiskEngine:
         Args:
             account: MT5 account number
             period_days: Analysis period in days
+            skip_risk_score: Skip risk score calculation for faster response
             
         Returns:
             Dictionary with copy ratio analysis and recommendation
@@ -3044,9 +3046,11 @@ class HullRiskEngine:
             if lot_breaches:
                 avg_breach_pct = sum(b["breach_pct"] for b in lot_breaches) / len(lot_breaches)
             
-            # Calculate risk control score (simplified)
-            risk_score = await self.calculate_risk_control_score(account, period_days)
-            composite_score = risk_score.get("composite_score", 70)
+            # Calculate risk control score (optional - skip for bulk operations)
+            composite_score = 70  # Default
+            if not skip_risk_score:
+                risk_score = await self.calculate_risk_control_score(account, period_days)
+                composite_score = risk_score.get("composite_score", 70)
             
             # Get copy ratio recommendation
             recommendation = get_recommended_copy_ratio(

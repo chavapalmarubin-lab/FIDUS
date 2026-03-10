@@ -17,7 +17,11 @@ import {
   Zap,
   Info,
   Edit2,
-  X
+  X,
+  Copy,
+  ArrowUp,
+  ArrowDown,
+  Minus
 } from 'lucide-react';
 import './RiskParameters.css';
 
@@ -42,10 +46,13 @@ const RiskParameters = () => {
   const [success, setSuccess] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [leverageByClass, setLeverageByClass] = useState({});
+  const [copyRatioData, setCopyRatioData] = useState([]);
+  const [loadingCopyRatio, setLoadingCopyRatio] = useState(false);
 
   useEffect(() => {
     fetchRiskPolicy();
     fetchLeverageSettings();
+    fetchCopyRatioRecommendations();
   }, []);
 
   const fetchRiskPolicy = async () => {
@@ -97,6 +104,97 @@ const RiskParameters = () => {
       }
     } catch (err) {
       console.error('Error fetching leverage:', err);
+    }
+  };
+
+  const fetchCopyRatioRecommendations = async () => {
+    try {
+      setLoadingCopyRatio(true);
+      const token = localStorage.getItem('fidus_token');
+      
+      // Fetch accounts with allocations
+      const accountsRes = await fetch(`${BACKEND_URL}/api/v2/derived/money-managers`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const accountsData = await accountsRes.json();
+      
+      // Also fetch live demo accounts
+      const demoRes = await fetch(`${BACKEND_URL}/api/live-demo/accounts`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const demoData = await demoRes.json();
+      
+      // Collect all accounts to analyze
+      const allAccounts = [];
+      
+      // Real accounts from money managers
+      if (accountsData.managers) {
+        Object.entries(accountsData.managers).forEach(([name, manager]) => {
+          manager.accounts?.forEach(acc => {
+            if (acc.initial_allocation > 0) {
+              allAccounts.push({
+                account: acc.account,
+                manager_name: name,
+                account_type: 'live_trading',
+                allocation: acc.initial_allocation
+              });
+            }
+          });
+        });
+      }
+      
+      // Demo accounts
+      if (demoData.accounts) {
+        demoData.accounts.forEach(acc => {
+          if (acc.initial_allocation > 0) {
+            allAccounts.push({
+              account: acc.account,
+              manager_name: acc.manager_name,
+              account_type: 'live_demo',
+              allocation: acc.initial_allocation
+            });
+          }
+        });
+      }
+      
+      // Fetch copy ratio for each account (in parallel for speed)
+      const copyRatioPromises = allAccounts.map(async (acc) => {
+        try {
+          const res = await fetch(
+            `${BACKEND_URL}/api/admin/risk-engine/copy-ratio/${acc.account}?period_days=30`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
+          const data = await res.json();
+          if (data.success) {
+            return {
+              ...acc,
+              current_ratio: data.current_copy_ratio,
+              recommended_ratio: data.recommended_ratio,
+              ratio_change: data.ratio_change,
+              action: data.action,
+              urgency: data.urgency,
+              risk_score: data.risk_control_score,
+              reasons: data.reasons || [],
+              breach_rate: data.lot_analysis?.breach_rate || 0
+            };
+          }
+          return null;
+        } catch {
+          return null;
+        }
+      });
+      
+      const results = (await Promise.all(copyRatioPromises)).filter(r => r !== null);
+      
+      // Sort by urgency
+      const urgencyOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4, OK: 5 };
+      results.sort((a, b) => (urgencyOrder[a.urgency] || 5) - (urgencyOrder[b.urgency] || 5));
+      
+      setCopyRatioData(results);
+    } catch (err) {
+      console.error('Error fetching copy ratio data:', err);
+    } finally {
+      setLoadingCopyRatio(false);
     }
   };
 
@@ -488,6 +586,123 @@ const RiskParameters = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Copy Ratio Recommendations - Social Trading Risk Control */}
+      <Card className="risk-card copy-ratio-card">
+        <CardHeader className="risk-card-header">
+          <CardTitle className="risk-card-title">
+            <Copy size={20} />
+            Copy Ratio Recommendations
+            <span className="card-subtitle">Social Trading Risk Control</span>
+          </CardTitle>
+          <Button 
+            onClick={fetchCopyRatioRecommendations} 
+            variant="outline" 
+            size="sm"
+            disabled={loadingCopyRatio}
+            className="refresh-btn"
+          >
+            <RefreshCw size={14} className={loadingCopyRatio ? 'spin' : ''} />
+            Refresh
+          </Button>
+        </CardHeader>
+        <CardContent className="risk-card-content">
+          <p className="copy-ratio-intro">
+            <Info size={14} />
+            The copy ratio controls trade sizes in real-time. A ratio of 0.5 means copied trades will be 50% of source size.
+          </p>
+          
+          {loadingCopyRatio ? (
+            <div className="copy-ratio-loading">
+              <RefreshCw size={20} className="spin" />
+              <span>Analyzing accounts...</span>
+            </div>
+          ) : copyRatioData.length === 0 ? (
+            <p className="no-data">No accounts with allocations found</p>
+          ) : (
+            <div className="copy-ratio-table-wrapper">
+              <table className="copy-ratio-table">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Type</th>
+                    <th>Current Ratio</th>
+                    <th>Recommended</th>
+                    <th>Action</th>
+                    <th>Urgency</th>
+                    <th>Risk Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {copyRatioData.map((item) => (
+                    <tr key={item.account} className={`urgency-${item.urgency?.toLowerCase()}`}>
+                      <td>
+                        <div className="account-info">
+                          <span className="manager-name">{item.manager_name}</span>
+                          <span className="account-num">#{item.account}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`type-badge ${item.account_type}`}>
+                          {item.account_type === 'live_demo' ? 'DEMO' : 'LIVE'}
+                        </span>
+                      </td>
+                      <td className="ratio-current">{item.current_ratio?.toFixed(1)}</td>
+                      <td className="ratio-recommended">
+                        <strong>{item.recommended_ratio?.toFixed(1)}</strong>
+                      </td>
+                      <td className="action-cell">
+                        {item.action === 'INCREASE' && (
+                          <span className="action-badge increase">
+                            <ArrowUp size={12} /> Increase
+                          </span>
+                        )}
+                        {item.action === 'DECREASE' && (
+                          <span className="action-badge decrease">
+                            <ArrowDown size={12} /> Decrease
+                          </span>
+                        )}
+                        {item.action === 'MAINTAIN' && (
+                          <span className="action-badge maintain">
+                            <Minus size={12} /> Maintain
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`urgency-badge ${item.urgency?.toLowerCase()}`}>
+                          {item.urgency}
+                        </span>
+                      </td>
+                      <td className="risk-score-cell">
+                        <span className={`score-badge ${
+                          item.risk_score >= 80 ? 'strong' : 
+                          item.risk_score >= 60 ? 'moderate' : 
+                          item.risk_score >= 40 ? 'weak' : 'critical'
+                        }`}>
+                          {item.risk_score || 'N/A'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          
+          <div className="copy-ratio-legend">
+            <h4>Valid Copy Ratios:</h4>
+            <div className="ratio-chips">
+              {[1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1].map(r => (
+                <span key={r} className="ratio-chip">{r}</span>
+              ))}
+            </div>
+            <p className="legend-note">
+              <AlertTriangle size={12} />
+              Decrease ratio to reduce position sizes when lot breaches occur. Implementation: Update Social Trading copier "Lot Multiplier" setting.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Risk Score Penalties Reference */}
       <Card className="risk-card penalties-card">
