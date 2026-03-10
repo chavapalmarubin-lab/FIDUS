@@ -694,6 +694,7 @@ export default function NextGenTradingAnalytics() {
               onChange={(e) => setTimePeriod(parseInt(e.target.value))}
               data-testid="period-selector"
             >
+              <option value={1}>Today (Day Trade)</option>
               <option value={7}>7 Days</option>
               <option value={30}>30 Days</option>
               <option value={90}>90 Days</option>
@@ -1011,7 +1012,7 @@ export default function NextGenTradingAnalytics() {
                   <div className="ngt-card-header-icon ngt-card-header-icon-warning">
                     <AlertTriangle size={18} />
                   </div>
-                  <h3>Risk Profile Interpretation (Last {timePeriod} Days)</h3>
+                  <h3>Risk Profile Interpretation ({timePeriod === 1 ? "Today" : `Last ${timePeriod} Days`})</h3>
                   <button 
                     className="ngt-btn ngt-btn-ghost ngt-btn-sm"
                     onClick={fetchRiskNarrative}
@@ -1429,7 +1430,7 @@ export default function NextGenTradingAnalytics() {
                       {(deepDiveManager.return_percentage || 0) >= 0 ? '+' : ''}
                       {formatPercent(deepDiveManager.return_percentage)}
                     </span>
-                    <span className="ngt-return-label">{timePeriod}-Day Return</span>
+                    <span className="ngt-return-label">{timePeriod === 1 ? "Today's" : `${timePeriod}-Day`} Return</span>
                   </div>
                 </div>
 
@@ -1657,7 +1658,7 @@ export default function NextGenTradingAnalytics() {
                     </option>
                   ))}
                 </select>
-                <span className="ngt-analysis-period">Analysis Period: Last {timePeriod} Days</span>
+                <span className="ngt-analysis-period">Analysis Period: {timePeriod === 1 ? "Today" : `Last ${timePeriod} Days`}</span>
               </div>
             </div>
 
