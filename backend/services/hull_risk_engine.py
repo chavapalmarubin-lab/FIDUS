@@ -2988,10 +2988,13 @@ class HullRiskEngine:
             
             if not deals:
                 return {
+                    "success": True,
                     "account": account,
                     "manager_name": manager_name,
                     "account_type": account_type,
+                    "notes": notes,
                     "current_copy_ratio": current_ratio,
+                    "current_ratio_source": "Extracted from account notes" if ratio_match else "Default (1.0)",
                     "recommended_ratio": current_ratio,
                     "ratio_change": 0,
                     "urgency": "INFO",
