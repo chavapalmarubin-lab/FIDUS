@@ -174,24 +174,24 @@ export default function LiveDemoAnalytics() {
   // HULL RISK ENGINE FUNCTIONS
   // ─────────────────────────────────────────────────────────────────────────────
   
-  // Fetch risk narrative on portfolio tab
+  // Fetch risk narrative on portfolio tab - also refetch when time period changes
   useEffect(() => {
-    if (activeTab === 'portfolio' && !riskNarrative && !riskNarrativeLoading && managers.length > 0) {
+    if (activeTab === 'portfolio' && managers.length > 0) {
       fetchRiskNarrative();
     }
-  }, [activeTab, managers]);
+  }, [activeTab, managers, timePeriod]);
 
-  // Fetch risk analysis when deep dive manager changes (for both deepdive and risklimits tabs)
+  // Fetch risk analysis when deep dive manager changes OR time period changes (for both deepdive and risklimits tabs)
   useEffect(() => {
     if (deepDiveManager && (activeTab === 'deepdive' || activeTab === 'risklimits')) {
       fetchRiskAnalysis(deepDiveManager.account);
-      // Also reset and fetch drawdown analysis when manager changes
+      // Also reset and fetch drawdown analysis when manager or period changes
       setDrawdownAnalysis(null);
       if (activeTab === 'risklimits') {
         fetchDrawdownAnalysis(deepDiveManager.account);
       }
     }
-  }, [deepDiveManager, activeTab]);
+  }, [deepDiveManager, activeTab, timePeriod]);
 
   const fetchRiskNarrative = async () => {
     try {
@@ -315,7 +315,7 @@ export default function LiveDemoAnalytics() {
       const token = localStorage.getItem('fidus_token');
       
       const response = await fetch(
-        `${BACKEND_URL}/api/admin/risk-engine/drawdown-analysis/${accountId}?period_days=90`,
+        `${BACKEND_URL}/api/admin/risk-engine/drawdown-analysis/${accountId}?period_days=${timePeriod}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

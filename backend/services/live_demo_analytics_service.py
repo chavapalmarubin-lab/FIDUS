@@ -177,17 +177,23 @@ class LiveDemoAnalyticsService:
             return_pct = (total_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
             
             # Get deal history for risk metrics
+            # Filter by period_days to get trades within the analysis window
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=period_days)
+            
             # Check both mt5_deals AND mt5_deals_history (demo accounts may use either)
             deals = await self.db.mt5_deals.find({
-                "account": account_num
-            }).sort("time", -1).limit(500).to_list(length=500)
+                "account": account_num,
+                "time": {"$gte": start_date, "$lte": end_date}
+            }).sort("time", -1).limit(5000).to_list(length=5000)
             
             # If no deals in primary collection, check mt5_deals_history
             if not deals:
-                logger.info(f"No deals in mt5_deals for account {account_num}, checking mt5_deals_history...")
+                logger.info(f"No deals in mt5_deals for account {account_num} in {period_days} days, checking mt5_deals_history...")
                 deals = await self.db.mt5_deals_history.find({
-                    "account": account_num
-                }).sort("time", -1).limit(500).to_list(length=500)
+                    "account": account_num,
+                    "time": {"$gte": start_date, "$lte": end_date}
+                }).sort("time", -1).limit(5000).to_list(length=5000)
                 if deals:
                     logger.info(f"Found {len(deals)} deals in mt5_deals_history for account {account_num}")
             

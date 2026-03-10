@@ -168,14 +168,14 @@ export default function NextGenTradingAnalytics() {
   // HULL RISK ENGINE FUNCTIONS
   // ─────────────────────────────────────────────────────────────────────────────
   
-  // Fetch risk narrative on portfolio tab
+  // Fetch risk narrative on portfolio tab - also refetch when time period changes
   useEffect(() => {
-    if (activeTab === 'portfolio' && !riskNarrative && !riskNarrativeLoading && managers.length > 0) {
+    if (activeTab === 'portfolio' && managers.length > 0) {
       fetchRiskNarrative();
     }
-  }, [activeTab, managers]);
+  }, [activeTab, managers, timePeriod]);
 
-  // Fetch risk analysis when deep dive manager changes (for both deepdive and risklimits tabs)
+  // Fetch risk analysis when deep dive manager changes OR time period changes (for both deepdive and risklimits tabs)
   useEffect(() => {
     if (deepDiveManager && (activeTab === 'deepdive' || activeTab === 'risklimits')) {
       fetchRiskAnalysis(deepDiveManager.account);
@@ -184,7 +184,7 @@ export default function NextGenTradingAnalytics() {
         fetchCopyRatioRecommendation(deepDiveManager.account);
       }
     }
-  }, [deepDiveManager, activeTab]);
+  }, [deepDiveManager, activeTab, timePeriod]);
 
   const fetchRiskNarrative = async () => {
     try {
