@@ -383,6 +383,19 @@ const LiveDemoDashboard = () => {
                         <span className="text-white">{formatCurrency(initial)}</span>
                       </div>
 
+                      {/* Allocation Start Date */}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-400">Allocation Date:</span>
+                        <span className="text-white">
+                          {account.allocation_start_date 
+                            ? new Date(account.allocation_start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                            : 'N/A'}
+                          {account.days_since_allocation !== null && account.days_since_allocation !== undefined && (
+                            <span className="text-slate-400 ml-2">({account.days_since_allocation} days)</span>
+                          )}
+                        </span>
+                      </div>
+
                       {/* Withdrawals */}
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-400">Withdrawals:</span>
