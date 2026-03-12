@@ -4,106 +4,72 @@ on:
   workflow_dispatch:
 
 jobs:
-  add-eurobot-accounts:
+  add-accounts:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     
     steps:
-      - name: Add Accounts to MongoDB
-        run: |
-          pip install pymongo > /dev/null 2>&1
-          
-          cat > add_accounts.py << 'PYTHON_SCRIPT'
-          from pymongo import MongoClient
-          from datetime import datetime, timezone
-          
-          MONGO_URL = "${{ secrets.MONGO_URL }}"
-          client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=10000)
-          db = client.fidus_production
-          
-          # Per SYSTEM_MASTER.md Section 4.2.1
-          # Server MUST be exactly "LucrumCapital-Trade" (case-sensitive)
-          
-          accounts = [
-              {
-                  "account": 2218,
-                  "password": "WmZzKz!4",
-                  "server": "LucrumCapital-Trade",
-                  "name": "EUROBOT.55",
-                  "manager_name": "EUROBOT.55",
-                  "broker": "LUCRUM Capital",
-                  "platform": "MT5",
-                  "fund_type": "DEMO",
-                  "account_type": "live_demo",
-                  "status": "active",
-                  "is_active": True,
-                  "initial_allocation": 100000,
-              },
-              {
-                  "account": 2219,
-                  "password": "NuevaCuenta123*",
-                  "server": "LucrumCapital-Trade",
-                  "name": "EUROBOT1",
-                  "manager_name": "EUROBOT1",
-                  "broker": "LUCRUM Capital",
-                  "platform": "MT5",
-                  "fund_type": "DEMO",
-                  "account_type": "live_demo",
-                  "status": "active",
-                  "is_active": True,
-                  "initial_allocation": 100000,
-              }
-          ]
-          
-          for acc in accounts:
-              acc["created_at"] = datetime.now(timezone.utc)
-              acc["updated_at"] = datetime.now(timezone.utc)
-              
-              # Add to mt5_account_config (for VPS sync)
-              db.mt5_account_config.update_one(
-                  {"account": acc["account"]},
-                  {"$set": acc},
-                  upsert=True
-              )
-              print(f"Added to mt5_account_config: {acc['account']} ({acc['name']})")
-              
-              # Add to mt5_accounts (for frontend) - without password
-              acc_display = {k: v for k, v in acc.items() if k != 'password'}
-              db.mt5_accounts.update_one(
-                  {"account": acc["account"]},
-                  {"$set": acc_display},
-                  upsert=True
-              )
-              print(f"Added to mt5_accounts: {acc['account']}")
-          
-          print()
-          print("Done! Accounts will sync on next VPS cycle (2 minutes)")
-          client.close()
-          PYTHON_SCRIPT
-          
-          python add_accounts.py
-      
-      - name: Restart VPS Bridge
+      - name: Add Accounts to Bridge Script
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
-          command_timeout: 3m
+          command_timeout: 10m
           script: |
-            Write-Host "Restarting bridge to force immediate sync..." -ForegroundColor Cyan
+            Write-Host "=== STEP 1: Show Current Script Content ===" -ForegroundColor Cyan
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
+            
+            Write-Host "First 100 lines of script:" -ForegroundColor Yellow
+            Get-Content $scriptPath -TotalCount 100
+            
+            Write-Host ""
+            Write-Host "=== STEP 2: Find Account List ===" -ForegroundColor Cyan
+            $content = Get-Content $scriptPath -Raw
+            
+            Write-Host "Lines containing account definitions:" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
+            
+            Write-Host ""
+            Write-Host "=== STEP 3: Backup and Update ===" -ForegroundColor Cyan
+            Copy-Item $scriptPath "$scriptPath.bak_$(Get-Date -Format 'yyyyMMddHHmmss')"
+            Write-Host "Backup created" -ForegroundColor Green
+            
+            $lines = Get-Content $scriptPath
+            for ($i = 0; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match "^\s*2217") {
+                Write-Host "Found last account (2217) at line $($i+1)" -ForegroundColor Green
+                $newLines = $lines[0..$i]
+                $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
+                $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
+                $newLines += $lines[($i+1)..($lines.Count-1)]
+                Set-Content $scriptPath $newLines -Encoding UTF8
+                Write-Host "Added 2218 and 2219 after line $($i+1)" -ForegroundColor Green
+                break
+              }
+            }
+            
+            Write-Host ""
+            Write-Host "=== STEP 4: Verify Update ===" -ForegroundColor Cyan
+            Write-Host "Account lines after update:" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
+            
+            Write-Host ""
+            Write-Host "=== STEP 5: Restart Service ===" -ForegroundColor Cyan
             Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 3
+            
             Set-Location "C:\mt5_bridge_service"
             Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
-            Write-Host "Done! Check VPS window - should show 15 accounts" -ForegroundColor Green
+            Write-Host "Service restarted" -ForegroundColor Green
+            
+            Write-Host ""
+            Write-Host "=== DONE ===" -ForegroundColor Cyan
+            Write-Host "Check VPS window - should now show 15 accounts" -ForegroundColor Green
       
       - name: Report
         if: always()
         run: |
-          echo "# EUROBOT Accounts Added" >> $GITHUB_STEP_SUMMARY
-          echo "- 2218 (EUROBOT.55) - \$100,000" >> $GITHUB_STEP_SUMMARY
-          echo "- 2219 (EUROBOT1) - \$100,000" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Server: LucrumCapital-Trade" >> $GITHUB_STEP_SUMMARY
+          echo "# LUCRUM Bridge Update" >> $GITHUB_STEP_SUMMARY
+          echo "Added accounts 2218 (EUROBOT.55) and 2219 (EUROBOT1)" >> $GITHUB_STEP_SUMMARY
