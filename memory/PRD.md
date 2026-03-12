@@ -554,23 +554,29 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 
 ## Live Demo Accounts
 - Purpose: Evaluate new money managers with simulated funded accounts
-- **Server:** Lucrumcapital-Live
+- **Server:** `LucrumCapital-Trade` (MUST be exact - case sensitive!)
 - **API:** `/api/live-demo/accounts`
 - **Status:** Configured in `mt5_account_config` (for VPS sync) and `mt5_accounts` (for frontend display)
 
-### Active Demo Accounts:
-| Account | Name | Password | Added |
-|---------|------|----------|-------|
-| 20062 | CRYPTO BITCOIN | Fidus2026@ | Initial |
-| 2210 | Demo Manager 2 | YtJ!T7Qi | Initial |
-| 2215 | JOEL ALVES GOLD | - | Initial |
-| 2216 | GOLD DAY TRADING | - | Initial |
-| 2217 | JOEL ALVES NASDAQ | - | Initial |
-| **2218** | **EUROBOT.55** | **WmZzKz!4** | **Mar 12, 2026** |
-| **2219** | **EUROBOT1** | **NuevaCuenta123*** | **Mar 12, 2026** |
+### Adding New LUCRUM Accounts - CRITICAL STEPS:
+1. Add to `mt5_account_config` with `server: 'LucrumCapital-Trade'` and `is_active: True`
+2. Add to `mt5_accounts` for frontend display
+3. Run "Restart LUCRUM Bridge and Verify Accounts" workflow
+4. Verify VPS shows updated account count
+
+### Active Demo Accounts (15 total):
+| Account | Name | Password | Initial Allocation | Added |
+|---------|------|----------|-------------------|-------|
+| 20062 | CRYPTO BITCOIN | Fidus2026@ | $200,000 | Initial |
+| 2210 | GOLD DAY TRADING | YtJ!T7Qi | $19,850 | Initial |
+| 2215 | JOEL ALVES GOLD | - | TBD | Initial |
+| 2216 | JOEL ALVES NASDAQ | - | TBD | Initial |
+| 2217 | UNO14 | - | TBD | Initial |
+| **2218** | **EUROBOT.55** | **WmZzKz!4** | **$100,000** | **Mar 12, 2026** |
+| **2219** | **EUROBOT1** | **NuevaCuenta123*** | **$100,000** | **Mar 12, 2026** |
 
 ### Latest Update (Mar 12, 2026):
 - Added EUROBOT.55 (account 2218) and EUROBOT1 (account 2219)
-- Both accounts configured with passwords for VPS MT5 Bridge sync
-- Accounts will be synced automatically on next VPS cycle (every 2 minutes)
-- Deals will be pulled from LUCRUM MT5 Terminal for analytics
+- Both accounts configured with `server: 'LucrumCapital-Trade'` and `is_active: True`
+- Initial allocation: $100,000 each
+- Allocation start date: Will auto-fill from first deal date when synced

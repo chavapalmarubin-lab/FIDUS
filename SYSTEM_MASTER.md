@@ -445,19 +445,21 @@ VPS window should show increased account count:
 | CORE | (omit) | Core strategy accounts |
 | SEPARATION | (omit) | Profit storage accounts |
 
-### Current LUCRUM Accounts (13 total)
+### Current LUCRUM Accounts (15 total)
 
-| Account | Name | Type | Initial Allocation |
-|---------|------|------|-------------------|
-| 2198 | JOSE | BALANCE | - |
-| 2199 | Broker Rebates | BALANCE | - |
-| 2205-2209 | Various Managers | BALANCE | - |
-| 20043 | Manager | BALANCE | - |
-| **20062** | **CRYPTO BITCOIN** | **LIVE DEMO** | $200,000 |
-| **2210** | **GOLD DAY TRADING** | **LIVE DEMO** | $19,850 |
-| **2215** | **JOEL ALVES NASDAQ** | **LIVE DEMO** | TBD |
-| **2216** | **JOEL ALVES GOLD** | **LIVE DEMO** | TBD |
-| **2217** | **UNO14** | **LIVE DEMO** | TBD |
+| Account | Name | Type | Initial Allocation | Added |
+|---------|------|------|-------------------|-------|
+| 2198 | JOSE | BALANCE | - | - |
+| 2199 | Broker Rebates | BALANCE | - | - |
+| 2205-2209 | Various Managers | BALANCE | - | - |
+| 20043 | Manager | BALANCE | - | - |
+| **20062** | **CRYPTO BITCOIN** | **LIVE DEMO** | $200,000 | - |
+| **2210** | **GOLD DAY TRADING** | **LIVE DEMO** | $19,850 | - |
+| **2215** | **JOEL ALVES NASDAQ** | **LIVE DEMO** | TBD | - |
+| **2216** | **JOEL ALVES GOLD** | **LIVE DEMO** | TBD | - |
+| **2217** | **UNO14** | **LIVE DEMO** | TBD | - |
+| **2218** | **EUROBOT.55** | **LIVE DEMO** | $100,000 | Mar 12, 2026 |
+| **2219** | **EUROBOT1** | **LIVE DEMO** | $100,000 | Mar 12, 2026 |
 
 ### Troubleshooting
 
@@ -471,10 +473,20 @@ VPS window should show increased account count:
 - Wait 2 minutes for next sync cycle
 - Check VPS logs for "Login failed" errors
 
+**CRITICAL: Adding New Accounts Checklist**
+1. ✅ Add to `mt5_account_config` collection (for VPS sync)
+2. ✅ Add to `mt5_accounts` collection (for frontend display)
+3. ✅ Server MUST be exactly `LucrumCapital-Trade` (case-sensitive)
+4. ✅ `is_active` MUST be `True`
+5. ✅ Password MUST be correct MT5 password
+6. ✅ Run "Restart LUCRUM Bridge and Verify Accounts" workflow
+7. ✅ Verify VPS shows increased account count
+
 ### Related GitHub Workflows
 - `sync-lucrum-accounts-to-mongodb.yml` - Manual sync trigger
 - `update-lucrum-bridge-accounts.yml` - Update account list on VPS
 - `emergency-restart-mt5-bridge-lucrum.yml` - Emergency VPS restart
+- `add-eurobot-accounts-to-lucrum-bridge.yml` - Renamed to "Restart LUCRUM Bridge and Verify Accounts"
 
 ---
 
