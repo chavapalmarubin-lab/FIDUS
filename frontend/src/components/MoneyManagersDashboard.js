@@ -405,6 +405,41 @@ const MoneyManagersDashboard = () => {
                         ))}
                       </div>
 
+                      {/* Copy Configuration - Show if any account has copy_sources */}
+                      {manager.account_details?.some(acc => acc.copy_sources?.length > 0) && (
+                        <div className="bg-blue-900/20 rounded-lg p-3 border border-blue-700/30">
+                          <div className="text-xs text-blue-300 mb-2 flex items-center">
+                            <Copy className="w-3 h-3 mr-1" />
+                            Copy Trading Configuration
+                          </div>
+                          {manager.account_details?.map((account) => (
+                            account.copy_sources?.length > 0 && (
+                              <div key={`copy-${account.account}`} className="mb-2 last:mb-0">
+                                <div className="text-xs text-slate-400 mb-1">
+                                  Account {account.account}:
+                                </div>
+                                {account.copy_sources.map((source, idx) => (
+                                  <div key={idx} className="flex items-center justify-between py-1 pl-2 border-l-2 border-blue-600/50">
+                                    <div className="text-sm">
+                                      <span className="text-white">{source.master_broker} </span>
+                                      <span className="text-cyan-400 font-mono">{source.master_account}</span>
+                                      {source.master_name && (
+                                        <span className="text-slate-400 text-xs ml-1">({source.master_name})</span>
+                                      )}
+                                    </div>
+                                    <Badge className={`${source.copy_type === 'ratio' ? 'bg-purple-700' : 'bg-orange-700'} text-white text-xs`}>
+                                      {source.copy_type === 'ratio' 
+                                        ? `${source.ratio}x ratio` 
+                                        : `${source.fixed_lot} lot fixed`}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      )}
+
                       {/* Performance Metrics */}
                       <div className="space-y-3">
                         {/* SSOT: Display Total Equity as primary metric */}

@@ -362,7 +362,8 @@ async def get_money_managers_derived():
                     "equity": "$equity",
                     "initial_allocation": "$initial_allocation",
                     "allocation_start_date": "$allocation_start_date",
-                    "status": "$status"
+                    "status": "$status",
+                    "copy_sources": "$copy_sources"
                 }},
                 "total_allocation": {"$sum": "$initial_allocation"},
                 "total_balance": {"$sum": "$balance"},
@@ -420,7 +421,8 @@ async def get_money_managers_derived():
                     "allocation": acc.get('initial_allocation', 0) or 0,
                     "allocation_start_date": acc.get('allocation_start_date'),
                     "balance": acc.get('balance', 0) or 0,
-                    "equity": acc.get('equity', 0) or 0
+                    "equity": acc.get('equity', 0) or 0,
+                    "copy_sources": acc.get('copy_sources', [])
                 })
             
             # Get earliest allocation date (for display at manager level)
