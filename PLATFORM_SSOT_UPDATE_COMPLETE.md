@@ -116,7 +116,7 @@ else:
 ### Fund Portfolio Endpoint Test
 
 ```bash
-$ curl https://equity-peak-tracker.preview.emergentagent.com/api/v2/derived/fund-portfolio
+$ curl https://fidus-trading.preview.emergentagent.com/api/v2/derived/fund-portfolio
 
 ✓ Total Allocation: $134,145.41  (was $129,657.41)
 ✓ Total AUM: $146,525.32

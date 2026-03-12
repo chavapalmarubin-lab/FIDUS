@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://equity-peak-tracker.preview.emergentagent.com"
+BACKEND_URL = "https://fidus-trading.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"

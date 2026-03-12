@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://equity-peak-tracker.preview.emergentagent.com`
+`https://fidus-trading.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

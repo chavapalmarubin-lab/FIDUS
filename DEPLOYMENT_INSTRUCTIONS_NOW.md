@@ -64,7 +64,7 @@ CLIENT_MONEY = sum(inv['principal_amount'] for inv in active_investments)
 ## 📊 Preview Already Works
 
 Test here to see correct values:
-**https://equity-peak-tracker.preview.emergentagent.com**
+**https://fidus-trading.preview.emergentagent.com**
 
 Preview shows:
 - ✅ Client Money: $134,145.41
