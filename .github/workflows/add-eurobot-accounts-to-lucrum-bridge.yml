@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 10
     
     steps:
-      - name: Show Lines 1-60 and Find Accounts
+      - name: Show Account Loading Code
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -18,10 +18,15 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
-            Write-Host "=== LINES 1-60 OF mt5_bridge_lucrum.py ===" -ForegroundColor Cyan
-            Get-Content "C:\mt5_bridge_service\mt5_bridge_lucrum.py" | Select-Object -First 60
+            Write-Host "=== LINES WITH 'lucrum' OR 'account' (case insensitive) ===" -ForegroundColor Cyan
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
+            Get-Content $scriptPath | Select-String -Pattern "lucrum|LUCRUM_ACCOUNTS|get_accounts|load_accounts|mt5_account|find\(" -CaseSensitive:$false
+            
+            Write-Host ""
+            Write-Host "=== LINES 200-280 (likely main sync function) ===" -ForegroundColor Cyan
+            Get-Content $scriptPath | Select-Object -Skip 199 -First 80
       
       - name: Report
         if: always()
         run: |
-          echo "# Showing first 60 lines" >> $GITHUB_STEP_SUMMARY
+          echo "# Account Loading Code" >> $GITHUB_STEP_SUMMARY
