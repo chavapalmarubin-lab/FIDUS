@@ -9,26 +9,19 @@ jobs:
     timeout-minutes: 10
     
     steps:
-      - name: Find Account Source in Script
+      - name: Show Lines 1-60 and Find Accounts
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
-          command_timeout: 10m
+          command_timeout: 5m
           script: |
-            Write-Host "=== LINES 1-90 OF SCRIPT ===" -ForegroundColor Cyan
-            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
-            
-            Get-Content $scriptPath | Select-Object -First 90
-            
-            Write-Host ""
-            Write-Host "=== SEARCHING FOR ACCOUNT NUMBERS ===" -ForegroundColor Cyan
-            Get-Content $scriptPath | Select-String -Pattern "2198|2199|LUCRUM_ACCOUNTS|MANAGED_ACCOUNTS|accounts\s*=\s*\["
+            Write-Host "=== LINES 1-60 OF mt5_bridge_lucrum.py ===" -ForegroundColor Cyan
+            Get-Content "C:\mt5_bridge_service\mt5_bridge_lucrum.py" | Select-Object -First 60
       
       - name: Report
         if: always()
         run: |
-          echo "# LUCRUM Bridge Diagnostic" >> $GITHUB_STEP_SUMMARY
-          echo "Showing first 90 lines to find account list" >> $GITHUB_STEP_SUMMARY
+          echo "# Showing first 60 lines" >> $GITHUB_STEP_SUMMARY
