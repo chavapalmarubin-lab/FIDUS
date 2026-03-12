@@ -11,7 +11,7 @@ import {
   ChevronRight, ChevronDown, Zap, Briefcase, PieChart as PieChartIcon,
   ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
   Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings,
-  CheckCircle, XCircle, AlertCircle
+  CheckCircle, XCircle, AlertCircle, Copy, ArrowUpCircle, ArrowDownCircle, MinusCircle
 } from 'lucide-react';
 import './LiveDemoAnalytics.css';
 
@@ -91,6 +91,10 @@ export default function LiveDemoAnalytics() {
   // Drawdown Analysis State (Quant-driven)
   const [drawdownAnalysis, setDrawdownAnalysis] = useState(null);
   const [drawdownAnalysisLoading, setDrawdownAnalysisLoading] = useState(false);
+  
+  // Copy Ratio Recommendation State
+  const [copyRatioData, setCopyRatioData] = useState(null);
+  const [copyRatioLoading, setCopyRatioLoading] = useState(false);
   
   const chatEndRef = useRef(null);
 
@@ -339,12 +343,44 @@ export default function LiveDemoAnalytics() {
     }
   };
 
-  // Fetch drawdown analysis when risk limits tab is selected
-  useEffect(() => {
-    if (activeTab === 'riskLimits' && deepDiveManager?.account && !drawdownAnalysis) {
-      fetchDrawdownAnalysis(deepDiveManager.account);
+  // Copy Ratio Recommendation - fetched on-demand per strategy
+  const fetchCopyRatioRecommendation = async (account) => {
+    if (!account) return;
+    
+    try {
+      setCopyRatioLoading(true);
+      setCopyRatioData(null);
+      const token = localStorage.getItem('fidus_token');
+      
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/risk-engine/copy-ratio/${account}?period_days=${timePeriod}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setCopyRatioData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching copy ratio:', err);
+    } finally {
+      setCopyRatioLoading(false);
     }
-  }, [activeTab, deepDiveManager]);
+  };
+
+  // Fetch drawdown analysis and copy ratio when risk limits tab is selected
+  useEffect(() => {
+    if (activeTab === 'risklimits' && deepDiveManager?.account) {
+      fetchDrawdownAnalysis(deepDiveManager.account);
+      fetchCopyRatioRecommendation(deepDiveManager.account);
+    }
+  }, [activeTab, deepDiveManager, timePeriod]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // AI STRATEGY ADVISOR FUNCTIONS
@@ -1704,6 +1740,95 @@ export default function LiveDemoAnalytics() {
                 <span className="lda-analysis-period">Analysis Period: {timePeriod === 1 ? "Today" : `Last ${timePeriod} Days`}</span>
               </div>
             </div>
+
+            {/* Copy Ratio Recommendation - Social Trading Risk Control */}
+            {deepDiveManager && (
+              <div className="lda-copy-ratio-section" data-testid="copy-ratio-section">
+                <div className="lda-copy-ratio-header">
+                  <h4>
+                    <Copy size={18} />
+                    Copy Ratio Recommendation
+                    <span className="section-subtitle">Social Trading Risk Control</span>
+                  </h4>
+                </div>
+                
+                {copyRatioLoading ? (
+                  <div className="lda-copy-ratio-loading">
+                    <Loader2 size={20} className="spin" />
+                    <span>Analyzing lot sizes...</span>
+                  </div>
+                ) : copyRatioData ? (
+                  <div className="lda-copy-ratio-content">
+                    <div className="lda-copy-ratio-main">
+                      <div className="lda-ratio-current">
+                        <span className="label">Current Ratio</span>
+                        <span className="value">{copyRatioData.current_copy_ratio?.toFixed(1)}</span>
+                        <span className="source">{copyRatioData.current_ratio_source}</span>
+                      </div>
+                      <div className="lda-ratio-arrow">
+                        {copyRatioData.action === 'INCREASE' && <ArrowUpCircle size={32} className="increase" />}
+                        {copyRatioData.action === 'DECREASE' && <ArrowDownCircle size={32} className="decrease" />}
+                        {copyRatioData.action === 'MAINTAIN' && <MinusCircle size={32} className="maintain" />}
+                      </div>
+                      <div className="lda-ratio-recommended">
+                        <span className="label">Recommended</span>
+                        <span className="value">{copyRatioData.recommended_ratio?.toFixed(1)}</span>
+                        <span className={`urgency-badge ${copyRatioData.urgency?.toLowerCase()}`}>
+                          {copyRatioData.urgency}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {copyRatioData.lot_analysis && (
+                      <div className="lda-lot-analysis-stats">
+                        <div className="stat">
+                          <span className="label">Trades Analyzed</span>
+                          <span className="value">{copyRatioData.lot_analysis.total_trades_analyzed}</span>
+                        </div>
+                        <div className="stat">
+                          <span className="label">Breaches</span>
+                          <span className="value">{copyRatioData.lot_analysis.trades_with_breaches}</span>
+                        </div>
+                        <div className="stat">
+                          <span className="label">Breach Rate</span>
+                          <span className="value">{copyRatioData.lot_analysis.breach_rate}%</span>
+                        </div>
+                        <div className="stat">
+                          <span className="label">Avg Breach</span>
+                          <span className="value">{copyRatioData.lot_analysis.average_breach_pct}%</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {copyRatioData.reasons?.length > 0 && (
+                      <div className="lda-copy-ratio-reasons">
+                        {copyRatioData.reasons.map((reason, i) => (
+                          <span key={i} className="reason">{reason}</span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="lda-valid-ratios">
+                      <span className="label">Valid Ratios:</span>
+                      <div className="ratio-chips">
+                        {[1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1].map(r => (
+                          <span 
+                            key={r} 
+                            className={`ratio-chip ${r === copyRatioData.recommended_ratio ? 'recommended' : ''} ${r === copyRatioData.current_copy_ratio ? 'current' : ''}`}
+                          >
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="lda-copy-ratio-empty">
+                    <p>Select a strategy above to analyze copy ratio</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {riskAnalysisLoading ? (
               <div className="lda-risk-loading">

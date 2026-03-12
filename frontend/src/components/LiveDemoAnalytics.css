@@ -3610,3 +3610,231 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COPY RATIO SECTION - Social Trading Risk Control (LiveDemoAnalytics)
+═══════════════════════════════════════════════════════════════════════════════ */
+
+.lda-copy-ratio-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+}
+
+.lda-copy-ratio-header h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--lda-text-primary);
+  margin: 0 0 16px 0;
+}
+
+.lda-copy-ratio-header .section-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--lda-text-muted);
+  margin-left: auto;
+}
+
+.lda-copy-ratio-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 30px;
+  color: var(--lda-text-muted);
+}
+
+.lda-copy-ratio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lda-copy-ratio-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.lda-ratio-current,
+.lda-ratio-recommended {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.lda-ratio-current .label,
+.lda-ratio-recommended .label {
+  font-size: 11px;
+  color: var(--lda-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lda-ratio-current .value,
+.lda-ratio-recommended .value {
+  font-size: 42px;
+  font-weight: 700;
+  font-family: var(--lda-font-mono);
+  color: var(--lda-text-primary);
+}
+
+.lda-ratio-current .source {
+  font-size: 10px;
+  color: var(--lda-text-muted);
+}
+
+.lda-ratio-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lda-ratio-arrow .increase { color: #10B981; }
+.lda-ratio-arrow .decrease { color: #EF4444; }
+.lda-ratio-arrow .maintain { color: #6B7280; }
+
+.lda-ratio-recommended .urgency-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.lda-ratio-recommended .urgency-badge.ok,
+.lda-ratio-recommended .urgency-badge.info {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.lda-ratio-recommended .urgency-badge.low {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.lda-ratio-recommended .urgency-badge.medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.lda-ratio-recommended .urgency-badge.high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+}
+
+.lda-ratio-recommended .urgency-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.lda-lot-analysis-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+.lda-lot-analysis-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.lda-lot-analysis-stats .label {
+  font-size: 10px;
+  color: var(--lda-text-muted);
+  text-transform: uppercase;
+}
+
+.lda-lot-analysis-stats .value {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--lda-font-mono);
+  color: var(--lda-text-primary);
+}
+
+.lda-copy-ratio-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 6px;
+}
+
+.lda-copy-ratio-reasons .reason {
+  font-size: 12px;
+  color: #93c5fd;
+  padding-left: 14px;
+  position: relative;
+}
+
+.lda-copy-ratio-reasons .reason::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+}
+
+.lda-valid-ratios {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.lda-valid-ratios .label {
+  font-size: 11px;
+  color: var(--lda-text-muted);
+  text-transform: uppercase;
+}
+
+.lda-valid-ratios .ratio-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lda-valid-ratios .ratio-chip {
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--lda-font-mono);
+  color: var(--lda-text-muted);
+}
+
+.lda-valid-ratios .ratio-chip.recommended {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10B981;
+  color: #34d399;
+}
+
+.lda-valid-ratios .ratio-chip.current {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3B82F6;
+  color: #60a5fa;
+}
+
+.lda-copy-ratio-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--lda-text-muted);
+}
+
