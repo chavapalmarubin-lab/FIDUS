@@ -1,15 +1,15 @@
-name: Diagnose LUCRUM Bridge Account Source
+name: Restart LUCRUM Bridge and Verify Accounts
 
 on:
   workflow_dispatch:
 
 jobs:
-  diagnose:
+  restart:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
     steps:
-      - name: Show Account Loading Code
+      - name: Restart Bridge
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -18,15 +18,17 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           command_timeout: 5m
           script: |
-            Write-Host "=== LINES WITH 'lucrum' OR 'account' (case insensitive) ===" -ForegroundColor Cyan
-            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
-            Get-Content $scriptPath | Select-String -Pattern "lucrum|LUCRUM_ACCOUNTS|get_accounts|load_accounts|mt5_account|find\(" -CaseSensitive:$false
+            Write-Host "=== Stopping existing bridge ===" -ForegroundColor Cyan
+            Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
             
-            Write-Host ""
-            Write-Host "=== LINES 200-280 (likely main sync function) ===" -ForegroundColor Cyan
-            Get-Content $scriptPath | Select-Object -Skip 199 -First 80
+            Write-Host "=== Starting bridge ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
+            
+            Write-Host "=== Done - check VPS window ===" -ForegroundColor Green
       
       - name: Report
-        if: always()
         run: |
-          echo "# Account Loading Code" >> $GITHUB_STEP_SUMMARY
+          echo "# Bridge Restarted" >> $GITHUB_STEP_SUMMARY
+          echo "Check VPS window for account count" >> $GITHUB_STEP_SUMMARY
