@@ -1,0 +1,179 @@
+name: Add EUROBOT Accounts (2218, 2219) to LUCRUM Bridge
+
+on:
+  workflow_dispatch:
+
+jobs:
+  add-eurobot-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Add EUROBOT Accounts to Bridge
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 10m
+          script: |
+            Write-Host "=== Adding EUROBOT Accounts to LUCRUM Bridge ===" -ForegroundColor Cyan
+            Write-Host ""
+            
+            $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
+            
+            if (-not (Test-Path $scriptPath)) {
+              Write-Host "ERROR: Script not found at $scriptPath" -ForegroundColor Red
+              Get-ChildItem "C:\mt5_bridge_service\*.py" -ErrorAction SilentlyContinue
+              exit 1
+            }
+            
+            Write-Host "Found script: $scriptPath" -ForegroundColor Green
+            Write-Host ""
+            
+            # Show current accounts
+            Write-Host "=== Current Account Configuration ===" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-String -Pattern "LUCRUM_ACCOUNTS|MANAGED_ACCOUNTS|account.*=|2218|2219"
+            
+            Write-Host ""
+            Write-Host "=== Backing Up Script ===" -ForegroundColor Yellow
+            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            Copy-Item $scriptPath "$scriptPath.backup_$timestamp"
+            Write-Host "Backup created: $scriptPath.backup_$timestamp" -ForegroundColor Green
+            
+            # Read content
+            $content = Get-Content $scriptPath -Raw
+            
+            # Check if accounts already exist
+            $has2218 = $content -match "2218"
+            $has2219 = $content -match "2219"
+            
+            Write-Host ""
+            Write-Host "Account 2218 (EUROBOT.55) exists: $has2218" -ForegroundColor White
+            Write-Host "Account 2219 (EUROBOT1) exists: $has2219" -ForegroundColor White
+            
+            if (-not $has2218 -or -not $has2219) {
+              Write-Host ""
+              Write-Host "Adding EUROBOT accounts..." -ForegroundColor Yellow
+              
+              # Define new account entries
+              $newLine1 = '    2218,   # LIVE DEMO - EUROBOT.55 (Euro pairs automated trading v0.55)'
+              $newLine2 = '    2219,   # LIVE DEMO - EUROBOT1 (Euro pairs automated trading)'
+              
+              # Try to find and update MANAGED_ACCOUNTS or LUCRUM_ACCOUNTS array
+              if ($content -match "MANAGED_ACCOUNTS\s*=\s*\[") {
+                Write-Host "Found MANAGED_ACCOUNTS array" -ForegroundColor Green
+                # Insert before the closing bracket
+                $content = $content -replace "(MANAGED_ACCOUNTS\s*=\s*\[[^\]]+)(]\s*)", "`$1`n$newLine1`n$newLine2`n`$2"
+                Set-Content $scriptPath $content -Encoding UTF8
+                Write-Host "Added 2218 and 2219 to MANAGED_ACCOUNTS" -ForegroundColor Green
+              }
+              elseif ($content -match "LUCRUM_ACCOUNTS\s*=\s*\[") {
+                Write-Host "Found LUCRUM_ACCOUNTS array" -ForegroundColor Green
+                $content = $content -replace "(LUCRUM_ACCOUNTS\s*=\s*\[[^\]]+)(]\s*)", "`$1`n$newLine1`n$newLine2`n`$2"
+                Set-Content $scriptPath $content -Encoding UTF8
+                Write-Host "Added 2218 and 2219 to LUCRUM_ACCOUNTS" -ForegroundColor Green
+              }
+              elseif ($content -match "accounts\s*=\s*\[") {
+                Write-Host "Found accounts array" -ForegroundColor Green
+                $content = $content -replace "(accounts\s*=\s*\[[^\]]+)(]\s*)", "`$1`n$newLine1`n$newLine2`n`$2"
+                Set-Content $scriptPath $content -Encoding UTF8
+                Write-Host "Added 2218 and 2219 to accounts" -ForegroundColor Green
+              }
+              else {
+                Write-Host "Could not find accounts array - showing first 100 lines:" -ForegroundColor Red
+                Get-Content $scriptPath -TotalCount 100
+                exit 1
+              }
+            }
+            else {
+              Write-Host "Both EUROBOT accounts already exist in script" -ForegroundColor Green
+            }
+            
+            Write-Host ""
+            Write-Host "=== Verifying Updated Script ===" -ForegroundColor Cyan
+            Get-Content $scriptPath | Select-String -Pattern "2218|2219"
+            
+            Write-Host ""
+            Write-Host "=== Restarting Bridge Service ===" -ForegroundColor Cyan
+            
+            # Stop existing Python processes
+            Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            
+            # Start the bridge service
+            Set-Location "C:\mt5_bridge_service"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
+            
+            Write-Host "Bridge service restarted" -ForegroundColor Green
+            Write-Host "Waiting 60 seconds for initial sync..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 60
+            
+            Write-Host ""
+            Write-Host "=== Checking Sync Results ===" -ForegroundColor Cyan
+            
+            # Check if log file exists and show recent entries
+            $logPath = "C:\mt5_bridge_service\logs\bridge.log"
+            if (Test-Path $logPath) {
+              Write-Host "Recent log entries:" -ForegroundColor Yellow
+              Get-Content $logPath -Tail 30
+            }
+            
+            Write-Host ""
+            Write-Host "=== DONE ===" -ForegroundColor Green
+            Write-Host "Expected: 15 accounts now (13 + 2 new EUROBOT accounts)" -ForegroundColor Cyan
+      
+      - name: Verify Accounts in MongoDB
+        run: |
+          pip install pymongo > /dev/null 2>&1
+          
+          cat > verify_accounts.py << 'PYTHON_SCRIPT'
+          from pymongo import MongoClient
+          from datetime import datetime, timezone
+          
+          mongo_uri = "${{ secrets.MONGO_URL }}"
+          client = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
+          db = client.fidus_production
+          
+          print("=== Verifying EUROBOT Accounts in MongoDB ===")
+          print()
+          
+          for acc_num in [2218, 2219]:
+              # Check mt5_account_config
+              config = db.mt5_account_config.find_one({"account": acc_num})
+              # Check mt5_accounts
+              account = db.mt5_accounts.find_one({"account": acc_num})
+              # Check deals count
+              deals = db.mt5_deals.count_documents({"account": acc_num})
+              
+              print(f"Account {acc_num}:")
+              print(f"  - In mt5_account_config: {'YES' if config else 'NO'}")
+              print(f"  - In mt5_accounts: {'YES' if account else 'NO'}")
+              print(f"  - Deals synced: {deals}")
+              if account:
+                  print(f"  - Name: {account.get('manager_name', 'N/A')}")
+                  print(f"  - Initial Allocation: ${account.get('initial_allocation', 0):,.2f}")
+              print()
+          
+          client.close()
+          PYTHON_SCRIPT
+          
+          python verify_accounts.py
+      
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "# EUROBOT Accounts Added to LUCRUM Bridge" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## New Accounts Added" >> $GITHUB_STEP_SUMMARY
+          echo "| Account | Name | Initial Allocation |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|-------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 2218 | EUROBOT.55 | $100,000 |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2219 | EUROBOT1 | $100,000 |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Expected Result" >> $GITHUB_STEP_SUMMARY
+          echo "- Bridge should now sync 15 accounts (was 13)" >> $GITHUB_STEP_SUMMARY
+          echo "- Deals will be pulled from MT5 Terminal" >> $GITHUB_STEP_SUMMARY
+          echo "- Analytics will be available once deals are synced" >> $GITHUB_STEP_SUMMARY
