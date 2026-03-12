@@ -18,17 +18,17 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           command_timeout: 10m
           script: |
-            Write-Host "=== FULL SCRIPT CONTENT ===" -ForegroundColor Cyan
+            Write-Host "=== LINES 1-90 OF SCRIPT ===" -ForegroundColor Cyan
             $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
             
-            Write-Host "Showing ALL lines (to find where 13 accounts come from):" -ForegroundColor Yellow
-            Get-Content $scriptPath
+            Get-Content $scriptPath | Select-Object -First 90
             
             Write-Host ""
-            Write-Host "=== END OF SCRIPT ===" -ForegroundColor Cyan
+            Write-Host "=== SEARCHING FOR ACCOUNT NUMBERS ===" -ForegroundColor Cyan
+            Get-Content $scriptPath | Select-String -Pattern "2198|2199|LUCRUM_ACCOUNTS|MANAGED_ACCOUNTS|accounts\s*=\s*\["
       
       - name: Report
         if: always()
         run: |
           echo "# LUCRUM Bridge Diagnostic" >> $GITHUB_STEP_SUMMARY
-          echo "Displayed full script to find account source" >> $GITHUB_STEP_SUMMARY
+          echo "Showing first 90 lines to find account list" >> $GITHUB_STEP_SUMMARY
