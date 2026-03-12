@@ -552,10 +552,25 @@ Build a standalone "VIKING" trading analytics dashboard alongside a comprehensiv
 3. **emergency-restart-mt5-bridge-lucrum.yml** - Emergency restart workflow using VPS_PORT secret
 4. **sync-lucrum-accounts-to-mongodb.yml** - Syncs LUCRUM accounts (now includes 20062, 2210 Live Demo accounts)
 
-## Live Demo Accounts (NEW)
+## Live Demo Accounts
 - Purpose: Evaluate new money managers with simulated funded accounts
-- Account 20062: Demo Manager 1 (password: Fidus2026@)
-- Account 2210: Demo Manager 2 (password: YtJ!T7Qi)
-- Server: Lucrumcapital-Live
-- Status: Configured in mt5_account_config and mt5_accounts collections
-- API: `/api/live-demo/accounts`
+- **Server:** Lucrumcapital-Live
+- **API:** `/api/live-demo/accounts`
+- **Status:** Configured in `mt5_account_config` (for VPS sync) and `mt5_accounts` (for frontend display)
+
+### Active Demo Accounts:
+| Account | Name | Password | Added |
+|---------|------|----------|-------|
+| 20062 | CRYPTO BITCOIN | Fidus2026@ | Initial |
+| 2210 | Demo Manager 2 | YtJ!T7Qi | Initial |
+| 2215 | JOEL ALVES GOLD | - | Initial |
+| 2216 | GOLD DAY TRADING | - | Initial |
+| 2217 | JOEL ALVES NASDAQ | - | Initial |
+| **2218** | **EUROBOT.55** | **WmZzKz!4** | **Mar 12, 2026** |
+| **2219** | **EUROBOT1** | **NuevaCuenta123*** | **Mar 12, 2026** |
+
+### Latest Update (Mar 12, 2026):
+- Added EUROBOT.55 (account 2218) and EUROBOT1 (account 2219)
+- Both accounts configured with passwords for VPS MT5 Bridge sync
+- Accounts will be synced automatically on next VPS cycle (every 2 minutes)
+- Deals will be pulled from LUCRUM MT5 Terminal for analytics
