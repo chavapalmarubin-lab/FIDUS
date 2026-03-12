@@ -1,15 +1,15 @@
-name: Add EUROBOT Accounts (2218, 2219) to LUCRUM Bridge
+name: Diagnose LUCRUM Bridge Account Source
 
 on:
   workflow_dispatch:
 
 jobs:
-  add-accounts:
+  diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     
     steps:
-      - name: Add Accounts to Bridge Script
+      - name: Find Account Source in Script
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -18,58 +18,17 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           command_timeout: 10m
           script: |
-            Write-Host "=== STEP 1: Show Current Script Content ===" -ForegroundColor Cyan
+            Write-Host "=== FULL SCRIPT CONTENT ===" -ForegroundColor Cyan
             $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
             
-            Write-Host "First 100 lines of script:" -ForegroundColor Yellow
-            Get-Content $scriptPath -TotalCount 100
+            Write-Host "Showing ALL lines (to find where 13 accounts come from):" -ForegroundColor Yellow
+            Get-Content $scriptPath
             
             Write-Host ""
-            Write-Host "=== STEP 2: Find Account List ===" -ForegroundColor Cyan
-            $content = Get-Content $scriptPath -Raw
-            
-            Write-Host "Lines containing account definitions:" -ForegroundColor Yellow
-            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
-            
-            Write-Host ""
-            Write-Host "=== STEP 3: Backup and Update ===" -ForegroundColor Cyan
-            Copy-Item $scriptPath "$scriptPath.bak_$(Get-Date -Format 'yyyyMMddHHmmss')"
-            Write-Host "Backup created" -ForegroundColor Green
-            
-            $lines = Get-Content $scriptPath
-            for ($i = 0; $i -lt $lines.Count; $i++) {
-              if ($lines[$i] -match "^\s*2217") {
-                Write-Host "Found last account (2217) at line $($i+1)" -ForegroundColor Green
-                $newLines = $lines[0..$i]
-                $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
-                $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
-                $newLines += $lines[($i+1)..($lines.Count-1)]
-                Set-Content $scriptPath $newLines -Encoding UTF8
-                Write-Host "Added 2218 and 2219 after line $($i+1)" -ForegroundColor Green
-                break
-              }
-            }
-            
-            Write-Host ""
-            Write-Host "=== STEP 4: Verify Update ===" -ForegroundColor Cyan
-            Write-Host "Account lines after update:" -ForegroundColor Yellow
-            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
-            
-            Write-Host ""
-            Write-Host "=== STEP 5: Restart Service ===" -ForegroundColor Cyan
-            Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 3
-            
-            Set-Location "C:\mt5_bridge_service"
-            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
-            Write-Host "Service restarted" -ForegroundColor Green
-            
-            Write-Host ""
-            Write-Host "=== DONE ===" -ForegroundColor Cyan
-            Write-Host "Check VPS window - should now show 15 accounts" -ForegroundColor Green
+            Write-Host "=== END OF SCRIPT ===" -ForegroundColor Cyan
       
       - name: Report
         if: always()
         run: |
-          echo "# LUCRUM Bridge Update" >> $GITHUB_STEP_SUMMARY
-          echo "Added accounts 2218 (EUROBOT.55) and 2219 (EUROBOT1)" >> $GITHUB_STEP_SUMMARY
+          echo "# LUCRUM Bridge Diagnostic" >> $GITHUB_STEP_SUMMARY
+          echo "Displayed full script to find account source" >> $GITHUB_STEP_SUMMARY
