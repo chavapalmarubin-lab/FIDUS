@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 15
     
     steps:
-      - name: Add EUROBOT Accounts to Bridge
+      - name: Show Bridge Script Account Loading
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -18,117 +18,118 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           command_timeout: 10m
           script: |
-            Write-Host "=== STEP 1: Show Script Structure ===" -ForegroundColor Cyan
+            Write-Host "=== Showing Bridge Script Account Section ===" -ForegroundColor Cyan
             $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
             
-            Write-Host "First 80 lines of script:" -ForegroundColor Yellow
-            Get-Content $scriptPath -TotalCount 80
+            Write-Host "Lines 1-150 of script:" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-Object -First 150
             
             Write-Host ""
-            Write-Host "=== STEP 2: Check if accounts already exist ===" -ForegroundColor Cyan
-            $content = Get-Content $scriptPath -Raw
-            $has2218 = $content -match "2218"
-            $has2219 = $content -match "2219"
-            
-            Write-Host "Account 2218 exists: $has2218" -ForegroundColor White
-            Write-Host "Account 2219 exists: $has2219" -ForegroundColor White
-            
-            if ($has2218 -and $has2219) {
-              Write-Host "Both accounts already exist - no changes needed" -ForegroundColor Green
-              exit 0
-            }
-            
-            Write-Host ""
-            Write-Host "=== STEP 3: Backup ===" -ForegroundColor Cyan
-            Copy-Item $scriptPath "$scriptPath.bak_$(Get-Date -Format 'yyyyMMddHHmmss')"
-            Write-Host "Backup created" -ForegroundColor Green
-            
-            Write-Host ""
-            Write-Host "=== STEP 4: Find and Update Account List ===" -ForegroundColor Cyan
-            
-            $lines = Get-Content $scriptPath
-            $found = $false
-            
-            for ($i = 0; $i -lt $lines.Count; $i++) {
-              # Look for line containing 2217
-              if ($lines[$i] -match "2217") {
-                Write-Host "Found 2217 at line $($i+1): $($lines[$i])" -ForegroundColor Green
-                $newLines = $lines[0..$i]
-                $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
-                $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
-                $newLines += $lines[($i+1)..($lines.Count-1)]
-                Set-Content $scriptPath $newLines -Encoding UTF8
-                Write-Host "Added 2218 and 2219 after line $($i+1)" -ForegroundColor Green
-                $found = $true
-                break
+            Write-Host "=== Lines containing 'account' ===" -ForegroundColor Cyan
+            Get-Content $scriptPath | Select-String -Pattern "account" | Select-Object -First 30
+      
+      - name: Add Accounts to MongoDB Config
+        run: |
+          pip install pymongo > /dev/null 2>&1
+          
+          cat > add_accounts.py << 'PYTHON_SCRIPT'
+          from pymongo import MongoClient
+          from datetime import datetime, timezone
+          
+          mongo_uri = "${{ secrets.MONGO_URL }}"
+          client = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
+          db = client.fidus_production
+          
+          print("=== Adding EUROBOT Accounts to mt5_account_config ===")
+          print()
+          
+          # Define the two new accounts
+          new_accounts = [
+              {
+                  "account": 2218,
+                  "password": "WmZzKz!4",
+                  "server": "Lucrumcapital-Live",
+                  "name": "EUROBOT.55",
+                  "manager_name": "EUROBOT.55",
+                  "broker": "LUCRUM Capital",
+                  "platform": "MT5",
+                  "fund_type": "DEMO",
+                  "account_type": "live_demo",
+                  "status": "active",
+                  "is_active": True,
+                  "initial_allocation": 100000,
+                  "created_at": datetime.now(timezone.utc),
+                  "updated_at": datetime.now(timezone.utc)
+              },
+              {
+                  "account": 2219,
+                  "password": "NuevaCuenta123*",
+                  "server": "Lucrumcapital-Live",
+                  "name": "EUROBOT1",
+                  "manager_name": "EUROBOT1",
+                  "broker": "LUCRUM Capital",
+                  "platform": "MT5",
+                  "fund_type": "DEMO",
+                  "account_type": "live_demo",
+                  "status": "active",
+                  "is_active": True,
+                  "initial_allocation": 100000,
+                  "created_at": datetime.now(timezone.utc),
+                  "updated_at": datetime.now(timezone.utc)
               }
-            }
+          ]
+          
+          for acc in new_accounts:
+              result = db.mt5_account_config.update_one(
+                  {"account": acc["account"]},
+                  {"$set": acc},
+                  upsert=True
+              )
+              if result.upserted_id:
+                  print(f"INSERTED: Account {acc['account']} ({acc['name']})")
+              else:
+                  print(f"UPDATED: Account {acc['account']} ({acc['name']})")
+          
+          print()
+          print("=== All LUCRUM accounts in mt5_account_config ===")
+          accounts = list(db.mt5_account_config.find(
+              {"server": {"$regex": "ucrum", "$options": "i"}},
+              {"_id": 0, "account": 1, "name": 1, "is_active": 1}
+          ).sort("account", 1))
+          
+          for acc in accounts:
+              print(f"  {acc['account']}: {acc.get('name', 'N/A')} (active: {acc.get('is_active', False)})")
+          
+          print(f"\nTotal LUCRUM accounts: {len(accounts)}")
+          
+          client.close()
+          PYTHON_SCRIPT
+          
+          python add_accounts.py
+      
+      - name: Restart Bridge Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Restarting Bridge Service ===" -ForegroundColor Cyan
             
-            if (-not $found) {
-              Write-Host "2217 not found, trying 20062..." -ForegroundColor Yellow
-              for ($i = 0; $i -lt $lines.Count; $i++) {
-                if ($lines[$i] -match "20062") {
-                  Write-Host "Found 20062 at line $($i+1): $($lines[$i])" -ForegroundColor Green
-                  $newLines = $lines[0..$i]
-                  $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
-                  $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
-                  $newLines += $lines[($i+1)..($lines.Count-1)]
-                  Set-Content $scriptPath $newLines -Encoding UTF8
-                  Write-Host "Added 2218 and 2219 after line $($i+1)" -ForegroundColor Green
-                  $found = $true
-                  break
-                }
-              }
-            }
-            
-            if (-not $found) {
-              Write-Host "20062 not found, trying 2210..." -ForegroundColor Yellow
-              for ($i = 0; $i -lt $lines.Count; $i++) {
-                if ($lines[$i] -match "2210") {
-                  Write-Host "Found 2210 at line $($i+1): $($lines[$i])" -ForegroundColor Green
-                  $newLines = $lines[0..$i]
-                  $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
-                  $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
-                  $newLines += $lines[($i+1)..($lines.Count-1)]
-                  Set-Content $scriptPath $newLines -Encoding UTF8
-                  Write-Host "Added 2218 and 2219 after line $($i+1)" -ForegroundColor Green
-                  $found = $true
-                  break
-                }
-              }
-            }
-            
-            if (-not $found) {
-              Write-Host "ERROR: Could not find any insertion point" -ForegroundColor Red
-              Write-Host "Showing all lines with numbers:" -ForegroundColor Yellow
-              for ($i = 0; $i -lt $lines.Count; $i++) {
-                if ($lines[$i] -match "\d{4,5}") {
-                  Write-Host "Line $($i+1): $($lines[$i])" -ForegroundColor White
-                }
-              }
-              exit 1
-            }
-            
-            Write-Host ""
-            Write-Host "=== STEP 5: Verify Update ===" -ForegroundColor Cyan
-            Write-Host "Lines containing 2218 or 2219:" -ForegroundColor Yellow
-            Get-Content $scriptPath | Select-String -Pattern "2218|2219"
-            
-            Write-Host ""
-            Write-Host "=== STEP 6: Restart Service ===" -ForegroundColor Cyan
             Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 3
             
             Set-Location "C:\mt5_bridge_service"
             Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WindowStyle Normal
-            Write-Host "Service restarted" -ForegroundColor Green
             
-            Write-Host ""
-            Write-Host "=== DONE ===" -ForegroundColor Cyan
-            Write-Host "Check VPS window - should now show 15 accounts" -ForegroundColor Green
+            Write-Host "Service restarted - check VPS window for account count" -ForegroundColor Green
+            Write-Host "Expected: 15 accounts (was 13)" -ForegroundColor Cyan
       
       - name: Report
         if: always()
         run: |
-          echo "# LUCRUM Bridge Update - EUROBOT Accounts" >> $GITHUB_STEP_SUMMARY
-          echo "Added accounts 2218 (EUROBOT.55) and 2219 (EUROBOT1)" >> $GITHUB_STEP_SUMMARY
+          echo "# LUCRUM Bridge - EUROBOT Accounts" >> $GITHUB_STEP_SUMMARY
+          echo "Added accounts 2218 (EUROBOT.55) and 2219 (EUROBOT1) to MongoDB" >> $GITHUB_STEP_SUMMARY
+          echo "Restarted bridge service to pick up new accounts" >> $GITHUB_STEP_SUMMARY
