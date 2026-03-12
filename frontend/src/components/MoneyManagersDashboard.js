@@ -280,6 +280,18 @@ const MoneyManagersDashboard = () => {
 
   // PHASE 3: Mock data generator REMOVED - using real API data only
 
+  // Filter managers to hide those with no allocations (except IB COMMISSIONS)
+  const filteredManagers = managers.filter(manager => {
+    // Always show IB COMMISSIONS
+    if (manager.name?.toUpperCase().includes('IB COMMISSIONS') || 
+        manager.name?.toUpperCase().includes('COMMISSIONS')) {
+      return true;
+    }
+    // Show managers with total allocation > 0
+    const totalAllocation = manager.account_details?.reduce((sum, acc) => sum + (acc.allocation || 0), 0) || 0;
+    return totalAllocation > 0;
+  });
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -406,10 +418,10 @@ const MoneyManagersDashboard = () => {
               <p className="text-slate-400 text-sm">TRUE P&L by manager - Shows actual profit/loss performance</p>
             </CardHeader>
             <CardContent>
-              {managers && managers.length > 0 ? (
+              {filteredManagers && filteredManagers.length > 0 ? (
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart
-                    data={managers
+                    data={filteredManagers
                       .map(manager => ({
                         name: manager.manager_name || 'Unknown',
                         true_pnl: manager.performance?.true_pnl || 0,
@@ -460,7 +472,7 @@ const MoneyManagersDashboard = () => {
                       radius={[0, 8, 8, 0]}
                       name="true_pnl"
                     >
-                      {managers.map((manager, index) => {
+                      {filteredManagers.map((manager, index) => {
                         const performance = manager.performance || {};
                         const truePnl = performance.true_pnl || 0;
                         // Color code based on P&L: green if positive, red if negative, gray if zero
@@ -485,7 +497,7 @@ const MoneyManagersDashboard = () => {
 
           {/* Managers Overview Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {managers.map((manager) => {
+            {filteredManagers.map((manager) => {
               const ExecutionIcon = getExecutionTypeIcon(manager.execution_type);
               const performance = manager.performance || {};
               
@@ -742,7 +754,7 @@ const MoneyManagersDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {managers.map((manager) => {
+                    {filteredManagers.map((manager) => {
                       const performance = manager.performance || {};
                       return (
                         <tr 
