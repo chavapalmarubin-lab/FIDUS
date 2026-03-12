@@ -42,6 +42,18 @@ const MoneyManagersDashboard = () => {
   const [newAllocationDate, setNewAllocationDate] = useState('');
   const [savingDate, setSavingDate] = useState(false);
 
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    manager_name: '',
+    initial_allocation: '',
+    allocation_start_date: '',
+    notes: '',
+    copy_sources: []
+  });
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     fetchManagers();
   }, []);
@@ -130,6 +142,139 @@ const MoneyManagersDashboard = () => {
       alert('Failed to save allocation date');
     } finally {
       setSavingDate(false);
+    }
+  };
+
+  // Open edit modal for an account
+  const openEditModal = (account, managerName) => {
+    setEditingAccount({ ...account, managerName });
+    setEditFormData({
+      manager_name: managerName || '',
+      initial_allocation: account.allocation || '',
+      allocation_start_date: account.allocation_start_date ? account.allocation_start_date.split('T')[0] : '',
+      notes: account.notes || '',
+      copy_sources: account.copy_sources || []
+    });
+    setEditModalOpen(true);
+  };
+
+  // Close edit modal
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditingAccount(null);
+    setEditFormData({
+      manager_name: '',
+      initial_allocation: '',
+      allocation_start_date: '',
+      notes: '',
+      copy_sources: []
+    });
+  };
+
+  // Add a new copy source
+  const addCopySource = () => {
+    setEditFormData(prev => ({
+      ...prev,
+      copy_sources: [
+        ...prev.copy_sources,
+        {
+          master_account: '',
+          master_broker: 'LUCRUM',
+          master_name: '',
+          copy_type: 'ratio',
+          ratio: 0.5,
+          fixed_lot: null
+        }
+      ]
+    }));
+  };
+
+  // Remove a copy source
+  const removeCopySource = (index) => {
+    setEditFormData(prev => ({
+      ...prev,
+      copy_sources: prev.copy_sources.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update a copy source field
+  const updateCopySource = (index, field, value) => {
+    setEditFormData(prev => ({
+      ...prev,
+      copy_sources: prev.copy_sources.map((source, i) => {
+        if (i === index) {
+          const updated = { ...source, [field]: value };
+          // Clear ratio/fixed_lot based on copy_type
+          if (field === 'copy_type') {
+            if (value === 'ratio') {
+              updated.fixed_lot = null;
+              updated.ratio = updated.ratio || 0.5;
+            } else {
+              updated.ratio = null;
+              updated.fixed_lot = updated.fixed_lot || 0.1;
+            }
+          }
+          return updated;
+        }
+        return source;
+      })
+    }));
+  };
+
+  // Save account profile and copy sources
+  const saveAccountEdit = async () => {
+    if (!editingAccount) return;
+    
+    setSaving(true);
+    try {
+      // Update profile
+      const profileResponse = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/v2/accounts/${editingAccount.account}/profile`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            manager_name: editFormData.manager_name,
+            initial_allocation: parseFloat(editFormData.initial_allocation) || 0,
+            allocation_start_date: editFormData.allocation_start_date || null,
+            notes: editFormData.notes
+          })
+        }
+      );
+
+      if (!profileResponse.ok) {
+        const errorData = await profileResponse.json();
+        throw new Error(errorData.detail || 'Failed to update profile');
+      }
+
+      // Update copy sources
+      const copyResponse = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/v2/accounts/${editingAccount.account}/copy-sources`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editFormData.copy_sources.map(source => ({
+            ...source,
+            master_account: parseInt(source.master_account) || 0,
+            ratio: source.copy_type === 'ratio' ? parseFloat(source.ratio) : null,
+            fixed_lot: source.copy_type === 'fixed_lot' ? parseFloat(source.fixed_lot) : null
+          })))
+        }
+      );
+
+      if (!copyResponse.ok) {
+        const errorData = await copyResponse.json();
+        throw new Error(errorData.detail || 'Failed to update copy sources');
+      }
+
+      console.log('✅ Account updated successfully');
+      closeEditModal();
+      fetchManagers(); // Refresh data
+    } catch (err) {
+      console.error('Error saving account:', err);
+      alert(`Failed to save: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -394,13 +539,26 @@ const MoneyManagersDashboard = () => {
                           Assigned Accounts ({manager.assigned_accounts?.length || 0})
                         </div>
                         {manager.account_details?.map((account) => (
-                          <div key={account.account} className="flex items-center justify-between py-1">
+                          <div key={account.account} className="flex items-center justify-between py-1 group">
                             <span className="text-slate-300 text-sm">
                               {account.account} ({account.name})
                             </span>
-                            <span className="text-cyan-400 text-sm font-medium">
-                              {formatCurrency(account.allocation)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-cyan-400 text-sm font-medium">
+                                {formatCurrency(account.allocation)}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-slate-400 hover:text-cyan-400"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(account, manager.name);
+                                }}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1081,6 +1239,237 @@ const MoneyManagersDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Account Modal */}
+      <AnimatePresence>
+        {editModalOpen && editingAccount && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+            onClick={closeEditModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Edit Account {editingAccount.account}</h2>
+                  <p className="text-slate-400 text-sm">{editingAccount.name}</p>
+                </div>
+                <Button variant="ghost" onClick={closeEditModal} className="text-slate-400 hover:text-white">
+                  ✕
+                </Button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-4 space-y-6">
+                {/* Profile Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 flex items-center">
+                    <Users className="w-4 h-4 mr-2" />
+                    Account Profile
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Manager Name</label>
+                      <input
+                        type="text"
+                        value={editFormData.manager_name}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, manager_name: e.target.value }))}
+                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Initial Allocation ($)</label>
+                      <input
+                        type="number"
+                        value={editFormData.initial_allocation}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, initial_allocation: e.target.value }))}
+                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Allocation Start Date</label>
+                    <input
+                      type="date"
+                      value={editFormData.allocation_start_date}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, allocation_start_date: e.target.value }))}
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Notes</label>
+                    <textarea
+                      value={editFormData.notes}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      rows={2}
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none resize-none"
+                      placeholder="Account notes..."
+                    />
+                  </div>
+                </div>
+
+                {/* Copy Configuration Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-blue-400 flex items-center">
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Trading Configuration
+                    </h3>
+                    <Button
+                      size="sm"
+                      onClick={addCopySource}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Source
+                    </Button>
+                  </div>
+
+                  {editFormData.copy_sources.length === 0 ? (
+                    <div className="text-center py-6 bg-slate-700/30 rounded-lg border border-dashed border-slate-600">
+                      <Copy className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                      <p className="text-slate-400">No copy sources configured</p>
+                      <p className="text-slate-500 text-sm">Click "Add Source" to configure copy trading</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editFormData.copy_sources.map((source, index) => (
+                        <div key={index} className="bg-slate-700/50 rounded-lg p-3 border border-slate-600">
+                          <div className="flex items-start justify-between mb-3">
+                            <span className="text-sm font-medium text-slate-300">Copy Source #{index + 1}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeCopySource(index)}
+                              className="text-red-400 hover:text-red-300 h-6 w-6 p-0"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Master Account</label>
+                              <input
+                                type="number"
+                                value={source.master_account}
+                                onChange={(e) => updateCopySource(index, 'master_account', e.target.value)}
+                                placeholder="e.g., 2210"
+                                className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1.5 text-white text-sm focus:border-cyan-500 focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Broker</label>
+                              <select
+                                value={source.master_broker}
+                                onChange={(e) => updateCopySource(index, 'master_broker', e.target.value)}
+                                className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1.5 text-white text-sm focus:border-cyan-500 focus:outline-none"
+                              >
+                                <option value="LUCRUM">LUCRUM</option>
+                                <option value="MEX Atlantic">MEX Atlantic</option>
+                                <option value="Other">Other</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Master Name (Optional)</label>
+                              <input
+                                type="text"
+                                value={source.master_name}
+                                onChange={(e) => updateCopySource(index, 'master_name', e.target.value)}
+                                placeholder="e.g., GOLD DAY TRADING"
+                                className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1.5 text-white text-sm focus:border-cyan-500 focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Copy Type</label>
+                              <select
+                                value={source.copy_type}
+                                onChange={(e) => updateCopySource(index, 'copy_type', e.target.value)}
+                                className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1.5 text-white text-sm focus:border-cyan-500 focus:outline-none"
+                              >
+                                <option value="ratio">Ratio</option>
+                                <option value="fixed_lot">Fixed Lot</option>
+                              </select>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            {source.copy_type === 'ratio' ? (
+                              <div>
+                                <label className="block text-xs text-slate-400 mb-1">Copy Ratio</label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    step="0.05"
+                                    min="0.01"
+                                    max="10"
+                                    value={source.ratio || 0.5}
+                                    onChange={(e) => updateCopySource(index, 'ratio', parseFloat(e.target.value))}
+                                    className="w-24 bg-slate-600 border border-slate-500 rounded px-2 py-1.5 text-white text-sm focus:border-cyan-500 focus:outline-none"
+                                  />
+                                  <span className="text-slate-400 text-sm">x (e.g., 0.5 = 50% of master position)</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                <label className="block text-xs text-slate-400 mb-1">Fixed Lot Size</label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={source.fixed_lot || 0.1}
+                                    onChange={(e) => updateCopySource(index, 'fixed_lot', parseFloat(e.target.value))}
+                                    className="w-24 bg-slate-600 border border-slate-500 rounded px-2 py-1.5 text-white text-sm focus:border-cyan-500 focus:outline-none"
+                                  />
+                                  <span className="text-slate-400 text-sm">lots (fixed size regardless of master)</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-4 flex justify-end gap-3">
+                <Button variant="outline" onClick={closeEditModal} className="text-slate-300 border-slate-600">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveAccountEdit}
+                  disabled={saving}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                >
+                  {saving ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

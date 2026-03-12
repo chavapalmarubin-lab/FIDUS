@@ -12,16 +12,35 @@ Architecture:
 - Join with money_managers ONLY for metadata (profile URLs, fees, etc.)
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone
+from pydantic import BaseModel
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v2", tags=["Single Source of Truth V2"])
+
+
+# Pydantic models for request bodies
+class CopySource(BaseModel):
+    master_account: int
+    master_broker: str = ""
+    master_name: str = ""
+    copy_type: str = "ratio"
+    ratio: Optional[float] = None
+    fixed_lot: Optional[float] = None
+    description: str = ""
+
+class AccountProfileUpdate(BaseModel):
+    manager_name: Optional[str] = None
+    initial_allocation: Optional[float] = None
+    allocation_start_date: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
 
 
 async def get_database():
@@ -324,6 +343,143 @@ async def update_manager_allocation_date(manager_name: str, allocation_start_dat
         raise
     except Exception as e:
         logger.error(f"❌ Error updating manager allocation date: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/accounts/{account_number}/copy-sources")
+async def update_account_copy_sources(account_number: int, copy_sources: List[CopySource] = Body(...)):
+    """
+    Update the copy trading configuration for an account.
+    
+    copy_sources format:
+    [
+        {
+            "master_account": 2210,
+            "master_broker": "LUCRUM",
+            "master_name": "GOLD DAY TRADING",
+            "copy_type": "ratio",  # or "fixed_lot"
+            "ratio": 0.5,          # if ratio type
+            "fixed_lot": null      # if fixed_lot type
+        }
+    ]
+    """
+    try:
+        db = await get_database()
+        
+        # Validate and convert to dict
+        validated_sources = []
+        for source in copy_sources:
+            validated = source.model_dump()
+            
+            # Validate required fields
+            if not validated["master_account"]:
+                raise HTTPException(status_code=400, detail="master_account is required for each copy source")
+            
+            if validated["copy_type"] == "ratio" and validated["ratio"] is None:
+                raise HTTPException(status_code=400, detail="ratio is required when copy_type is 'ratio'")
+            
+            if validated["copy_type"] == "fixed_lot" and validated["fixed_lot"] is None:
+                raise HTTPException(status_code=400, detail="fixed_lot is required when copy_type is 'fixed_lot'")
+            
+            validated_sources.append(validated)
+        
+        # Update the account
+        result = await db.mt5_accounts.update_one(
+            {"account": account_number},
+            {"$set": {
+                "copy_sources": validated_sources,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
+        
+        logger.info(f"✅ Updated copy_sources for account {account_number} - {len(validated_sources)} sources")
+        
+        return {
+            "success": True,
+            "message": f"Copy configuration updated for account {account_number}",
+            "account": account_number,
+            "copy_sources_count": len(validated_sources)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error updating copy sources: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/accounts/{account_number}/profile")
+async def update_account_profile(account_number: int, profile_data: AccountProfileUpdate = Body(...)):
+    """
+    Update account profile information.
+    
+    profile_data can include:
+    - manager_name: str
+    - initial_allocation: float
+    - allocation_start_date: str (ISO format)
+    - notes: str
+    - status: str
+    """
+    try:
+        db = await get_database()
+        
+        # Build update document with only provided fields
+        update_fields = {}
+        data = profile_data.model_dump(exclude_none=True)
+        
+        if "manager_name" in data:
+            update_fields["manager_name"] = data["manager_name"]
+        
+        if "initial_allocation" in data:
+            update_fields["initial_allocation"] = float(data["initial_allocation"])
+        
+        if "allocation_start_date" in data:
+            try:
+                date_str = data["allocation_start_date"]
+                if date_str:
+                    parsed_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                    update_fields["allocation_start_date"] = parsed_date
+                else:
+                    update_fields["allocation_start_date"] = None
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format")
+        
+        if "notes" in data:
+            update_fields["notes"] = data["notes"]
+        
+        if "status" in data:
+            update_fields["status"] = data["status"]
+        
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="No valid fields provided for update")
+        
+        update_fields["updated_at"] = datetime.now(timezone.utc)
+        
+        # Update the account
+        result = await db.mt5_accounts.update_one(
+            {"account": account_number},
+            {"$set": update_fields}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail=f"Account {account_number} not found")
+        
+        logger.info(f"✅ Updated profile for account {account_number}")
+        
+        return {
+            "success": True,
+            "message": f"Profile updated for account {account_number}",
+            "account": account_number,
+            "updated_fields": list(update_fields.keys())
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error updating account profile: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
