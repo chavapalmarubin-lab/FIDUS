@@ -18,11 +18,11 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           command_timeout: 10m
           script: |
-            Write-Host "=== STEP 1: Show Current Script Content ===" -ForegroundColor Cyan
+            Write-Host "=== STEP 1: Show Script Structure ===" -ForegroundColor Cyan
             $scriptPath = "C:\mt5_bridge_service\mt5_bridge_lucrum.py"
             
-            Write-Host "Current account lines:" -ForegroundColor Yellow
-            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
+            Write-Host "First 80 lines of script:" -ForegroundColor Yellow
+            Get-Content $scriptPath -TotalCount 80
             
             Write-Host ""
             Write-Host "=== STEP 2: Check if accounts already exist ===" -ForegroundColor Cyan
@@ -39,17 +39,20 @@ jobs:
             }
             
             Write-Host ""
-            Write-Host "=== STEP 3: Backup and Update ===" -ForegroundColor Cyan
+            Write-Host "=== STEP 3: Backup ===" -ForegroundColor Cyan
             Copy-Item $scriptPath "$scriptPath.bak_$(Get-Date -Format 'yyyyMMddHHmmss')"
             Write-Host "Backup created" -ForegroundColor Green
             
-            # Find the line with account 2217 and insert after it
+            Write-Host ""
+            Write-Host "=== STEP 4: Find and Update Account List ===" -ForegroundColor Cyan
+            
             $lines = Get-Content $scriptPath
             $found = $false
+            
             for ($i = 0; $i -lt $lines.Count; $i++) {
-              if ($lines[$i] -match "^\s*2217") {
-                Write-Host "Found account 2217 at line $($i+1)" -ForegroundColor Green
-                # Insert new accounts after this line
+              # Look for line containing 2217
+              if ($lines[$i] -match "2217") {
+                Write-Host "Found 2217 at line $($i+1): $($lines[$i])" -ForegroundColor Green
                 $newLines = $lines[0..$i]
                 $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
                 $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
@@ -62,11 +65,10 @@ jobs:
             }
             
             if (-not $found) {
-              Write-Host "Could not find account 2217 - trying alternate insertion point" -ForegroundColor Yellow
-              # Try inserting after 20062 if 2217 not found
+              Write-Host "2217 not found, trying 20062..." -ForegroundColor Yellow
               for ($i = 0; $i -lt $lines.Count; $i++) {
-                if ($lines[$i] -match "^\s*20062") {
-                  Write-Host "Found account 20062 at line $($i+1)" -ForegroundColor Green
+                if ($lines[$i] -match "20062") {
+                  Write-Host "Found 20062 at line $($i+1): $($lines[$i])" -ForegroundColor Green
                   $newLines = $lines[0..$i]
                   $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
                   $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
@@ -80,17 +82,40 @@ jobs:
             }
             
             if (-not $found) {
-              Write-Host "ERROR: Could not find insertion point" -ForegroundColor Red
+              Write-Host "20062 not found, trying 2210..." -ForegroundColor Yellow
+              for ($i = 0; $i -lt $lines.Count; $i++) {
+                if ($lines[$i] -match "2210") {
+                  Write-Host "Found 2210 at line $($i+1): $($lines[$i])" -ForegroundColor Green
+                  $newLines = $lines[0..$i]
+                  $newLines += "    2218,   # LIVE DEMO - EUROBOT.55"
+                  $newLines += "    2219,   # LIVE DEMO - EUROBOT1"
+                  $newLines += $lines[($i+1)..($lines.Count-1)]
+                  Set-Content $scriptPath $newLines -Encoding UTF8
+                  Write-Host "Added 2218 and 2219 after line $($i+1)" -ForegroundColor Green
+                  $found = $true
+                  break
+                }
+              }
+            }
+            
+            if (-not $found) {
+              Write-Host "ERROR: Could not find any insertion point" -ForegroundColor Red
+              Write-Host "Showing all lines with numbers:" -ForegroundColor Yellow
+              for ($i = 0; $i -lt $lines.Count; $i++) {
+                if ($lines[$i] -match "\d{4,5}") {
+                  Write-Host "Line $($i+1): $($lines[$i])" -ForegroundColor White
+                }
+              }
               exit 1
             }
             
             Write-Host ""
-            Write-Host "=== STEP 4: Verify Update ===" -ForegroundColor Cyan
-            Write-Host "Account lines after update:" -ForegroundColor Yellow
-            Get-Content $scriptPath | Select-String -Pattern "^\s*\d{4,5}" | ForEach-Object { Write-Host $_.Line }
+            Write-Host "=== STEP 5: Verify Update ===" -ForegroundColor Cyan
+            Write-Host "Lines containing 2218 or 2219:" -ForegroundColor Yellow
+            Get-Content $scriptPath | Select-String -Pattern "2218|2219"
             
             Write-Host ""
-            Write-Host "=== STEP 5: Restart Service ===" -ForegroundColor Cyan
+            Write-Host "=== STEP 6: Restart Service ===" -ForegroundColor Cyan
             Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 3
             
@@ -100,17 +125,10 @@ jobs:
             
             Write-Host ""
             Write-Host "=== DONE ===" -ForegroundColor Cyan
-            Write-Host "Check VPS window - should now show 15 accounts (was 13)" -ForegroundColor Green
+            Write-Host "Check VPS window - should now show 15 accounts" -ForegroundColor Green
       
       - name: Report
         if: always()
         run: |
           echo "# LUCRUM Bridge Update - EUROBOT Accounts" >> $GITHUB_STEP_SUMMARY
-          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Accounts Added" >> $GITHUB_STEP_SUMMARY
-          echo "- **2218** - EUROBOT.55 (Euro pairs automated trading v0.55)" >> $GITHUB_STEP_SUMMARY
-          echo "- **2219** - EUROBOT1 (Euro pairs automated trading)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Expected Result" >> $GITHUB_STEP_SUMMARY
-          echo "Bridge should now sync 15 accounts total" >> $GITHUB_STEP_SUMMARY
+          echo "Added accounts 2218 (EUROBOT.55) and 2219 (EUROBOT1)" >> $GITHUB_STEP_SUMMARY
