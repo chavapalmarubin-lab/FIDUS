@@ -4,7 +4,7 @@ import {
   Building2, Users, DollarSign, TrendingUp, LogOut, PieChart,
   BarChart3, Shield, Activity, UserPlus, RefreshCw, ChevronRight,
   Wallet, ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2,
-  Plus, Download, X, Check, Copy
+  Plus, Download, X, Check, Copy, Upload
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -264,6 +264,9 @@ const ClientsTab = ({ token }) => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
   const [createdCreds, setCreatedCreds] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', country: '', investment_amount: '', referral_agent_id: '' });
@@ -314,6 +317,34 @@ const ClientsTab = ({ token }) => {
     downloadCSV(rows, ['name', 'email', 'invested', 'returns', 'status', 'phone', 'country'], 'franchise_clients.csv');
   };
 
+  const handleBulkUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBulkUploading(true); setBulkResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${API_URL}/api/franchise/dashboard/bulk-import-clients`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) { setBulkResult({ error: data.detail || 'Upload failed' }); return; }
+      setBulkResult(data);
+      if (data.imported > 0) fetchAll();
+    } catch { setBulkResult({ error: 'Network error' }); }
+    finally { setBulkUploading(false); e.target.value = ''; }
+  };
+
+  const downloadTemplate = () => {
+    const csv = 'first_name,last_name,email,phone,country,investment_amount,referral_agent_email\nJohn,Doe,john@example.com,+1555123,USA,100000,agent@company.com\n';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'client_import_template.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <LoadingSkeleton />;
 
   return (
@@ -330,6 +361,7 @@ const ClientsTab = ({ token }) => {
           <CardTitle className="text-base text-slate-200">Client List</CardTitle>
           <div className="flex gap-2">
             <CSVButton onClick={exportCSV} />
+            <Button data-testid="bulk-import-btn" variant="outline" size="sm" onClick={() => { setShowBulk(true); setBulkResult(null); }} className="gap-1.5 border-emerald-600/50 text-emerald-400 hover:bg-emerald-600/10"><Upload className="w-3.5 h-3.5" /> Bulk Import</Button>
             <Button data-testid="add-client-btn" size="sm" onClick={() => { setShowAdd(true); setCreatedCreds(null); }} className="gap-1.5 bg-sky-600 hover:bg-sky-500 text-white"><Plus className="w-3.5 h-3.5" /> Add Client</Button>
           </div>
         </CardHeader>
@@ -408,12 +440,96 @@ const ClientsTab = ({ token }) => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-};
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showBulk && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-2xl rounded-xl border border-slate-700/50 p-6 max-h-[90vh] overflow-y-auto" style={{ background: '#0f172a' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white">Bulk Import Clients</h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowBulk(false)} className="text-slate-400"><X className="w-4 h-4" /></Button>
+              </div>
+
+              {!bulkResult ? (
+                <div className="space-y-4">
+                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/30 space-y-2">
+                    <p className="text-sm text-slate-300 font-medium">CSV Format Required:</p>
+                    <code className="block text-xs text-emerald-400 bg-slate-900/50 p-2 rounded font-mono overflow-x-auto">first_name, last_name, email, phone, country, investment_amount, referral_agent_email</code>
+                    <p className="text-xs text-slate-500">Each row creates a client with login credentials (<span className="text-emerald-400">Fidus2026!</span>)</p>
+                    <Button variant="outline" size="sm" onClick={downloadTemplate} className="border-slate-600 text-slate-300 hover:text-white gap-1.5 mt-1"><Download className="w-3 h-3" /> Download Template</Button>
+                  </div>
+
+                  <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-emerald-500/50 transition-colors">
+                    {bulkUploading ? (
+                      <div className="flex flex-col items-center gap-2"><Loader2 className="w-8 h-8 animate-spin text-emerald-400" /><p className="text-slate-400 text-sm">Importing clients...</p></div>
+                    ) : (
+                      <>
+                        <Upload className="w-10 h-10 mx-auto mb-3 text-slate-500" />
+                        <p className="text-slate-300 text-sm mb-2">Drop your CSV file here or click to browse</p>
+                        <input data-testid="bulk-import-file" type="file" accept=".csv" onChange={handleBulkUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" style={{ position: 'relative' }} />
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : bulkResult.error ? (
+                <div className="space-y-4">
+                  <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-4">{bulkResult.error}</div>
+                  <Button onClick={() => setBulkResult(null)} className="w-full bg-slate-700 hover:bg-slate-600 text-white">Try Again</Button>
+                </div>
+              ) : (
+                <div data-testid="bulk-import-results" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-emerald-400">{bulkResult.imported}</div>
+                      <div className="text-sm text-slate-400">Imported</div>
+                    </div>
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-amber-400">{bulkResult.skipped}</div>
+                      <div className="text-sm text-slate-400">Skipped</div>
+                    </div>
+                  </div>
+
+                  {bulkResult.errors?.length > 0 && (
+                    <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
+                      <p className="text-red-400 text-xs font-medium mb-2">Errors:</p>
+                      {bulkResult.errors.map((e, i) => <p key={i} className="text-xs text-red-300">Row {e.row}: {e.error}{e.email ? ` (${e.email})` : ''}</p>)}
+                    </div>
+                  )}
+
+                  {bulkResult.credentials?.length > 0 && (
+                    <div>
 
 // ─────────────────────────────────────────
 // REFERRAL AGENTS TAB (with Add Agent + CSV)
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-slate-300 font-medium">Generated Credentials</p>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          const rows = bulkResult.credentials.map(c => ({ name: c.name, email: c.email, password: c.temp_password, investment: c.investment_amount }));
+                          downloadCSV(rows, ['name', 'email', 'password', 'investment'], 'imported_credentials.csv');
+                        }} className="border-slate-600 text-slate-300 hover:text-white gap-1"><Download className="w-3 h-3" /> Export Credentials</Button>
+                      </div>
+                      <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                        <table className="w-full text-xs">
+                          <thead><tr className="border-b border-slate-700/50 text-slate-400"><th className="text-left p-2">Name</th><th className="text-left p-2">Email</th><th className="text-right p-2">Amount</th><th className="text-left p-2">Password</th></tr></thead>
+                          <tbody>{bulkResult.credentials.map((c, i) => (
+                            <tr key={i} className="border-b border-slate-700/30"><td className="p-2 text-slate-200">{c.name}</td><td className="p-2 text-slate-400">{c.email}</td><td className="p-2 text-right text-sky-400">{fmt(c.investment_amount)}</td><td className="p-2 text-emerald-400 font-mono">{c.temp_password}</td></tr>
+                          ))}</tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button onClick={() => { setShowBulk(false); setBulkResult(null); }} className="w-full bg-slate-700 hover:bg-slate-600 text-white">Close</Button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 // ─────────────────────────────────────────
 const AgentsTab = ({ token }) => {
   const [agents, setAgents] = useState([]);

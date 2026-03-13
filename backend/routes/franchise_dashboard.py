@@ -6,16 +6,18 @@ Multi-tenant dashboard endpoints for franchise company admins.
 All endpoints filter data by company_id from JWT token.
 """
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 import os
 import logging
 import jwt
 import uuid
 import hashlib
+import csv
+import io
 
 logger = logging.getLogger(__name__)
 
@@ -670,6 +672,190 @@ async def onboard_franchise_agent(req: OnboardAgentRequest, authorization: str =
         raise
     except Exception as e:
         logger.error(f"Error onboarding agent: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# BULK IMPORT CLIENTS (CSV Upload)
+# =============================================================================
+
+@router.post("/bulk-import-clients")
+async def bulk_import_clients(file: UploadFile = File(...), authorization: str = Header(None)):
+    """
+    Bulk import franchise clients from CSV file.
+    Expected columns: first_name, last_name, email, phone, country, investment_amount, referral_agent_email
+    Creates client + investment + login for each valid row. Password = Fidus2026!
+    """
+    try:
+        company_id = get_company_id_from_token(authorization)
+        db = await get_database()
+
+        company = await db.franchise_companies.find_one({"company_id": company_id})
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        # Read CSV
+        contents = await file.read()
+        try:
+            text = contents.decode("utf-8-sig")  # Handle BOM
+        except UnicodeDecodeError:
+            text = contents.decode("latin-1")
+
+        reader = csv.DictReader(io.StringIO(text))
+        rows = list(reader)
+
+        if not rows:
+            raise HTTPException(status_code=400, detail="CSV file is empty")
+
+        # Pre-load agents for lookup by email
+        agents = await db.franchise_referral_agents.find(
+            {"company_id": company_id}, {"_id": 0, "agent_id": 1, "email": 1, "first_name": 1, "last_name": 1}
+        ).to_list(500)
+        agent_map = {a["email"].lower(): a["agent_id"] for a in agents}
+
+        # Pre-load existing client emails to skip duplicates
+        existing_emails = set()
+        existing = await db.franchise_clients.find(
+            {"company_id": company_id}, {"_id": 0, "email": 1}
+        ).to_list(10000)
+        existing_emails = {c["email"].lower() for c in existing}
+
+        results = {"imported": 0, "skipped": 0, "errors": [], "credentials": []}
+        now = datetime.now(timezone.utc)
+
+        for idx, row in enumerate(rows, start=2):  # Row 2 = first data row (1 = header)
+            first_name = (row.get("first_name") or "").strip()
+            last_name = (row.get("last_name") or "").strip()
+            email = (row.get("email") or "").strip().lower()
+            phone = (row.get("phone") or "").strip()
+            country = (row.get("country") or "").strip()
+            amount_str = (row.get("investment_amount") or "").strip().replace(",", "").replace("$", "")
+            agent_email = (row.get("referral_agent_email") or "").strip().lower()
+
+            # Validate required fields
+            if not first_name or not last_name or not email:
+                results["errors"].append({"row": idx, "error": "Missing first_name, last_name, or email"})
+                results["skipped"] += 1
+                continue
+
+            if not amount_str:
+                results["errors"].append({"row": idx, "email": email, "error": "Missing investment_amount"})
+                results["skipped"] += 1
+                continue
+
+            try:
+                investment_amount = float(amount_str)
+            except ValueError:
+                results["errors"].append({"row": idx, "email": email, "error": f"Invalid investment_amount: {amount_str}"})
+                results["skipped"] += 1
+                continue
+
+            if email in existing_emails:
+                results["errors"].append({"row": idx, "email": email, "error": "Duplicate email (already exists)"})
+                results["skipped"] += 1
+                continue
+
+            # Resolve agent
+            referral_agent_id = agent_map.get(agent_email)
+            if not referral_agent_id and agent_email:
+                results["errors"].append({"row": idx, "email": email, "error": f"Agent not found: {agent_email}"})
+                results["skipped"] += 1
+                continue
+            if not referral_agent_id:
+                # Use first available agent if none specified
+                referral_agent_id = agents[0]["agent_id"] if agents else None
+            if not referral_agent_id:
+                results["errors"].append({"row": idx, "email": email, "error": "No referral agents available"})
+                results["skipped"] += 1
+                continue
+
+            # Create client
+            client_id = str(uuid.uuid4())
+            from dateutil.relativedelta import relativedelta
+            incubation_end = now + relativedelta(months=2)
+            contract_end = now + relativedelta(months=14)
+
+            client_doc = {
+                "client_id": client_id,
+                "company_id": company_id,
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "phone": phone,
+                "country": country,
+                "investment_amount": investment_amount,
+                "investment_date": now,
+                "contract_start_date": now,
+                "contract_end_date": contract_end,
+                "incubation_end_date": incubation_end,
+                "visible_return_pct": 2.0,
+                "actual_return_pct": 2.5,
+                "referral_agent_id": referral_agent_id,
+                "status": "incubation",
+                "kyc_status": "pending",
+                "created_at": now,
+                "updated_at": now
+            }
+            await db.franchise_clients.insert_one(client_doc)
+
+            investment_doc = {
+                "investment_id": str(uuid.uuid4()),
+                "company_id": company_id,
+                "client_id": client_id,
+                "referral_agent_id": referral_agent_id,
+                "amount": investment_amount,
+                "investment_date": now,
+                "fund_type": "BALANCE",
+                "contract_months": 14,
+                "incubation_months": 2,
+                "client_return_pct": 2.0,
+                "gross_return_pct": 2.5,
+                "total_returns_earned": 0,
+                "total_returns_paid": 0,
+                "commission_pool": 0,
+                "company_commission": 0,
+                "agent_commission": 0,
+                "status": "incubation",
+                "created_at": now,
+                "updated_at": now
+            }
+            await db.franchise_investments.insert_one(investment_doc)
+
+            login_doc = {
+                "client_id": client_id,
+                "company_id": company_id,
+                "email": email,
+                "password_hash": _hash_password(DEFAULT_TEMP_PASSWORD),
+                "status": "active",
+                "created_at": now,
+                "updated_at": now
+            }
+            await db.franchise_client_logins.insert_one(login_doc)
+
+            existing_emails.add(email)
+            results["imported"] += 1
+            results["credentials"].append({
+                "name": f"{first_name} {last_name}",
+                "email": email,
+                "investment_amount": investment_amount,
+                "temp_password": DEFAULT_TEMP_PASSWORD
+            })
+
+        logger.info(f"Bulk import: {results['imported']} imported, {results['skipped']} skipped for company {company_id}")
+
+        return {
+            "success": True,
+            "message": f"Imported {results['imported']} clients, {results['skipped']} skipped",
+            "imported": results["imported"],
+            "skipped": results["skipped"],
+            "errors": results["errors"][:20],  # Limit error list
+            "credentials": results["credentials"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in bulk import: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
