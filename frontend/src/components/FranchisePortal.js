@@ -4,7 +4,7 @@ import {
   Building2, Users, DollarSign, TrendingUp, LogOut, PieChart,
   BarChart3, Shield, Activity, UserPlus, RefreshCw, ChevronRight,
   Wallet, ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2,
-  Plus, Download, X, Check, Copy, Upload, Calendar
+  Plus, Download, X, Check, Copy, Upload, Calendar, Search
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -805,12 +805,16 @@ const ClientsTab = ({ token }) => {
   );
 };
 // ─────────────────────────────────────────
+// REFERRAL AGENTS TAB (FIDUS-quality with cards + search + KPIs)
+// ─────────────────────────────────────────
 const AgentsTab = ({ token }) => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [createdCreds, setCreatedCreds] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', commission_tier: '50' });
   const [formError, setFormError] = useState('');
 
@@ -842,48 +846,140 @@ const AgentsTab = ({ token }) => {
   };
 
   const exportCSV = () => {
-    const rows = agents.map(a => ({ name: `${a.first_name} ${a.last_name}`, email: a.email, clients_referred: a.total_clients_referred || 0, aum_referred: a.total_aum_referred || 0, commission_tier: `${a.commission_tier || 50}%`, status: a.status || '' }));
-    downloadCSV(rows, ['name', 'email', 'clients_referred', 'aum_referred', 'commission_tier', 'status'], 'franchise_agents.csv');
+    const rows = agents.map(a => ({ name: `${a.first_name} ${a.last_name}`, email: a.email, phone: a.phone || '', clients_referred: a.total_clients_referred || 0, aum_referred: a.total_aum_referred || 0, commission_tier: `${a.commission_tier || 50}%`, status: a.status || '' }));
+    downloadCSV(rows, ['name', 'email', 'phone', 'clients_referred', 'aum_referred', 'commission_tier', 'status'], 'franchise_agents.csv');
   };
 
   if (loading) return <LoadingSkeleton />;
 
+  // Stats
+  const totalAgents = agents.length;
+  const activeAgents = agents.filter(a => a.status === 'active').length;
+  const totalAUM = agents.reduce((s, a) => s + (a.total_aum_referred || 0), 0);
+  const totalClients = agents.reduce((s, a) => s + (a.total_clients_referred || 0), 0);
+
+  // Filter
+  const filtered = agents.filter(a => {
+    const matchesSearch = !searchTerm || `${a.first_name} ${a.last_name} ${a.email}`.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesActive = !showActiveOnly || a.status === 'active';
+    return matchesSearch && matchesActive;
+  });
+
   return (
     <div className="space-y-6" data-testid="franchise-agents-tab">
-      <Card className="border-slate-700/50 bg-slate-800/40">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-base text-slate-200">Referral Agents ({agents.length})</CardTitle>
-          <div className="flex gap-2">
-            <CSVButton onClick={exportCSV} />
-            <Button data-testid="add-agent-btn" size="sm" onClick={() => { setShowAdd(true); setCreatedCreds(null); }} className="gap-1.5 bg-amber-600 hover:bg-amber-500 text-white"><Plus className="w-3.5 h-3.5" /> Add Agent</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {agents.length === 0 ? (
-            <div className="text-center py-12 text-slate-500"><UserPlus className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>No agents yet. Click "Add Agent" to onboard.</p></div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b border-slate-700/50 text-slate-400">
-                  <th className="text-left p-3">Agent</th><th className="text-left p-3">Email</th><th className="text-right p-3">Clients</th><th className="text-right p-3">AUM</th><th className="text-right p-3">Tier</th><th className="text-center p-3">Status</th>
-                </tr></thead>
-                <tbody>
-                  {agents.map((a) => (
-                    <tr key={a.agent_id} className="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
-                      <td className="p-3 text-slate-200 font-medium">{a.first_name} {a.last_name}</td>
-                      <td className="p-3 text-slate-400">{a.email}</td>
-                      <td className="p-3 text-right text-slate-200">{a.total_clients_referred || 0}</td>
-                      <td className="p-3 text-right text-sky-400">{fmt(a.total_aum_referred)}</td>
-                      <td className="p-3 text-right text-amber-400">{a.commission_tier || 50}%</td>
-                      <td className="p-3 text-center"><Badge variant="outline" className="border-emerald-500/40 text-emerald-400">{a.status || 'active'}</Badge></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white">Referrals & Commissions</h2>
+          <p className="text-sm text-slate-400">Manage referral agents and track commission payments</p>
+        </div>
+        <Button data-testid="add-agent-btn" size="sm" onClick={() => { setShowAdd(true); setCreatedCreds(null); }} className="gap-1.5 bg-blue-600 hover:bg-blue-500 text-white"><Plus className="w-3.5 h-3.5" /> Add Salesperson</Button>
+      </div>
+
+      {/* KPI Strip - FIDUS style */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="border-slate-700/30 bg-slate-800/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Active Salespeople</p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-2xl font-bold text-white">{activeAgents}</p>
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center"><Users className="w-5 h-5 text-blue-400" /></div>
             </div>
-          )}
+          </CardContent>
+        </Card>
+        <Card className="border-slate-700/30 bg-slate-800/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Total Sales Volume</p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-2xl font-bold text-white">{fmt(totalAUM)}</p>
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-emerald-400" /></div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-700/30 bg-slate-800/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Total Clients</p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-2xl font-bold text-white">{totalClients}</p>
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center"><UserPlus className="w-5 h-5 text-amber-400" /></div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-700/30 bg-slate-800/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Total Agents</p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-2xl font-bold text-white">{totalAgents}</p>
+              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center"><Building2 className="w-5 h-5 text-purple-400" /></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search + Filters */}
+      <Card className="border-slate-700/30 bg-slate-800/30">
+        <CardContent className="p-4 flex flex-col sm:flex-row gap-3 items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Input placeholder="Search by name, email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 bg-slate-900/50 border-slate-700 text-white" />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setShowActiveOnly(!showActiveOnly)} className={`gap-1.5 ${showActiveOnly ? 'bg-blue-600/20 border-blue-500/40 text-blue-400' : 'border-slate-600 text-slate-400'}`}>
+            {showActiveOnly ? 'Active Only' : 'Show All'}
+          </Button>
+          <CSVButton onClick={exportCSV} />
         </CardContent>
       </Card>
+
+      {/* Agent Cards Grid - FIDUS style */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-slate-500"><UserPlus className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>No agents found.</p></div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((a) => (
+            <Card key={a.agent_id} className="border-slate-700/30 bg-slate-800/30 hover:border-slate-600/50 transition-colors">
+              <CardContent className="p-5">
+                {/* Agent Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-slate-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">{a.first_name} {a.last_name}</h3>
+                      <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400 mt-0.5">Tier {a.commission_tier || 50}%</Badge>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-xs">{a.status || 'Active'}</Badge>
+                </div>
+
+                {/* Contact */}
+                <div className="space-y-1 mb-4 text-sm">
+                  <p className="text-slate-400 truncate">{a.email}</p>
+                  {a.phone && <p className="text-slate-500">{a.phone}</p>}
+                </div>
+
+                {/* Stats - FIDUS style */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-2 bg-slate-700/30 rounded-lg">
+                    <p className="text-xs text-slate-500">Clients</p>
+                    <p className="text-lg font-bold text-white">{a.total_clients_referred || 0}</p>
+                  </div>
+                  <div className="p-2 bg-slate-700/30 rounded-lg">
+                    <p className="text-xs text-slate-500">Sales</p>
+                    <p className="text-lg font-bold text-white">{fmt(a.total_aum_referred)}</p>
+                  </div>
+                </div>
+
+                {/* Commission info */}
+                <div className="border-t border-slate-700/30 pt-3 space-y-1 text-sm">
+                  <div className="flex justify-between"><span className="text-slate-400">Total Commissions</span><span className="text-white font-medium">{fmt(a.total_commission_earned)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Pending</span><span className="text-amber-400 font-medium">{fmt(a.pending_commission)}</span></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Add Agent Modal */}
       <AnimatePresence>
@@ -921,7 +1017,7 @@ const AgentsTab = ({ token }) => {
                     </div>
                     <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30"><p className="text-xs text-slate-400">Login credentials will be auto-generated: <span className="text-emerald-400 font-mono">Fidus2026!</span></p></div>
                     {formError && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-2">{formError}</div>}
-                    <Button data-testid="agent-form-submit" disabled={submitting} onClick={handleAdd} className="w-full bg-amber-600 hover:bg-amber-500 text-white">
+                    <Button data-testid="agent-form-submit" disabled={submitting} onClick={handleAdd} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
                       {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}{submitting ? 'Creating...' : 'Onboard Agent'}
                     </Button>
                   </div>
@@ -1407,9 +1503,7 @@ const FranchisePortal = ({ authData, onLogout }) => {
               <TabsTrigger value="overview" className="flex-shrink-0" data-testid="tab-overview">Overview</TabsTrigger>
               <TabsTrigger value="portfolio" className="flex-shrink-0" data-testid="tab-portfolio">$ Fund Portfolio</TabsTrigger>
               <TabsTrigger value="cashflow" className="flex-shrink-0" data-testid="tab-cashflow">$ Cash Flow & Performance</TabsTrigger>
-              <TabsTrigger value="instruments" className="flex-shrink-0" data-testid="tab-instruments">Instruments</TabsTrigger>
               <TabsTrigger value="risk" className="flex-shrink-0" data-testid="tab-risk">Risk Parameters</TabsTrigger>
-              <TabsTrigger value="gap" className="flex-shrink-0" data-testid="tab-gap">Gap Analysis</TabsTrigger>
               <TabsTrigger value="clients" className="flex-shrink-0" data-testid="tab-clients">Clients</TabsTrigger>
               <TabsTrigger value="agents" className="flex-shrink-0" data-testid="tab-agents">Referrals</TabsTrigger>
               <TabsTrigger value="commissions" className="flex-shrink-0" data-testid="tab-commissions">Commissions</TabsTrigger>
@@ -1420,9 +1514,7 @@ const FranchisePortal = ({ authData, onLogout }) => {
             <TabsContent value="overview"><OverviewTab overview={overview} loading={loading} /></TabsContent>
             <TabsContent value="portfolio"><PortfolioTab token={token} loading={loading} /></TabsContent>
             <TabsContent value="cashflow"><CashFlowTab token={token} /></TabsContent>
-            <TabsContent value="instruments"><InstrumentsTab token={token} /></TabsContent>
             <TabsContent value="risk"><RiskParamsTab token={token} /></TabsContent>
-            <TabsContent value="gap"><GapAnalysisTab token={token} overview={overview} /></TabsContent>
             <TabsContent value="clients"><ClientsTab token={token} /></TabsContent>
             <TabsContent value="agents"><AgentsTab token={token} /></TabsContent>
             <TabsContent value="commissions"><CommissionsTab token={token} /></TabsContent>
