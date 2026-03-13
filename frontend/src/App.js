@@ -20,6 +20,8 @@ import ProtectedRoute from "./components/referral-agent/ProtectedRoute";
 // Franchise Portal
 import FranchiseLogin from "./components/FranchiseLogin";
 import FranchisePortal from "./components/FranchisePortal";
+import FranchiseClientPortal from "./components/FranchiseClientPortal";
+import FranchiseAgentPortal from "./components/FranchiseAgentPortal";
 // VIKING Standalone Application
 import VikingApp from "./components/VikingApp";
 // VKNG Public Dashboard (No Login Required)
@@ -82,7 +84,7 @@ function GetVKNGPublicWrapper() {
 }
 
 // Franchise Portal App - Separate authentication from FIDUS
-function FranchiseApp() {
+function FranchiseAdminApp() {
   const [authData, setAuthData] = useState(null);
   const [checking, setChecking] = useState(true);
 
@@ -91,27 +93,21 @@ function FranchiseApp() {
     const admin = localStorage.getItem('franchise_admin');
     const company = localStorage.getItem('franchise_company');
     if (token && admin && company) {
-      setAuthData({
-        token,
-        admin: JSON.parse(admin),
-        company: JSON.parse(company)
-      });
+      setAuthData({ token, admin: JSON.parse(admin), company: JSON.parse(company) });
     }
     setChecking(false);
   }, []);
 
   if (checking) return null;
+  if (!authData) return <FranchiseLogin onLogin={(data) => setAuthData(data)} />;
+  return <FranchisePortal authData={authData} onLogout={() => setAuthData(null)} />;
+}
 
-  if (!authData) {
-    return <FranchiseLogin onLogin={(data) => setAuthData(data)} />;
-  }
-
-  return (
-    <FranchisePortal 
-      authData={authData} 
-      onLogout={() => setAuthData(null)} 
-    />
-  );
+function FranchiseApp() {
+  const pathname = window.location.pathname.toLowerCase();
+  if (pathname.startsWith('/franchise/client')) return <FranchiseClientPortal />;
+  if (pathname.startsWith('/franchise/agent')) return <FranchiseAgentPortal />;
+  return <FranchiseAdminApp />;
 }
 
 // FIDUS App - The main investment platform
@@ -382,6 +378,32 @@ function FidusApp() {
     if (token && storedUser && storedUser !== 'null') {
       try {
         const user = JSON.parse(storedUser);
+        
+        // Validate JWT token hasn't expired
+        if (token) {
+          try {
+            const parts = token.split('.');
+            if (parts.length === 3) {
+              const payload = JSON.parse(atob(parts[1]));
+              const currentTime = Math.floor(Date.now() / 1000);
+              if (payload.exp && payload.exp <= currentTime) {
+                console.log('⏰ JWT token expired - clearing auth and showing login');
+                localStorage.removeItem('fidus_user');
+                localStorage.removeItem('fidus_token');
+                setCurrentView("login");
+                return;
+              }
+            }
+          } catch (e) {
+            // Token parsing failed - clear and show login
+            console.warn('Token validation failed:', e);
+            localStorage.removeItem('fidus_user');
+            localStorage.removeItem('fidus_token');
+            setCurrentView("login");
+            return;
+          }
+        }
+        
         console.log('✅ User authenticated:', user.email || user.username);
         setUser(user);
         
@@ -392,6 +414,8 @@ function FidusApp() {
         }
       } catch (error) {
         console.error('❌ Error parsing stored user:', error);
+        localStorage.removeItem('fidus_user');
+        localStorage.removeItem('fidus_token');
         setCurrentView("login");
       }
     } else {
@@ -637,6 +661,28 @@ function FidusApp() {
                         <AdminDashboard user={user} onLogout={handleLogout} />
                       </Suspense>
                     </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            } 
+          />
+
+          {/* CATCH-ALL: Redirect any unmatched routes to home (prevents blank pages) */}
+          <Route 
+            path="*" 
+            element={
+              <div className="App">
+                <AnimatePresence mode="wait">
+                  {currentView === "admin" && user ? (
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <AdminDashboard user={user} onLogout={handleLogout} />
+                    </Suspense>
+                  ) : currentView === "client" && user ? (
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <ClientDashboard user={user} onLogout={handleLogout} />
+                    </Suspense>
+                  ) : (
+                    <LoginSelection onLogin={handleLogin} />
                   )}
                 </AnimatePresence>
               </div>

@@ -612,3 +612,189 @@ async def get_franchise_risk_policy(authorization: str = Header(None)):
     except Exception as e:
         logger.error(f"Error fetching risk policy for franchise: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# =============================================================================
+# HELPERS FOR CLIENT/AGENT TOKEN DECODING
+# =============================================================================
+
+def get_client_id_from_token(authorization: str) -> dict:
+    """Extract client_id and company_id from JWT token."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "franchise_client":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        return {"client_id": payload["client_id"], "company_id": payload["company_id"]}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def get_agent_id_from_token(authorization: str) -> dict:
+    """Extract agent_id and company_id from JWT token."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "franchise_agent":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        return {"agent_id": payload["agent_id"], "company_id": payload["company_id"]}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+# =============================================================================
+# CLIENT PORTAL ENDPOINTS
+# =============================================================================
+
+@router.get("/client/overview")
+async def get_client_overview(authorization: str = Header(None)):
+    """Client's investment overview — shows only their own data."""
+    try:
+        ids = get_client_id_from_token(authorization)
+        db = await get_database()
+
+        client = await db.franchise_clients.find_one(
+            {"client_id": ids["client_id"], "company_id": ids["company_id"]},
+            {"_id": 0}
+        )
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+
+        investments = await db.franchise_investments.find(
+            {"client_id": ids["client_id"]},
+            {"_id": 0}
+        ).to_list(20)
+
+        total_invested = sum(i.get("amount", 0) for i in investments)
+        total_returns = sum(i.get("total_returns_earned", 0) for i in investments)
+        total_paid = sum(i.get("total_returns_paid", 0) for i in investments)
+
+        company = await db.franchise_companies.find_one(
+            {"company_id": ids["company_id"]},
+            {"_id": 0, "company_name": 1, "logo_url": 1, "primary_color": 1, "subdomain": 1}
+        )
+
+        return {
+            "success": True,
+            "client": {
+                "first_name": client.get("first_name"),
+                "last_name": client.get("last_name"),
+                "email": client.get("email"),
+                "status": client.get("status"),
+                "investment_date": str(client.get("investment_date", "")),
+                "contract_start_date": str(client.get("contract_start_date", "")),
+                "contract_end_date": str(client.get("contract_end_date", "")),
+                "incubation_end_date": str(client.get("incubation_end_date", "")),
+                "kyc_status": client.get("kyc_status", "pending"),
+            },
+            "summary": {
+                "total_invested": total_invested,
+                "total_returns_earned": total_returns,
+                "total_returns_paid": total_paid,
+                "pending_returns": total_returns - total_paid,
+                "visible_return_pct": client.get("visible_return_pct", 2.0),
+            },
+            "investments": investments,
+            "company": company or {},
+            "fund_terms": {
+                "contract_months": 14,
+                "incubation_months": 2,
+                "client_return_pct": 2.0,
+                "payment_frequency": "quarterly"
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching client overview: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# AGENT PORTAL ENDPOINTS
+# =============================================================================
+
+@router.get("/agent/overview")
+async def get_agent_overview(authorization: str = Header(None)):
+    """Agent's referral overview — shows only their own referred clients."""
+    try:
+        ids = get_agent_id_from_token(authorization)
+        db = await get_database()
+
+        agent = await db.franchise_referral_agents.find_one(
+            {"agent_id": ids["agent_id"], "company_id": ids["company_id"]},
+            {"_id": 0, "password_hash": 0}
+        )
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+
+        # Get referred clients
+        referred_clients = await db.franchise_clients.find(
+            {"referral_agent_id": ids["agent_id"]},
+            {"_id": 0}
+        ).to_list(500)
+
+        # Get referred investments
+        referred_investments = await db.franchise_investments.find(
+            {"referral_agent_id": ids["agent_id"]},
+            {"_id": 0}
+        ).to_list(500)
+
+        total_aum = sum(i.get("amount", 0) for i in referred_investments if i.get("status") in ("incubation", "active"))
+        total_commission = sum(i.get("agent_commission", 0) for i in referred_investments)
+
+        # Get commission transactions
+        transactions = await db.franchise_commission_transactions.find(
+            {"agent_id": ids["agent_id"]},
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(50)
+
+        company = await db.franchise_companies.find_one(
+            {"company_id": ids["company_id"]},
+            {"_id": 0, "company_name": 1, "logo_url": 1, "primary_color": 1, "subdomain": 1, "commission_split": 1}
+        )
+
+        return {
+            "success": True,
+            "agent": {
+                "first_name": agent.get("first_name"),
+                "last_name": agent.get("last_name"),
+                "email": agent.get("email"),
+                "commission_tier": agent.get("commission_tier", 50),
+                "status": agent.get("status"),
+            },
+            "summary": {
+                "total_clients_referred": len(referred_clients),
+                "total_aum_referred": total_aum,
+                "total_commission_earned": total_commission,
+                "active_clients": len([c for c in referred_clients if c.get("status") == "active"]),
+                "incubation_clients": len([c for c in referred_clients if c.get("status") == "incubation"]),
+            },
+            "clients": [
+                {
+                    "client_id": c.get("client_id"),
+                    "first_name": c.get("first_name"),
+                    "last_name": c.get("last_name"),
+                    "investment_amount": c.get("investment_amount", 0),
+                    "status": c.get("status"),
+                    "investment_date": str(c.get("investment_date", "")),
+                }
+                for c in referred_clients
+            ],
+            "transactions": transactions,
+            "company": company or {},
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching agent overview: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

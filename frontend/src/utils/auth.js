@@ -116,4 +116,7 @@ export const isAuthenticated = () => {
  */
 export const clearAuth = () => {
   localStorage.removeItem('fidus_user');
+  localStorage.removeItem('fidus_token');
+  localStorage.removeItem('google_session_token');
+  localStorage.removeItem('google_api_authenticated');
 };

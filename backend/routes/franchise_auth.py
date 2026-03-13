@@ -347,3 +347,261 @@ async def change_franchise_password(token: str, passwords: PasswordChange):
     except Exception as e:
         logger.error(f"Error changing franchise password: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# =============================================================================
+# CLIENT AUTHENTICATION ENDPOINTS
+# =============================================================================
+
+class FranchiseClientLogin(BaseModel):
+    email: str
+    password: str
+
+
+class FranchiseClientRegister(BaseModel):
+    company_id: str
+    client_id: str  # Existing client_id from franchise_clients
+    email: str
+    password: str
+
+
+def create_client_token(client_data: dict) -> str:
+    """Create JWT token for franchise client."""
+    payload = {
+        "client_id": client_data["client_id"],
+        "company_id": client_data["company_id"],
+        "company_name": client_data.get("company_name", ""),
+        "email": client_data["email"],
+        "type": "franchise_client",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+@router.post("/client/register")
+async def register_franchise_client_login(reg: FranchiseClientRegister):
+    """Register login credentials for an existing franchise client."""
+    try:
+        db = await get_database()
+        
+        # Verify client exists
+        client = await db.franchise_clients.find_one({"client_id": reg.client_id, "company_id": reg.company_id})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Check if already registered
+        existing = await db.franchise_client_logins.find_one({"client_id": reg.client_id})
+        if existing:
+            raise HTTPException(status_code=400, detail="Client login already exists")
+        
+        now = datetime.now(timezone.utc)
+        login_doc = {
+            "client_id": reg.client_id,
+            "company_id": reg.company_id,
+            "email": reg.email.lower(),
+            "password_hash": hash_password(reg.password),
+            "status": "active",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_client_logins.insert_one(login_doc)
+        
+        return {"success": True, "message": "Client login created"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registering franchise client login: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/client/login")
+async def login_franchise_client(credentials: FranchiseClientLogin):
+    """Login for franchise client."""
+    try:
+        db = await get_database()
+        
+        login = await db.franchise_client_logins.find_one({"email": credentials.email.lower()})
+        if not login or not verify_password(credentials.password, login["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        if login.get("status") != "active":
+            raise HTTPException(status_code=401, detail="Account is not active")
+        
+        # Get client info
+        client = await db.franchise_clients.find_one(
+            {"client_id": login["client_id"]},
+            {"_id": 0}
+        )
+        if not client:
+            raise HTTPException(status_code=401, detail="Client record not found")
+        
+        # Get company info
+        company = await db.franchise_companies.find_one(
+            {"company_id": login["company_id"]},
+            {"_id": 0}
+        )
+        if not company or company.get("status") != "active":
+            raise HTTPException(status_code=401, detail="Company not active")
+        
+        # Update last login
+        await db.franchise_client_logins.update_one(
+            {"client_id": login["client_id"]},
+            {"$set": {"last_login": datetime.now(timezone.utc)}}
+        )
+        
+        token = create_client_token({
+            "client_id": login["client_id"],
+            "company_id": login["company_id"],
+            "company_name": company.get("company_name", ""),
+            "email": login["email"]
+        })
+        
+        return {
+            "success": True,
+            "token": token,
+            "client": {
+                "client_id": client["client_id"],
+                "first_name": client.get("first_name", ""),
+                "last_name": client.get("last_name", ""),
+                "email": login["email"],
+                "status": client.get("status", "active")
+            },
+            "company": {
+                "company_id": company["company_id"],
+                "company_name": company["company_name"],
+                "logo_url": company.get("logo_url", ""),
+                "primary_color": company.get("primary_color", "#0ea5e9")
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in franchise client login: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# AGENT AUTHENTICATION ENDPOINTS
+# =============================================================================
+
+class FranchiseAgentLogin(BaseModel):
+    email: str
+    password: str
+
+
+class FranchiseAgentRegister(BaseModel):
+    company_id: str
+    agent_id: str  # Existing agent_id from franchise_referral_agents
+    email: str
+    password: str
+
+
+def create_agent_token(agent_data: dict) -> str:
+    """Create JWT token for franchise referral agent."""
+    payload = {
+        "agent_id": agent_data["agent_id"],
+        "company_id": agent_data["company_id"],
+        "company_name": agent_data.get("company_name", ""),
+        "email": agent_data["email"],
+        "type": "franchise_agent",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+@router.post("/agent/register")
+async def register_franchise_agent_login(reg: FranchiseAgentRegister):
+    """Register login credentials for an existing franchise referral agent."""
+    try:
+        db = await get_database()
+        
+        agent = await db.franchise_referral_agents.find_one({"agent_id": reg.agent_id, "company_id": reg.company_id})
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+        
+        existing = await db.franchise_agent_logins.find_one({"agent_id": reg.agent_id})
+        if existing:
+            raise HTTPException(status_code=400, detail="Agent login already exists")
+        
+        now = datetime.now(timezone.utc)
+        login_doc = {
+            "agent_id": reg.agent_id,
+            "company_id": reg.company_id,
+            "email": reg.email.lower(),
+            "password_hash": hash_password(reg.password),
+            "status": "active",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_agent_logins.insert_one(login_doc)
+        
+        return {"success": True, "message": "Agent login created"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registering franchise agent login: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/agent/login")
+async def login_franchise_agent(credentials: FranchiseAgentLogin):
+    """Login for franchise referral agent."""
+    try:
+        db = await get_database()
+        
+        login = await db.franchise_agent_logins.find_one({"email": credentials.email.lower()})
+        if not login or not verify_password(credentials.password, login["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        if login.get("status") != "active":
+            raise HTTPException(status_code=401, detail="Account is not active")
+        
+        agent = await db.franchise_referral_agents.find_one(
+            {"agent_id": login["agent_id"]},
+            {"_id": 0, "password_hash": 0}
+        )
+        if not agent:
+            raise HTTPException(status_code=401, detail="Agent record not found")
+        
+        company = await db.franchise_companies.find_one(
+            {"company_id": login["company_id"]},
+            {"_id": 0}
+        )
+        if not company or company.get("status") != "active":
+            raise HTTPException(status_code=401, detail="Company not active")
+        
+        await db.franchise_agent_logins.update_one(
+            {"agent_id": login["agent_id"]},
+            {"$set": {"last_login": datetime.now(timezone.utc)}}
+        )
+        
+        token = create_agent_token({
+            "agent_id": login["agent_id"],
+            "company_id": login["company_id"],
+            "company_name": company.get("company_name", ""),
+            "email": login["email"]
+        })
+        
+        return {
+            "success": True,
+            "token": token,
+            "agent": {
+                "agent_id": agent["agent_id"],
+                "first_name": agent.get("first_name", ""),
+                "last_name": agent.get("last_name", ""),
+                "email": login["email"],
+                "commission_tier": agent.get("commission_tier", 50)
+            },
+            "company": {
+                "company_id": company["company_id"],
+                "company_name": company["company_name"],
+                "logo_url": company.get("logo_url", ""),
+                "primary_color": company.get("primary_color", "#0ea5e9")
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in franchise agent login: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
