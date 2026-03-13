@@ -17,18 +17,20 @@ Build a comprehensive FIDUS investment platform with VIKING trading analytics, M
 
 ### Phase 2 - Franchise Admin Portal (Mar 13, 2026)
 - JWT auth at `/api/franchise/auth/`
-- 9-tab portal at `/franchise/login` (Overview, Portfolio, Cash Flow, Instruments, Risk, Gap Analysis, Clients, Referrals, Commissions)
+- 9-tab portal at `/franchise/login`
 
 ### Phase 3 - Client & Agent Portals (Mar 13, 2026)
 - **Client Portal** `/franchise/client/login` — investment overview, returns, contract timeline
-- **Agent Portal** `/franchise/agent/login` — referred clients, AUM, commissions, tier display
+- **Agent Portal** `/franchise/agent/login` — referred clients, AUM, commissions
 
-### Phase 4 - Self-Service Onboarding + CSV (Mar 13, 2026)
-- **Add Client modal** with referral agent dropdown, auto-generates `Fidus2026!` password
-- **Add Agent modal** with commission tier (30/40/50%), auto-generates `Fidus2026!` password
-- **CSV download** on all data tabs (Clients, Agents, Commissions, Instruments)
-- Created client/agent can immediately login to their respective portals
-- Backend: `POST /api/franchise/dashboard/onboard-client` and `POST /api/franchise/dashboard/onboard-agent`
+### Phase 4 - Self-Service Onboarding + CSV + Bulk Import (Mar 13, 2026)
+- **Add Client modal** — referral agent dropdown, auto `Fidus2026!` password
+- **Add Agent modal** — commission tier (30/40/50%), auto `Fidus2026!` password
+- **CSV download** on all data tabs
+- **Bulk Import** — upload CSV of clients, validates rows, creates client+investment+login for each valid row, shows results with exportable credentials
+  - Handles: missing fields, duplicate emails, invalid amounts, agent resolution
+  - Template download included
+  - `POST /api/franchise/dashboard/bulk-import-clients` (multipart/form-data)
 
 ### P1 Bug Fix - Blank Page (Mar 13, 2026)
 - Catch-all `*` route prevents blank pages on unmatched URLs
@@ -61,9 +63,9 @@ Build a comprehensive FIDUS investment platform with VIKING trading analytics, M
 
 ## Key Files
 - `/app/backend/routes/franchise_auth.py` - All franchise auth (admin/client/agent)
-- `/app/backend/routes/franchise_dashboard.py` - Dashboard + onboarding endpoints
+- `/app/backend/routes/franchise_dashboard.py` - Dashboard + onboarding + bulk import
 - `/app/backend/routes/franchise_api.py` - Company CRUD
-- `/app/frontend/src/components/FranchisePortal.js` - Admin portal (9 tabs + modals + CSV)
+- `/app/frontend/src/components/FranchisePortal.js` - Admin portal (9 tabs + modals + CSV + bulk)
 - `/app/frontend/src/components/FranchiseClientPortal.js` - Client portal
 - `/app/frontend/src/components/FranchiseAgentPortal.js` - Agent portal
 - `/app/frontend/src/components/FranchiseLogin.js` - Admin login
