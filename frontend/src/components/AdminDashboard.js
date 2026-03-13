@@ -45,6 +45,7 @@ import LiveDemoDashboard from './LiveDemoDashboard';
 import InstrumentSpecifications from './InstrumentSpecifications';
 import RiskParameters from './RiskParameters';
 import GapRiskAnalysis from './GapRiskAnalysis';
+import WhiteLabelDashboard from './WhiteLabelDashboard';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
@@ -680,6 +681,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <TabsTrigger value="crm" className="flex-shrink-0">
               CRM Dashboard
             </TabsTrigger>
+            <TabsTrigger value="white-label" className="flex-shrink-0">
+              🏢 White Label
+            </TabsTrigger>
             {/* Hidden - Redemptions and Google Workspace not currently used
             <TabsTrigger value="redemptions" className="flex-shrink-0">
               <ArrowDownCircle size={16} className="mr-2" />
@@ -834,6 +838,10 @@ const AdminDashboard = ({ user, onLogout }) => {
 
           <TabsContent value="crm" className="mt-6">
             <CRMDashboard user={user} />
+          </TabsContent>
+
+          <TabsContent value="white-label" className="mt-6">
+            <WhiteLabelDashboard />
           </TabsContent>
 
           <TabsContent value="clients" className="mt-6">
