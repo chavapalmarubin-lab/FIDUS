@@ -2,7 +2,7 @@
 
 **Test Date:** November 10, 2025  
 **Environment:** Production (Render)  
-**API URL:** https://fidus-trading.preview.emergentagent.com  
+**API URL:** https://multi-tenant-hub-32.preview.emergentagent.com  
 **Status:** ✅ ALL SYSTEMS OPERATIONAL
 
 ---

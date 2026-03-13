@@ -18,7 +18,7 @@ from datetime import datetime
 
 class CorrectedBackendTester:
     def __init__(self):
-        self.base_url = "https://fidus-trading.preview.emergentagent.com/api"
+        self.base_url = "https://multi-tenant-hub-32.preview.emergentagent.com/api"
         self.admin_token = None
         self.test_results = []
         

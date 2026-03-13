@@ -15,7 +15,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://fidus-trading.preview.emergentagent.com"
+BASE_URL = "https://multi-tenant-hub-32.preview.emergentagent.com"
 TIMEOUT = 30
 
 class MongoDBStructureTest:

@@ -86,7 +86,7 @@
 ## Demo Access Information
 
 ### **URL**
-`https://fidus-trading.preview.emergentagent.com`
+`https://multi-tenant-hub-32.preview.emergentagent.com`
 
 ### **Full Experience Flow**
 1. **Visit URL** → See beautiful logo animation

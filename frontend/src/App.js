@@ -17,6 +17,9 @@ import ReferralAgentClients from "./pages/referral-agent/Clients";
 import ReferralAgentCommissions from "./pages/referral-agent/Commissions";
 import ReferralAgentProfile from "./pages/referral-agent/Profile";
 import ProtectedRoute from "./components/referral-agent/ProtectedRoute";
+// Franchise Portal
+import FranchiseLogin from "./components/FranchiseLogin";
+import FranchisePortal from "./components/FranchisePortal";
 // VIKING Standalone Application
 import VikingApp from "./components/VikingApp";
 // VKNG Public Dashboard (No Login Required)
@@ -42,6 +45,11 @@ function isVikingRoute() {
 function isGetVKNGRoute() {
   const pathname = window.location.pathname.toLowerCase();
   return pathname.startsWith('/getvkng');
+}
+
+function isFranchiseRoute() {
+  const pathname = window.location.pathname.toLowerCase();
+  return pathname.startsWith('/franchise');
 }
 
 // Initial check at module load
@@ -71,6 +79,39 @@ function VikingAppWrapper() {
 // GetVKNG Public App - No authentication required
 function GetVKNGPublicWrapper() {
   return <GetVKNGPublic />;
+}
+
+// Franchise Portal App - Separate authentication from FIDUS
+function FranchiseApp() {
+  const [authData, setAuthData] = useState(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('franchise_token');
+    const admin = localStorage.getItem('franchise_admin');
+    const company = localStorage.getItem('franchise_company');
+    if (token && admin && company) {
+      setAuthData({
+        token,
+        admin: JSON.parse(admin),
+        company: JSON.parse(company)
+      });
+    }
+    setChecking(false);
+  }, []);
+
+  if (checking) return null;
+
+  if (!authData) {
+    return <FranchiseLogin onLogin={(data) => setAuthData(data)} />;
+  }
+
+  return (
+    <FranchisePortal 
+      authData={authData} 
+      onLogout={() => setAuthData(null)} 
+    />
+  );
 }
 
 // FIDUS App - The main investment platform
@@ -506,6 +547,12 @@ function FidusApp() {
                 <ReferralAgentProfile />
               </ProtectedRoute>
             } 
+          />
+          
+          {/* FRANCHISE PORTAL ROUTES */}
+          <Route 
+            path="/franchise/*" 
+            element={<FranchiseApp />} 
           />
           
           {/* ADMIN ROUTE: Direct /admin path for OAuth redirects */}

@@ -4,7 +4,7 @@ Test Render Production API Endpoints
 import requests
 import json
 
-BACKEND_URL = "https://fidus-trading.preview.emergentagent.com"
+BACKEND_URL = "https://multi-tenant-hub-32.preview.emergentagent.com"
 
 print("="*80)
 print("RENDER PRODUCTION API VERIFICATION")

@@ -12,7 +12,7 @@ import os
 # Get BASE_URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://fidus-trading.preview.emergentagent.com"
+    BASE_URL = "https://multi-tenant-hub-32.preview.emergentagent.com"
 
 
 class TestVikingPRODeals:

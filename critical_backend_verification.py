@@ -41,7 +41,7 @@ from datetime import datetime
 import os
 
 # Backend URL from environment
-BACKEND_URL = "https://fidus-trading.preview.emergentagent.com"
+BACKEND_URL = "https://multi-tenant-hub-32.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_USERNAME = "admin"

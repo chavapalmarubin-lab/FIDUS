@@ -29702,13 +29702,27 @@ try:
 except Exception as e:
     logging.error(f"❌ Failed to include VIKING router: {e}")
 
-# Import and include White Label Franchise router
+# Import and include White Label Franchise routers
 try:
     from routes.franchise_api import router as franchise_router
     app.include_router(franchise_router)
-    logging.info("✅ White Label Franchise router included successfully")
+    logging.info("✅ White Label Franchise API router included successfully")
 except Exception as e:
-    logging.error(f"❌ Failed to include Franchise router: {e}")
+    logging.error(f"❌ Failed to include Franchise API router: {e}")
+
+try:
+    from routes.franchise_auth import router as franchise_auth_router
+    app.include_router(franchise_auth_router)
+    logging.info("✅ Franchise Auth router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Franchise Auth router: {e}")
+
+try:
+    from routes.franchise_dashboard import router as franchise_dashboard_router
+    app.include_router(franchise_dashboard_router)
+    logging.info("✅ Franchise Dashboard router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Franchise Dashboard router: {e}")
 
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
