@@ -10,9 +10,12 @@ from fastapi import APIRouter, HTTPException, Header
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+from pydantic import BaseModel
 import os
 import logging
 import jwt
+import uuid
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -442,6 +445,231 @@ async def get_franchise_commissions(authorization: str = Header(None)):
         raise
     except Exception as e:
         logger.error(f"Error fetching franchise commissions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# ONBOARDING: Create Client + Login (Admin action)
+# =============================================================================
+
+DEFAULT_TEMP_PASSWORD = "Fidus2026!"
+
+def _hash_password(password: str) -> str:
+    salt = "fidus_franchise_salt_2026"
+    return hashlib.sha256(f"{password}{salt}".encode()).hexdigest()
+
+
+class OnboardClientRequest(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    phone: str = ""
+    country: str = ""
+    investment_amount: float
+    referral_agent_id: str
+
+
+class OnboardAgentRequest(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    phone: str = ""
+    commission_tier: int = 50
+
+
+@router.post("/onboard-client")
+async def onboard_franchise_client(req: OnboardClientRequest, authorization: str = Header(None)):
+    """
+    Create a franchise client + investment record + login credentials in one step.
+    Auto-generates password Fidus2026!
+    """
+    try:
+        company_id = get_company_id_from_token(authorization)
+        db = await get_database()
+
+        # Verify company
+        company = await db.franchise_companies.find_one({"company_id": company_id})
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        # Verify agent belongs to this company
+        agent = await db.franchise_referral_agents.find_one({
+            "agent_id": req.referral_agent_id, "company_id": company_id
+        })
+        if not agent:
+            raise HTTPException(status_code=400, detail="Referral agent not found in your company")
+
+        # Check duplicate email
+        existing = await db.franchise_clients.find_one({
+            "company_id": company_id, "email": req.email.lower()
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Client with this email already exists")
+
+        client_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+        from dateutil.relativedelta import relativedelta
+        incubation_end = now + relativedelta(months=2)
+        contract_end = now + relativedelta(months=14)
+
+        # 1. Create client
+        client_doc = {
+            "client_id": client_id,
+            "company_id": company_id,
+            "first_name": req.first_name,
+            "last_name": req.last_name,
+            "email": req.email.lower(),
+            "phone": req.phone,
+            "country": req.country,
+            "investment_amount": req.investment_amount,
+            "investment_date": now,
+            "contract_start_date": now,
+            "contract_end_date": contract_end,
+            "incubation_end_date": incubation_end,
+            "visible_return_pct": 2.0,
+            "actual_return_pct": 2.5,
+            "referral_agent_id": req.referral_agent_id,
+            "status": "incubation",
+            "kyc_status": "pending",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_clients.insert_one(client_doc)
+
+        # 2. Create investment record
+        investment_doc = {
+            "investment_id": str(uuid.uuid4()),
+            "company_id": company_id,
+            "client_id": client_id,
+            "referral_agent_id": req.referral_agent_id,
+            "amount": req.investment_amount,
+            "investment_date": now,
+            "fund_type": "BALANCE",
+            "contract_months": 14,
+            "incubation_months": 2,
+            "client_return_pct": 2.0,
+            "gross_return_pct": 2.5,
+            "total_returns_earned": 0,
+            "total_returns_paid": 0,
+            "commission_pool": 0,
+            "company_commission": 0,
+            "agent_commission": 0,
+            "status": "incubation",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_investments.insert_one(investment_doc)
+
+        # 3. Create login credentials
+        login_doc = {
+            "client_id": client_id,
+            "company_id": company_id,
+            "email": req.email.lower(),
+            "password_hash": _hash_password(DEFAULT_TEMP_PASSWORD),
+            "status": "active",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_client_logins.insert_one(login_doc)
+
+        # 4. Update agent stats
+        await db.franchise_referral_agents.update_one(
+            {"agent_id": req.referral_agent_id},
+            {"$inc": {"total_clients_referred": 1, "total_aum_referred": req.investment_amount}}
+        )
+
+        logger.info(f"Onboarded client {req.first_name} {req.last_name} for company {company_id}")
+
+        return {
+            "success": True,
+            "message": f"Client {req.first_name} {req.last_name} onboarded successfully",
+            "client_id": client_id,
+            "credentials": {
+                "email": req.email.lower(),
+                "temp_password": DEFAULT_TEMP_PASSWORD,
+                "login_url": "/franchise/client/login"
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error onboarding client: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/onboard-agent")
+async def onboard_franchise_agent(req: OnboardAgentRequest, authorization: str = Header(None)):
+    """
+    Create a franchise referral agent + login credentials in one step.
+    Auto-generates password Fidus2026!
+    """
+    try:
+        company_id = get_company_id_from_token(authorization)
+        db = await get_database()
+
+        company = await db.franchise_companies.find_one({"company_id": company_id})
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        # Check duplicate email
+        existing = await db.franchise_referral_agents.find_one({
+            "company_id": company_id, "email": req.email.lower()
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Agent with this email already exists")
+
+        agent_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+
+        # 1. Create agent
+        agent_doc = {
+            "agent_id": agent_id,
+            "company_id": company_id,
+            "first_name": req.first_name,
+            "last_name": req.last_name,
+            "email": req.email.lower(),
+            "phone": req.phone,
+            "commission_tier": req.commission_tier,
+            "total_commission_earned": 0,
+            "pending_commission": 0,
+            "total_clients_referred": 0,
+            "total_aum_referred": 0,
+            "status": "active",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_referral_agents.insert_one(agent_doc)
+
+        # 2. Create login credentials
+        login_doc = {
+            "agent_id": agent_id,
+            "company_id": company_id,
+            "email": req.email.lower(),
+            "password_hash": _hash_password(DEFAULT_TEMP_PASSWORD),
+            "status": "active",
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.franchise_agent_logins.insert_one(login_doc)
+
+        logger.info(f"Onboarded agent {req.first_name} {req.last_name} for company {company_id}")
+
+        return {
+            "success": True,
+            "message": f"Agent {req.first_name} {req.last_name} onboarded successfully",
+            "agent_id": agent_id,
+            "credentials": {
+                "email": req.email.lower(),
+                "temp_password": DEFAULT_TEMP_PASSWORD,
+                "login_url": "/franchise/agent/login"
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error onboarding agent: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
