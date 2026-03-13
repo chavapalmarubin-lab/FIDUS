@@ -40,7 +40,7 @@ const CSVButton = ({ onClick }) => (
 );
 
 // ─────────────────────────────────────────
-// OVERVIEW TAB
+// OVERVIEW TAB (FIDUS-quality)
 // ─────────────────────────────────────────
 const OverviewTab = ({ overview, loading }) => {
   if (loading) return <LoadingSkeleton />;
@@ -49,53 +49,119 @@ const OverviewTab = ({ overview, loading }) => {
   const stats = overview.stats || {};
   const projections = overview.monthly_projections || {};
   const company = overview.company || {};
+  const split = overview.commission_split || {};
+  const terms = overview.fund_terms || {};
 
   return (
     <div className="space-y-6" data-testid="franchise-overview-tab">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard icon={DollarSign} label="Total AUM" value={fmt(stats.total_aum)} color="#0ea5e9" />
-        <KPICard icon={Users} label="Total Clients" value={stats.total_clients || 0} color="#10b981" />
-        <KPICard icon={UserPlus} label="Referral Agents" value={stats.total_agents || 0} color="#f59e0b" />
-        <KPICard icon={TrendingUp} label="Monthly Commission" value={fmt(projections.company_share)} color="#8b5cf6" />
+      {/* Company Header */}
+      <Card className="border-slate-700/50 bg-slate-800/40">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white">{company.name || 'Franchise'} Dashboard</h2>
+              <p className="text-sm text-slate-400 mt-1">White Label FIDUS BALANCE Fund | {company.subdomain || ''}</p>
+            </div>
+            <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-sm px-3 py-1">{company.status || 'Active'}</Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* KPI Strip - matching FIDUS Trading Analytics */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/30">
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Total AUM</p>
+          <p className="text-2xl font-bold text-blue-400">{fmt(stats.total_aum)}</p>
+          <p className="text-xs text-slate-500">Client capital</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Total Clients</p>
+          <p className="text-2xl font-bold text-emerald-400">{stats.total_clients || 0}</p>
+          <p className="text-xs text-slate-500">{stats.active_clients || 0} active</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Referral Agents</p>
+          <p className="text-2xl font-bold text-amber-400">{stats.total_agents || 0}</p>
+          <p className="text-xs text-slate-500">Earning commissions</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Monthly Revenue</p>
+          <p className="text-2xl font-bold text-cyan-400">{fmt(projections.company_share)}</p>
+          <p className="text-xs text-slate-500">Company share</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Annual Projection</p>
+          <p className="text-2xl font-bold text-green-400">{fmt((projections.company_share || 0) * 12)}</p>
+          <p className="text-xs text-slate-500">12-month est.</p>
+        </div>
       </div>
 
-      {/* Monthly Projections */}
+      {/* Capital & Revenue Calculation - FIDUS style */}
       <Card className="border-slate-700/50 bg-slate-800/40">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-slate-200">Monthly Projections</CardTitle>
+          <CardTitle className="text-base text-slate-200 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-emerald-400" /> Capital & Revenue Flow (Monthly)
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <ProjectionItem label="Gross Return (2.5%)" value={fmt(projections.gross_return)} color="#10b981" />
-            <ProjectionItem label="Client Payments (2.0%)" value={fmt(projections.client_payments)} color="#ef4444" />
-            <ProjectionItem label="Commission Pool (0.5%)" value={fmt(projections.commission_pool)} color="#f59e0b" />
-            <ProjectionItem label="Company Share" value={fmt(projections.company_share)} color="#0ea5e9" />
-            <ProjectionItem label="Agent Share" value={fmt(projections.agent_share)} color="#8b5cf6" />
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-slate-400">FIDUS generates on AUM (2.5%)</span>
+              <span className="text-emerald-400 font-bold">{fmt(projections.gross_return)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-t border-slate-700/30">
+              <span className="text-slate-400">- Paid to clients (2.0%)</span>
+              <span className="text-red-400 font-medium">-{fmt(projections.client_payments)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-t border-dashed border-amber-500/30 bg-amber-900/10 px-3 rounded-lg">
+              <span className="text-amber-400 font-semibold">= Commission Pool (0.5%)</span>
+              <span className="text-amber-400 font-bold">{fmt(projections.commission_pool)}</span>
+            </div>
+            <div className="pl-6 space-y-2 mt-2">
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-400">Your company ({split.company || 50}%)</span>
+                <span className="text-sky-400 font-bold">{fmt(projections.company_share)}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-400">Agent payouts ({split.agent || 50}%)</span>
+                <span className="text-purple-400 font-bold">{fmt(projections.agent_share)}</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Company Info */}
-      <Card className="border-slate-700/50 bg-slate-800/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base text-slate-200">Company Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div><span className="text-slate-500">Company</span><p className="text-slate-200 font-medium">{company.name || '-'}</p></div>
-            <div><span className="text-slate-500">Code</span><p className="text-slate-200 font-medium">{company.code || '-'}</p></div>
-            <div><span className="text-slate-500">Subdomain</span><p className="text-sky-400 font-medium">{company.subdomain || '-'}</p></div>
-            <div><span className="text-slate-500">Status</span><Badge variant="outline" className="border-emerald-500/40 text-emerald-400 mt-1">{company.status || 'active'}</Badge></div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Fund Terms & Company Details */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border-slate-700/50 bg-slate-800/40">
+          <CardHeader className="pb-3"><CardTitle className="text-base text-slate-200">FIDUS BALANCE Fund Terms</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-emerald-400">{terms.gross_return_pct || 2.5}%</div><div className="text-xs text-slate-500">Gross Return</div></div>
+              <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-sky-400">{terms.client_return_pct || 2.0}%</div><div className="text-xs text-slate-500">Client Return</div></div>
+              <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-white">{terms.contract_months || 14} mo</div><div className="text-xs text-slate-500">Contract</div></div>
+              <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-white">{terms.incubation_months || 2} mo</div><div className="text-xs text-slate-500">Incubation</div></div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-700/50 bg-slate-800/40">
+          <CardHeader className="pb-3"><CardTitle className="text-base text-slate-200">Company Details</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between"><span className="text-slate-500">Company</span><span className="text-slate-200 font-medium">{company.name || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Code</span><span className="text-slate-200 font-medium">{company.code || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Subdomain</span><span className="text-sky-400 font-medium">{company.subdomain || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Commission Split</span><span className="text-amber-400 font-medium">{split.company || 50}/{split.agent || 50}</span></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
 
 // ─────────────────────────────────────────
-// FUND PORTFOLIO TAB
+// FUND PORTFOLIO TAB (FIDUS-quality)
 // ─────────────────────────────────────────
 const PortfolioTab = ({ token, loading: parentLoading }) => {
   const [portfolio, setPortfolio] = useState(null);
@@ -122,53 +188,78 @@ const PortfolioTab = ({ token, loading: parentLoading }) => {
   const monthly = returns.monthly || {};
   const quarterly = returns.quarterly || {};
   const terms = portfolio.contract_terms || {};
+  const split = portfolio.commission_split || {};
 
   return (
     <div className="space-y-6" data-testid="franchise-portfolio-tab">
-      {/* Portfolio Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard icon={Wallet} label="Total AUM" value={fmt(portfolio.total_aum)} color="#0ea5e9" />
-        <KPICard icon={Users} label="Total Clients" value={portfolio.total_clients || 0} color="#10b981" />
-        <KPICard icon={PieChart} label="Fund Type" value={portfolio.fund_type || 'BALANCE'} color="#f59e0b" />
-        <KPICard icon={Activity} label="Omnibus Account" value={portfolio.omnibus_account || 'Not Assigned'} color="#8b5cf6" />
+      {/* Fund Status Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/30">
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Fund Type</p>
+          <p className="text-xl font-bold text-purple-400">{portfolio.fund_type || 'BALANCE'}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Total AUM</p>
+          <p className="text-xl font-bold text-blue-400">{fmt(portfolio.total_aum)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Total Clients</p>
+          <p className="text-xl font-bold text-emerald-400">{portfolio.total_clients || 0}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Omnibus Account</p>
+          <p className="text-xl font-bold text-cyan-400">{portfolio.omnibus_account || 'Pending'}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-slate-400">Monthly Pool</p>
+          <p className="text-xl font-bold text-amber-400">{fmt(monthly.commission_pool)}</p>
+        </div>
       </div>
 
-      {/* Returns Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-slate-700/50 bg-slate-800/40">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-slate-200">Monthly Returns</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <ReturnRow label="Gross Return" pct={`${returns.gross_return_pct}%`} value={fmt(monthly.gross_return)} up />
-            <ReturnRow label="Client Obligation" pct={`${returns.client_return_pct}%`} value={fmt(monthly.client_obligation)} down />
-            <ReturnRow label="Commission Pool" pct={`${returns.commission_pool_pct}%`} value={fmt(monthly.commission_pool)} up />
-          </CardContent>
-        </Card>
+      {/* Capital & Revenue Calculation (FIDUS SSOT style) */}
+      <Card className="border-slate-700/50 bg-slate-800/40">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base text-slate-200 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-emerald-400" /> Capital & Revenue Calculation (Single Source of Truth)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between py-2"><span className="text-slate-400">Total Client Capital</span><span className="text-white font-bold">{fmt(portfolio.total_aum)}</span></div>
+            <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">x Gross Return ({returns.gross_return_pct || 2.5}% monthly)</span><span className="text-emerald-400 font-medium">+{fmt(monthly.gross_return)}</span></div>
+            <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">- Client Obligations ({returns.client_return_pct || 2.0}% monthly)</span><span className="text-red-400 font-medium">-{fmt(monthly.client_obligation)}</span></div>
+            <div className="flex justify-between py-2 border-t border-dashed border-amber-500/30 bg-amber-900/10 px-3 rounded-lg">
+              <span className="text-amber-400 font-bold text-base">= Commission Pool ({returns.commission_pool_pct || 0.5}%)</span>
+              <span className="text-amber-400 font-bold text-base">{fmt(monthly.commission_pool)}</span>
+            </div>
+            <p className="text-xs text-slate-600">Commission Pool = Gross Return - Client Obligations = {returns.gross_return_pct}% - {returns.client_return_pct}% = {returns.commission_pool_pct}% of AUM</p>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="border-slate-700/50 bg-slate-800/40">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-slate-200">Quarterly Projections</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <ReturnRow label="Gross Return" value={fmt(quarterly.gross_return)} up />
-            <ReturnRow label="Client Obligation" value={fmt(quarterly.client_obligation)} down />
-            <ReturnRow label="Company Share" value={fmt(quarterly.company_share)} up />
-            <ReturnRow label="Agent Share" value={fmt(quarterly.agent_share)} up />
-          </CardContent>
-        </Card>
-      </div>
+      {/* Quarterly Projections */}
+      <Card className="border-slate-700/50 bg-slate-800/40">
+        <CardHeader className="pb-3"><CardTitle className="text-base text-slate-200">Quarterly Projections</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-3 bg-emerald-900/10 border border-emerald-500/20 rounded-lg text-center"><div className="text-xl font-bold text-emerald-400">{fmt(quarterly.gross_return)}</div><div className="text-xs text-slate-500">Gross Return</div></div>
+            <div className="p-3 bg-red-900/10 border border-red-500/20 rounded-lg text-center"><div className="text-xl font-bold text-red-400">{fmt(quarterly.client_obligation)}</div><div className="text-xs text-slate-500">Client Obligation</div></div>
+            <div className="p-3 bg-sky-900/10 border border-sky-500/20 rounded-lg text-center"><div className="text-xl font-bold text-sky-400">{fmt(quarterly.company_share)}</div><div className="text-xs text-slate-500">Company ({split.company || 50}%)</div></div>
+            <div className="p-3 bg-purple-900/10 border border-purple-500/20 rounded-lg text-center"><div className="text-xl font-bold text-purple-400">{fmt(quarterly.agent_share)}</div><div className="text-xs text-slate-500">Agents ({split.agent || 50}%)</div></div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Contract Terms */}
       <Card className="border-slate-700/50 bg-slate-800/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base text-slate-200">Contract Terms</CardTitle>
-        </CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base text-slate-200">Contract Terms</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div><span className="text-slate-500">Duration</span><p className="text-slate-200 font-semibold">{terms.duration_months || 14} months</p></div>
-            <div><span className="text-slate-500">Incubation</span><p className="text-slate-200 font-semibold">{terms.incubation_months || 2} months</p></div>
-            <div><span className="text-slate-500">Payment</span><p className="text-slate-200 font-semibold capitalize">{terms.payment_frequency || 'quarterly'}</p></div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+            <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-white">{terms.duration_months || 14}</div><div className="text-xs text-slate-500">Contract Months</div></div>
+            <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-amber-400">{terms.incubation_months || 2}</div><div className="text-xs text-slate-500">Incubation</div></div>
+            <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-white capitalize">{terms.payment_frequency || 'quarterly'}</div><div className="text-xs text-slate-500">Payment Freq.</div></div>
+            <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-emerald-400">$100K</div><div className="text-xs text-slate-500">Min Investment</div></div>
+            <div className="p-3 bg-slate-700/30 rounded-lg text-center"><div className="text-lg font-bold text-sky-400">10%</div><div className="text-xs text-slate-500">Referral Comm.</div></div>
           </div>
         </CardContent>
       </Card>
@@ -1282,42 +1373,28 @@ const FranchisePortal = ({ authData, onLogout }) => {
 
   return (
     <div data-testid="franchise-portal" className="min-h-screen" style={{ background: '#0a0f1a' }}>
-      {/* Header */}
+      {/* Header - FIDUS style */}
       <header className="border-b border-slate-800" style={{ background: 'rgba(10, 15, 26, 0.95)', backdropFilter: 'blur(12px)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {company.logo_url ? (
-              <img src={company.logo_url} alt={company.company_name} className="h-8 w-auto" />
-            ) : (
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>
-                <Building2 className="w-5 h-5 text-white" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              {company.logo_url ? (
+                <img src={company.logo_url} alt={company.company_name} className="h-10 w-auto" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>
+                  <Building2 className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <div>
+                <h1 className="text-xl font-bold text-white leading-tight">{company.company_name || 'Franchise'} &mdash; Admin Dashboard</h1>
+                <p className="text-sm text-slate-400">Manage fund allocations, monitor performance, and oversee client database.</p>
               </div>
-            )}
-            <div>
-              <h1 className="text-lg font-bold text-white leading-tight">{company.company_name || 'Franchise Portal'}</h1>
-              <p className="text-xs text-slate-500">{company.subdomain || 'Powered by FIDUS'}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400 hidden sm:block">{admin.first_name} {admin.last_name}</span>
-            <Button
-              data-testid="franchise-refresh-btn"
-              variant="ghost"
-              size="sm"
-              onClick={fetchOverview}
-              className="text-slate-400 hover:text-white"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-            <Button
-              data-testid="franchise-logout-btn"
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-slate-400 hover:text-red-400"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 hidden sm:block">{admin.first_name} {admin.last_name}</span>
+              <Button data-testid="franchise-refresh-btn" variant="ghost" size="sm" onClick={fetchOverview} className="text-slate-400 hover:text-white"><RefreshCw className="w-4 h-4" /></Button>
+              <Button data-testid="franchise-logout-btn" variant="ghost" size="sm" onClick={handleLogout} className="text-slate-400 hover:text-red-400"><LogOut className="w-4 h-4" /></Button>
+            </div>
           </div>
         </div>
       </header>
@@ -1328,8 +1405,8 @@ const FranchisePortal = ({ authData, onLogout }) => {
           <div className="overflow-x-auto pb-2">
             <TabsList className="bg-slate-800/50 border border-slate-700/50 inline-flex w-auto min-w-full sm:min-w-0">
               <TabsTrigger value="overview" className="flex-shrink-0" data-testid="tab-overview">Overview</TabsTrigger>
-              <TabsTrigger value="portfolio" className="flex-shrink-0" data-testid="tab-portfolio">Fund Portfolio</TabsTrigger>
-              <TabsTrigger value="cashflow" className="flex-shrink-0" data-testid="tab-cashflow">Cash Flow</TabsTrigger>
+              <TabsTrigger value="portfolio" className="flex-shrink-0" data-testid="tab-portfolio">$ Fund Portfolio</TabsTrigger>
+              <TabsTrigger value="cashflow" className="flex-shrink-0" data-testid="tab-cashflow">$ Cash Flow & Performance</TabsTrigger>
               <TabsTrigger value="instruments" className="flex-shrink-0" data-testid="tab-instruments">Instruments</TabsTrigger>
               <TabsTrigger value="risk" className="flex-shrink-0" data-testid="tab-risk">Risk Parameters</TabsTrigger>
               <TabsTrigger value="gap" className="flex-shrink-0" data-testid="tab-gap">Gap Analysis</TabsTrigger>
