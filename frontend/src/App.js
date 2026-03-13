@@ -22,6 +22,7 @@ import FranchiseLogin from "./components/FranchiseLogin";
 import FranchisePortal from "./components/FranchisePortal";
 import FranchiseClientPortal from "./components/FranchiseClientPortal";
 import FranchiseAgentPortal from "./components/FranchiseAgentPortal";
+import FranchiseSimulator from "./components/FranchiseSimulator";
 // VIKING Standalone Application
 import VikingApp from "./components/VikingApp";
 // VKNG Public Dashboard (No Login Required)
@@ -107,6 +108,7 @@ function FranchiseApp() {
   const pathname = window.location.pathname.toLowerCase();
   if (pathname.startsWith('/franchise/client')) return <FranchiseClientPortal />;
   if (pathname.startsWith('/franchise/agent')) return <FranchiseAgentPortal />;
+  if (pathname.startsWith('/franchise/simulator')) return <FranchiseSimulator />;
   return <FranchiseAdminApp />;
 }
 
