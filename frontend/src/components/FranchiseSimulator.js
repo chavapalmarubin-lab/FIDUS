@@ -1,19 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   DollarSign, TrendingUp, Users, Building2, ArrowRight,
-  ArrowDown, Percent, Calculator, PieChart, BarChart3
+  ArrowDown, Percent, Calculator, PieChart, BarChart3, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-
-const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0);
-const fmtK = (v) => {
-  if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
-  if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
-  return fmt(v);
-};
 
 const FranchiseSimulator = () => {
   const [aum, setAum] = useState(10000000);
@@ -21,6 +14,44 @@ const FranchiseSimulator = () => {
   const [clientPct, setClientPct] = useState(2.0);
   const [avgInvestment, setAvgInvestment] = useState(150000);
   const [agentCount, setAgentCount] = useState(5);
+  const [currency, setCurrency] = useState('USD'); // USD or MXN
+  const [mxnRate, setMxnRate] = useState(20.5);
+  const [rateLoading, setRateLoading] = useState(false);
+  const [rateSource, setRateSource] = useState('default');
+
+  // Fetch live MXN/USD rate on mount
+  useEffect(() => {
+    const fetchRate = async () => {
+      setRateLoading(true);
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await res.json();
+        if (data?.rates?.MXN) {
+          setMxnRate(parseFloat(data.rates.MXN.toFixed(2)));
+          setRateSource('live');
+        }
+      } catch (e) {
+        console.warn('Exchange rate fetch failed, using default', e);
+        setRateSource('default');
+      }
+      finally { setRateLoading(false); }
+    };
+    fetchRate();
+  }, []);
+
+  // Currency formatting helpers
+  const toDisplay = (usdVal) => currency === 'MXN' ? usdVal * mxnRate : usdVal;
+  const fromDisplay = (displayVal) => currency === 'MXN' ? displayVal / mxnRate : displayVal;
+  const sym = currency === 'MXN' ? 'MX$' : '$';
+  const fmt = (v) => new Intl.NumberFormat(currency === 'MXN' ? 'es-MX' : 'en-US', {
+    style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0
+  }).format(toDisplay(v || 0));
+  const fmtK = (v) => {
+    const d = toDisplay(v);
+    if (d >= 1000000) return `${sym}${(d / 1000000).toFixed(1)}M`;
+    if (d >= 1000) return `${sym}${(d / 1000).toFixed(0)}K`;
+    return fmt(v);
+  };
 
   const agentSplit = 100 - companySplit;
   const grossPct = 2.5;
@@ -57,8 +88,14 @@ const FranchiseSimulator = () => {
     };
   }, [aum, companySplit, agentSplit, avgInvestment, agentCount, clientPct, spreadPct, grossPct]);
 
-  // AUM presets
-  const aumPresets = [
+  // AUM presets (always in USD internally)
+  const aumPresets = currency === 'MXN' ? [
+    { label: `MX$20M`, value: 1000000 },
+    { label: `MX$100M`, value: 5000000 },
+    { label: `MX$200M`, value: 10000000 },
+    { label: `MX$500M`, value: 25000000 },
+    { label: `MX$1B`, value: 50000000 },
+  ] : [
     { label: '$1M', value: 1000000 },
     { label: '$5M', value: 5000000 },
     { label: '$10M', value: 10000000 },
@@ -80,7 +117,24 @@ const FranchiseSimulator = () => {
               <p className="text-xs text-slate-500">White Label Investment Fund | BALANCE Product</p>
             </div>
           </div>
-          <a href="/franchise/login" className="text-sm text-sky-400 hover:text-sky-300 transition-colors">Franchise Portal</a>
+          <div className="flex items-center gap-4">
+            {/* Currency Toggle */}
+            <div className="flex items-center gap-1 bg-slate-800/80 rounded-lg p-0.5 border border-slate-700/50">
+              <button onClick={() => setCurrency('USD')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currency === 'USD' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white'}`}>USD</button>
+              <button onClick={() => setCurrency('MXN')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currency === 'MXN' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}>MXN</button>
+            </div>
+            {currency === 'MXN' && (
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span>1 USD =</span>
+                <input type="number" value={mxnRate} onChange={e => { setMxnRate(parseFloat(e.target.value) || 1); setRateSource('manual'); }}
+                  className="w-16 bg-slate-800/60 border border-slate-700 rounded px-1.5 py-0.5 text-emerald-400 text-xs font-mono text-center" step="0.1" />
+                <span>MXN</span>
+                {rateLoading && <RefreshCw className="w-3 h-3 animate-spin text-slate-500" />}
+                {rateSource === 'live' && <Badge variant="outline" className="text-[9px] border-emerald-500/30 text-emerald-500 py-0">LIVE</Badge>}
+              </div>
+            )}
+            <a href="/franchise/login" className="text-sm text-sky-400 hover:text-sky-300 transition-colors">Franchise Portal</a>
+          </div>
         </div>
       </header>
 
