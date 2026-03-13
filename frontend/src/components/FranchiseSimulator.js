@@ -18,16 +18,15 @@ const fmtK = (v) => {
 const FranchiseSimulator = () => {
   const [aum, setAum] = useState(10000000);
   const [companySplit, setCompanySplit] = useState(50);
+  const [clientPct, setClientPct] = useState(2.0);
   const [avgInvestment, setAvgInvestment] = useState(150000);
   const [agentCount, setAgentCount] = useState(5);
 
   const agentSplit = 100 - companySplit;
+  const grossPct = 2.5;
+  const spreadPct = parseFloat((grossPct - clientPct).toFixed(2));
 
   const calc = useMemo(() => {
-    const grossPct = 2.5;
-    const clientPct = 2.0;
-    const spreadPct = 0.5;
-
     const monthlyGross = aum * (grossPct / 100);
     const monthlyClientPay = aum * (clientPct / 100);
     const monthlyPool = aum * (spreadPct / 100);
@@ -56,7 +55,7 @@ const FranchiseSimulator = () => {
       clientCount, clientsPerAgent, monthlyPerAgent,
       contractPool, contractCompany,
     };
-  }, [aum, companySplit, agentSplit, avgInvestment, agentCount]);
+  }, [aum, companySplit, agentSplit, avgInvestment, agentCount, clientPct, spreadPct, grossPct]);
 
   // AUM presets
   const aumPresets = [
@@ -93,21 +92,21 @@ const FranchiseSimulator = () => {
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-6 text-center">
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-6 py-4 min-w-[140px]">
-                  <div className="text-3xl font-black text-emerald-400">2.5%</div>
+                  <div className="text-3xl font-black text-emerald-400">{grossPct}%</div>
                   <div className="text-xs text-slate-400 mt-1">FIDUS Returns</div>
                   <div className="text-[10px] text-slate-500">Monthly Gross</div>
                 </div>
                 <ArrowRight className="w-6 h-6 text-slate-600 hidden md:block" />
                 <ArrowDown className="w-6 h-6 text-slate-600 md:hidden" />
                 <div className="bg-sky-500/10 border border-sky-500/20 rounded-xl px-6 py-4 min-w-[140px]">
-                  <div className="text-3xl font-black text-sky-400">2.0%</div>
+                  <div className="text-3xl font-black text-sky-400">{clientPct}%</div>
                   <div className="text-xs text-slate-400 mt-1">Client Gets</div>
                   <div className="text-[10px] text-slate-500">Monthly Net</div>
                 </div>
                 <ArrowRight className="w-6 h-6 text-slate-600 hidden md:block" />
                 <ArrowDown className="w-6 h-6 text-slate-600 md:hidden" />
                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-6 py-4 min-w-[140px] ring-2 ring-amber-500/20">
-                  <div className="text-3xl font-black text-amber-400">0.5%</div>
+                  <div className="text-3xl font-black text-amber-400">{spreadPct}%</div>
                   <div className="text-xs text-slate-400 mt-1">Your Revenue</div>
                   <div className="text-[10px] text-slate-500">Commission Pool</div>
                 </div>
@@ -117,7 +116,7 @@ const FranchiseSimulator = () => {
         </motion.div>
 
         {/* Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* AUM Slider */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="border-slate-700/30 bg-slate-900/50">
@@ -141,6 +140,38 @@ const FranchiseSimulator = () => {
                       {p.label}
                     </Button>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Client Return Rate */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+            <Card className="border-slate-700/30 bg-slate-900/50">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-300">Client Return Rate</label>
+                  <span className="text-sm text-slate-400">Client <span className="text-sky-400 font-bold">{clientPct}%</span> / Spread <span className="text-amber-400 font-bold">{spreadPct}%</span></span>
+                </div>
+                <input
+                  data-testid="client-rate-slider"
+                  type="range"
+                  min={0.5} max={2.0} step={0.25}
+                  value={clientPct}
+                  onChange={(e) => setClientPct(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-sky-400"
+                />
+                <div className="flex gap-2 flex-wrap">
+                  {[{l:'0.5%',v:0.5},{l:'1.0%',v:1.0},{l:'1.5%',v:1.5},{l:'2.0%',v:2.0}].map((p) => (
+                    <Button key={p.v} variant="outline" size="sm" onClick={() => setClientPct(p.v)}
+                      className={`text-xs ${clientPct === p.v ? 'bg-sky-600 text-white border-sky-500' : 'border-slate-600 text-slate-400 hover:text-white'}`}>
+                      {p.l}
+                    </Button>
+                  ))}
+                </div>
+                <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-2 text-center">
+                  <span className="text-xs text-slate-500">Your spread: </span>
+                  <span className="text-sm font-bold text-amber-400">{grossPct}% - {clientPct}% = {spreadPct}%</span>
                 </div>
               </CardContent>
             </Card>
@@ -191,7 +222,7 @@ const FranchiseSimulator = () => {
         {/* Revenue Results */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <ResultCard label="Monthly Company Revenue" value={fmt(calc.monthlyCompany)} sub={`${fmtK(aum)} x 0.5% x ${companySplit}%`} color="#f59e0b" icon={Building2} />
+            <ResultCard label="Monthly Company Revenue" value={fmt(calc.monthlyCompany)} sub={`${fmtK(aum)} x ${spreadPct}% x ${companySplit}%`} color="#f59e0b" icon={Building2} />
             <ResultCard label="Quarterly Company Revenue" value={fmt(calc.quarterlyCompany)} sub="3 months" color="#0ea5e9" icon={TrendingUp} />
             <ResultCard label="Annual Company Revenue" value={fmt(calc.annualCompany)} sub="12 months" color="#10b981" icon={DollarSign} big />
             <ResultCard label="Annual Agent Payouts" value={fmt(calc.annualAgent)} sub={`Split to ${agentCount} agents`} color="#8b5cf6" icon={Users} />
@@ -206,10 +237,10 @@ const FranchiseSimulator = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <FlowRow label="FIDUS generates on your AUM" sublabel="2.5% monthly" value={fmt(calc.monthlyGross)} color="#10b981" pct={100} />
-                <FlowRow label="Paid to your clients" sublabel="2.0% monthly" value={`-${fmt(calc.monthlyClientPay)}`} color="#ef4444" pct={80} />
+                <FlowRow label="FIDUS generates on your AUM" sublabel={`${grossPct}% monthly`} value={fmt(calc.monthlyGross)} color="#10b981" pct={100} />
+                <FlowRow label="Paid to your clients" sublabel={`${clientPct}% monthly`} value={`-${fmt(calc.monthlyClientPay)}`} color="#ef4444" pct={80} />
                 <div className="border-t border-dashed border-slate-700 my-2" />
-                <FlowRow label="Commission Pool (your revenue)" sublabel="0.5% spread" value={fmt(calc.monthlyPool)} color="#f59e0b" pct={20} highlight />
+                <FlowRow label="Commission Pool (your revenue)" sublabel={`${spreadPct}% spread`} value={fmt(calc.monthlyPool)} color="#f59e0b" pct={20} highlight />
                 <div className="pl-6 space-y-2">
                   <FlowRow label="Your company keeps" sublabel={`${companySplit}% of pool`} value={fmt(calc.monthlyCompany)} color="#f59e0b" pct={companySplit * 0.2} />
                   <FlowRow label="Paid to your agents" sublabel={`${agentSplit}% of pool`} value={fmt(calc.monthlyAgent)} color="#8b5cf6" pct={agentSplit * 0.2} />
@@ -223,7 +254,7 @@ const FranchiseSimulator = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <Card className="border-slate-700/30 bg-slate-900/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-slate-200">Revenue at Scale ({companySplit}/{agentSplit} Split)</CardTitle>
+              <CardTitle className="text-base text-slate-200">Revenue at Scale ({companySplit}/{agentSplit} Split, {spreadPct}% Spread)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -232,7 +263,7 @@ const FranchiseSimulator = () => {
                     <tr className="border-b border-slate-700/50 text-slate-400">
                       <th className="text-left p-3">AUM</th>
                       <th className="text-right p-3">Clients</th>
-                      <th className="text-right p-3">Monthly Pool</th>
+                      <th className="text-right p-3">Monthly Pool ({spreadPct}%)</th>
                       <th className="text-right p-3">Monthly Company</th>
                       <th className="text-right p-3">Annual Company</th>
                       <th className="text-right p-3">Per Agent/mo</th>
@@ -240,7 +271,7 @@ const FranchiseSimulator = () => {
                   </thead>
                   <tbody>
                     {[1000000, 5000000, 10000000, 25000000, 50000000, 100000000].map((a) => {
-                      const pool = a * 0.005;
+                      const pool = a * (spreadPct / 100);
                       const comp = pool * (companySplit / 100);
                       const ag = pool * (agentSplit / 100);
                       const isActive = a === aum;
@@ -299,9 +330,9 @@ const FranchiseSimulator = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-center">
-                <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-emerald-400">2.5%</div><div className="text-xs text-slate-500">Gross Monthly Return</div></div>
-                <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-sky-400">2.0%</div><div className="text-xs text-slate-500">Client Monthly Return</div></div>
-                <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-amber-400">0.5%</div><div className="text-xs text-slate-500">Commission Pool</div></div>
+                <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-emerald-400">{grossPct}%</div><div className="text-xs text-slate-500">Gross Monthly Return</div></div>
+                <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-sky-400">{clientPct}%</div><div className="text-xs text-slate-500">Client Monthly Return</div></div>
+                <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-amber-400">{spreadPct}%</div><div className="text-xs text-slate-500">Commission Pool</div></div>
                 <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-slate-200">14 mo</div><div className="text-xs text-slate-500">Contract Duration</div></div>
                 <div className="bg-slate-800/40 rounded-lg p-3"><div className="text-lg font-bold text-slate-200">2 mo</div><div className="text-xs text-slate-500">Incubation Period</div></div>
               </div>
