@@ -169,47 +169,163 @@ async def get_franchise_portfolio(authorization: str = Header(None)):
 @router.get("/cashflow")
 async def get_franchise_cashflow(authorization: str = Header(None)):
     """
-    Get cash flow and performance data for franchise company.
-    Based on difference between 2.0% (client) and 2.5% (gross).
+    Rich cash flow data matching FIDUS main dashboard quality.
+    Includes obligations calendar, monthly timeline with per-client breakdowns,
+    capital & revenue calculation, and running balances.
     """
     try:
         company_id = get_company_id_from_token(authorization)
         db = await get_database()
-        
-        # Get company
+
         company = await db.franchise_companies.find_one({"company_id": company_id})
         if not company:
             raise HTTPException(status_code=404, detail="Company not found")
-        
-        # Get all active investments
+
+        split = company.get("commission_split", {"company": 50, "agent": 50})
+
+        # Get all investments with client data
         investments = await db.franchise_investments.find(
             {"company_id": company_id, "status": {"$in": ["incubation", "active", "matured"]}},
             {"_id": 0}
         ).to_list(1000)
-        
+
+        # Get all clients for name lookup
+        clients = await db.franchise_clients.find(
+            {"company_id": company_id},
+            {"_id": 0, "client_id": 1, "first_name": 1, "last_name": 1, "email": 1,
+             "referral_agent_id": 1, "contract_start_date": 1, "contract_end_date": 1,
+             "incubation_end_date": 1, "investment_amount": 1, "status": 1}
+        ).to_list(1000)
+        client_map = {c["client_id"]: c for c in clients}
+
+        # Get agents for name lookup
+        agents = await db.franchise_referral_agents.find(
+            {"company_id": company_id},
+            {"_id": 0, "agent_id": 1, "first_name": 1, "last_name": 1, "commission_tier": 1}
+        ).to_list(100)
+        agent_map = {a["agent_id"]: a for a in agents}
+
         # Calculate totals
         total_invested = sum(inv.get("amount", 0) for inv in investments)
         total_returns_earned = sum(inv.get("total_returns_earned", 0) for inv in investments)
         total_returns_paid = sum(inv.get("total_returns_paid", 0) for inv in investments)
         total_commission = sum(inv.get("commission_pool", 0) for inv in investments)
-        
-        # Get quarterly breakdown
-        quarterly_data = []
-        
-        # Commission transactions by period
-        commission_pipeline = [
-            {"$match": {"company_id": company_id}},
-            {"$group": {
-                "_id": "$period",
-                "total_commission": {"$sum": "$amount"},
-                "company_share": {"$sum": {"$cond": [{"$eq": ["$transaction_type", "company_share"]}, "$amount", 0]}},
-                "agent_share": {"$sum": {"$cond": [{"$eq": ["$transaction_type", "agent_share"]}, "$amount", 0]}}
-            }},
-            {"$sort": {"_id": -1}}
-        ]
-        
-        quarters = await db.franchise_commission_transactions.aggregate(commission_pipeline).to_list(8)
-        
+
+        # ── Build monthly obligations timeline (14 months per investment) ──
+        from dateutil.relativedelta import relativedelta
+        now = datetime.now(timezone.utc)
+        monthly_obligations = {}
+
+        # Track key dates
+        next_payment_date = None
+        next_payment_amount = 0
+        first_large_payment_date = None
+        first_large_payment_amount = 0
+        latest_contract_end = None
+        total_contract_obligations = 0
+
+        for inv in investments:
+            client = client_map.get(inv.get("client_id"), {})
+            agent = agent_map.get(inv.get("referral_agent_id"), {})
+            amount = inv.get("amount", 0)
+            client_return_pct = inv.get("client_return_pct", 2.0)
+            gross_return_pct = inv.get("gross_return_pct", 2.5)
+            monthly_interest = amount * (client_return_pct / 100)
+            monthly_commission = amount * ((gross_return_pct - client_return_pct) / 100)
+            referral_commission = monthly_interest * 0.10  # 10% referral commission
+
+            # Contract dates - ensure timezone aware
+            start_date = inv.get("created_at") or now
+            if isinstance(start_date, str):
+                try:
+                    start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                except:
+                    start_date = now
+            if start_date.tzinfo is None:
+                start_date = start_date.replace(tzinfo=timezone.utc)
+
+            incubation_end = start_date + relativedelta(months=2)
+            contract_end = start_date + relativedelta(months=14)
+
+            if latest_contract_end is None or contract_end > latest_contract_end:
+                latest_contract_end = contract_end
+
+            # Generate 14 months of obligations
+            for month_offset in range(14):
+                payment_date = start_date + relativedelta(months=month_offset + 1)
+                month_key = payment_date.strftime("%Y-%m")
+                is_incubation = month_offset < 2
+
+                if month_key not in monthly_obligations:
+                    monthly_obligations[month_key] = {
+                        "month": month_key,
+                        "date": payment_date.strftime("%B %Y"),
+                        "payment_date": payment_date.strftime("%B %d, %Y"),
+                        "total_due": 0,
+                        "client_interest": 0,
+                        "referral_commissions": 0,
+                        "commission_pool": 0,
+                        "clients": [],
+                        "days_away": (payment_date - now).days,
+                        "is_past": payment_date < now
+                    }
+
+                entry = monthly_obligations[month_key]
+
+                if not is_incubation:
+                    entry["total_due"] += monthly_interest + referral_commission
+                    entry["client_interest"] += monthly_interest
+                    entry["referral_commissions"] += referral_commission
+                    entry["commission_pool"] += monthly_commission
+                    total_contract_obligations += monthly_interest
+
+                    # Track next payment
+                    if payment_date > now:
+                        if next_payment_date is None or payment_date < next_payment_date:
+                            next_payment_date = payment_date
+                            next_payment_amount = entry["total_due"]
+
+                client_name = f"{client.get('first_name', '')} {client.get('last_name', '')}".strip() or "Unknown"
+                agent_name = f"{agent.get('first_name', '')} {agent.get('last_name', '')}".strip() or None
+
+                entry["clients"].append({
+                    "client_name": client_name,
+                    "client_interest": 0 if is_incubation else monthly_interest,
+                    "referral_commission": 0 if is_incubation else referral_commission,
+                    "agent_name": agent_name,
+                    "is_incubation": is_incubation,
+                    "investment_amount": amount
+                })
+
+        # Sort months and find first large payment
+        sorted_months = sorted(monthly_obligations.values(), key=lambda m: m["month"])
+        future_months = [m for m in sorted_months if not m["is_past"] and m["total_due"] > 0]
+
+        if future_months:
+            next_payment_amount = future_months[0]["total_due"]
+            # Find first "large" payment (> 2x the next payment or > $5000)
+            threshold = max(next_payment_amount * 2, 5000)
+            for m in future_months:
+                if m["total_due"] >= threshold:
+                    first_large_payment_date = m["payment_date"]
+                    first_large_payment_amount = m["total_due"]
+                    break
+            if not first_large_payment_date and len(future_months) > 1:
+                # Use the largest future month
+                largest = max(future_months, key=lambda m: m["total_due"])
+                first_large_payment_date = largest["payment_date"]
+                first_large_payment_amount = largest["total_due"]
+
+        # ── Capital & Revenue Calculation ──
+        monthly_gross = total_invested * 0.025
+        monthly_client_obligation = total_invested * 0.02
+        monthly_pool = total_invested * 0.005
+        company_share_monthly = monthly_pool * (split["company"] / 100)
+        agent_share_monthly = monthly_pool * (split["agent"] / 100)
+
+        # Net position = Total Capital - Total Obligations
+        net_position = total_invested - total_contract_obligations
+
         return {
             "success": True,
             "cashflow": {
@@ -218,26 +334,45 @@ async def get_franchise_cashflow(authorization: str = Header(None)):
                     "total_returns_earned": total_returns_earned,
                     "total_returns_paid": total_returns_paid,
                     "pending_payments": total_returns_earned - total_returns_paid,
-                    "total_commission_earned": total_commission
+                    "total_commission_earned": total_commission,
+                    "total_obligations": total_contract_obligations,
+                    "net_position": net_position
                 },
-                
-                # Monthly projections based on current AUM
-                "monthly_projection": {
-                    "gross_return": total_invested * 0.025,
-                    "client_payments": total_invested * 0.02,
-                    "commission_pool": total_invested * 0.005,
-                    "company_share": total_invested * 0.005 * (company.get("commission_split", {}).get("company", 50) / 100),
-                    "agent_share": total_invested * 0.005 * (company.get("commission_split", {}).get("agent", 50) / 100)
+                "calendar": {
+                    "next_payment": {
+                        "date": next_payment_date.strftime("%B %d, %Y") if next_payment_date else None,
+                        "amount": next_payment_amount,
+                        "days_away": (next_payment_date - now).days if next_payment_date else None
+                    },
+                    "first_large_payment": {
+                        "date": first_large_payment_date,
+                        "amount": first_large_payment_amount,
+                        "days_away": None
+                    },
+                    "contract_end": {
+                        "date": latest_contract_end.strftime("%B %d, %Y") if latest_contract_end else None,
+                        "amount": total_contract_obligations,
+                        "days_away": (latest_contract_end - now).days if latest_contract_end else None
+                    }
                 },
-                
-                "quarterly_history": quarters,
-                
+                "capital_calculation": {
+                    "total_aum": total_invested,
+                    "total_obligations": total_contract_obligations,
+                    "net_position": net_position,
+                    "monthly_gross": monthly_gross,
+                    "monthly_client_pay": monthly_client_obligation,
+                    "monthly_pool": monthly_pool,
+                    "company_share": company_share_monthly,
+                    "agent_share": agent_share_monthly
+                },
+                "monthly_timeline": sorted_months[-18:] if len(sorted_months) > 18 else sorted_months,
                 "investment_count": len(investments),
                 "active_investments": len([i for i in investments if i.get("status") == "active"]),
-                "incubation_investments": len([i for i in investments if i.get("status") == "incubation"])
+                "incubation_investments": len([i for i in investments if i.get("status") == "incubation"]),
+                "commission_split": split
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

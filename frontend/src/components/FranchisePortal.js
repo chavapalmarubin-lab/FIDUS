@@ -4,7 +4,7 @@ import {
   Building2, Users, DollarSign, TrendingUp, LogOut, PieChart,
   BarChart3, Shield, Activity, UserPlus, RefreshCw, ChevronRight,
   Wallet, ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2,
-  Plus, Download, X, Check, Copy, Upload
+  Plus, Download, X, Check, Copy, Upload, Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -177,11 +177,12 @@ const PortfolioTab = ({ token, loading: parentLoading }) => {
 };
 
 // ─────────────────────────────────────────
-// CASH FLOW TAB
+// CASH FLOW TAB (FIDUS-quality with obligations calendar + timeline)
 // ─────────────────────────────────────────
 const CashFlowTab = ({ token }) => {
   const [cashflow, setCashflow] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expandedMonth, setExpandedMonth] = useState(null);
 
   useEffect(() => {
     const fetchCashflow = async () => {
@@ -201,30 +202,212 @@ const CashFlowTab = ({ token }) => {
   if (!cashflow) return <EmptyState msg="No cash flow data" />;
 
   const summary = cashflow.summary || {};
-  const proj = cashflow.monthly_projection || {};
+  const calendar = cashflow.calendar || {};
+  const capital = cashflow.capital_calculation || {};
+  const timeline = cashflow.monthly_timeline || [];
+  const split = cashflow.commission_split || {};
+
+  const fmtC = (v) => fmt(v);
+  let runningBalance = summary.total_invested || 0;
 
   return (
     <div className="space-y-6" data-testid="franchise-cashflow-tab">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard icon={DollarSign} label="Total Invested" value={fmt(summary.total_invested)} color="#0ea5e9" />
-        <KPICard icon={TrendingUp} label="Returns Earned" value={fmt(summary.total_returns_earned)} color="#10b981" />
-        <KPICard icon={ArrowUpRight} label="Returns Paid" value={fmt(summary.total_returns_paid)} color="#f59e0b" />
-        <KPICard icon={Clock} label="Pending Payments" value={fmt(summary.pending_payments)} color="#ef4444" />
-      </div>
 
-      {/* Monthly Projection */}
+      {/* ── Cash Flow Obligations Calendar ── */}
       <Card className="border-slate-700/50 bg-slate-800/40">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-slate-200">Monthly Cash Flow Projection</CardTitle>
+          <CardTitle className="text-base text-slate-200 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-cyan-400" /> Cash Flow Obligations Calendar
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-slate-800/50 rounded-lg">
+            <div className="text-center">
+              <p className="text-sm text-slate-400">Total AUM</p>
+              <p className="text-xl font-bold text-blue-400">{fmtC(summary.total_invested)}</p>
+              <p className="text-xs text-slate-500">Client capital</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-slate-400">Returns Earned</p>
+              <p className="text-xl font-bold text-emerald-400">{fmtC(summary.total_returns_earned)}</p>
+              <p className="text-xs text-slate-500">Accrued</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-slate-400">Returns Paid</p>
+              <p className="text-xl font-bold text-cyan-400">{fmtC(summary.total_returns_paid)}</p>
+              <p className="text-xs text-slate-500">Distributed</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-slate-400">Total Obligations</p>
+              <p className="text-xl font-bold text-orange-400">{fmtC(summary.total_obligations)}</p>
+              <p className="text-xs text-slate-500">Full contract</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-slate-400">Net Position</p>
+              <p className={`text-xl font-bold ${(summary.net_position || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {fmtC(summary.net_position)}
+              </p>
+              <p className="text-xs text-slate-500">Assets - Obligations</p>
+            </div>
+          </div>
+
+          {/* Key Milestones */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {calendar.next_payment?.date && (
+              <div className="p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-400 mb-2">Next Payment Due</h4>
+                <p className="text-white font-bold">{calendar.next_payment.date}</p>
+                <p className="text-green-400 font-bold">{fmtC(calendar.next_payment.amount)}</p>
+                <p className="text-xs text-slate-400">{calendar.next_payment.days_away} days away</p>
+              </div>
+            )}
+            {calendar.first_large_payment?.date && (
+              <div className="p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+                <h4 className="text-sm font-medium text-yellow-400 mb-2">First Large Payment</h4>
+                <p className="text-white font-bold">{calendar.first_large_payment.date}</p>
+                <p className="text-yellow-400 font-bold">{fmtC(calendar.first_large_payment.amount)}</p>
+              </div>
+            )}
+            {calendar.contract_end?.date && (
+              <div className="p-4 bg-red-900/20 border border-red-600/30 rounded-lg">
+                <h4 className="text-sm font-medium text-red-400 mb-2">Contract End</h4>
+                <p className="text-white font-bold">{calendar.contract_end.date}</p>
+                <p className="text-red-400 font-bold">{fmtC(calendar.contract_end.amount)}</p>
+                <p className="text-xs text-slate-400">{calendar.contract_end.days_away} days away</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Capital & Revenue Calculation ── */}
+      <Card className="border-slate-700/50 bg-slate-800/40">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base text-slate-200 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-emerald-400" /> Capital & Revenue Calculation
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <ProjectionItem label="Gross Return" value={fmt(proj.gross_return)} color="#10b981" />
-            <ProjectionItem label="Client Payments" value={fmt(proj.client_payments)} color="#ef4444" />
-            <ProjectionItem label="Commission Pool" value={fmt(proj.commission_pool)} color="#f59e0b" />
-            <ProjectionItem label="Company Share" value={fmt(proj.company_share)} color="#0ea5e9" />
-            <ProjectionItem label="Agent Share" value={fmt(proj.agent_share)} color="#8b5cf6" />
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-slate-400">Total AUM (Client Capital)</span>
+              <span className="text-white font-bold">{fmtC(capital.total_aum)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-t border-slate-700/30">
+              <span className="text-slate-400">- Client Obligations (Full Contract)</span>
+              <span className="text-red-400 font-medium">-{fmtC(summary.total_obligations)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-t border-cyan-500/20 bg-cyan-900/10 px-3 rounded-lg">
+              <span className="text-cyan-400 font-bold text-base">= Net Position</span>
+              <span className={`font-bold text-base ${(summary.net_position || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {fmtC(summary.net_position)}
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 mt-2">Net Position = Total AUM - Total Client Obligations over contract lifetime</p>
+            
+            <div className="border-t border-slate-700/30 pt-3 mt-3">
+              <p className="text-slate-400 mb-2 font-medium">Monthly Revenue Breakdown:</p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="text-center p-2 bg-slate-700/30 rounded"><div className="text-emerald-400 font-bold">{fmtC(capital.monthly_gross)}</div><div className="text-[10px] text-slate-500">Gross (2.5%)</div></div>
+                <div className="text-center p-2 bg-slate-700/30 rounded"><div className="text-red-400 font-bold">-{fmtC(capital.monthly_client_pay)}</div><div className="text-[10px] text-slate-500">Client (2.0%)</div></div>
+                <div className="text-center p-2 bg-slate-700/30 rounded"><div className="text-amber-400 font-bold">{fmtC(capital.monthly_pool)}</div><div className="text-[10px] text-slate-500">Pool (0.5%)</div></div>
+                <div className="text-center p-2 bg-slate-700/30 rounded"><div className="text-sky-400 font-bold">{fmtC(capital.company_share)}</div><div className="text-[10px] text-slate-500">Company ({split.company || 50}%)</div></div>
+                <div className="text-center p-2 bg-slate-700/30 rounded"><div className="text-purple-400 font-bold">{fmtC(capital.agent_share)}</div><div className="text-[10px] text-slate-500">Agents ({split.agent || 50}%)</div></div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Monthly Obligations Timeline ── */}
+      <Card className="border-slate-700/50 bg-slate-800/40">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base text-slate-200 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-400" /> Monthly Obligations Timeline
+          </CardTitle>
+          <CSVButton onClick={() => {
+            const rows = timeline.filter(m => m.total_due > 0).map(m => ({
+              month: m.date, total_due: m.total_due?.toFixed(2), client_interest: m.client_interest?.toFixed(2), referral_commissions: m.referral_commissions?.toFixed(2), commission_pool: m.commission_pool?.toFixed(2), days_away: m.days_away
+            }));
+            downloadCSV(rows, ['month', 'total_due', 'client_interest', 'referral_commissions', 'commission_pool', 'days_away'], 'franchise_obligations.csv');
+          }} />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {timeline.filter(m => m.total_due > 0 || m.clients?.some(c => c.is_incubation)).length === 0 ? (
+              <EmptyState msg="No obligations yet. Onboard clients to see payment timeline." />
+            ) : (
+              timeline.filter(m => m.total_due > 0 || m.clients?.length > 0).slice(0, 14).map((month) => {
+                const isExpanded = expandedMonth === month.month;
+                const isPast = month.is_past;
+                const statusColor = isPast ? 'border-green-600/30 bg-green-900/10' : month.days_away < 30 ? 'border-yellow-600/30 bg-yellow-900/10' : 'border-slate-600/30 bg-slate-800/30';
+                const statusIcon = isPast ? '✅' : month.days_away < 30 ? '⚠️' : '📅';
+
+                runningBalance -= month.total_due || 0;
+
+                return (
+                  <div key={month.month} className={`p-4 border rounded-lg ${statusColor} transition-all`}>
+                    <div className="flex justify-between items-start cursor-pointer" onClick={() => setExpandedMonth(isExpanded ? null : month.month)}>
+                      <div>
+                        <h5 className="font-bold text-white">{statusIcon} {month.date}</h5>
+                        <p className="text-xs text-slate-400">{month.days_away} days away</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-white">{fmtC(month.total_due)}</p>
+                        <p className="text-xs text-slate-400">Total Due</p>
+                      </div>
+                    </div>
+
+                    {/* Obligation breakdown */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                      {month.client_interest > 0 && (
+                        <div className="text-sm"><span className="text-slate-400">Client Interest:</span><span className="text-blue-400 ml-2 font-medium">{fmtC(month.client_interest)}</span></div>
+                      )}
+                      {month.referral_commissions > 0 && (
+                        <div className="text-sm"><span className="text-slate-400">Referral Commissions:</span><span className="text-green-400 ml-2 font-medium">{fmtC(month.referral_commissions)}</span></div>
+                      )}
+                      {month.commission_pool > 0 && (
+                        <div className="text-sm"><span className="text-slate-400">Commission Pool:</span><span className="text-amber-400 ml-2 font-medium">{fmtC(month.commission_pool)}</span></div>
+                      )}
+                    </div>
+
+                    {/* Expanded: Per-client breakdown */}
+                    {isExpanded && month.clients && month.clients.length > 0 && (
+                      <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                        <p className="text-xs font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                          <Users className="w-3 h-3" /> Payment Breakdown by Client
+                        </p>
+                        <div className="space-y-2">
+                          {month.clients.map((client, idx) => (
+                            <div key={idx} className="p-2 bg-slate-700/30 rounded border border-slate-600/30">
+                              <div className="flex justify-between items-center">
+                                <span className="text-white font-medium text-sm">{client.client_name}</span>
+                                <span className="text-cyan-400 font-bold text-sm">
+                                  {client.is_incubation ? <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px]">INCUBATION</Badge> : fmtC(client.client_interest)}
+                                </span>
+                              </div>
+                              {!client.is_incubation && client.agent_name && (
+                                <div className="flex justify-between items-center mt-1 ml-4 text-xs">
+                                  <span className="text-green-400/80">Ref: {client.agent_name}</span>
+                                  <span className="text-green-400">{fmtC(client.referral_commission)}</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Running balance */}
+                    <div className="flex justify-between items-center pt-3 mt-3 border-t border-slate-600/30">
+                      <span className="text-sm text-slate-400">Running Balance After Payment:</span>
+                      <span className={`font-bold ${runningBalance >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtC(runningBalance)}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>
@@ -232,7 +415,7 @@ const CashFlowTab = ({ token }) => {
       {/* Investment Stats */}
       <Card className="border-slate-700/50 bg-slate-800/40">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-slate-200">Investment Breakdown</CardTitle>
+          <CardTitle className="text-base text-slate-200">Investment Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4 text-sm text-center">

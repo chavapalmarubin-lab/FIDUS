@@ -7,50 +7,27 @@ Build a comprehensive FIDUS investment platform with VIKING trading analytics, M
 - **Frontend:** React + Tailwind CSS + Shadcn/UI
 - **Backend:** FastAPI + Python
 - **Database:** MongoDB Atlas (fidus_production)
-- **Deployment:** Render (prod), Emergent (preview)
 
 ## White Label Franchise System (Complete)
 
-### Phase 1 - Admin Management (Mar 12, 2026)
-- `franchise_companies` collection + CRUD API
-- White Label tab in FIDUS Admin Dashboard
+### Phase 1-4 Summary
+- Phase 1: Admin Management + White Label tab in FIDUS
+- Phase 2: Franchise Admin Portal (9 tabs) at `/franchise/login`
+- Phase 3: Client Portal (`/franchise/client/login`) + Agent Portal (`/franchise/agent/login`)
+- Phase 4: Self-service onboarding (Add Client/Agent), CSV downloads, Bulk CSV Import
 
-### Phase 2 - Franchise Admin Portal (Mar 13, 2026)
-- JWT auth at `/api/franchise/auth/`
-- 9-tab portal at `/franchise/login`
+### Cash Flow Upgrade (Mar 13, 2026)
+- Rebuilt Cash Flow tab to match FIDUS main dashboard quality
+- Cash Flow Obligations Calendar with status bar (AUM, Returns, Obligations, Net Position)
+- Key Milestones (Next Payment, First Large Payment, Contract End with dates + amounts + days)
+- Capital & Revenue Calculation (AUM - Obligations = Net Position, Monthly Revenue Breakdown)
+- Monthly Obligations Timeline with per-client breakdowns, referral commissions, running balance
+- Export to CSV
 
-### Phase 3 - Client & Agent Portals (Mar 13, 2026)
-- **Client Portal** `/franchise/client/login` — investment overview, returns, contract timeline
-- **Agent Portal** `/franchise/agent/login` — referred clients, AUM, commissions
-
-### Phase 4 - Self-Service Onboarding + CSV + Bulk Import (Mar 13, 2026)
-- **Add Client modal** — referral agent dropdown, auto `Fidus2026!` password
-- **Add Agent modal** — commission tier (30/40/50%), auto `Fidus2026!` password
-- **CSV download** on all data tabs
-- **Bulk Import** — upload CSV of clients, validates rows, creates client+investment+login for each valid row, shows results with exportable credentials
-  - Handles: missing fields, duplicate emails, invalid amounts, agent resolution
-  - Template download included
-  - `POST /api/franchise/dashboard/bulk-import-clients` (multipart/form-data)
-
-### P1 Bug Fix - Blank Page (Mar 13, 2026)
-- Catch-all `*` route prevents blank pages on unmatched URLs
-- JWT expiry validation clears stale tokens gracefully
-
-## Prioritized Backlog
-
-### P1
-- Deploy MT5 Bridge API to LUCRUM VPS
-- Create backend regression tests
-
-### P2
-- Bulk copy ratio API performance fix
-- Lucrum MT5 Bridge duplicate key errors
-- Risk Alerts notification system
-- VIKING CORE & PRO live data sync
-
-### P3 (Refactoring)
-- Split `single_source_api.py`, `server.py` (29K+ lines)
-- Break down `MoneyManagersDashboard.js`
+### Simulator
+- Interactive revenue simulator at `/franchise/simulator` (public, no login)
+- AUM slider, client return rate slider (0.5%-2.0%), commission split slider
+- MXN/USD toggle with live exchange rate
 
 ## Test Credentials
 | Portal | Email/Username | Password |
@@ -59,13 +36,8 @@ Build a comprehensive FIDUS investment platform with VIKING trading analytics, M
 | Franchise Admin | admin@testco.com | FranchiseTest123 |
 | Franchise Client | maria@example.com | ClientTest123 |
 | Franchise Agent | carlos@example.com | AgentTest123 |
-| New onboarded users | (their email) | Fidus2026! |
 
-## Key Files
-- `/app/backend/routes/franchise_auth.py` - All franchise auth (admin/client/agent)
-- `/app/backend/routes/franchise_dashboard.py` - Dashboard + onboarding + bulk import
-- `/app/backend/routes/franchise_api.py` - Company CRUD
-- `/app/frontend/src/components/FranchisePortal.js` - Admin portal (9 tabs + modals + CSV + bulk)
-- `/app/frontend/src/components/FranchiseClientPortal.js` - Client portal
-- `/app/frontend/src/components/FranchiseAgentPortal.js` - Agent portal
-- `/app/frontend/src/components/FranchiseLogin.js` - Admin login
+## Prioritized Backlog
+### P1: Deploy MT5 Bridge API to LUCRUM VPS, Backend regression tests
+### P2: Bulk copy ratio API perf, Lucrum duplicate keys, Risk Alerts
+### P3: Refactor server.py (29K+ lines), single_source_api.py
