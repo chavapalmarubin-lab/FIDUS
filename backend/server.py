@@ -29727,6 +29727,13 @@ except Exception as e:
     logging.error(f"❌ Failed to include Risk Monitoring router: {e}")
 
 try:
+    from routes.risk_report_pdf import router as risk_report_pdf_router
+    app.include_router(risk_report_pdf_router)
+    logging.info("✅ Risk Report PDF router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Risk Report PDF router: {e}")
+
+try:
     from routes.franchise_auth import router as franchise_auth_router
     app.include_router(franchise_auth_router)
     logging.info("✅ Franchise Auth router included successfully")

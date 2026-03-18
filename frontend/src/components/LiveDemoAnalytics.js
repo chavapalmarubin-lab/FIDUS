@@ -2894,11 +2894,33 @@ export default function LiveDemoAnalytics() {
 
               return (
                 <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ borderTop: '2px solid rgba(14,165,233,0.2)', paddingTop: '20px' }}>
-                    <h3 style={{ color: '#0ea5e9', fontSize: '16px', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <FileText size={18} /> FIDUS Risk Compliance Report — {mgr.manager_name}
-                    </h3>
-                    <p style={{ color: '#475569', fontSize: '12px', margin: 0 }}>Account #{mgr.account} | {checks.filter(c => c.sev === 'PASS').length}/{checks.length} checks passing</p>
+                  <div style={{ borderTop: '2px solid rgba(14,165,233,0.2)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h3 style={{ color: '#0ea5e9', fontSize: '16px', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={18} /> FIDUS Risk Compliance Report — {mgr.manager_name}
+                      </h3>
+                      <p style={{ color: '#475569', fontSize: '12px', margin: 0 }}>Account #{mgr.account} | {checks.filter(c => c.sev === 'PASS').length}/{checks.length} checks passing</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const token = localStorage.getItem('fidus_token');
+                        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/risk/report/pdf/${mgr.account}`, {
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        .then(res => res.blob())
+                        .then(blob => {
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `FIDUS_Risk_Report_${mgr.manager_name.replace(/\s+/g, '_')}_${mgr.account}.pdf`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        });
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                    >
+                      <Download size={14} /> Download PDF Report
+                    </button>
                   </div>
 
                   {/* Compliance Checklist */}
