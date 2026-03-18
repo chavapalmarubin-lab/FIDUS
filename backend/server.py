@@ -24864,6 +24864,14 @@ async def automatic_vps_sync():
         # 3. Log summary
         total_duration = accounts_result.get('duration_seconds', 0) + trades_result.get('duration_seconds', 0)
         logging.info(f"✅ Complete sync finished in {total_duration:.2f}s: {accounts_result.get('accounts_synced', 0)} accounts + {trades_result.get('total_trades_synced', 0)} trades")
+
+        # 4. LAYER 2 — Risk Monitoring Cycle (Post-Incident Rebuild, March 2026)
+        # Runs AFTER each VPS sync: checks drawdown, stores snapshots, sends alerts
+        try:
+            from services.risk_monitoring_service import run_risk_monitoring_cycle
+            await run_risk_monitoring_cycle(db)
+        except Exception as risk_err:
+            logging.error(f"❌ Risk monitoring cycle error: {risk_err}", exc_info=True)
             
     except Exception as e:
         logging.error(f"❌ Auto-sync exception: {e}", exc_info=True)
@@ -29709,6 +29717,14 @@ try:
     logging.info("✅ White Label Franchise API router included successfully")
 except Exception as e:
     logging.error(f"❌ Failed to include Franchise API router: {e}")
+
+# Import and include Layer 2 Risk Monitoring router
+try:
+    from routes.risk_monitoring import router as risk_monitoring_router
+    app.include_router(risk_monitoring_router)
+    logging.info("✅ Layer 2 Risk Monitoring router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Risk Monitoring router: {e}")
 
 try:
     from routes.franchise_auth import router as franchise_auth_router

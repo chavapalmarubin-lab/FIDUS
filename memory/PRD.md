@@ -1,43 +1,54 @@
 # FIDUS Investment Platform - Product Requirements Document
 
-## Original Problem Statement
-Build a comprehensive FIDUS investment platform with VIKING trading analytics, MT5 integration, and White Label Franchise System for third-party companies.
+## Architecture: Three-Layer Risk Control
 
-## Core Architecture
-- **Frontend:** React + Tailwind CSS + Shadcn/UI
-- **Backend:** FastAPI + Python
-- **Database:** MongoDB Atlas (fidus_production)
+### Layer 1 — Social Trading Platform (PRIMARY enforcement)
+- Equity monitors on the social trading platform
+- Can disable copiers, close trades, send alerts
+- Configured per account by FIDUS admin
 
-## White Label Franchise System (Complete)
+### Layer 2 — FIDUS Platform (MONITORING & ALERTING)
+- Render API + MongoDB + React dashboard
+- DETECT → ALERT → LOG only. No trade execution.
+- 5-minute equity polling with alert rules
+- Email alerts on drawdown breaches
 
-### Phase 1-4 Summary
-- Phase 1: Admin Management + White Label tab in FIDUS
-- Phase 2: Franchise Admin Portal (9 tabs) at `/franchise/login`
-- Phase 3: Client Portal (`/franchise/client/login`) + Agent Portal (`/franchise/agent/login`)
-- Phase 4: Self-service onboarding (Add Client/Agent), CSV downloads, Bulk CSV Import
+### Layer 3 — LUCRUM Broker (Last resort)
+- Broker-level equity protection / stop-out
+- Break switch at broker level
 
-### Cash Flow Upgrade (Mar 13, 2026)
-- Rebuilt Cash Flow tab to match FIDUS main dashboard quality
-- Cash Flow Obligations Calendar with status bar (AUM, Returns, Obligations, Net Position)
-- Key Milestones (Next Payment, First Large Payment, Contract End with dates + amounts + days)
-- Capital & Revenue Calculation (AUM - Obligations = Net Position, Monthly Revenue Breakdown)
-- Monthly Obligations Timeline with per-client breakdowns, referral commissions, running balance
-- Export to CSV
+## Layer 2 Implementation Status (March 2026)
 
-### Simulator
-- Interactive revenue simulator at `/franchise/simulator` (public, no login)
-- AUM slider, client return rate slider (0.5%-2.0%), commission split slider
-- MXN/USD toggle with live exchange rate
+### Items A+B+C — Alert Rules + Service + Snapshots [COMPLETE]
+- Risk monitoring service runs after every VPS sync (5 min)
+- Per-account drawdown check: 3% WARNING, 5% CRITICAL (configurable per account)
+- Portfolio-level drawdown check: 5% WARNING, 10% CRITICAL
+- Email alerts via SMTP with deduplication (60 min window)
+- Equity snapshots stored every 5 min (90-day retention)
+- Alert status set on mt5_accounts: OK / WARNING / CRITICAL
+- Files: `/app/backend/services/risk_monitoring_service.py`, `/app/backend/routes/risk_monitoring.py`
+
+### API Endpoints
+- `GET /api/admin/risk/status` — Current risk status for all accounts + portfolio
+- `GET /api/admin/risk/alerts?status=unresolved` — Alert list with lifecycle
+- `GET /api/admin/risk/alerts/unresolved-count` — Badge count (poll 30s)
+- `POST /api/admin/risk/alerts/{id}/resolve` — Mark alert resolved
+- `GET /api/admin/risk/snapshots/{account_id}?hours=24` — Equity history
+- `GET /api/admin/risk/exposure` — Cross-account instrument concentration
+- `GET /api/admin/risk/data-health/{account_id}` — Sync health status
+- `POST /api/admin/risk/test-alert` — Test email delivery
+
+### Remaining Layer 2 Items
+- Item D: Exposure aggregation dashboard view (backend done, frontend pending)
+- Item E: Dashboard alert panel + risk status on Money Manager cards (frontend)
+- Item F: Social trading monitor tracking per account (backend + frontend)
+- Item G: Risk score auto-computation daily (backend)
+
+## Incident Archive
+All documents at `/app/docs/incident_march_2026/`
 
 ## Test Credentials
 | Portal | Email/Username | Password |
 |--------|---------------|----------|
 | FIDUS Admin | admin | Password123 |
 | Franchise Admin | admin@testco.com | FranchiseTest123 |
-| Franchise Client | maria@example.com | ClientTest123 |
-| Franchise Agent | carlos@example.com | AgentTest123 |
-
-## Prioritized Backlog
-### P1: Deploy MT5 Bridge API to LUCRUM VPS, Backend regression tests
-### P2: Bulk copy ratio API perf, Lucrum duplicate keys, Risk Alerts
-### P3: Refactor server.py (29K+ lines), single_source_api.py
