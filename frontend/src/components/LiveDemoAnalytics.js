@@ -11,7 +11,7 @@ import {
   ChevronRight, ChevronDown, Zap, Briefcase, PieChart as PieChartIcon,
   ArrowUpRight, ArrowDownRight, Filter, Search, ExternalLink,
   Send, Bot, Loader2, Sparkles, MessageSquare, Lightbulb, Settings,
-  CheckCircle, XCircle, AlertCircle, Copy, ArrowUpCircle, ArrowDownCircle, MinusCircle
+  CheckCircle, XCircle, AlertCircle, Copy, ArrowUpCircle, ArrowDownCircle, MinusCircle, FileText
 } from 'lucide-react';
 import './LiveDemoAnalytics.css';
 
@@ -2854,6 +2854,124 @@ export default function LiveDemoAnalytics() {
                 </div>
               </div>
             )}
+
+            {/* ═══════════════════════════════════════════════════════════
+                RISK COMPLIANCE REPORT — Integrated per strategy
+            ═══════════════════════════════════════════════════════════ */}
+            {deepDiveManager && riskAnalysis && (() => {
+              const mgr = deepDiveManager;
+              const eq = mgr.equity || 0;
+              const trades = mgr.total_trades || 0;
+              const dd = mgr.max_drawdown_pct || riskAnalysis?.risk_control?.risk_control_score?.drawdown?.max_pct || 0;
+              const currentDD = riskAnalysis?.risk_control?.risk_control_score?.drawdown?.current_pct || 0;
+              const wr = mgr.win_rate || 0;
+              const pf = mgr.profit_factor || 0;
+              const sharpe = mgr.sharpe_ratio || 0;
+              const riskScore = riskAnalysis?.risk_control?.risk_control_score?.score ?? riskAnalysis?.risk_control?.score ?? 0;
+              const riskLabel = riskScore >= 80 ? 'Strong' : riskScore >= 60 ? 'Moderate' : riskScore >= 40 ? 'Weak' : 'Critical';
+              const riskColor = riskScore >= 80 ? '#10b981' : riskScore >= 60 ? '#0ea5e9' : riskScore >= 40 ? '#f59e0b' : '#ef4444';
+
+              const sizingRules = [
+                { asset: 'GOLD (XAUUSD)', lots: '0.10–0.30', risk: 'HIGH', maxT: 3, atr: '0.60×ATR(14)', stop: '$10' },
+                { asset: 'FOREX Majors', lots: '0.50–1.00', risk: 'MEDIUM', maxT: '5–7', atr: '0.75×ATR(14)', stop: '20 pips' },
+                { asset: 'FOREX Crosses', lots: '0.30–0.70', risk: 'MEDIUM', maxT: '4–5', atr: '1.00×ATR(14)', stop: '30 pips' },
+                { asset: 'INDICES', lots: '1.0–3.0', risk: 'MED-HIGH', maxT: '3–5', atr: '0.80×ATR(14)', stop: '50 pts' },
+                { asset: 'OIL', lots: '0.10–0.30', risk: 'HIGH', maxT: 3, atr: '0.70×ATR(14)', stop: '$0.50' },
+                { asset: 'BTC', lots: '0.10–0.30', risk: 'HIGH', maxT: '2–3', atr: '0.50×ATR(14)', stop: '$500' },
+                { asset: 'ETH', lots: '0.20–0.50', risk: 'MED-HIGH', maxT: 3, atr: '0.55×ATR(14)', stop: '$30' },
+              ];
+
+              const checks = [
+                { check: 'Max Drawdown ≤ 10%', actual: `${dd.toFixed(2)}%`, sev: dd > 10 ? 'FAIL' : dd > 5 ? 'WARN' : 'PASS' },
+                { check: 'Current DD ≤ 5%', actual: `${currentDD.toFixed(2)}%`, sev: currentDD > 5 ? 'FAIL' : currentDD > 3 ? 'WARN' : 'PASS' },
+                { check: 'Win Rate ≥ 30%', actual: `${wr.toFixed(1)}%`, sev: wr >= 30 ? 'PASS' : 'FAIL' },
+                { check: 'Profit Factor ≥ 1.0', actual: pf.toFixed(2), sev: pf >= 1.5 ? 'PASS' : pf >= 1.0 ? 'WARN' : 'FAIL' },
+                { check: 'Sharpe ≥ 0.5', actual: sharpe.toFixed(2), sev: sharpe >= 1.0 ? 'PASS' : sharpe >= 0.5 ? 'WARN' : 'FAIL' },
+                { check: 'Risk Score ≥ 60', actual: `${riskScore}/100`, sev: riskScore >= 80 ? 'PASS' : riskScore >= 60 ? 'WARN' : 'FAIL' },
+              ];
+              const sc = { PASS: '#10b981', WARN: '#f59e0b', FAIL: '#ef4444' };
+              const rc = { HIGH: '#ef4444', 'MED-HIGH': '#f59e0b', MEDIUM: '#10b981' };
+
+              return (
+                <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ borderTop: '2px solid rgba(14,165,233,0.2)', paddingTop: '20px' }}>
+                    <h3 style={{ color: '#0ea5e9', fontSize: '16px', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FileText size={18} /> FIDUS Risk Compliance Report — {mgr.manager_name}
+                    </h3>
+                    <p style={{ color: '#475569', fontSize: '12px', margin: 0 }}>Account #{mgr.account} | {checks.filter(c => c.sev === 'PASS').length}/{checks.length} checks passing</p>
+                  </div>
+
+                  {/* Compliance Checklist */}
+                  <div style={{ background: '#0f172a', border: `1px solid ${riskColor}33`, borderRadius: '10px', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <span style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: '600' }}>Compliance Status</span>
+                      <span style={{ color: riskColor, fontWeight: 'bold', fontSize: '13px' }}>{riskScore}/100 ({riskLabel})</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      {checks.map((c, i) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: `${sc[c.sev]}08`, border: `1px solid ${sc[c.sev]}20`, borderRadius: '6px' }}>
+                          <span style={{ color: '#cbd5e1', fontSize: '12px' }}>{c.check}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '12px', fontFamily: 'monospace' }}>{c.actual}</span>
+                            <span style={{ color: sc[c.sev], fontSize: '10px', fontWeight: 'bold', padding: '1px 6px', background: `${sc[c.sev]}15`, borderRadius: '3px' }}>{c.sev}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Mandatory Params + Position Sizing side by side */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ background: '#0f172a', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '10px', padding: '14px' }}>
+                      <h4 style={{ color: '#ef4444', fontSize: '12px', margin: '0 0 8px 0' }}>FIDUS Risk Parameters — MANDATORY</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {[['Risk/Trade', '0.25–0.75%'], ['Intraday DD', '5% (hard)'], ['Weekly', '6%'], ['Monthly DD', '10%'], ['Margin', '25%'], ['Force Flat', '21:50 UTC'], ['Overnight', 'PROHIBITED']].map(([p, v], i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '11px' }}>
+                            <span style={{ color: '#94a3b8' }}>{p}</span>
+                            <span style={{ color: '#fca5a5', fontFamily: 'monospace', fontWeight: 'bold' }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ background: '#0f172a', border: '1px solid rgba(14,165,233,0.15)', borderRadius: '10px', padding: '14px' }}>
+                      <h4 style={{ color: '#0ea5e9', fontSize: '12px', margin: '0 0 8px 0' }}>Position Sizing — Per Asset</h4>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                        <thead><tr style={{ borderBottom: '1px solid rgba(100,116,139,0.2)' }}>
+                          {['Asset', 'Lots/$100K', 'Risk', 'Max'].map(h => <th key={h} style={{ textAlign: 'left', padding: '4px', color: '#64748b' }}>{h}</th>)}
+                        </tr></thead>
+                        <tbody>{sizingRules.map((r, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid rgba(100,116,139,0.08)' }}>
+                            <td style={{ padding: '4px', color: '#e2e8f0', fontWeight: '500' }}>{r.asset}</td>
+                            <td style={{ padding: '4px', color: '#0ea5e9', fontFamily: 'monospace' }}>{r.lots}</td>
+                            <td style={{ padding: '4px' }}><span style={{ color: rc[r.risk] || '#f59e0b', fontSize: '9px', fontWeight: 'bold' }}>{r.risk}</span></td>
+                            <td style={{ padding: '4px', color: '#cbd5e1', fontFamily: 'monospace' }}>{r.maxT}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Algo Config */}
+                  <div style={{ background: '#0f172a', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '10px', padding: '14px' }}>
+                    <h4 style={{ color: '#8b5cf6', fontSize: '12px', margin: '0 0 8px 0' }}>Algorithm Configuration — Send to Manager</h4>
+                    <pre style={{ background: '#020617', border: '1px solid rgba(100,116,139,0.12)', borderRadius: '6px', padding: '12px', fontSize: '10px', color: '#10b981', fontFamily: 'monospace', overflowX: 'auto', margin: 0, lineHeight: '1.5' }}>{
+`# FIDUS RISK CONFIG — ${mgr.manager_name} (#${mgr.account})
+# ${new Date().toISOString().split('T')[0]}
+[DRAWDOWN] max_intraday=5% max_weekly=6% max_monthly=10%
+[SIZING]   risk_per_trade=0.50% max_margin=25%
+[HOURS]    force_flat=21:50UTC overnight=PROHIBITED
+[GOLD]     max_lots=0.30 max_trades=3 stop=0.60xATR
+[FOREX]    max_lots=1.00 max_trades=7 stop=0.75xATR
+[INDEX]    max_lots=3.00 max_trades=5 stop=0.80xATR`
+                    }</pre>
+                  </div>
+
+                  <div style={{ padding: '6px 10px', background: 'rgba(100,116,139,0.05)', borderRadius: '4px', fontSize: '9px', color: '#475569' }}>
+                    FIDUS Compliance Report | {mgr.manager_name} (#{mgr.account}) | {new Date().toISOString().split('T')[0]}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -3079,7 +3197,9 @@ export default function LiveDemoAnalytics() {
             </div>
           </div>
         )}
+
       </main>
     </div>
   );
 }
+
