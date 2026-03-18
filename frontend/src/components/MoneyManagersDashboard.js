@@ -688,6 +688,33 @@ const MoneyManagersDashboard = () => {
                         </div>
                       </div>
 
+                      {/* LAYER 2: Risk Status Row */}
+                      {(() => {
+                        const dd = performance.return_percentage || 0;
+                        const isBreached = dd <= -10;
+                        const isHalt = dd <= -5;
+                        const isWarn = dd <= -3;
+                        const statusColor = isBreached ? 'border-red-500/40 bg-red-900/20' : isHalt ? 'border-red-500/30 bg-red-900/10' : isWarn ? 'border-amber-500/30 bg-amber-900/10' : 'border-emerald-500/20 bg-emerald-900/10';
+                        const statusLabel = isBreached ? 'CRITICAL' : isHalt ? 'HALT ZONE' : isWarn ? 'WARNING' : 'OK';
+                        const statusTextColor = isBreached ? 'text-red-400' : isHalt ? 'text-red-400' : isWarn ? 'text-amber-400' : 'text-emerald-400';
+                        const barWidth = Math.min(Math.abs(dd) / 20 * 100, 100);
+                        const barColor = isBreached ? 'bg-red-500' : isHalt ? 'bg-red-500' : isWarn ? 'bg-amber-500' : 'bg-emerald-500';
+                        return (
+                          <div className={`p-3 rounded-lg border ${statusColor} space-y-2`}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400 text-xs font-medium">RISK STATUS</span>
+                              <span className={`text-xs font-bold ${statusTextColor}`}>{statusLabel}</span>
+                            </div>
+                            <div className="w-full bg-slate-700/50 rounded-full h-1.5">
+                              <div className={`h-1.5 rounded-full ${barColor}`} style={{ width: `${barWidth}%` }} />
+                            </div>
+                            <div className="flex justify-between text-[9px] text-slate-600">
+                              <span>0%</span><span className="text-amber-700">-3%</span><span className="text-red-700">-5%</span><span>-10%</span><span>-20%</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {/* Action Buttons */}
                       <div className="flex space-x-2 pt-3 border-t border-slate-700">
                         {manager.profile_url && (

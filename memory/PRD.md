@@ -1,54 +1,44 @@
 # FIDUS Investment Platform - Product Requirements Document
 
-## Architecture: Three-Layer Risk Control
+## Three-Layer Risk Architecture (Post-Incident March 2026)
 
 ### Layer 1 — Social Trading Platform (PRIMARY enforcement)
-- Equity monitors on the social trading platform
-- Can disable copiers, close trades, send alerts
-- Configured per account by FIDUS admin
-
-### Layer 2 — FIDUS Platform (MONITORING & ALERTING)
-- Render API + MongoDB + React dashboard
-- DETECT → ALERT → LOG only. No trade execution.
-- 5-minute equity polling with alert rules
-- Email alerts on drawdown breaches
-
+### Layer 2 — FIDUS Platform (MONITORING & ALERTING) ← This system
 ### Layer 3 — LUCRUM Broker (Last resort)
-- Broker-level equity protection / stop-out
-- Break switch at broker level
 
-## Layer 2 Implementation Status (March 2026)
+## Layer 2 Implementation — ALL ITEMS COMPLETE
 
-### Items A+B+C — Alert Rules + Service + Snapshots [COMPLETE]
-- Risk monitoring service runs after every VPS sync (5 min)
-- Per-account drawdown check: 3% WARNING, 5% CRITICAL (configurable per account)
-- Portfolio-level drawdown check: 5% WARNING, 10% CRITICAL
-- Email alerts via SMTP with deduplication (60 min window)
-- Equity snapshots stored every 5 min (90-day retention)
-- Alert status set on mt5_accounts: OK / WARNING / CRITICAL
-- Files: `/app/backend/services/risk_monitoring_service.py`, `/app/backend/routes/risk_monitoring.py`
+| Item | Description | Status |
+|------|-------------|--------|
+| A | Alert rules on 5-min polling (3% warn / 5% critical) | COMPLETE |
+| B | Alert delivery service (SMTP email, MongoDB alerts) | COMPLETE |
+| C | Equity snapshots (every 5 min, 90-day retention) | COMPLETE |
+| D | Exposure aggregation engine | COMPLETE |
+| E | Dashboard: Risk Alerts tab + drawdown bars on MM cards | COMPLETE |
+| F | Social trading monitor tracking per account | COMPLETE |
+| G | Risk score auto-computation (100pt scale) | COMPLETE |
+| H | Data health endpoint per account | COMPLETE |
 
-### API Endpoints
-- `GET /api/admin/risk/status` — Current risk status for all accounts + portfolio
-- `GET /api/admin/risk/alerts?status=unresolved` — Alert list with lifecycle
-- `GET /api/admin/risk/alerts/unresolved-count` — Badge count (poll 30s)
-- `POST /api/admin/risk/alerts/{id}/resolve` — Mark alert resolved
-- `GET /api/admin/risk/snapshots/{account_id}?hours=24` — Equity history
-- `GET /api/admin/risk/exposure` — Cross-account instrument concentration
-- `GET /api/admin/risk/data-health/{account_id}` — Sync health status
-- `POST /api/admin/risk/test-alert` — Test email delivery
+## Key Files
+- `/app/backend/services/risk_monitoring_service.py` — Core monitoring service
+- `/app/backend/routes/risk_monitoring.py` — All risk API endpoints
+- `/app/frontend/src/components/RiskAlertsDashboard.js` — Risk Alerts tab
+- `/app/docs/incident_march_2026/` — All incident documents (7 files)
 
-### Remaining Layer 2 Items
-- Item D: Exposure aggregation dashboard view (backend done, frontend pending)
-- Item E: Dashboard alert panel + risk status on Money Manager cards (frontend)
-- Item F: Social trading monitor tracking per account (backend + frontend)
-- Item G: Risk score auto-computation daily (backend)
-
-## Incident Archive
-All documents at `/app/docs/incident_march_2026/`
+## API Endpoints (Layer 2)
+- `GET /api/admin/risk/status` — Portfolio + per-account risk status
+- `GET /api/admin/risk/alerts` — Alert list with lifecycle
+- `GET /api/admin/risk/alerts/unresolved-count` — Badge count
+- `POST /api/admin/risk/alerts/{id}/resolve` — Resolve alert
+- `GET /api/admin/risk/snapshots/{id}` — Equity history
+- `GET /api/admin/risk/exposure` — Instrument concentration
+- `GET /api/admin/risk/data-health/{id}` — Sync status
+- `GET /api/admin/risk/risk-scores` — Computed risk scores
+- `GET /api/admin/risk/social-monitors` — Monitor config status
+- `POST /api/admin/risk/social-monitors/{id}` — Add monitor config
+- `POST /api/admin/risk/test-alert` — Test SMTP delivery
 
 ## Test Credentials
 | Portal | Email/Username | Password |
 |--------|---------------|----------|
 | FIDUS Admin | admin | Password123 |
-| Franchise Admin | admin@testco.com | FranchiseTest123 |

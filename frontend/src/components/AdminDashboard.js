@@ -46,6 +46,7 @@ import InstrumentSpecifications from './InstrumentSpecifications';
 import RiskParameters from './RiskParameters';
 import GapRiskAnalysis from './GapRiskAnalysis';
 import WhiteLabelDashboard from './WhiteLabelDashboard';
+import RiskAlertsDashboard from './RiskAlertsDashboard';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
@@ -627,6 +628,9 @@ const AdminDashboard = ({ user, onLogout }) => {
               <TrendingUp size={16} className="mr-2" />
               Trading Analytics
             </TabsTrigger>
+            <TabsTrigger value="risk-alerts" className="flex-shrink-0">
+              🚨 Risk Alerts
+            </TabsTrigger>
             <TabsTrigger value="money-managers" className="flex-shrink-0">
               💼 Money Managers
             </TabsTrigger>
@@ -737,6 +741,10 @@ const AdminDashboard = ({ user, onLogout }) => {
 
           <TabsContent value="trading-analytics" className="mt-6">
             <NextGenTradingAnalytics />
+          </TabsContent>
+
+          <TabsContent value="risk-alerts" className="mt-6">
+            <RiskAlertsDashboard />
           </TabsContent>
 
           <TabsContent value="money-managers" className="mt-6">

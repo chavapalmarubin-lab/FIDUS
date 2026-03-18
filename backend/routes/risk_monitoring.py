@@ -185,3 +185,128 @@ async def send_test_alert():
     """
     sent = send_alert_email(subject, body)
     return {"success": sent, "message": "Test alert sent" if sent else "Failed to send test alert"}
+
+
+
+# ═══════════════════════════════════════════
+# ITEM F — SOCIAL TRADING MONITOR TRACKING
+# ═══════════════════════════════════════════
+
+@router.get("/social-monitors")
+async def get_social_trading_monitors():
+    """Get social trading equity monitor config status for all monitored accounts."""
+    db = await get_db()
+    from services.risk_monitoring_service import MONITORED_ACCOUNTS
+    results = []
+    for acc_id in MONITORED_ACCOUNTS:
+        doc = await db.mt5_accounts.find_one(
+            {"account": acc_id},
+            {"_id": 0, "account": 1, "manager_name": 1, "social_trading_monitors": 1}
+        )
+        if doc:
+            monitors = doc.get("social_trading_monitors", [])
+            results.append({
+                "account": acc_id,
+                "manager_name": doc.get("manager_name", ""),
+                "monitors": monitors,
+                "configured": len(monitors) > 0,
+                "verified": all(m.get("verified", False) for m in monitors) if monitors else False
+            })
+    return {"success": True, "accounts": results}
+
+
+@router.post("/social-monitors/{account_id}")
+async def update_social_trading_monitor(account_id: int, monitor: dict = None):
+    """
+    Add or update social trading monitor config for an account.
+    Body: { type: "equity_protect", threshold_pct: 10, action: "disable_copier", configured_by: "Chava", verified: true }
+    """
+    from pydantic import BaseModel
+    db = await get_db()
+
+    if not monitor:
+        raise HTTPException(status_code=400, detail="Monitor config required")
+
+    monitor["configured_at"] = datetime.now(timezone.utc).isoformat()
+
+    result = await db.mt5_accounts.update_one(
+        {"account": account_id},
+        {"$push": {"social_trading_monitors": monitor}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    return {"success": True, "message": f"Monitor added for account {account_id}"}
+
+
+@router.put("/social-monitors/{account_id}/verify")
+async def verify_social_trading_monitor(account_id: int):
+    """Mark all social trading monitors for an account as verified."""
+    db = await get_db()
+    result = await db.mt5_accounts.update_one(
+        {"account": account_id},
+        {"$set": {"social_trading_monitors.$[].verified": True, "social_trading_monitors.$[].verified_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"success": True, "message": f"Monitors verified for account {account_id}"}
+
+
+# ═══════════════════════════════════════════
+# ITEM G — RISK SCORE (computed from breach events)
+# ═══════════════════════════════════════════
+
+@router.get("/risk-scores")
+async def get_risk_scores():
+    """Get current risk scores for all monitored accounts."""
+    db = await get_db()
+    from services.risk_monitoring_service import MONITORED_ACCOUNTS, INITIAL_ALLOCATIONS
+
+    scores = []
+    for acc_id in MONITORED_ACCOUNTS:
+        # Count breach events in last 30 days
+        since = datetime.now(timezone.utc) - timedelta(days=30)
+        breaches = await db.alerts.count_documents({
+            "account": acc_id,
+            "sent_at": {"$gte": since}
+        })
+        critical_breaches = await db.alerts.count_documents({
+            "account": acc_id,
+            "alert_type": "halt",
+            "sent_at": {"$gte": since}
+        })
+
+        # Get current drawdown
+        doc = await db.mt5_accounts.find_one({"account": acc_id}, {"_id": 0, "equity": 1, "manager_name": 1})
+        equity = doc.get("equity", 0) if doc else 0
+        initial = INITIAL_ALLOCATIONS.get(acc_id, 0)
+        dd_pct = ((equity - initial) / initial * 100) if initial > 0 else 0
+
+        # Compute score (start 100, deduct penalties)
+        score = 100
+        score -= critical_breaches * 20   # -20 per critical breach
+        score -= breaches * 5             # -5 per any breach
+        if dd_pct <= -10:
+            score -= 40                   # -40 for monthly DD breach
+        elif dd_pct <= -5:
+            score -= 20
+        elif dd_pct <= -3:
+            score -= 10
+        score = max(0, min(100, score))
+
+        label = "Strong" if score >= 80 else "Moderate" if score >= 60 else "Weak" if score >= 40 else "Critical"
+
+        scores.append({
+            "account": acc_id,
+            "manager_name": doc.get("manager_name", "") if doc else "",
+            "score": score,
+            "label": label,
+            "drawdown_pct": round(dd_pct, 2),
+            "breaches_30d": breaches,
+            "critical_breaches_30d": critical_breaches,
+            "penalties_applied": {
+                "critical_breach": critical_breaches * 20,
+                "any_breach": breaches * 5,
+                "drawdown": 40 if dd_pct <= -10 else 20 if dd_pct <= -5 else 10 if dd_pct <= -3 else 0
+            }
+        })
+
+    return {"success": True, "scores": scores, "timestamp": datetime.now(timezone.utc).isoformat()}
