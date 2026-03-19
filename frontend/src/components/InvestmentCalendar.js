@@ -712,6 +712,15 @@ const InvestmentCalendar = ({ user }) => {
                                 {formatCurrency(event.amount)}
                               </span>
                             )}
+                            {/* Fund Health Indicator */}
+                            {(() => {
+                              const d = new Date(event.date);
+                              const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                              const h = fundHealth[mk];
+                              if (h === 'green') return <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /><span className="text-emerald-400 text-[10px] font-medium">Funded</span></span>;
+                              if (h === 'red') return <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30"><span className="w-1.5 h-1.5 rounded-full bg-red-400" /><span className="text-red-400 text-[10px] font-medium">Review</span></span>;
+                              return null;
+                            })()}
                           </div>
                         </div>
                       </motion.div>
