@@ -25366,27 +25366,16 @@ async def get_live_demo_accounts():
     Used to evaluate new money managers before allocating real money to them.
     """
     try:
-        # Query mt5_accounts for accounts with account_type = 'live_demo'
+        # Query mt5_accounts for accounts with account_type = 'live_demo' (active only)
         demo_accounts = await db.mt5_accounts.find({
-            "account_type": "live_demo"
+            "account_type": "live_demo",
+            "status": "active"
         }).to_list(length=100)
         
-        # If no accounts found with that type, also check for specific demo accounts
+        # If no active demo accounts found, return empty
         if not demo_accounts:
-            # Check for known demo account numbers
-            demo_account_numbers = [20062, 2210]
-            demo_accounts = await db.mt5_accounts.find({
-                "account": {"$in": demo_account_numbers}
-            }).to_list(length=100)
-        
-        # If no accounts found with that type, also check for specific demo accounts
-        if not demo_accounts:
-            # Check for known demo account numbers
-            demo_account_numbers = [20062, 2210]
-            demo_accounts = await db.mt5_accounts.find({
-                "account": {"$in": demo_account_numbers}
-            }).to_list(length=100)
-            logging.info(f"Fallback query found {len(demo_accounts)} accounts")
+            logging.info("No active live_demo accounts found")
+            demo_accounts = []
         
         # Format response
         formatted_accounts = []

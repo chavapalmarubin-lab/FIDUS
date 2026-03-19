@@ -44,14 +44,16 @@ class LiveDemoAnalyticsService:
     async def get_demo_accounts_config(self) -> List[Dict]:
         """Get all live demo accounts from the database"""
         try:
-            # Query for accounts marked as live_demo type
+            # Query for accounts marked as live_demo type (active only)
             demo_accounts = await self.db.mt5_accounts.find({
-                "account_type": "live_demo"
+                "account_type": "live_demo",
+                "status": "active"
             }).to_list(length=100)
             
             # Also check mt5_account_config for live_demo accounts
             config_accounts = await self.db.mt5_account_config.find({
-                "account_type": "live_demo"
+                "account_type": "live_demo",
+                "status": {"$ne": "inactive"}
             }).to_list(length=100)
             
             # Merge account numbers
@@ -79,9 +81,10 @@ class LiveDemoAnalyticsService:
         try:
             logger.info(f"📊 Calculating LIVE DEMO manager rankings for {period_days} days")
             
-            # Get all demo accounts
+            # Get all active demo accounts
             demo_accounts = await self.db.mt5_accounts.find({
-                "account_type": "live_demo"
+                "account_type": "live_demo",
+                "status": "active"
             }).to_list(length=100)
             
             if not demo_accounts:
@@ -135,6 +138,7 @@ class LiveDemoAnalyticsService:
                 "worst_performer": worst,
                 "period_days": period_days,
                 "account_type": "live_demo",
+                "status": "active",
                 "total_accounts": len(managers_data)
             }
             
@@ -148,6 +152,7 @@ class LiveDemoAnalyticsService:
                 "worst_performer": None,
                 "period_days": period_days,
                 "account_type": "live_demo",
+                "status": "active",
                 "error": str(e)
             }
     
