@@ -303,3 +303,117 @@ async def get_manager_daily_pnl(account_id: int, days: int = 30, authorization: 
             "total_breaches": sum(len(d["breaches"]) for d in result),
         }
     }
+
+
+
+@router.get("/report/pdf/{account_id}")
+async def manager_download_pdf(account_id: int, authorization: str = Header(None)):
+    """PDF report accessible with manager token."""
+    payload = _decode_token(authorization)
+    if account_id not in payload.get("allowed_accounts", []):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    from fastapi.responses import StreamingResponse
+    from io import BytesIO
+
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.units import inch
+        from reportlab.lib.colors import HexColor, white
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+        db = await get_db()
+        acc = await db.mt5_accounts.find_one({"account": account_id}, {"_id": 0})
+        if not acc:
+            raise HTTPException(status_code=404, detail="Account not found")
+
+        manager_name = acc.get("manager_name", f"Account {account_id}")
+        equity = acc.get("equity", 0) or 0
+        initial = acc.get("initial_allocation", 0) or 0
+        dd_pct = ((equity - initial) / initial * 100) if initial > 0 else 0
+        now = datetime.now(timezone.utc)
+
+        # Trade stats
+        pipeline = [
+            {"$match": {"account": account_id, "type": {"$ne": 2}, "profit": {"$ne": 0}}},
+            {"$group": {"_id": None, "total_trades": {"$sum": 1}, "wins": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, 1, 0]}},
+                        "total_profit": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, "$profit", 0]}},
+                        "total_loss": {"$sum": {"$cond": [{"$lt": ["$profit", 0]}, "$profit", 0]}}}}
+        ]
+        stats = list(await db.mt5_deals_history.aggregate(pipeline).to_list(1))
+        s = stats[0] if stats else {}
+        total_trades = s.get("total_trades", 0)
+        win_rate = (s.get("wins", 0) / total_trades * 100) if total_trades > 0 else 0
+        pf = abs(s.get("total_profit", 0) / s.get("total_loss", 1)) if s.get("total_loss", 0) != 0 else 0
+
+        buf = BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6*inch, bottomMargin=0.5*inch, leftMargin=0.7*inch, rightMargin=0.7*inch)
+        styles = getSampleStyleSheet()
+        cyan = HexColor("#0ea5e9")
+        red = HexColor("#ef4444")
+        green = HexColor("#10b981")
+        dark = HexColor("#1e293b")
+        light = HexColor("#cbd5e1")
+        slate = HexColor("#64748b")
+
+        title_style = ParagraphStyle("T", parent=styles["Title"], fontSize=20, textColor=cyan, fontName="Helvetica-Bold")
+        h2 = ParagraphStyle("H2", parent=styles["Heading2"], fontSize=14, textColor=cyan, fontName="Helvetica-Bold")
+        h2r = ParagraphStyle("H2R", parent=h2, textColor=red)
+        body = ParagraphStyle("B", parent=styles["Normal"], fontSize=10, textColor=HexColor("#334155"))
+        small = ParagraphStyle("S", parent=styles["Normal"], fontSize=8, textColor=slate)
+        mono = ParagraphStyle("M", parent=styles["Normal"], fontSize=9, textColor=green, fontName="Courier", backColor=HexColor("#f0f4f8"))
+
+        elements = []
+        elements.append(Paragraph("FIDUS INVESTMENT MANAGEMENT", small))
+        elements.append(Paragraph("Risk Compliance Report", title_style))
+        elements.append(Paragraph(f"{manager_name} — Account #{account_id}", ParagraphStyle("Sub", parent=styles["Normal"], fontSize=11, textColor=slate)))
+        elements.append(Paragraph(f"Generated: {now.strftime('%B %d, %Y %H:%M UTC')} | CONFIDENTIAL", small))
+        elements.append(HRFlowable(width="100%", thickness=1, color=cyan, spaceAfter=12))
+
+        # KPI Table
+        elements.append(Paragraph("Account Summary", h2))
+        kpi = Table([["Equity", "Initial", "P&L", "DD%", "Trades", "Win Rate", "PF"],
+                      [f"${equity:,.2f}", f"${initial:,.2f}", f"${equity-initial:+,.2f}", f"{dd_pct:+.2f}%", str(total_trades), f"{win_rate:.1f}%", f"{pf:.2f}"]],
+                     colWidths=[90, 90, 80, 65, 50, 60, 55])
+        kpi.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), dark), ("TEXTCOLOR", (0,0), (-1,0), light), ("FONTSIZE", (0,0), (-1,-1), 9),
+                                  ("FONTNAME", (0,1), (-1,1), "Helvetica-Bold"), ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                  ("GRID", (0,0), (-1,-1), 0.5, HexColor("#e2e8f0")), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
+        elements.append(kpi)
+        elements.append(Spacer(1, 8))
+
+        # Risk Params
+        elements.append(Paragraph("FIDUS Risk Parameters — MANDATORY", h2r))
+        params = [["Parameter", "Value"]] + [["Max Risk Per Trade", "0.25-0.75%"], ["Intraday Max DD", "5% (hard stop)"], ["Weekly Max", "6%"],
+                   ["Monthly Max DD", "10%"], ["Max Margin", "25%"], ["Leverage", "200:1"], ["Force Flat", "21:50 UTC"], ["Overnight", "PROHIBITED"]]
+        pt = Table(params, colWidths=[300, 150])
+        pt.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), red), ("TEXTCOLOR", (0,0), (-1,0), white), ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+                                 ("FONTSIZE", (0,0), (-1,-1), 10), ("ALIGN", (1,0), (1,-1), "RIGHT"), ("FONTNAME", (1,1), (1,-1), "Courier-Bold"),
+                                 ("GRID", (0,0), (-1,-1), 0.5, HexColor("#fecaca")), ("TOPPADDING", (0,0), (-1,-1), 4), ("BOTTOMPADDING", (0,0), (-1,-1), 4)]))
+        elements.append(pt)
+        elements.append(Spacer(1, 8))
+
+        # Position Sizing
+        elements.append(Paragraph("Position Sizing", h2))
+        sizing = [["Asset", "Lots/$100K", "Risk", "Max Trades", "ATR Stop", "Stop"]] + [
+            list(r) for r in [("GOLD", "0.10-0.30", "HIGH", "3", "0.60xATR", "$10"), ("FOREX Maj", "0.50-1.00", "MED", "5-7", "0.75xATR", "20pip"),
+                               ("INDICES", "1.0-3.0", "MED-HIGH", "3-5", "0.80xATR", "50pt"), ("BTC", "0.10-0.30", "HIGH", "2-3", "0.50xATR", "$500")]]
+        st = Table(sizing, colWidths=[80, 75, 65, 65, 75, 55])
+        st.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), cyan), ("TEXTCOLOR", (0,0), (-1,0), white), ("FONTSIZE", (0,0), (-1,-1), 9),
+                                 ("ALIGN", (1,0), (-1,-1), "CENTER"), ("GRID", (0,0), (-1,-1), 0.5, HexColor("#e2e8f0")),
+                                 ("TOPPADDING", (0,0), (-1,-1), 4), ("BOTTOMPADDING", (0,0), (-1,-1), 4)]))
+        elements.append(st)
+        elements.append(Spacer(1, 12))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=slate, spaceAfter=4))
+        elements.append(Paragraph(f"FIDUS Investment Management | {manager_name} (#{account_id}) | {now.strftime('%Y-%m-%d')} | CONFIDENTIAL", small))
+
+        doc.build(elements)
+        buf.seek(0)
+        filename = f"FIDUS_Risk_Report_{manager_name.replace(' ', '_')}_{account_id}.pdf"
+        return StreamingResponse(buf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Manager PDF error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

@@ -253,7 +253,7 @@ const ManagerDashboard = ({ authData, onLogout }) => {
                   <CardHeader className="pb-3 flex flex-row items-center justify-between">
                     <CardTitle className="text-sm text-slate-200">Compliance Status</CardTitle>
                     <button onClick={() => {
-                      fetch(`${API_URL}/api/admin/risk/report/pdf/${selectedAccount}`, { headers })
+                      fetch(`${API_URL}/api/manager/report/pdf/${selectedAccount}`, { headers })
                         .then(r => r.blob()).then(b => { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `FIDUS_Risk_Report_${sel.manager_name?.replace(/\s+/g,'_')}_${selectedAccount}.pdf`; a.click(); });
                     }}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
