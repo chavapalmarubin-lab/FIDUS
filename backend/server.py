@@ -29734,6 +29734,13 @@ except Exception as e:
     logging.error(f"❌ Failed to include Risk Report PDF router: {e}")
 
 try:
+    from routes.manager_portal import router as manager_portal_router
+    app.include_router(manager_portal_router)
+    logging.info("✅ Manager Portal router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Manager Portal router: {e}")
+
+try:
     from routes.franchise_auth import router as franchise_auth_router
     app.include_router(franchise_auth_router)
     logging.info("✅ Franchise Auth router included successfully")
