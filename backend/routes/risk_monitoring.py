@@ -310,3 +310,68 @@ async def get_risk_scores():
         })
 
     return {"success": True, "scores": scores, "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+
+# ═══════════════════════════════════════════
+# FUND HEALTH CALENDAR (Public — for client portal)
+# Returns ONLY green/red status per month, no amounts
+# ═══════════════════════════════════════════
+
+@router.get("/fund-health-calendar")
+async def get_fund_health_calendar():
+    """
+    Month-by-month fund health for client portal.
+    green = fund can cover obligations, red = underfunded.
+    No amounts — just status.
+    """
+    db = await get_db()
+    try:
+        from services.risk_monitoring_service import MONITORED_ACCOUNTS
+        from dateutil.relativedelta import relativedelta
+        from bson.decimal128 import Decimal128
+
+        now = datetime.now(timezone.utc)
+
+        # Total fund equity
+        total_equity = 0
+        for acc_id in MONITORED_ACCOUNTS:
+            doc = await db.mt5_accounts.find_one({"account": acc_id}, {"_id": 0, "equity": 1})
+            total_equity += float(doc.get("equity", 0) or 0) if doc else 0
+
+        # Get all active investments
+        investments = await db.investments.find(
+            {"status": {"$in": ["active", "incubation"]}},
+            {"_id": 0, "principal_amount": 1, "amount": 1, "interest_rate": 1, "fund_type": 1}
+        ).to_list(500)
+
+        def to_float(v):
+            if isinstance(v, Decimal128):
+                return float(v.to_decimal())
+            return float(v) if v else 0
+
+        # Compute monthly obligations and running balance
+        running = total_equity
+        months = []
+        for i in range(14):
+            month_date = now + relativedelta(months=i)
+            month_key = month_date.strftime("%Y-%m")
+
+            month_obligations = 0
+            for inv in investments:
+                amt = to_float(inv.get("principal_amount") or inv.get("amount", 0))
+                rate = to_float(inv.get("interest_rate", 0.015))
+                month_obligations += amt * rate
+
+            running -= month_obligations
+            months.append({
+                "month": month_key,
+                "funded": running >= 0,
+                "status": "green" if running >= 0 else "red"
+            })
+
+        return {"success": True, "months": months, "as_of": now.isoformat()}
+
+    except Exception as e:
+        logger.error(f"Fund health calendar error: {e}", exc_info=True)
+        return {"success": True, "months": [], "as_of": datetime.now(timezone.utc).isoformat()}

@@ -29757,6 +29757,16 @@ except Exception as e:
 # Include the API router in the main app AFTER all endpoints are defined
 app.include_router(api_router)
 
+# Public endpoint: Fund health calendar for client portal (no auth required)
+@app.get("/api/public/fund-health-calendar")
+async def public_fund_health_calendar():
+    """Public fund health — green/red per month. No amounts exposed."""
+    try:
+        from routes.risk_monitoring import get_fund_health_calendar
+        return await get_fund_health_calendar()
+    except Exception as e:
+        return {"success": True, "months": []}
+
 
 # ===============================================================================
 # SERVER STARTUP

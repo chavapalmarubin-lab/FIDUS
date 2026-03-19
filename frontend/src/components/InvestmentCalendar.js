@@ -25,14 +25,26 @@ const InvestmentCalendar = ({ user }) => {
   const [calendarData, setCalendarData] = useState(null);
   const [monthlyTimeline, setMonthlyTimeline] = useState({});
   const [contractSummary, setContractSummary] = useState(null);
+  const [fundHealth, setFundHealth] = useState({});
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewMode, setViewMode] = useState('timeline'); // timeline, upcoming, month
-  const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
+  const [viewMode, setViewMode] = useState('timeline');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     fetchCalendarData();
+    // Fetch fund health (public endpoint)
+    fetch(`${BACKEND_URL}/api/public/fund-health-calendar`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.months) {
+          const map = {};
+          data.months.forEach(m => { map[m.month] = m.status; });
+          setFundHealth(map);
+        }
+      })
+      .catch(() => {});
   }, [user.id]);
 
   const fetchCalendarData = async () => {
@@ -495,9 +507,29 @@ const InvestmentCalendar = ({ user }) => {
                     >
                       {/* Month Header */}
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-bold text-white">
-                          📅 {monthData.month_name}
-                        </h3>
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-xl font-bold text-white">
+                            📅 {monthData.month_name}
+                          </h3>
+                          {/* Fund Health Indicator */}
+                          {(() => {
+                            const monthKeyShort = monthKey.substring(0, 7);
+                            const health = fundHealth[monthKeyShort];
+                            if (health === 'green') return (
+                              <span title="Fund is adequately funded for this period" className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="text-emerald-400 text-xs font-medium">Funded</span>
+                              </span>
+                            );
+                            if (health === 'red') return (
+                              <span title="Fund coverage is below target for this period" className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30">
+                                <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                                <span className="text-red-400 text-xs font-medium">Review</span>
+                              </span>
+                            );
+                            return null;
+                          })()}
+                        </div>
                         {monthData.total_due > 0 && (
                           <div className="text-right">
                             <div className="text-lg font-bold text-cyan-400">
