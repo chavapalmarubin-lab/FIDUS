@@ -22,6 +22,114 @@ import './LiveDemoAnalytics.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Daily P&L Breach Section — reusable for Risk Limits tab
+const DailyPnlSection = ({ account }) => {
+  const [data, setData] = React.useState(null);
+  const [trades, setTrades] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!account) return;
+    setLoading(true);
+    const token = localStorage.getItem('fidus_token');
+    const h = { 'Authorization': `Bearer ${token}` };
+    Promise.all([
+      fetch(`${BACKEND_URL}/api/manager/daily-pnl/${account}?days=30`, { headers: h }).then(r => r.json()).catch(() => null),
+      fetch(`${BACKEND_URL}/api/manager/trade-history/${account}?days=14`, { headers: h }).then(r => r.json()).catch(() => null)
+    ]).then(([pnl, tr]) => {
+      if (pnl?.success) setData(pnl);
+      if (tr?.success) setTrades(tr.trades || []);
+      setLoading(false);
+    });
+  }, [account]);
+
+  if (loading) return <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '12px' }}>Loading trade analysis...</div>;
+  if (!data) return null;
+
+  const summary = data.summary || {};
+  const days = data.daily_pnl || [];
+  const fmt = v => `$${(v||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+
+  return (
+    <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ borderTop: '2px solid rgba(245,158,11,0.2)', paddingTop: '16px' }}>
+        <h3 style={{ color: '#f59e0b', fontSize: '14px', margin: '0 0 4px 0' }}>Daily P&L — Breach Analysis</h3>
+        <p style={{ color: '#475569', fontSize: '11px', margin: 0 }}>
+          {summary.profitable_days || 0} profitable / {summary.losing_days || 0} losing / <span style={{ color: '#ef4444' }}>{summary.breach_days || 0} breach days</span>
+        </p>
+      </div>
+
+      <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {days.map((d, i) => (
+          <div key={i} style={{ padding: '8px 10px', borderRadius: '6px', border: `1px solid ${d.has_breach ? 'rgba(239,68,68,0.3)' : d.daily_pnl < 0 ? 'rgba(245,158,11,0.1)' : 'rgba(100,116,139,0.1)'}`, background: d.has_breach ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: '#fff', fontFamily: 'monospace', fontSize: '11px', fontWeight: 'bold', width: '75px' }}>{d.date}</span>
+                <span style={{ color: d.daily_pnl >= 0 ? '#10b981' : '#ef4444', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '12px' }}>
+                  {d.daily_pnl >= 0 ? '+' : ''}{fmt(d.daily_pnl)}
+                </span>
+                <span style={{ color: '#64748b', fontSize: '10px' }}>{d.trade_count}T ({d.wins}W/{d.losses}L)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#94a3b8', fontSize: '10px', fontFamily: 'monospace' }}>Eq: {fmt(d.running_equity)}</span>
+                <span style={{ color: d.drawdown_from_peak <= -5 ? '#ef4444' : d.drawdown_from_peak <= -3 ? '#f59e0b' : '#64748b', fontSize: '10px', fontFamily: 'monospace' }}>
+                  DD: {d.drawdown_from_peak?.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+            {d.has_breach && (
+              <div style={{ marginTop: '4px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {d.breaches.map((b, j) => (
+                  <span key={j} style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '3px', background: b.severity === 'CRITICAL' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)', color: b.severity === 'CRITICAL' ? '#ef4444' : '#f59e0b', border: `1px solid ${b.severity === 'CRITICAL' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}` }}>
+                    {b.rule}: {b.value}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Recent Trades Table */}
+      {trades.length > 0 && (
+        <div>
+          <h4 style={{ color: '#0ea5e9', fontSize: '13px', margin: '12px 0 8px 0' }}>Recent Trades ({trades.length})</h4>
+          <div style={{ maxHeight: '300px', overflowY: 'auto', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+              <thead style={{ position: 'sticky', top: 0, background: '#0f172a' }}>
+                <tr style={{ color: '#64748b', borderBottom: '1px solid rgba(100,116,139,0.2)' }}>
+                  <th style={{ textAlign: 'left', padding: '4px 6px' }}>Time</th>
+                  <th style={{ textAlign: 'left', padding: '4px 6px' }}>Symbol</th>
+                  <th style={{ textAlign: 'right', padding: '4px 6px' }}>Volume</th>
+                  <th style={{ textAlign: 'right', padding: '4px 6px' }}>Price</th>
+                  <th style={{ textAlign: 'right', padding: '4px 6px' }}>P&L</th>
+                  <th style={{ textAlign: 'center', padding: '4px 6px' }}>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trades.slice(0, 80).map((t, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(100,116,139,0.08)' }}>
+                    <td style={{ padding: '3px 6px', color: '#94a3b8', fontFamily: 'monospace' }}>{t.time ? new Date(t.time).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '-'}</td>
+                    <td style={{ padding: '3px 6px', color: '#e2e8f0', fontWeight: '500' }}>{t.symbol || '-'}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'right', color: '#cbd5e1', fontFamily: 'monospace' }}>{t.volume?.toFixed(2)}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'right', color: '#94a3b8', fontFamily: 'monospace' }}>{t.price?.toFixed(2)}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold', color: (t.profit||0) >= 0 ? '#10b981' : '#ef4444' }}>{(t.profit||0) >= 0 ? '+' : ''}{(t.profit||0).toFixed(2)}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '8px', padding: '1px 4px', borderRadius: '2px', background: t.entry === 0 ? 'rgba(14,165,233,0.1)' : 'rgba(100,116,139,0.15)', color: t.entry === 0 ? '#0ea5e9' : '#94a3b8' }}>
+                        {t.entry === 0 ? 'OPEN' : 'CLOSE'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Default strategy for Deep Dive (TradingHub Gold - Account 886557)
 const DEFAULT_DEEP_DIVE_ACCOUNT = 886557;
 
@@ -2991,6 +3099,9 @@ export default function LiveDemoAnalytics() {
                   <div style={{ padding: '6px 10px', background: 'rgba(100,116,139,0.05)', borderRadius: '4px', fontSize: '9px', color: '#475569' }}>
                     FIDUS Compliance Report | {mgr.manager_name} (#{mgr.account}) | {new Date().toISOString().split('T')[0]}
                   </div>
+
+                  {/* Daily P&L Breach Analysis — integrated into Risk Limits */}
+                  <DailyPnlSection account={mgr.account} />
                 </div>
               );
             })()}

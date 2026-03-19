@@ -99,6 +99,8 @@ const ManagerDashboard = ({ authData, onLogout }) => {
   const [strategies, setStrategies] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [riskAnalysis, setRiskAnalysis] = useState(null);
+  const [dailyPnl, setDailyPnl] = useState(null);
+  const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
@@ -121,11 +123,19 @@ const ManagerDashboard = ({ authData, onLogout }) => {
   useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
 
   const fetchRiskAnalysis = useCallback(async (accId) => {
-    setAnalysisLoading(true); setRiskAnalysis(null);
+    setAnalysisLoading(true); setRiskAnalysis(null); setDailyPnl(null); setTrades([]);
     try {
-      const res = await fetch(`${API_URL}/api/manager/risk-analysis/${accId}`, { headers });
-      const data = await res.json();
-      if (data.success) setRiskAnalysis(data.analysis);
+      const [riskRes, pnlRes, tradeRes] = await Promise.all([
+        fetch(`${API_URL}/api/manager/risk-analysis/${accId}`, { headers }),
+        fetch(`${API_URL}/api/manager/daily-pnl/${accId}?days=30`, { headers }),
+        fetch(`${API_URL}/api/manager/trade-history/${accId}?days=14`, { headers })
+      ]);
+      const riskData = await riskRes.json();
+      const pnlData = await pnlRes.json();
+      const tradeData = await tradeRes.json();
+      if (riskData.success) setRiskAnalysis(riskData.analysis);
+      if (pnlData.success) setDailyPnl(pnlData);
+      if (tradeData.success) setTrades(tradeData.trades || []);
     } catch (e) { console.error(e); }
     finally { setAnalysisLoading(false); }
   }, [token]);
@@ -307,6 +317,103 @@ const ManagerDashboard = ({ authData, onLogout }) => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Daily P&L with Breach Detection */}
+                {dailyPnl && (
+                  <Card className="border-slate-700/30 bg-slate-800/20">
+                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                      <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
+                        <Activity size={16} className="text-amber-400" /> Daily P&L — Breach Analysis
+                      </CardTitle>
+                      <div className="flex gap-3 text-xs">
+                        <span className="text-emerald-400">{dailyPnl.summary?.profitable_days || 0} profitable</span>
+                        <span className="text-red-400">{dailyPnl.summary?.losing_days || 0} losing</span>
+                        <span className="text-amber-400">{dailyPnl.summary?.breach_days || 0} breach days</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
+                        {(dailyPnl.daily_pnl || []).map((day, i) => (
+                          <div key={i} className={`p-3 rounded-lg border ${day.has_breach ? 'border-red-500/30 bg-red-900/10' : day.daily_pnl < 0 ? 'border-amber-500/10 bg-amber-900/5' : 'border-slate-700/20 bg-slate-800/20'}`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className="text-white font-mono text-xs font-bold w-20">{day.date}</span>
+                                <span className={`font-mono font-bold text-sm ${day.daily_pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  ${day.daily_pnl >= 0 ? '+' : ''}{day.daily_pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                </span>
+                                <span className="text-slate-500 text-xs">{day.trade_count}T ({day.wins}W/{day.losses}L)</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-slate-400 text-xs font-mono">Eq: ${day.running_equity?.toLocaleString()}</span>
+                                <span className={`text-xs font-mono ${day.drawdown_from_peak <= -5 ? 'text-red-400' : day.drawdown_from_peak <= -3 ? 'text-amber-400' : 'text-slate-500'}`}>
+                                  DD: {day.drawdown_from_peak?.toFixed(2)}%
+                                </span>
+                                {day.symbols && <span className="text-slate-600 text-[10px]">{day.symbols.join(', ')}</span>}
+                              </div>
+                            </div>
+                            {day.has_breach && (
+                              <div className="mt-2 flex gap-2 flex-wrap">
+                                {day.breaches.map((b, j) => (
+                                  <span key={j} className={`text-[10px] px-2 py-0.5 rounded ${b.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                                    {b.rule}: {b.value}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {day.max_single_loss < -100 && (
+                              <div className="mt-1 text-[10px] text-red-400/70">
+                                Worst trade: ${day.max_single_loss.toLocaleString()} | Best: ${day.max_single_win?.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Recent Trades */}
+                {trades.length > 0 && (
+                  <Card className="border-slate-700/30 bg-slate-800/20">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm text-slate-200">Recent Trades (Last 14 Days) — {trades.length} trades</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                        <table className="w-full text-xs">
+                          <thead className="sticky top-0 bg-slate-900">
+                            <tr className="text-slate-500 border-b border-slate-700/30">
+                              <th className="text-left py-2 px-2">Time</th>
+                              <th className="text-left py-2 px-2">Symbol</th>
+                              <th className="text-right py-2 px-2">Volume</th>
+                              <th className="text-right py-2 px-2">Price</th>
+                              <th className="text-right py-2 px-2">P&L</th>
+                              <th className="text-center py-2 px-2">Type</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {trades.slice(0, 100).map((t, i) => (
+                              <tr key={i} className="border-b border-slate-700/10 hover:bg-slate-800/30">
+                                <td className="py-1.5 px-2 text-slate-400 font-mono">{t.time ? new Date(t.time).toLocaleString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '-'}</td>
+                                <td className="py-1.5 px-2 text-white font-medium">{t.symbol || '-'}</td>
+                                <td className="py-1.5 px-2 text-right text-slate-300 font-mono">{t.volume?.toFixed(2)}</td>
+                                <td className="py-1.5 px-2 text-right text-slate-400 font-mono">{t.price?.toFixed(2)}</td>
+                                <td className={`py-1.5 px-2 text-right font-mono font-bold ${(t.profit || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  ${(t.profit || 0) >= 0 ? '+' : ''}{(t.profit || 0).toFixed(2)}
+                                </td>
+                                <td className="py-1.5 px-2 text-center">
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded ${t.entry === 0 ? 'bg-sky-500/15 text-sky-400' : 'bg-slate-600/30 text-slate-400'}`}>
+                                    {t.entry === 0 ? 'OPEN' : 'CLOSE'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             ) : (
               <div className="text-center py-16 text-slate-500">
