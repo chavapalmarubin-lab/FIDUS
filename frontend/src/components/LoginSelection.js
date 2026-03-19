@@ -264,6 +264,20 @@ const LoginSelection = ({ onLogin }) => {
                   Referral Agent Login
                 </motion.button>
 
+                <motion.button
+                  className="login-option"
+                  onClick={() => window.location.href = "/manager/login"}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(124, 58, 237, 0.15))', borderColor: 'rgba(168, 85, 247, 0.3)' }}
+                >
+                  <Shield className="inline mr-3" size={20} style={{ color: '#a855f7' }} />
+                  <span style={{ color: '#c084fc' }}>Money Manager Login</span>
+                </motion.button>
+
                 <motion.div
                   className="mt-8 pt-6 border-t border-slate-600"
                   initial={{ opacity: 0 }}
