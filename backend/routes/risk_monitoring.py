@@ -324,22 +324,30 @@ async def get_fund_health_calendar():
     Month-by-month fund health for client portal.
     green = fund can cover obligations, red = underfunded.
     No amounts — just status.
+    
+    Logic: Net Fund Position = Total Equity - Total Client Capital (principal owed back).
+    If net position is negative, fund is underfunded for ALL months.
+    Running balance deducts monthly interest obligations from net position.
     """
     db = await get_db()
     try:
-        from services.risk_monitoring_service import MONITORED_ACCOUNTS
+        from services.risk_monitoring_service import MONITORED_ACCOUNTS, TOTAL_INITIAL
         from dateutil.relativedelta import relativedelta
         from bson.decimal128 import Decimal128
 
         now = datetime.now(timezone.utc)
 
-        # Total fund equity
+        # Total fund equity (real MT5 accounts only)
         total_equity = 0
         for acc_id in MONITORED_ACCOUNTS:
             doc = await db.mt5_accounts.find_one({"account": acc_id}, {"_id": 0, "equity": 1})
             total_equity += float(doc.get("equity", 0) or 0) if doc else 0
 
-        # Get all active investments
+        # Net Fund Position = Equity - Client Capital (what we owe back)
+        # This is the TRUE available surplus/deficit
+        net_position = total_equity - TOTAL_INITIAL
+
+        # Get all active investments for monthly obligation calculation
         investments = await db.investments.find(
             {"status": {"$in": ["active", "incubation"]}},
             {"_id": 0, "principal_amount": 1, "amount": 1, "interest_rate": 1, "fund_type": 1}
@@ -350,13 +358,14 @@ async def get_fund_health_calendar():
                 return float(v.to_decimal())
             return float(v) if v else 0
 
-        # Compute monthly obligations and running balance
-        running = total_equity
+        # Running balance starts from net position (negative = already underfunded)
+        running = net_position
         months = []
         for i in range(14):
             month_date = now + relativedelta(months=i)
             month_key = month_date.strftime("%Y-%m")
 
+            # Monthly interest obligations
             month_obligations = 0
             for inv in investments:
                 amt = to_float(inv.get("principal_amount") or inv.get("amount", 0))
