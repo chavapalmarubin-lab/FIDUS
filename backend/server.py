@@ -29730,6 +29730,13 @@ except Exception as e:
     logging.error(f"❌ Failed to include Manager Portal router: {e}")
 
 try:
+    from routes.hull_risk_analytics import router as hull_analytics_router
+    app.include_router(hull_analytics_router)
+    logging.info("✅ Hull Risk Analytics router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Hull Risk Analytics router: {e}")
+
+try:
     from routes.franchise_auth import router as franchise_auth_router
     app.include_router(franchise_auth_router)
     logging.info("✅ Franchise Auth router included successfully")

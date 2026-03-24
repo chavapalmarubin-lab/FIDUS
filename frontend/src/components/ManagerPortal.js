@@ -101,8 +101,12 @@ const ManagerDashboard = ({ authData, onLogout }) => {
   const [riskAnalysis, setRiskAnalysis] = useState(null);
   const [dailyPnl, setDailyPnl] = useState(null);
   const [trades, setTrades] = useState([]);
+  const [tradeRisk, setTradeRisk] = useState(null);
+  const [varData, setVarData] = useState(null);
+  const [riskAlerts, setRiskAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState('overview');
 
   const token = authData?.token || localStorage.getItem('manager_token');
   const manager = authData?.manager || JSON.parse(localStorage.getItem('manager_data') || '{}');
@@ -123,19 +127,23 @@ const ManagerDashboard = ({ authData, onLogout }) => {
   useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
 
   const fetchRiskAnalysis = useCallback(async (accId) => {
-    setAnalysisLoading(true); setRiskAnalysis(null); setDailyPnl(null); setTrades([]);
+    setAnalysisLoading(true); setRiskAnalysis(null); setDailyPnl(null); setTrades([]); setTradeRisk(null); setVarData(null); setRiskAlerts([]);
     try {
-      const [riskRes, pnlRes, tradeRes] = await Promise.all([
+      const [riskRes, pnlRes, tradeRes, trRes, varRes, alertRes] = await Promise.all([
         fetch(`${API_URL}/api/manager/risk-analysis/${accId}`, { headers }),
         fetch(`${API_URL}/api/manager/daily-pnl/${accId}?days=30`, { headers }),
-        fetch(`${API_URL}/api/manager/trade-history/${accId}?days=14`, { headers })
+        fetch(`${API_URL}/api/manager/trade-history/${accId}?days=14`, { headers }),
+        fetch(`${API_URL}/api/manager/trade-risk-analysis/${accId}?days=14`, { headers }),
+        fetch(`${API_URL}/api/manager/var-analysis/${accId}?days=30`, { headers }),
+        fetch(`${API_URL}/api/manager/risk-alerts/${accId}`, { headers })
       ]);
-      const riskData = await riskRes.json();
-      const pnlData = await pnlRes.json();
-      const tradeData = await tradeRes.json();
+      const [riskData, pnlData, tradeData, trData, vData, aData] = await Promise.all([riskRes.json(), pnlRes.json(), tradeRes.json(), trRes.json(), varRes.json(), alertRes.json()]);
       if (riskData.success) setRiskAnalysis(riskData.analysis);
       if (pnlData.success) setDailyPnl(pnlData);
       if (tradeData.success) setTrades(tradeData.trades || []);
+      if (trData.success) setTradeRisk(trData);
+      if (vData.success) setVarData(vData);
+      if (aData.success) setRiskAlerts(aData.alerts || []);
     } catch (e) { console.error(e); }
     finally { setAnalysisLoading(false); }
   }, [token]);
@@ -222,11 +230,29 @@ const ManagerDashboard = ({ authData, onLogout }) => {
               ))}
             </div>
 
+            {/* Section Tabs */}
+            <div className="flex gap-1 p-1 bg-slate-800/30 rounded-lg border border-slate-700/20 overflow-x-auto">
+              {[
+                { id: 'overview', label: 'Risk Overview' },
+                { id: 'var', label: 'VaR / CVaR' },
+                { id: 'pertrade', label: 'Per-Trade Risk' },
+                { id: 'daily', label: 'Daily P&L' },
+                { id: 'trades', label: 'Trade History' },
+              ].map(tab => (
+                <button key={tab.id} onClick={() => setActiveSection(tab.id)}
+                  className={`px-4 py-2 rounded-md text-xs font-medium transition-all whitespace-nowrap ${activeSection === tab.id ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
             {/* Risk Analysis Content */}
             {analysisLoading ? (
               <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-purple-400" /></div>
             ) : riskAnalysis ? (
               <div className="space-y-4">
+                {/* ═══ OVERVIEW SECTION ═══ */}
+                {activeSection === 'overview' && <>
                 {/* Risk Policy */}
                 {(riskAnalysis.risk_control_score || riskAnalysis.risk_control?.risk_control_score) && (
                   <Card className="border-slate-700/30 bg-slate-800/20">
@@ -317,6 +343,202 @@ const ManagerDashboard = ({ authData, onLogout }) => {
                     </CardContent>
                   </Card>
                 </div>
+                </>}
+
+                {/* ═══ VaR / CVaR SECTION ═══ */}
+                {activeSection === 'var' && varData && (
+                  <div className="space-y-4">
+                    {/* VaR/CVaR Cards */}
+                    <Card className="border-slate-700/30 bg-slate-800/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm text-slate-200">Value at Risk (VaR) & Expected Shortfall (CVaR) — Hull Methodology</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="p-3 bg-red-900/15 border border-red-500/20 rounded-lg text-center">
+                            <div className="text-xs text-slate-400">Daily VaR (95%)</div>
+                            <div className="text-xl font-bold text-red-400 font-mono">${Math.abs(varData.var?.historical_95 || 0).toLocaleString()}</div>
+                            <div className="text-[10px] text-red-400/70">{varData.var?.as_pct_equity_95}% of equity</div>
+                          </div>
+                          <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-center">
+                            <div className="text-xs text-slate-400">Daily VaR (99%)</div>
+                            <div className="text-xl font-bold text-red-400 font-mono">${Math.abs(varData.var?.historical_99 || 0).toLocaleString()}</div>
+                            <div className="text-[10px] text-red-400/70">{varData.var?.as_pct_equity_99}% of equity</div>
+                          </div>
+                          <div className="p-3 bg-amber-900/15 border border-amber-500/20 rounded-lg text-center">
+                            <div className="text-xs text-slate-400">CVaR (95%)</div>
+                            <div className="text-xl font-bold text-amber-400 font-mono">${Math.abs(varData.cvar?.expected_shortfall_95 || 0).toLocaleString()}</div>
+                            <div className="text-[10px] text-amber-400/70">Expected Shortfall</div>
+                          </div>
+                          <div className="p-3 bg-amber-900/20 border border-amber-500/30 rounded-lg text-center">
+                            <div className="text-xs text-slate-400">CVaR (99%)</div>
+                            <div className="text-xl font-bold text-amber-400 font-mono">${Math.abs(varData.cvar?.expected_shortfall_99 || 0).toLocaleString()}</div>
+                            <div className="text-[10px] text-amber-400/70">{varData.cvar?.as_pct_equity_99}% of equity</div>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-600 mt-2">VaR = max expected loss at confidence level. CVaR = average loss when VaR is breached. Based on {varData.period_days}-day historical simulation.</p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Statistics */}
+                    <Card className="border-slate-700/30 bg-slate-800/20">
+                      <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Risk Statistics</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-center">
+                          {[
+                            { l: 'Sharpe', v: varData.statistics?.sharpe_annualized, c: (varData.statistics?.sharpe_annualized || 0) >= 1 ? '#10b981' : '#f59e0b' },
+                            { l: 'Sortino', v: varData.statistics?.sortino_annualized, c: (varData.statistics?.sortino_annualized || 0) >= 1 ? '#10b981' : '#f59e0b' },
+                            { l: 'Best Day', v: `$${varData.statistics?.best_day?.toLocaleString()}`, c: '#10b981' },
+                            { l: 'Worst Day', v: `$${varData.statistics?.worst_day?.toLocaleString()}`, c: '#ef4444' },
+                            { l: 'Skewness', v: varData.statistics?.skewness, c: (varData.statistics?.skewness || 0) > 0 ? '#10b981' : '#ef4444' },
+                            { l: 'Kurtosis', v: varData.statistics?.kurtosis, c: '#64748b' },
+                          ].map((s, i) => (
+                            <div key={i} className="p-2 bg-slate-700/20 rounded-lg">
+                              <div className="text-lg font-bold font-mono" style={{ color: s.c }}>{s.v}</div>
+                              <div className="text-[10px] text-slate-500">{s.l}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Session Analysis */}
+                    <Card className="border-slate-700/30 bg-slate-800/20">
+                      <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Trading Session Analysis</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {(varData.sessions || []).map((s, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-700/20 bg-slate-800/10">
+                              <div className="flex items-center gap-3">
+                                <span className="text-white font-bold text-sm w-24">{s.session}</span>
+                                <span className={`font-mono font-bold ${s.total_pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${s.total_pnl >= 0 ? '+' : ''}{s.total_pnl.toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs">
+                                <span className="text-slate-400">{s.trade_count}T</span>
+                                <span className="text-slate-400">WR {s.win_rate}%</span>
+                                <span className="text-slate-400">PF {s.profit_factor}</span>
+                                <div className="w-16 bg-slate-700/50 rounded-full h-1.5">
+                                  <div className="h-1.5 rounded-full bg-purple-500" style={{ width: `${s.risk_concentration}%` }} />
+                                </div>
+                                <span className="text-purple-400 text-[10px] w-10">{s.risk_concentration}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Monte Carlo */}
+                    {varData.monte_carlo && (
+                      <Card className="border-slate-700/30 bg-slate-800/20">
+                        <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Monte Carlo Projection ({varData.monte_carlo.days_forward}-Day)</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="p-3 bg-red-900/10 border border-red-500/15 rounded-lg">
+                              <div className="text-xs text-slate-400">Worst Case (5th %ile)</div>
+                              <div className="text-lg font-bold text-red-400 font-mono">{fmt(varData.monte_carlo.worst_case_5pct?.[varData.monte_carlo.days_forward])}</div>
+                            </div>
+                            <div className="p-3 bg-slate-700/20 rounded-lg">
+                              <div className="text-xs text-slate-400">Median</div>
+                              <div className="text-lg font-bold text-white font-mono">{fmt(varData.monte_carlo.median?.[varData.monte_carlo.days_forward])}</div>
+                            </div>
+                            <div className="p-3 bg-emerald-900/10 border border-emerald-500/15 rounded-lg">
+                              <div className="text-xs text-slate-400">Best Case (95th %ile)</div>
+                              <div className="text-lg font-bold text-emerald-400 font-mono">{fmt(varData.monte_carlo.best_case_95pct?.[varData.monte_carlo.days_forward])}</div>
+                            </div>
+                          </div>
+                          <div className="mt-3 p-2 bg-slate-700/20 rounded text-center">
+                            <span className="text-slate-400 text-xs">Probability of &gt;5% loss in {varData.monte_carlo.days_forward} days: </span>
+                            <span className={`font-bold text-sm ${varData.monte_carlo.prob_below_initial > 20 ? 'text-red-400' : varData.monte_carlo.prob_below_initial > 10 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                              {varData.monte_carlo.prob_below_initial}%
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+                {activeSection === 'var' && !varData && <div className="text-center py-12 text-slate-500">VaR analysis not available</div>}
+
+                {/* ═══ PER-TRADE RISK SECTION ═══ */}
+                {activeSection === 'pertrade' && tradeRisk && (
+                  <div className="space-y-4">
+                    {/* Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-slate-800/30 rounded-xl border border-slate-700/20">
+                      <div className="text-center"><div className="text-lg font-bold text-white">{tradeRisk.total_trades}</div><div className="text-[10px] text-slate-500">Trades Analyzed</div></div>
+                      <div className="text-center"><div className="text-lg font-bold" style={{ color: tradeRisk.compliance_rate >= 90 ? '#10b981' : tradeRisk.compliance_rate >= 70 ? '#f59e0b' : '#ef4444' }}>{tradeRisk.compliance_rate}%</div><div className="text-[10px] text-slate-500">Compliance Rate</div></div>
+                      <div className="text-center"><div className="text-lg font-bold text-red-400">{tradeRisk.violation_trades}</div><div className="text-[10px] text-slate-500">Violations</div></div>
+                      <div className="text-center"><div className="text-lg font-bold text-amber-400">{tradeRisk.max_single_risk_pct}%</div><div className="text-[10px] text-slate-500">Max Risk/Trade</div></div>
+                      <div className="text-center"><div className="text-lg font-bold text-purple-400">{fmt(tradeRisk.risk_budget)}</div><div className="text-[10px] text-slate-500">Risk Budget (1%)</div></div>
+                    </div>
+
+                    {/* Violations Summary */}
+                    {tradeRisk.violations_summary?.length > 0 && (
+                      <Card className="border-red-500/15 bg-red-900/5">
+                        <CardHeader className="pb-2"><CardTitle className="text-xs text-red-400">Violation Summary</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="space-y-1">
+                            {tradeRisk.violations_summary.map((v, i) => (
+                              <div key={i} className="flex justify-between items-center p-2 rounded bg-red-900/10 border border-red-500/10">
+                                <span className="text-slate-300 text-xs">{v.rule}</span>
+                                <div className="flex items-center gap-3 text-xs">
+                                  <span className="text-red-400 font-mono">{v.count}x</span>
+                                  <span className="text-slate-500">worst: {v.worst}%</span>
+                                  <Badge variant="outline" className={`text-[9px] ${v.severity === 'CRITICAL' ? 'border-red-500/40 text-red-400' : v.severity === 'HIGH' ? 'border-amber-500/40 text-amber-400' : 'border-yellow-500/40 text-yellow-400'}`}>{v.severity}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Per-Trade Table */}
+                    <Card className="border-slate-700/30 bg-slate-800/20">
+                      <CardHeader className="pb-2"><CardTitle className="text-xs text-slate-200">Per-Trade Risk Analysis ({tradeRisk.trades?.length} trades)</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                          <table className="w-full text-[10px]">
+                            <thead className="sticky top-0 bg-slate-900">
+                              <tr className="text-slate-500 border-b border-slate-700/30">
+                                <th className="text-left py-2 px-1">Time</th>
+                                <th className="text-left py-2 px-1">Symbol</th>
+                                <th className="text-right py-2 px-1">Vol</th>
+                                <th className="text-right py-2 px-1">P&L</th>
+                                <th className="text-right py-2 px-1">Risk%</th>
+                                <th className="text-right py-2 px-1">DD Contrib</th>
+                                <th className="text-right py-2 px-1">DD Peak</th>
+                                <th className="text-right py-2 px-1">Equity</th>
+                                <th className="text-center py-2 px-1">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(tradeRisk.trades || []).slice().reverse().slice(0, 150).map((t, i) => (
+                                <tr key={i} className={`border-b border-slate-700/10 ${!t.compliant ? 'bg-red-900/5' : ''}`}>
+                                  <td className="py-1 px-1 text-slate-400 font-mono">{t.time ? new Date(t.time).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '-'}</td>
+                                  <td className="py-1 px-1 text-white font-medium">{t.symbol}</td>
+                                  <td className="py-1 px-1 text-right text-slate-300 font-mono">{t.volume}</td>
+                                  <td className={`py-1 px-1 text-right font-mono font-bold ${t.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${t.profit >= 0 ? '+' : ''}{t.profit.toFixed(2)}</td>
+                                  <td className={`py-1 px-1 text-right font-mono ${t.risk_pct > 1 ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{t.risk_pct.toFixed(2)}%</td>
+                                  <td className={`py-1 px-1 text-right font-mono ${t.dd_contribution < -0.5 ? 'text-red-400' : 'text-slate-500'}`}>{t.dd_contribution.toFixed(2)}%</td>
+                                  <td className={`py-1 px-1 text-right font-mono ${t.dd_from_peak < -5 ? 'text-red-400' : t.dd_from_peak < -3 ? 'text-amber-400' : 'text-slate-500'}`}>{t.dd_from_peak.toFixed(2)}%</td>
+                                  <td className="py-1 px-1 text-right text-slate-300 font-mono">${t.running_equity?.toLocaleString()}</td>
+                                  <td className="py-1 px-1 text-center">
+                                    {t.compliant ? <span className="text-emerald-500 text-[8px]">OK</span> : <span className="text-red-400 text-[8px] font-bold">VIOLATION</span>}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+                {activeSection === 'pertrade' && !tradeRisk && <div className="text-center py-12 text-slate-500">Per-trade analysis not available</div>}
+
+                {/* ═══ DAILY P&L SECTION ═══ */}
+                {activeSection === 'daily' && <>
 
                 {/* Daily P&L with Breach Detection */}
                 {dailyPnl && (
@@ -372,6 +594,11 @@ const ManagerDashboard = ({ authData, onLogout }) => {
                   </Card>
                 )}
 
+                </>}
+
+                {/* ═══ TRADE HISTORY SECTION ═══ */}
+                {activeSection === 'trades' && <>
+
                 {/* Recent Trades */}
                 {trades.length > 0 && (
                   <Card className="border-slate-700/30 bg-slate-800/20">
@@ -414,6 +641,8 @@ const ManagerDashboard = ({ authData, onLogout }) => {
                     </CardContent>
                   </Card>
                 )}
+
+                </>}
               </div>
             ) : (
               <div className="text-center py-16 text-slate-500">
