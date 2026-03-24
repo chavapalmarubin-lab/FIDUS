@@ -335,6 +335,7 @@ export default function LiveDemoAnalytics() {
   const fetchRiskAnalysis = async (account) => {
     try {
       setRiskAnalysisLoading(true);
+      setRiskAnalysis(null);  // Clear old data immediately
       const token = localStorage.getItem('fidus_token');
       
       const response = await fetch(
