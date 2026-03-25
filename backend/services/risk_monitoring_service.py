@@ -42,13 +42,13 @@ ALERT_RECIPIENT = os.environ.get("ALERT_RECIPIENT_EMAIL", "")
 # Monitored accounts (real capital only — NO demo accounts)
 MONITORED_ACCOUNTS = [2206, 20043, 2208]
 
-# Initial allocations (March 9, 2026)
+# Initial allocations (March 25, 2026 — all moved to Lucrum Wallet)
 INITIAL_ALLOCATIONS = {
-    2206: 179316.36,
-    20043: 178000.00,
-    2208: 50000.00,
+    2206: 0,
+    20043: 0,
+    2208: 0,
 }
-TOTAL_INITIAL = sum(INITIAL_ALLOCATIONS.values())  # $407,316.36
+TOTAL_INITIAL = 0  # No manager allocations — capital in Lucrum Wallet
 
 
 # ═══════════════════════════════════════════
