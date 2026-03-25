@@ -327,8 +327,8 @@ def get_current_admin_user(request: Request) -> dict:
     token = auth_header.split(" ")[1]
     payload = verify_jwt_token(token)
     
-    # Check if user is admin
-    if payload.get("type") != "admin":
+    # Check if user is admin or risk_manager
+    if payload.get("type") not in ("admin", "risk_manager"):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     return payload
@@ -9882,7 +9882,7 @@ async def get_client_capital_flows(client_id: str, days: int = 90):
 async def get_client_mt5_account(client_id: str, current_user=Depends(get_current_user)):
     """Get MT5 account information for a client"""
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
@@ -9922,7 +9922,7 @@ async def get_client_mt5_account(client_id: str, current_user=Depends(get_curren
 async def get_client_mt5_positions(client_id: str, current_user=Depends(get_current_user)):
     """Get MT5 open positions for a client"""
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
@@ -11697,7 +11697,7 @@ async def get_individual_google_auth_url(request: Request):
             raise HTTPException(status_code=401, detail=f"Token validation failed: {str(e)}")
         
         # Check if user is admin
-        if payload.get("type") != "admin":
+        if payload.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         admin_user_id = payload.get("user_id") or payload.get("id")
@@ -15786,7 +15786,7 @@ async def collect_alejandro_multi_account_data(force_refresh: bool = False, curr
     """Collect live data from all 4 of Alejandro's MT5 accounts using sequential login"""
     try:
         # Only admin can trigger data collection
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # Collect data from all accounts
@@ -15838,7 +15838,7 @@ async def get_mt5_dashboard_overview(current_user=Depends(get_current_user)):
     """Get comprehensive MT5 dashboard overview with live data"""
     try:
         # Only admin can view MT5 dashboard overview
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # Get all MT5 accounts with live data
@@ -21741,7 +21741,7 @@ async def get_all_mt5_accounts():
 async def check_mt5_bridge_health(current_user=Depends(get_current_user)):
     """Check MT5 bridge service health - ROUTER FIX VERIFICATION"""
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # Now test the actual MT5 bridge health check
@@ -21778,7 +21778,7 @@ async def check_mt5_sync_health(current_user=Depends(get_current_user)):
     Returns detailed sync status for all accounts
     """
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         from mt5_health_monitor import get_mt5_health_monitor
@@ -26935,7 +26935,7 @@ async def api_authentication_middleware(request: Request, call_next):
             request.state.user_type = payload.get("type") or payload.get("user_type")
             
             # Check role-based access for admin-only endpoints
-            if is_admin_only and (payload.get("type") or payload.get("user_type")) != "admin":
+            if is_admin_only and (payload.get("type") or payload.get("user_type")) not in ("admin", "risk_manager"):
                 user_type = payload.get("type") or payload.get("user_type")
                 logging.warning(f"Access denied for non-admin user {payload['username']} to {path}")
                 return JSONResponse(
@@ -27935,7 +27935,7 @@ async def create_mt5_account(request: MT5AccountCreateRequest, current_user=Depe
     """Create and link MT5 account"""
     try:
         # Admin only endpoint
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
@@ -28121,7 +28121,7 @@ async def get_client_mt5_accounts(client_id: str, current_user=Depends(get_curre
 async def sync_mt5_account(account_id: str, current_user=Depends(get_current_user)):
     """Manually synchronize MT5 account data"""
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
@@ -28146,7 +28146,7 @@ async def sync_mt5_account(account_id: str, current_user=Depends(get_current_use
 async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
     """Synchronize all active MT5 accounts"""
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         if not hasattr(mt5_service, 'mt5_repo') or mt5_service.mt5_repo is None:
@@ -28173,7 +28173,7 @@ async def sync_all_mt5_accounts(current_user=Depends(get_current_user)):
 async def get_comprehensive_mt5_status(current_user=Depends(get_current_user)):
     """Get comprehensive MT5 system status"""
     try:
-        if current_user.get("type") != "admin":
+        if current_user.get("type") not in ("admin", "risk_manager"):
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # Debug: Check what type mt5_service actually is
