@@ -175,8 +175,9 @@ class LiveDemoAnalyticsService:
                 allocation_start_date = None
                 days_since_allocation = period_days
             
-            # Calculate P&L
-            total_pnl = current_equity - initial_allocation if initial_allocation > 0 else account.get("profit", 0)
+            # Calculate P&L (TRUE P&L = Equity + Withdrawals - Initial)
+            total_withdrawals = account.get("total_withdrawals", 0) or 0
+            total_pnl = (current_equity + total_withdrawals - initial_allocation) if initial_allocation > 0 else account.get("profit", 0)
             
             # Calculate return percentage
             return_pct = (total_pnl / initial_allocation * 100) if initial_allocation > 0 else 0
@@ -297,6 +298,7 @@ class LiveDemoAnalyticsService:
                 "current_balance": round(current_balance, 2),
                 "total_pnl": round(total_pnl, 2),
                 "return_percentage": round(return_pct, 2),
+                "total_withdrawals": round(total_withdrawals, 2),
                 "profit_withdrawals": account.get("profit_withdrawals", 0),
                 "allocation_start_date": allocation_start_date.isoformat() if allocation_start_date else None,
                 "days_since_allocation": days_since_allocation,

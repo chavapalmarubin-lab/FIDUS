@@ -91,7 +91,7 @@ const LiveDemoDashboard = () => {
   const totals = accounts.reduce((acc, account) => {
     const balance = account.balance || 0;
     const initial = account.initial_allocation || 0;
-    const pnl = initial > 0 ? balance - initial : 0;
+    const pnl = initial > 0 ? ((account.equity || balance) + (account.total_withdrawals || 0) - initial) : 0;
     
     return {
       balance: acc.balance + balance,
@@ -266,7 +266,7 @@ const LiveDemoDashboard = () => {
                   data={accounts.map(acc => {
                     const initial = acc.initial_allocation || 0;
                     const balance = acc.balance || 0;
-                    const pnl = initial > 0 ? balance - initial : 0;
+                    const pnl = initial > 0 ? ((acc.equity || balance) + (acc.total_withdrawals || 0) - initial) : 0;
                     const roi = initial > 0 ? (pnl / initial * 100) : 0;
                     return {
                       name: acc.manager_name || `Account ${acc.account}`,
@@ -313,7 +313,7 @@ const LiveDemoDashboard = () => {
                     {accounts.map((acc, index) => {
                       const initial = acc.initial_allocation || 0;
                       const balance = acc.balance || 0;
-                      const pnl = initial > 0 ? balance - initial : 0;
+                      const pnl = initial > 0 ? ((acc.equity || balance) + (acc.total_withdrawals || 0) - initial) : 0;
                       // Green for positive, Red for negative (matching Money Managers)
                       const color = pnl > 0 ? '#22c55e' : pnl < 0 ? '#ef4444' : '#64748b';
                       return <Cell key={`cell-${index}`} fill={color} />;
@@ -329,7 +329,9 @@ const LiveDemoDashboard = () => {
             {accounts.map((account) => {
               const initial = account.initial_allocation || 0;
               const balance = account.balance || 0;
-              const pnl = initial > 0 ? balance - initial : 0;
+              const withdrawals = account.total_withdrawals || 0;
+              const equity = account.equity || balance;
+              const pnl = initial > 0 ? (equity + withdrawals - initial) : 0;
               const returnPct = initial > 0 ? (pnl / initial * 100) : 0;
 
               return (
@@ -399,7 +401,7 @@ const LiveDemoDashboard = () => {
                       {/* Withdrawals */}
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-400">Withdrawals:</span>
-                        <span className="text-white">$0.00</span>
+                        <span className="text-white">{formatCurrency(withdrawals)}</span>
                       </div>
 
                       {/* TRUE P&L */}
@@ -412,7 +414,7 @@ const LiveDemoDashboard = () => {
 
                       {/* Corrected Equity calculation */}
                       <div className="text-xs text-slate-500">
-                        ✓ Corrected: Equity ({formatCurrency(account.equity || balance)}) + Withdrawals ($0.00)
+                        ✓ Corrected: Equity ({formatCurrency(equity)}) + Withdrawals ({formatCurrency(withdrawals)})
                       </div>
 
                       {/* Platform Info */}

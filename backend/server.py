@@ -25407,6 +25407,7 @@ async def get_live_demo_accounts():
                 "platform": acc.get("platform", "MT5"),
                 "broker": acc.get("broker", "LUCRUM Capital"),
                 "server": acc.get("server", "Lucrumcapital-Live"),
+                "total_withdrawals": acc.get("total_withdrawals", 0),
                 "status": acc.get("status", "evaluating"),
                 "account_type": "live_demo",
                 "evaluation_notes": acc.get("evaluation_notes", ""),
