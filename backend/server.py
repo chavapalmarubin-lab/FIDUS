@@ -29738,6 +29738,13 @@ except Exception as e:
     logging.error(f"❌ Failed to include Hull Risk Analytics router: {e}")
 
 try:
+    from routes.hull_risk_framework import router as hull_framework_router
+    app.include_router(hull_framework_router)
+    logging.info("✅ Hull Risk Framework router included successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to include Hull Risk Framework router: {e}")
+
+try:
     from routes.franchise_auth import router as franchise_auth_router
     app.include_router(franchise_auth_router)
     logging.info("✅ Franchise Auth router included successfully")
