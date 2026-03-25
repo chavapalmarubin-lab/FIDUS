@@ -47,6 +47,7 @@ import RiskParameters from './RiskParameters';
 import GapRiskAnalysis from './GapRiskAnalysis';
 import WhiteLabelDashboard from './WhiteLabelDashboard';
 import RiskAlertsDashboard from './RiskAlertsDashboard';
+import { useRiskFramework, RiskBanner, NextEventCountdown } from './RiskFrameworkShared';
 // GoogleConnectionMonitor removed - redundant with Google Workspace integration
 import {
   LineChart,
@@ -144,6 +145,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [sim, setSim] = useState({ enabled: false, CORE: 0, BALANCE: 0, DYNAMIC: 0 });
   const [portfolioData, setPortfolioData] = useState(null);
   const fileInputRef = useRef(null);
+  const risk = useRiskFramework();
 
   // Detect tab parameter from URL for OAuth callback
   const [activeTab, setActiveTab] = useState(() => {
@@ -589,6 +591,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           <span className="text-slate-400 text-base">Investment Committee</span>
         </div>
         <div className="flex items-center gap-4">
+          <NextEventCountdown risk={risk} />
           <span className="text-slate-300">{user.name}</span>
           <Button onClick={onLogout} className="logout-btn">
             <LogOut size={16} className="mr-2" />
@@ -706,6 +709,9 @@ const AdminDashboard = ({ user, onLogout }) => {
               🚀 Phase 4 Complete
             </TabsTrigger>
           </TabsList>
+
+          {/* Global Risk Framework Banner — shows across ALL tabs */}
+          <RiskBanner risk={risk} />
 
           <TabsContent value="portfolio" className="mt-6">
             <div className="space-y-4">

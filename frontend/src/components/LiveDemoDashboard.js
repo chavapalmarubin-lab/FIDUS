@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { RiskGradeBadge } from './RiskFrameworkShared';
 import { 
   Users, 
   TrendingUp, 
@@ -354,8 +355,9 @@ const LiveDemoDashboard = () => {
                         </Badge>
                       </div>
                       
-                      <CardTitle className="text-white text-lg mt-2">
+                      <CardTitle className="text-white text-lg mt-2 flex items-center gap-2">
                         {account.manager_name || `Manager Candidate`}
+                        <RiskGradeBadge drawdownPct={returnPct} />
                       </CardTitle>
                       <p className="text-slate-400 text-sm">
                         Demo Trading • {account.broker || 'LUCRUM Capital'}

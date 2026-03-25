@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { RiskGradeBadge } from './RiskFrameworkShared';
 import { 
   Users, 
   TrendingUp, 
@@ -523,8 +524,9 @@ const MoneyManagersDashboard = () => {
                         </Badge>
                       </div>
                       
-                      <CardTitle className="text-white text-lg">
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
                         {manager.manager_name || manager.display_name || manager.name}
+                        <RiskGradeBadge drawdownPct={performance.return_percentage || 0} />
                       </CardTitle>
                       <p className="text-slate-400 text-sm">
                         {manager.strategy || manager.strategy_name || 'Active Trading Strategy'}

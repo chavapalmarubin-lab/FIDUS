@@ -14,6 +14,7 @@ import {
   CheckCircle, XCircle, AlertCircle, Copy, ArrowUpCircle, ArrowDownCircle, MinusCircle, FileText
 } from 'lucide-react';
 import './LiveDemoAnalytics.css';
+import { RiskGradeBadge } from './RiskFrameworkShared';
 
 // ============================================================================
 // NEXT-GEN TRADING ANALYTICS DASHBOARD

@@ -10,6 +10,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { RiskGradeBadge } from './RiskFrameworkShared';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0);
@@ -104,6 +105,7 @@ const ManagerDashboard = ({ authData, onLogout }) => {
   const [tradeRisk, setTradeRisk] = useState(null);
   const [varData, setVarData] = useState(null);
   const [riskAlerts, setRiskAlerts] = useState([]);
+  const [calendarAlert, setCalendarAlert] = useState(null);
   const [loading, setLoading] = useState(true);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('overview');
@@ -124,7 +126,13 @@ const ManagerDashboard = ({ authData, onLogout }) => {
     finally { setLoading(false); }
   }, [token]);
 
-  useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
+  useEffect(() => {
+    fetchStrategies();
+    // Fetch prohibited calendar (public endpoint)
+    fetch(`${API_URL}/api/public/fund-health-calendar`).catch(() => {});
+    fetch(`${API_URL}/api/admin/risk-framework/prohibited-calendar`, { headers })
+      .then(r => r.json()).then(d => { if (d.success) setCalendarAlert(d); }).catch(() => {});
+  }, [fetchStrategies]);
 
   const fetchRiskAnalysis = useCallback(async (accId) => {
     setAnalysisLoading(true); setRiskAnalysis(null); setDailyPnl(null); setTrades([]); setTradeRisk(null); setVarData(null); setRiskAlerts([]);
@@ -183,6 +191,20 @@ const ManagerDashboard = ({ authData, onLogout }) => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Prohibited Calendar Alert */}
+        {calendarAlert?.today_is_prohibited && (
+          <div className="flex items-center gap-3 p-3 bg-red-900/40 border border-red-500/50 rounded-lg animate-pulse">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <span className="text-red-400 font-bold text-sm">PROHIBITED TRADING DAY — {calendarAlert.active_today?.[0]?.name}</span>
+            <span className="text-red-300 text-xs">Action: {calendarAlert.active_today?.[0]?.action}</span>
+          </div>
+        )}
+        {calendarAlert?.next_event && !calendarAlert.today_is_prohibited && calendarAlert.next_event.days_away <= 3 && (
+          <div className="flex items-center gap-2 p-2 bg-amber-900/20 border border-amber-500/30 rounded-lg text-xs text-amber-400">
+            <AlertTriangle className="w-4 h-4" />
+            <span>Upcoming: <strong>{calendarAlert.next_event.name}</strong> in {calendarAlert.next_event.days_away}d — {calendarAlert.next_event.action}</span>
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-purple-400" /></div>
         ) : (
