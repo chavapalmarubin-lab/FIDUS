@@ -415,7 +415,7 @@ function FidusApp() {
         console.log('✅ User authenticated:', user.email || user.username);
         setUser(user);
         
-        if (user.isAdmin || user.type === 'admin') {
+        if (user.isAdmin || user.type === 'admin' || user.type === 'risk_manager') {
           setCurrentView("admin");
         } else {
           setCurrentView("client");
@@ -445,7 +445,7 @@ function FidusApp() {
     // Store user data
     localStorage.setItem('fidus_user', JSON.stringify(userData));
     
-    if (userData?.isAdmin || userData?.type === 'admin') {
+    if (userData?.isAdmin || userData?.type === 'admin' || userData?.type === 'risk_manager') {
       setCurrentView("admin");
     } else {
       setCurrentView("client");

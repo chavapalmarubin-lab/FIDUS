@@ -376,6 +376,9 @@ class UserResponse(BaseModel):
     profile_picture: str
     must_change_password: Optional[bool] = False
     token: Optional[str] = None
+    role: Optional[str] = None
+    allowed_tabs: Optional[list] = None
+    isAdmin: Optional[bool] = None
 
 class UserCreate(BaseModel):
     username: str
@@ -1985,21 +1988,25 @@ async def login(login_data: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
         user_response_dict = {
-            "id": user_doc["id"],  # Fixed: use "id" field, not "user_id"
+            "id": user_doc.get("id", user_doc.get("username", "")),
             "username": user_doc["username"], 
-            "name": user_doc["name"] + " [JWT-FIXED]",  # Debug marker
+            "name": user_doc["name"] + " [JWT-FIXED]",
             "email": user_doc["email"],
-            "type": user_doc["type"],  # Fixed: use "type" field, not "user_type"
+            "type": user_doc["type"],
             "profile_picture": user_doc.get("profile_picture", ""),
-            "must_change_password": must_change_password
+            "must_change_password": must_change_password,
+            "role": user_doc.get("role", user_doc["type"]),
+            "allowed_tabs": user_doc.get("allowed_tabs", []),
+            "isAdmin": user_doc["type"] in ("admin", "risk_manager"),
         }
         
         # Create JWT token data with consistent field naming
         token_data = {
-            "user_id": user_doc["id"],  # Consistent field naming
-            "id": user_doc["id"],       # Backward compatibility
+            "user_id": user_doc.get("id", user_doc.get("username", "")),
+            "id": user_doc.get("id", user_doc.get("username", "")),
             "username": user_doc["username"],
-            "type": user_doc["type"]
+            "type": user_doc["type"],
+            "role": user_doc.get("role", user_doc["type"])
         }
         
         logging.info(f"🔍 Creating JWT token with data: {token_data}")

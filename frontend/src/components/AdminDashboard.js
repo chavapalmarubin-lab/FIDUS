@@ -147,6 +147,11 @@ const AdminDashboard = ({ user, onLogout }) => {
   const fileInputRef = useRef(null);
   const risk = useRiskFramework();
 
+  // Tab access control for risk_manager users
+  const allowedTabs = user?.allowed_tabs || [];
+  const isRestricted = user?.type === 'risk_manager' || (allowedTabs.length > 0 && user?.type !== 'admin');
+  const canSeeTab = (tabId) => !isRestricted || allowedTabs.includes(tabId);
+
   // Detect tab parameter from URL for OAuth callback
   const [activeTab, setActiveTab] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -156,7 +161,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       console.log('🎯 OAuth callback detected - setting Google Workspace as active tab');
       return 'google';
     }
-    return 'portfolio';
+    return user?.type === 'risk_manager' ? 'risk-alerts' : 'portfolio';
   });
 
   const fields = ["CORE", "BALANCE", "DYNAMIC"];
@@ -620,94 +625,25 @@ const AdminDashboard = ({ user, onLogout }) => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex overflow-x-auto whitespace-nowrap bg-slate-800 pb-2 gap-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-            <TabsTrigger value="portfolio" className="flex-shrink-0">
-              Fund Portfolio
-            </TabsTrigger>
-            <TabsTrigger value="cashflow" className="flex-shrink-0">
-              <DollarSign size={16} className="mr-2" />
-              Cash Flow & Performance
-            </TabsTrigger>
-            <TabsTrigger value="trading-analytics" className="flex-shrink-0">
-              <TrendingUp size={16} className="mr-2" />
-              Trading Analytics
-            </TabsTrigger>
-            <TabsTrigger value="risk-alerts" className="flex-shrink-0">
-              🚨 Risk Alerts
-            </TabsTrigger>
-            <TabsTrigger value="money-managers" className="flex-shrink-0">
-              💼 Money Managers
-            </TabsTrigger>
-            <TabsTrigger value="live-demo" className="flex-shrink-0">
-              🧪 LIVE DEMO
-            </TabsTrigger>
-            <TabsTrigger value="live-demo-analytics" className="flex-shrink-0">
-              📊 Demo Analytics
-            </TabsTrigger>
-            {/* Hidden tabs - not currently used:
-            <TabsTrigger value="broker-rebates" className="flex-shrink-0">
-              💰 Broker Rebates
-            </TabsTrigger>
-            <TabsTrigger value="investment-committee" className="flex-shrink-0">
-              📊 Investment Committee
-            </TabsTrigger>
-            */}
-            <TabsTrigger value="instrument-specs" className="flex-shrink-0">
-              📋 Instruments
-            </TabsTrigger>
-            <TabsTrigger value="risk-params" className="flex-shrink-0">
-              🛡️ Risk Parameters
-            </TabsTrigger>
-            <TabsTrigger value="gap-analysis" className="flex-shrink-0">
-              📊 Gap Analysis
-            </TabsTrigger>
-
-            {/* Hidden - Investments tab not currently used
-            <TabsTrigger value="investments" className="flex-shrink-0">
-              <TrendingUp size={16} className="mr-2" />
-              Investments
-            </TabsTrigger>
-            */}
-            <TabsTrigger value="accounts-management" className="flex-shrink-0">
-              🗄️ Account Management
-            </TabsTrigger>
-            <TabsTrigger value="clients" className="flex-shrink-0">
-              <Users size={16} className="mr-2" />
-              Clients
-            </TabsTrigger>
-            <TabsTrigger value="referrals" className="flex-shrink-0">
-              <Users2 size={16} className="mr-2" />
-              Referrals
-            </TabsTrigger>
-            <TabsTrigger value="track-record" className="flex-shrink-0">
-              📈 TRACK-RECORD
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex-shrink-0">
-              <Users size={16} className="mr-2" />
-              User Admin
-            </TabsTrigger>
-            <TabsTrigger value="crm" className="flex-shrink-0">
-              CRM Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="white-label" className="flex-shrink-0">
-              🏢 White Label
-            </TabsTrigger>
-            {/* Hidden - Redemptions and Google Workspace not currently used
-            <TabsTrigger value="redemptions" className="flex-shrink-0">
-              <ArrowDownCircle size={16} className="mr-2" />
-              Redemptions
-            </TabsTrigger>
-            <TabsTrigger value="google" className="flex-shrink-0">
-              🌐 Google Workspace
-            </TabsTrigger>
-            */}
-            {/* Google Connection Monitor removed - redundant with Google Workspace integration */}
-            <TabsTrigger value="technical-docs" className="flex-shrink-0">
-              <FileText size={16} className="mr-2" />
-              📡 Tech Documentation
-            </TabsTrigger>
-            <TabsTrigger value="phase4-docs" className="flex-shrink-0">
-              🚀 Phase 4 Complete
-            </TabsTrigger>
+            {canSeeTab('portfolio') && <TabsTrigger value="portfolio" className="flex-shrink-0">Fund Portfolio</TabsTrigger>}
+            {canSeeTab('cashflow') && <TabsTrigger value="cashflow" className="flex-shrink-0"><DollarSign size={16} className="mr-2" />Cash Flow & Performance</TabsTrigger>}
+            {canSeeTab('trading-analytics') && <TabsTrigger value="trading-analytics" className="flex-shrink-0"><TrendingUp size={16} className="mr-2" />Trading Analytics</TabsTrigger>}
+            {canSeeTab('risk-alerts') && <TabsTrigger value="risk-alerts" className="flex-shrink-0">🚨 Risk Alerts</TabsTrigger>}
+            {canSeeTab('money-managers') && <TabsTrigger value="money-managers" className="flex-shrink-0">💼 Money Managers</TabsTrigger>}
+            {canSeeTab('live-demo') && <TabsTrigger value="live-demo" className="flex-shrink-0">🧪 LIVE DEMO</TabsTrigger>}
+            {canSeeTab('demo-analytics') && <TabsTrigger value="live-demo-analytics" className="flex-shrink-0">📊 Demo Analytics</TabsTrigger>}
+            {canSeeTab('instruments') && <TabsTrigger value="instrument-specs" className="flex-shrink-0">📋 Instruments</TabsTrigger>}
+            {canSeeTab('risk-parameters') && <TabsTrigger value="risk-params" className="flex-shrink-0">🛡️ Risk Parameters</TabsTrigger>}
+            {canSeeTab('gap-analysis') && <TabsTrigger value="gap-analysis" className="flex-shrink-0">📊 Gap Analysis</TabsTrigger>}
+            {canSeeTab('accounts-management') && <TabsTrigger value="accounts-management" className="flex-shrink-0">🗄️ Account Management</TabsTrigger>}
+            {canSeeTab('clients') && <TabsTrigger value="clients" className="flex-shrink-0"><Users size={16} className="mr-2" />Clients</TabsTrigger>}
+            {canSeeTab('referrals') && <TabsTrigger value="referrals" className="flex-shrink-0"><Users2 size={16} className="mr-2" />Referrals</TabsTrigger>}
+            {canSeeTab('track-record') && <TabsTrigger value="track-record" className="flex-shrink-0">📈 TRACK-RECORD</TabsTrigger>}
+            {canSeeTab('users') && <TabsTrigger value="users" className="flex-shrink-0"><Users size={16} className="mr-2" />User Admin</TabsTrigger>}
+            {canSeeTab('crm') && <TabsTrigger value="crm" className="flex-shrink-0">CRM Dashboard</TabsTrigger>}
+            {canSeeTab('white-label') && <TabsTrigger value="white-label" className="flex-shrink-0">🏢 White Label</TabsTrigger>}
+            {canSeeTab('technical-docs') && <TabsTrigger value="technical-docs" className="flex-shrink-0"><FileText size={16} className="mr-2" />📡 Tech Documentation</TabsTrigger>}
+            {canSeeTab('phase4-docs') && <TabsTrigger value="phase4-docs" className="flex-shrink-0">🚀 Phase 4 Complete</TabsTrigger>}
           </TabsList>
 
           {/* Global Risk Framework Banner — shows across ALL tabs */}

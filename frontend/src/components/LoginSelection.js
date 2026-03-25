@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { User, Shield, Loader2 } from "lucide-react";
+import { User, Shield, Loader2, Activity } from "lucide-react";
 import ClientOnboarding from "./ClientOnboarding";
 import LeadRegistrationForm from "./LeadRegistrationForm";
 import PasswordReset from "./PasswordReset";
@@ -276,6 +276,20 @@ const LoginSelection = ({ onLogin }) => {
                 >
                   <Shield className="inline mr-3" size={20} style={{ color: '#a855f7' }} />
                   <span style={{ color: '#c084fc' }}>Money Manager Login</span>
+                </motion.button>
+
+                <motion.button
+                  className="login-option"
+                  onClick={() => setSelectedType("risk_manager")}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85 }}
+                  style={{ background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(6, 182, 212, 0.15))', borderColor: 'rgba(14, 165, 233, 0.3)' }}
+                >
+                  <Activity className="inline mr-3" size={20} style={{ color: '#0ea5e9' }} />
+                  <span style={{ color: '#67e8f9' }}>Risk Management Login</span>
                 </motion.button>
 
                 <motion.div

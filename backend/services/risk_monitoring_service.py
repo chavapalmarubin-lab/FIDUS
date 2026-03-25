@@ -43,16 +43,18 @@ ALERT_RECIPIENT = os.environ.get("ALERT_RECIPIENT_EMAIL", "")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-# Monitored accounts (real capital only — NO demo accounts)
-MONITORED_ACCOUNTS = [2206, 20043, 2208]
+# Monitored accounts (real capital + live demo)
+MONITORED_ACCOUNTS = [2206, 20043, 2208, 2210, 2215, 2216, 2217, 2218, 2219, 20062, 939702]
 
-# Initial allocations (March 25, 2026 — all moved to Lucrum Wallet)
+# Initial allocations (March 25, 2026 — real accounts moved to Lucrum Wallet)
 INITIAL_ALLOCATIONS = {
-    2206: 0,
-    20043: 0,
-    2208: 0,
+    2206: 0, 20043: 0, 2208: 0,
+    # Live Demo accounts
+    2210: 300961.0, 2215: 100000.0, 2216: 100000.0,
+    2217: 100000.0, 2218: 100000.0, 2219: 100000.0,
+    20062: 200000.0, 939702: 10000.0,
 }
-TOTAL_INITIAL = 0  # No manager allocations — capital in Lucrum Wallet
+TOTAL_INITIAL = sum(INITIAL_ALLOCATIONS.values())
 
 
 # ═══════════════════════════════════════════
