@@ -39,6 +39,10 @@ SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
 SMTP_APP_PASSWORD = os.environ.get("SMTP_APP_PASSWORD", "")
 ALERT_RECIPIENT = os.environ.get("ALERT_RECIPIENT_EMAIL", "")
 
+# Telegram config from .env
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
 # Monitored accounts (real capital only — NO demo accounts)
 MONITORED_ACCOUNTS = [2206, 20043, 2208]
 
@@ -52,8 +56,30 @@ TOTAL_INITIAL = 0  # No manager allocations — capital in Lucrum Wallet
 
 
 # ═══════════════════════════════════════════
-# ITEM B — ALERT DELIVERY SERVICE
+# ITEM B — ALERT DELIVERY SERVICE (Email + Telegram)
 # ═══════════════════════════════════════════
+
+import requests as http_requests
+
+def send_telegram_alert(message: str) -> bool:
+    """Send alert via Telegram bot. Returns True if sent."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        logger.error("[ALERT] Telegram not configured")
+        return False
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "HTML"}
+        resp = http_requests.post(url, json=payload, timeout=10)
+        if resp.status_code == 200:
+            logger.info(f"[ALERT] Telegram sent")
+            return True
+        else:
+            logger.error(f"[ALERT] Telegram failed: {resp.status_code} {resp.text[:100]}")
+            return False
+    except Exception as e:
+        logger.error(f"[ALERT] Telegram error: {e}")
+        return False
+
 
 def send_alert_email(subject: str, body: str) -> bool:
     """Send alert email via SMTP. Returns True if sent."""
@@ -312,6 +338,18 @@ async def _maybe_send_alert(db, account_id, alert_type, manager_name,
     )
     email_sent = send_alert_email(subject, body)
 
+    # Send Telegram
+    severity = "🔴 CRITICAL" if alert_type == "halt" else "⚠️ WARNING"
+    tg_msg = (
+        f"{severity} <b>FIDUS Risk Alert</b>\n\n"
+        f"<b>Account:</b> {account_id} ({manager_name})\n"
+        f"<b>Drawdown:</b> {drawdown_pct:+.2f}%\n"
+        f"<b>Equity:</b> ${equity:,.2f}\n"
+        f"<b>Threshold:</b> {threshold}%\n"
+        f"<b>Time:</b> {now.strftime('%Y-%m-%d %H:%M UTC')}"
+    )
+    telegram_sent = send_telegram_alert(tg_msg)
+
     # Write alert record to MongoDB
     await db.alerts.insert_one({
         "account": account_id,
@@ -323,6 +361,7 @@ async def _maybe_send_alert(db, account_id, alert_type, manager_name,
         "initial_allocation": initial_alloc,
         "sent_at": now,
         "email_sent": email_sent,
+        "telegram_sent": telegram_sent,
         "resolved_at": None,
         "resolved_by": None
     })
@@ -345,6 +384,18 @@ async def _maybe_send_portfolio_alert(db, total_equity, drawdown_pct, account_de
     subject, body = build_portfolio_alert_email(total_equity, drawdown_pct, account_details)
     email_sent = send_alert_email(subject, body)
 
+    # Send Telegram
+    severity = "🔴" if "critical" in alert_type else "⚠️"
+    acct_lines = "\n".join([f"  • {a['manager']} ({a['account']}): {a['drawdown']:+.2f}%" for a in account_details])
+    tg_msg = (
+        f"{severity} <b>FIDUS Portfolio Alert</b>\n\n"
+        f"<b>Portfolio DD:</b> {drawdown_pct:+.2f}%\n"
+        f"<b>Equity:</b> ${total_equity:,.2f}\n\n"
+        f"<b>Accounts:</b>\n{acct_lines}\n\n"
+        f"<b>Time:</b> {now.strftime('%Y-%m-%d %H:%M UTC')}"
+    )
+    telegram_sent = send_telegram_alert(tg_msg)
+
     await db.alerts.insert_one({
         "account": "PORTFOLIO",
         "alert_type": alert_type,
@@ -354,6 +405,7 @@ async def _maybe_send_portfolio_alert(db, total_equity, drawdown_pct, account_de
         "initial_allocation": TOTAL_INITIAL,
         "sent_at": now,
         "email_sent": email_sent,
+        "telegram_sent": telegram_sent,
         "account_breakdown": account_details,
         "resolved_at": None,
         "resolved_by": None

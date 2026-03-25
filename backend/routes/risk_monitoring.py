@@ -183,8 +183,23 @@ async def send_test_alert():
         <p>If you received this, the alert delivery is working correctly.</p>
     </div>
     """
-    sent = send_alert_email(subject, body)
-    return {"success": sent, "message": "Test alert sent" if sent else "Failed to send test alert"}
+    email_sent = send_alert_email(subject, body)
+
+    from services.risk_monitoring_service import send_telegram_alert
+    tg_msg = (
+        f"✅ <b>FIDUS Alert Test</b>\n\n"
+        f"Email: {'✅ Sent' if email_sent else '❌ Failed'}\n"
+        f"Telegram: Testing...\n"
+        f"Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
+    )
+    telegram_sent = send_telegram_alert(tg_msg)
+
+    return {
+        "success": email_sent or telegram_sent,
+        "email_sent": email_sent,
+        "telegram_sent": telegram_sent,
+        "message": f"Email: {'OK' if email_sent else 'FAILED'} | Telegram: {'OK' if telegram_sent else 'FAILED'}"
+    }
 
 
 
