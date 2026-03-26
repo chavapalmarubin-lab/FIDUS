@@ -24,6 +24,8 @@ import FranchiseClientPortal from "./components/FranchiseClientPortal";
 import FranchiseAgentPortal from "./components/FranchiseAgentPortal";
 import FranchiseSimulator from "./components/FranchiseSimulator";
 import ManagerPortal from "./components/ManagerPortal";
+import RetailLanding from "./components/RetailLanding";
+import RetailClientPortal from "./components/RetailClientPortal";
 // VIKING Standalone Application
 import VikingApp from "./components/VikingApp";
 // VKNG Public Dashboard (No Login Required)
@@ -59,6 +61,11 @@ function isFranchiseRoute() {
 function isManagerRoute() {
   const pathname = window.location.pathname.toLowerCase();
   return pathname.startsWith('/manager');
+}
+
+function isRetailRoute() {
+  const pathname = window.location.pathname.toLowerCase();
+  return pathname.startsWith('/retail');
 }
 
 // Initial check at module load
@@ -592,6 +599,11 @@ function FidusApp() {
             path="/manager/*" 
             element={<ManagerPortal />} 
           />
+
+          {/* RETAIL ROUTES */}
+          <Route path="/retail" element={<RetailLanding />} />
+          <Route path="/retail/login" element={<RetailClientPortal />} />
+          <Route path="/retail/*" element={<RetailClientPortal />} />
           
           {/* ADMIN ROUTE: Direct /admin path for OAuth redirects */}
           <Route 
