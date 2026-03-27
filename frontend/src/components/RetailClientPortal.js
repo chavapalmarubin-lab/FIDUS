@@ -43,11 +43,9 @@ const RetailLogin = ({ onLogin }) => {
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-            <Shield size={28} color="white" />
-          </div>
+          <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
           <h1 style={{ color: 'white', fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>FIDUS</h1>
-          <p style={{ color: '#64748b', fontSize: 13 }}>Retail Investment Portal</p>
+          <p style={{ color: '#64748b', fontSize: 13 }}>Portal de Inversiones</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -117,9 +115,12 @@ const RetailApp = ({ authData, onLogout }) => {
         <div>
           {/* Header */}
           <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <p style={{ color: '#64748b', fontSize: 13 }}>Welcome back</p>
-              <h2 style={{ color: 'white', fontSize: 18, fontWeight: 700, margin: 0 }}>{client.first_name || client.name}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 32 }} />
+              <div>
+                <p style={{ color: '#64748b', fontSize: 11, margin: 0 }}>Bienvenido</p>
+                <h2 style={{ color: 'white', fontSize: 18, fontWeight: 700, margin: 0 }}>{client.first_name || client.name}</h2>
+              </div>
             </div>
             <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><LogOut size={20} color="#64748b" /></button>
           </div>

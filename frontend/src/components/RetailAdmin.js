@@ -44,11 +44,9 @@ const AdminLogin = ({ onLogin }) => {
     <div style={{ background: '#050a15', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-            <Shield size={28} color="white" />
-          </div>
+          <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
           <h1 style={{ color: 'white', fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>FIDUS Retail</h1>
-          <p style={{ color: '#64748b', fontSize: 13 }}>Administration Portal</p>
+          <p style={{ color: '#64748b', fontSize: 13 }}>Portal de Administracion</p>
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <input placeholder="Admin Email" type="email" value={creds.email} onChange={e => setCreds({...creds, email: e.target.value})}
@@ -138,9 +136,7 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
       <header style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(5,10,21,0.95)', backdropFilter: 'blur(12px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Shield size={20} color="white" />
-            </div>
+            <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 36 }} />
             <div>
               <h1 style={{ color: 'white', fontSize: 18, fontWeight: 800, margin: 0 }}>FIDUS Retail — Admin</h1>
               <p style={{ color: '#64748b', fontSize: 12, margin: 0 }}>{admin.name || admin.email}</p>
@@ -156,7 +152,7 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 10, marginBottom: 24, border: '1px solid rgba(255,255,255,0.06)' }}>
-          {[{ id: 'overview', label: 'Overview', icon: BarChart3 }, { id: 'clients', label: 'Clients', icon: Users }, { id: 'calendar', label: 'Payment Calendar', icon: Calendar }].map(t => (
+          {[{ id: 'overview', label: 'Resumen', icon: BarChart3 }, { id: 'clients', label: 'Clientes', icon: Users }, { id: 'fund', label: 'Fondo', icon: DollarSign }, { id: 'calendar', label: 'Calendario de Pagos', icon: Calendar }].map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               style={{ flex: 1, padding: '10px 16px', background: activeTab === t.id ? '#0ea5e9' : 'transparent', borderRadius: 8, border: 'none', color: activeTab === t.id ? 'white' : '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <t.icon size={14} /> {t.label}
@@ -246,6 +242,105 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
                         <td className="p-3 text-center"><Badge variant="outline" className={c.status === 'active' ? 'border-emerald-500/40 text-emerald-400' : 'border-slate-500/40 text-slate-400'}>{c.status || 'active'}</Badge></td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+
+        {/* ═══ FUND TAB — Cash Flow & Performance ═══ */}
+        {activeTab === 'fund' && (
+          <div className="space-y-6">
+            {/* Capital Overview */}
+            <Card className="border-slate-700/20 bg-slate-800/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" /> Capital & Revenue (FIDUS CORE Retail)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between py-2"><span className="text-slate-400">Total AUM (Client Capital)</span><span className="text-white font-bold font-mono">{fmt(stats.total_aum)}</span></div>
+                  <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">x Gross Return (2.5% monthly)</span><span className="text-emerald-400 font-mono">+{fmt((stats.total_aum || 0) * 0.025)}</span></div>
+                  <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">- Client Return (1.5% monthly)</span><span className="text-red-400 font-mono">-{fmt((stats.total_aum || 0) * 0.015)}</span></div>
+                  <div className="flex justify-between py-2 border-t border-dashed border-amber-500/30 bg-amber-900/10 px-3 rounded-lg">
+                    <span className="text-amber-400 font-bold">= FIDUS Revenue (1.0%)</span>
+                    <span className="text-amber-400 font-bold font-mono">{fmt((stats.total_aum || 0) * 0.01)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Performance Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="border-emerald-500/15 bg-emerald-900/5">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-emerald-400 font-mono">{fmt((stats.total_aum || 0) * 0.025)}</div>
+                  <div className="text-xs text-slate-500 mt-1">Gross Monthly (2.5%)</div>
+                </CardContent>
+              </Card>
+              <Card className="border-red-500/15 bg-red-900/5">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-red-400 font-mono">-{fmt(stats.monthly_revenue)}</div>
+                  <div className="text-xs text-slate-500 mt-1">Client Payments (1.5%)</div>
+                </CardContent>
+              </Card>
+              <Card className="border-amber-500/15 bg-amber-900/5">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-amber-400 font-mono">{fmt((stats.total_aum || 0) * 0.01)}</div>
+                  <div className="text-xs text-slate-500 mt-1">FIDUS Revenue (1.0%)</div>
+                </CardContent>
+              </Card>
+              <Card className="border-cyan-500/15 bg-cyan-900/5">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-400 font-mono">{fmt((stats.total_aum || 0) * 0.01 * 12)}</div>
+                  <div className="text-xs text-slate-500 mt-1">Annual Revenue (12mo)</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Net Fund Position */}
+            <Card className="border-slate-700/20 bg-slate-800/20">
+              <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Net Fund Position</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between py-2"><span className="text-slate-400">Total Capital (AUM)</span><span className="text-white font-mono">{fmt(stats.total_aum)}</span></div>
+                  <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">- Total Client Obligations (14mo at 1.5%)</span><span className="text-red-400 font-mono">-{fmt((stats.total_aum || 0) * 0.015 * 14)}</span></div>
+                  <div className="flex justify-between py-2 border-t border-cyan-500/20 bg-cyan-900/10 px-3 rounded-lg">
+                    <span className="text-cyan-400 font-bold">= Net Position</span>
+                    <span className={`font-bold font-mono ${(stats.total_aum || 0) - (stats.total_aum || 0) * 0.015 * 14 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {fmt((stats.total_aum || 0) - (stats.total_aum || 0) * 0.015 * 14)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600">Note: Retail clients have no contract — obligation is month-to-month. 14-month projection shown for comparison with institutional.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Revenue Scaling */}
+            <Card className="border-slate-700/20 bg-slate-800/20">
+              <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Revenue at Scale</CardTitle></CardHeader>
+              <CardContent>
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b border-slate-700/30 text-slate-400">
+                    <th className="text-left p-2">AUM</th><th className="text-right p-2">Clients</th><th className="text-right p-2">Gross (2.5%)</th><th className="text-right p-2">Client Pay (1.5%)</th><th className="text-right p-2 text-amber-400">FIDUS Rev (1.0%)</th><th className="text-right p-2">Annual</th>
+                  </tr></thead>
+                  <tbody>
+                    {[50000, 100000, 500000, 1000000, 5000000].map(aum => {
+                      const isActive = Math.abs(aum - (stats.total_aum || 0)) < aum * 0.5;
+                      return (
+                        <tr key={aum} className={`border-b border-slate-700/10 ${isActive ? 'bg-cyan-900/10' : ''}`}>
+                          <td className={`p-2 font-medium ${isActive ? 'text-cyan-400' : 'text-slate-200'}`}>{fmt(aum)}</td>
+                          <td className="p-2 text-right text-slate-400">{Math.round(aum / (stats.avg_balance || 5000))}</td>
+                          <td className="p-2 text-right text-emerald-400 font-mono">{fmt(aum * 0.025)}</td>
+                          <td className="p-2 text-right text-red-400 font-mono">-{fmt(aum * 0.015)}</td>
+                          <td className="p-2 text-right text-amber-400 font-bold font-mono">{fmt(aum * 0.01)}</td>
+                          <td className="p-2 text-right text-cyan-400 font-mono">{fmt(aum * 0.01 * 12)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </CardContent>

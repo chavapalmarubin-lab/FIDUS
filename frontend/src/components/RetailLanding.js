@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Shield, TrendingUp, DollarSign, Clock, ChevronRight, CheckCircle, ArrowRight, Users, Calendar, Star, Lock, Globe, Play } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, TrendingUp, DollarSign, Clock, ChevronRight, CheckCircle, ArrowRight, Users, Calendar, Star, Lock, Globe, Play, X, ExternalLink } from 'lucide-react';
 
 const LUCRUM_SIGNUP = 'https://my.lucrumfx.com/auth/signup?ib=fiso3999&ref=STD%20IB';
+
+// Popup handler
+const openLucrumPopup = () => {
+  const w = Math.min(window.innerWidth * 0.9, 1000);
+  const h = Math.min(window.innerHeight * 0.9, 700);
+  const left = (window.innerWidth - w) / 2;
+  const top = (window.innerHeight - h) / 2;
+  window.open(LUCRUM_SIGNUP, 'LucrumSignup', `width=${w},height=${h},left=${left},top=${top},scrollbars=yes,resizable=yes`);
+};
 
 // ─── TRANSLATIONS ───
 const T = {
@@ -75,7 +84,7 @@ const RetailLanding = () => {
               <button onClick={() => setLang('en')} style={{ padding: '5px 10px', background: lang === 'en' ? '#0ea5e9' : 'transparent', color: lang === 'en' ? 'white' : '#64748b', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>EN</button>
             </div>
             <a href="/retail/login" style={{ padding: '8px 20px', color: '#94a3b8', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>{t.signIn}</a>
-            <a href={LUCRUM_SIGNUP} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 24px', background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', color: 'white', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>{t.openAccount}</a>
+            <button onClick={openLucrumPopup} style={{ padding: '8px 24px', background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', color: 'white', borderRadius: 8, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>{t.openAccount}</button>
           </div>
         </div>
       </nav>
@@ -92,9 +101,9 @@ const RetailLanding = () => {
           </h1>
           <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: '#94a3b8', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>{t.heroDesc}</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href={LUCRUM_SIGNUP} target="_blank" rel="noopener noreferrer" style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={openLucrumPopup} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
               {t.startBtn} <ArrowRight size={18} />
-            </a>
+            </button>
             <a href="/retail/login" style={{ padding: '14px 32px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 600, textDecoration: 'none' }}>{t.loginBtn}</a>
           </div>
         </motion.div>
@@ -120,7 +129,7 @@ const RetailLanding = () => {
         <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', textAlign: 'center', marginBottom: 48 }}>{t.howTitle}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
           {[
-            { step: '1', title: t.step1t, desc: t.step1d, icon: Users, action: t.openAccount, link: LUCRUM_SIGNUP },
+            { step: '1', title: t.step1t, desc: t.step1d, icon: Users, action: t.openAccount, onClick: openLucrumPopup },
             { step: '2', title: t.step2t, desc: t.step2d, icon: DollarSign },
             { step: '3', title: t.step3t, desc: t.step3d, icon: Shield },
             { step: '4', title: t.step4t, desc: t.step4d, icon: TrendingUp },
@@ -131,7 +140,7 @@ const RetailLanding = () => {
               <s.icon size={24} style={{ color: '#0ea5e9', marginBottom: 12, marginTop: 8 }} />
               <h3 style={{ color: 'white', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{s.title}</h3>
               <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.6, marginBottom: s.action ? 12 : 0 }}>{s.desc}</p>
-              {s.action && <a href={s.link} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>{s.action} <ChevronRight size={14} /></a>}
+              {s.action && <button onClick={s.onClick || (() => {})} style={{ color: '#0ea5e9', fontSize: 13, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>{s.action} <ChevronRight size={14} /></button>}
             </motion.div>
           ))}
         </div>
@@ -167,9 +176,9 @@ const RetailLanding = () => {
         <div style={{ padding: 40, background: 'linear-gradient(135deg, rgba(14,165,233,0.1), rgba(6,182,212,0.05))', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 20 }}>
           <h2 style={{ color: 'white', fontSize: 28, fontWeight: 800, marginBottom: 12 }}>{t.ctaTitle}</h2>
           <p style={{ color: '#94a3b8', marginBottom: 24 }}>{t.ctaDesc}</p>
-          <a href={LUCRUM_SIGNUP} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>
+          <button onClick={openLucrumPopup} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             {t.ctaBtn} <ArrowRight size={18} />
-          </a>
+          </button>
         </div>
       </section>
 
