@@ -183,3 +183,154 @@ async def get_retail_dashboard(authorization: str = Header(None)):
         "payments": payments,
         "fund_health": fund_health
     }
+
+
+
+# ═══════════════════════════════════════════
+# RETAIL ADMIN ENDPOINTS
+# ═══════════════════════════════════════════
+
+ADMIN_JWT_SECRET = os.environ.get("JWT_SECRET", "fidus-retail-admin-2026")
+
+
+class RetailAdminLogin(BaseModel):
+    email: str
+    password: str
+
+
+def _admin_token(data: dict) -> str:
+    payload = {**data, "type": "retail_admin", "exp": datetime.now(timezone.utc) + timedelta(hours=24)}
+    return jwt.encode(payload, ADMIN_JWT_SECRET, algorithm="HS256")
+
+
+def _decode_admin(authorization: str) -> dict:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Auth required")
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, ADMIN_JWT_SECRET, algorithms=["HS256"])
+        if payload.get("type") != "retail_admin":
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+@router.post("/admin/login")
+async def login_retail_admin(creds: RetailAdminLogin):
+    """Login for retail admin."""
+    db = await get_db()
+    admin = await db.retail_admins.find_one({"email": creds.email.lower(), "status": "active"})
+    if not admin or admin.get("password_hash") != _hash(creds.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = _admin_token({"admin_id": admin.get("admin_id", ""), "email": admin["email"], "name": admin.get("name", "")})
+    return {
+        "success": True,
+        "token": token,
+        "admin": {"name": admin.get("name", ""), "email": admin["email"]}
+    }
+
+
+@router.get("/admin/dashboard")
+async def get_retail_admin_dashboard(authorization: str = Header(None)):
+    """Full admin dashboard — all clients, AUM, calendar."""
+    _decode_admin(authorization)
+    db = await get_db()
+
+    clients = await db.retail_clients.find(
+        {}, {"_id": 0, "password_hash": 0}
+    ).sort("balance", -1).to_list(1000)
+
+    total_aum = sum(c.get("balance", 0) for c in clients)
+    active = [c for c in clients if c.get("status") == "active"]
+    monthly_rev = total_aum * 0.015
+    avg_bal = total_aum / len(clients) if clients else 0
+
+    # Payment calendar (next 12 months)
+    from dateutil.relativedelta import relativedelta
+    now = datetime.now(timezone.utc)
+    calendar = []
+    for i in range(12):
+        pay_date = now + relativedelta(months=i + 1, day=28)
+        month_clients = []
+        month_total = 0
+        for c in active:
+            bal = c.get("balance", 0)
+            if bal > 0:
+                amt = bal * 0.015
+                month_total += amt
+                month_clients.append({"name": f"{c.get('first_name','')} {c.get('last_name','')}", "amount": round(amt, 2), "balance": bal})
+
+        calendar.append({
+            "month": pay_date.strftime("%Y-%m"),
+            "month_name": pay_date.strftime("%B %Y"),
+            "pay_date": pay_date.strftime("%B %d, %Y"),
+            "total_due": round(month_total, 2),
+            "client_count": len(month_clients),
+            "aum": total_aum,
+            "clients": sorted(month_clients, key=lambda x: x["amount"], reverse=True)
+        })
+
+    return {
+        "success": True,
+        "stats": {
+            "total_aum": total_aum,
+            "total_clients": len(clients),
+            "active_clients": len(active),
+            "monthly_revenue": round(monthly_rev, 2),
+            "avg_balance": round(avg_bal, 2)
+        },
+        "clients": clients,
+        "payment_calendar": calendar
+    }
+
+
+class AddRetailClient(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    phone: str = ""
+    password: str
+    balance: float = 0
+
+
+@router.post("/admin/add-client")
+async def admin_add_retail_client(req: AddRetailClient, authorization: str = Header(None)):
+    """Admin adds a retail client with balance."""
+    _decode_admin(authorization)
+    db = await get_db()
+
+    existing = await db.retail_clients.find_one({"email": req.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    now = datetime.now(timezone.utc)
+    client_id = str(uuid.uuid4())
+    doc = {
+        "client_id": client_id,
+        "first_name": req.first_name,
+        "last_name": req.last_name,
+        "email": req.email.lower(),
+        "password_hash": _hash(req.password),
+        "phone": req.phone,
+        "balance": req.balance,
+        "total_deposited": req.balance,
+        "total_returns": 0,
+        "product": "FIDUS_CORE",
+        "return_rate": 1.5,
+        "status": "active",
+        "created_at": now,
+        "updated_at": now
+    }
+    await db.retail_clients.insert_one(doc)
+
+    return {
+        "success": True,
+        "client_id": client_id,
+        "email": req.email.lower(),
+        "password": req.password,
+        "message": f"Client {req.first_name} {req.last_name} added"
+    }

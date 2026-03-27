@@ -134,6 +134,7 @@ const RetailLanding = () => {
         </p>
         <div style={{ marginTop: 12, display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12, color: '#64748b' }}>
           <a href="/retail/login" style={{ color: '#64748b', textDecoration: 'none' }}>Client Portal</a>
+          <a href="/retail/admin" style={{ color: '#64748b', textDecoration: 'none' }}>Admin</a>
           <a href="/franchise/login" style={{ color: '#64748b', textDecoration: 'none' }}>Franchise Partners</a>
           <a href="/" style={{ color: '#64748b', textDecoration: 'none' }}>FIDUS Institutional</a>
         </div>
