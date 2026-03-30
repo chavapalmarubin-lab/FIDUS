@@ -16332,10 +16332,15 @@ async def calculate_cash_flow_calendar():
             logging.warning("⚠️ LUCRUM 2199 (IB COMMISSIONS) account not found - using $0 for broker rebates")
         
         # Get ALL active MT5 accounts for total equity (same as Fund Portfolio)
-        # CRITICAL: Exclude live_demo accounts - they have no real money
+        # As of March 27, 2026: Only FIDUS CONCENTRADORA (2208) holds client capital
+        # Plus IB COMMISSIONS (2199) for broker rebates
         mt5_accounts = await db.mt5_accounts.find({
             "status": "active",
-            "account_type": {"$ne": "live_demo"}
+            "account_type": {"$ne": "live_demo"},
+            "$or": [
+                {"show_in_managers": True},
+                {"account": 2199}
+            ]
         }).to_list(length=None)
         
         # Handle Decimal128 for equity
@@ -16601,8 +16606,9 @@ async def calculate_cash_flow_calendar():
         # 
         # Formula: Running Balance = Lucrum Wallet + Current Revenue - Cumulative Interest Paid
         # Get Lucrum Wallet balance
+        # As of March 27, 2026: All capital moved to account 2208 — wallet is zero
         lucrum_wallet = await db.lucrum_wallet.find_one({"_id": "current"})
-        wallet_balance = lucrum_wallet.get("balance", 0) if lucrum_wallet else 0
+        wallet_balance = 0  # Capital now in FIDUS CONCENTRADORA (2208), not wallet
         
         # Starting balance includes both wallet and trading revenue
         running_balance = wallet_balance + current_revenue  # Wallet + Revenue/Profit
