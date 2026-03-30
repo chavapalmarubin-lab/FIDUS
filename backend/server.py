@@ -29595,7 +29595,7 @@ async def sync_all_mt5_deals(current_user: dict = Depends(get_current_admin_user
     """
     try:
         # Initialize sync service if not already done
-        if not mt5_deals_sync.db:
+        if mt5_deals_sync.db is None:
             await mt5_deals_sync.initialize(db)
         
         # Run sync
@@ -29618,7 +29618,7 @@ async def sync_account_deals(
     """
     try:
         # Initialize sync service if not already done
-        if not mt5_deals_sync.db:
+        if mt5_deals_sync.db is None:
             await mt5_deals_sync.initialize(db)
         
         # Run sync for single account
