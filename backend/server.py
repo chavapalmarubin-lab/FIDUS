@@ -1484,13 +1484,19 @@ async def ensure_default_users_in_mongodb():
     
     try:
         for user in default_users:
-            # Use upsert to update existing or create new users 
-            await db.users.update_one(
-                {"username": user["username"]},
-                {"$set": user},
-                upsert=True
-            )
-            logging.info(f"✅ Upserted default user: {user['username']} to MongoDB")
+            # Only insert if user doesn't exist — NEVER overwrite existing password
+            existing = await db.users.find_one({"username": user["username"]})
+            if not existing:
+                await db.users.insert_one(user)
+                logging.info(f"✅ Created default user: {user['username']}")
+            else:
+                # Update only non-sensitive fields, preserve password
+                safe_update = {k: v for k, v in user.items() if k not in ("password", "password_hash", "temp_password", "must_change_password")}
+                await db.users.update_one(
+                    {"username": user["username"]},
+                    {"$set": safe_update}
+                )
+                logging.info(f"✅ Updated default user (preserved password): {user['username']}")
         
         logging.info("🎯 PRODUCTION: All users managed via MongoDB (no MOCK data)")
         return True
