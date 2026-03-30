@@ -1,0 +1,111 @@
+name: Full Historical Backfill - Account 2122
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backfill-2122:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: "Stop Current Bridge"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Stopping current bridge for full backfill ===" -ForegroundColor Cyan
+            
+            # Kill Python processes running MT5 bridge
+            $pyProcs = Get-Process python* -ErrorAction SilentlyContinue
+            if ($pyProcs) {
+              Write-Host "Stopping Python processes..." -ForegroundColor Yellow
+              $pyProcs | Stop-Process -Force -ErrorAction SilentlyContinue
+            }
+            
+            Start-Sleep -Seconds 5
+            Write-Host "Bridge stopped" -ForegroundColor Green
+
+      - name: "Run Full Backfill (180 days) for Account 2122"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 15m
+          script: |
+            Write-Host "=== Starting FULL BACKFILL for Account 2122 ===" -ForegroundColor Cyan
+            Write-Host "Setting INITIAL_BACKFILL_DAYS=180 to cover Nov 5, 2025 start date"
+            
+            $env:INITIAL_BACKFILL_DAYS = "180"
+            
+            $bridgeDir = "C:\mt5_bridge_service"
+            $bridgeScript = Get-ChildItem -Path $bridgeDir -Filter "mt5_bridge_lucrum.py" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            
+            if (-not $bridgeScript) {
+              # Try other common locations
+              $locations = @(
+                "C:\mt5_bridge_service\mt5_bridge_lucrum.py",
+                "C:\Users\Administrator\mt5_bridge_lucrum.py",
+                "C:\fidus\mt5_bridge_lucrum.py",
+                "D:\mt5_bridge_service\mt5_bridge_lucrum.py"
+              )
+              foreach ($loc in $locations) {
+                if (Test-Path $loc) {
+                  $bridgeScript = Get-Item $loc
+                  break
+                }
+              }
+            }
+            
+            if ($bridgeScript) {
+              Write-Host "Found bridge script: $($bridgeScript.FullName)" -ForegroundColor Green
+              Write-Host "Starting with INITIAL_BACKFILL_DAYS=180..." -ForegroundColor Yellow
+              
+              Set-Location $bridgeScript.DirectoryName
+              
+              # Run the bridge once to trigger full backfill, then it continues normally
+              Start-Process -FilePath "python" -ArgumentList $bridgeScript.FullName -NoNewWindow -PassThru
+              
+              Write-Host "Bridge started with 180-day backfill" -ForegroundColor Green
+              Write-Host "Account 2122 (JARED GOLD) will pull full history from Nov 5, 2025"
+              
+              # Wait for initial sync to complete
+              Start-Sleep -Seconds 180
+              Write-Host "Initial backfill cycle should be complete" -ForegroundColor Green
+            } else {
+              Write-Host "ERROR: Could not find mt5_bridge_lucrum.py" -ForegroundColor Red
+              Write-Host "Searching all drives..."
+              Get-ChildItem -Path C:\ -Filter "mt5_bridge*lucrum*" -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
+              Get-ChildItem -Path D:\ -Filter "mt5_bridge*lucrum*" -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
+            }
+
+      - name: "Verify Backfill via MongoDB"
+        run: |
+          echo "Verifying account 2122 deals in MongoDB..."
+          pip install pymongo > /dev/null 2>&1
+          python3 -c "
+          from pymongo import MongoClient
+          c = MongoClient('${{ secrets.MONGO_URL }}' if '${{ secrets.MONGO_URL }}' else 'mongodb+srv://chavapalmarubin_db_user:2170TenochSecure@fidus.y1p9be2.mongodb.net/fidus_production')
+          db = c.fidus_production
+          count = db.mt5_deals_history.count_documents({'account': 2122})
+          acc = db.mt5_accounts.find_one({'account': 2122}, {'_id': 0, 'equity': 1, 'last_sync_timestamp': 1})
+          print(f'Account 2122 deals: {count}')
+          print(f'Equity: {acc.get(\"equity\", \"NOT SYNCED\")}')
+          print(f'Last sync: {acc.get(\"last_sync_timestamp\", \"NEVER\")}')
+          if count >= 200:
+            print('SUCCESS - Full history loaded')
+          elif count > 104:
+            print(f'PARTIAL - Got {count} deals (was 104, target ~224)')
+          else:
+            print('BACKFILL MAY STILL BE RUNNING - check again in 5 minutes')
+          c.close()
+          "
