@@ -35,41 +35,34 @@ class TradingAnalyticsService:
         # Fund structure mapping - UPDATED March 9, 2026 (LUCRUM Capital accounts)
         # 3 ACTIVE MANAGERS (Final March 2026 Allocation):
         # 1. JC PROVIDER - Account 2206 ($179,316.36) - Copies MEX Atlantic 86511 at 0.5 ratio
-        # 2. JARED COPIA - Account 20043 ($178,000) - Copies LUCRUM 2122 at 0.3 ratio
-        # 3. JOSE GOLD DAY-TRADE - Account 2208 ($50,000) - Copies LUCRUM 2210 at 0.5 ratio
-        # Total Allocated: $407,316.36
+        # FUND STRUCTURE - March 30, 2026: All capital consolidated to FIDUS CONCENTRADORA (2208)
+        # 2208 copies 2210 (FIDUS DEMO) 1:1, which copies 20062, 2215, 2216, 2219 all 1:1
         self.FUND_STRUCTURE = {
             "Main Fund": {
-                "aum": 407316.36,  # Total March 2026 allocation
-                "accounts": [2206, 20043, 2208],
+                "aum": 300961.07,
+                "accounts": [2208],
                 "managers": [
-                    {"id": "manager_jc_provider", "account": 2206, "name": "JC PROVIDER", "status": "active", "allocation": 179316.36, "notes": "Copies MEX Atlantic 86511 at 0.5 ratio"},
-                    {"id": "manager_jared_copia", "account": 20043, "name": "JARED COPIA", "status": "active", "allocation": 178000.00, "notes": "Copies LUCRUM 2122 at 0.3 ratio"},
-                    {"id": "manager_jose_gold_daytrade", "account": 2208, "name": "JOSE GOLD DAY-TRADE", "status": "active", "allocation": 50000.00, "notes": "Copies LUCRUM 2210 at 0.5 ratio"}
+                    {"id": "fidus_concentradora", "account": 2208, "name": "FIDUS CONCENTRADORA", "status": "active", "allocation": 300961.07, "notes": "Copies FIDUS DEMO (2210) 1:1. 2210 copies 20062, 2215, 2216, 2219 all 1:1."}
                 ]
             },
             "BALANCE": {
-                "aum": 178000.00,  # JARED COPIA allocation
-                "accounts": [20043],
-                "managers": [
-                    {"id": "manager_jared_copia", "account": 20043, "name": "JARED COPIA", "status": "active", "allocation": 178000.00}
-                ]
+                "aum": 0,
+                "accounts": [],
+                "managers": []
             },
             "CORE": {
-                "aum": 179316.36,  # JC PROVIDER allocation
-                "accounts": [2206],
-                "managers": [
-                    {"id": "manager_jc_provider", "account": 2206, "name": "JC PROVIDER", "status": "active", "allocation": 179316.36}
-                ]
+                "aum": 0,
+                "accounts": [],
+                "managers": []
             },
             "SEPARATION": {
-                "aum": 0,  # No separation accounts active
+                "aum": 0,
                 "accounts": [],
                 "managers": []
             },
             "INACTIVE": {
                 "aum": 0,
-                "accounts": [2209, 2205, 2199],  # Previously active accounts now zeroed
+                "accounts": [2206, 20043, 2209, 2205, 2199],
                 "managers": []
             }
         }
@@ -494,15 +487,24 @@ class TradingAnalyticsService:
             
             # Calculate portfolio-wide stats
             total_pnl = sum(m["total_pnl"] for m in all_managers)
+            total_aum = sum(m.get("current_equity", 0) for m in all_managers)
+            total_allocation = sum(m.get("initial_allocation", 0) for m in all_managers)
             avg_return = sum(m["return_percentage"] for m in all_managers) / len(all_managers) if all_managers else 0
             avg_sharpe = sum(m["sharpe_ratio"] for m in all_managers) / len(all_managers) if all_managers else 0
+            avg_win_rate = sum(m.get("win_rate", 0) for m in all_managers) / len(all_managers) if all_managers else 0
+            total_trades = sum(m.get("total_trades", 0) for m in all_managers)
             
             return {
                 "managers": all_managers,
                 "total_managers": len(all_managers),
+                "active_strategies": len(all_managers),
+                "total_aum": round(total_aum, 2),
+                "total_allocation": round(total_allocation, 2),
                 "total_pnl": round(total_pnl, 2),
                 "average_return": round(avg_return, 2),
                 "average_sharpe": round(avg_sharpe, 3),
+                "average_win_rate": round(avg_win_rate, 1),
+                "total_trades": total_trades,
                 "best_performer": all_managers[0] if all_managers else None,
                 "worst_performer": all_managers[-1] if all_managers else None,
                 "period_days": period_days,
