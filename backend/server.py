@@ -24928,6 +24928,24 @@ scheduler.add_job(
     replace_existing=True
 )
 
+# LAYER 2: Independent risk monitoring cycle — runs every 5 minutes
+# Does NOT depend on VPS sync completing — runs independently
+async def independent_risk_monitoring():
+    """Standalone risk monitoring cycle — checks drawdowns, sends alerts."""
+    try:
+        from services.risk_monitoring_service import run_risk_monitoring_cycle
+        await run_risk_monitoring_cycle(db)
+    except Exception as e:
+        logging.error(f"❌ Independent risk monitoring error: {e}", exc_info=True)
+
+scheduler.add_job(
+    independent_risk_monitoring,
+    'cron',
+    minute='2,7,12,17,22,27,32,37,42,47,52,57',
+    id='risk_monitoring_independent',
+    replace_existing=True
+)
+
 # Schedule automatic health monitoring every 5 minutes
 # Runs at: :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
 scheduler.add_job(
