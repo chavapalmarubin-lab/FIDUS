@@ -44,12 +44,11 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 # Monitored accounts (real capital + live demo)
-MONITORED_ACCOUNTS = [2206, 20043, 2208, 2210, 2215, 2216, 2217, 2218, 2219, 20062, 939702, 2122, 2224]
+MONITORED_ACCOUNTS = [2208, 2210, 2215, 2216, 2217, 2218, 2219, 20062, 939702, 2122, 2224]
 
-# Initial allocations (March 27, 2026 — consolidated to 2208)
+# Initial allocations
 INITIAL_ALLOCATIONS = {
-    2206: 0, 20043: 0,
-    2208: 300961.07,  # Full client capital — copies 2210 1:1
+    2208: 300961.07,  # FIDUS CONCENTRADORA — full client capital
     # Live Demo accounts
     2210: 300961.0, 2215: 100000.0, 2216: 100000.0,
     2217: 100000.0, 2218: 100000.0, 2219: 100000.0,
