@@ -504,7 +504,8 @@ async def get_money_managers_derived():
         pipeline = [
             {"$match": {
                 "status": "active",
-                "account_type": {"$ne": "live_demo"}  # EXCLUDE demo accounts from Money Managers
+                "account_type": {"$ne": "live_demo"},
+                "show_in_managers": True
             }},
             {"$group": {
                 "_id": "$manager_name",
