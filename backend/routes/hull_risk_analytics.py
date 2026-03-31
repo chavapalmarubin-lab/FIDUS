@@ -436,6 +436,15 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
         {"_id": 0, "symbol": 1, "profit": 1, "time": 1, "volume": 1}
     ).sort("time", 1).to_list(5000)
 
+    # PRELOAD all sub-account trades into memory for fast matching
+    sub_trades_cache = {}
+    for sub_id in sub_account_ids:
+        sub_deals = await db.mt5_deals_history.find(
+            {"account": sub_id, "type": {"$ne": 2}, "time": {"$gte": since}},
+            {"_id": 0, "symbol": 1, "time": 1}
+        ).to_list(5000)
+        sub_trades_cache[sub_id] = sub_deals
+
     # Match each trade back through the copy chain to the originating sub-strategy
     attribution = {aid: {"account": aid, "name": "", "pnl": 0, "trades": 0, "wins": 0, "losses": 0,
                           "gross_profit": 0, "gross_loss": 0, "symbols": [], "volumes": []} for aid in sub_account_ids}
@@ -453,15 +462,16 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
         if not tm or not sym:
             continue
 
-        # Match: find sub-account that had the same symbol trade within 120 seconds
+        # Fast in-memory match: find sub-account with same symbol trade within 120 seconds
         best_match = None
         for sub_id in sub_account_ids:
-            match = await db.mt5_deals_history.find_one({
-                "account": sub_id, "symbol": sym, "type": {"$ne": 2},
-                "time": {"$gte": tm - timedelta(seconds=120), "$lte": tm + timedelta(seconds=120)}
-            })
-            if match:
-                best_match = sub_id
+            for st in sub_trades_cache.get(sub_id, []):
+                if st.get("symbol") == sym and st.get("time"):
+                    delta = abs((st["time"] - tm).total_seconds())
+                    if delta <= 120:
+                        best_match = sub_id
+                        break
+            if best_match:
                 break
 
         target = best_match if best_match else "unmatched"
