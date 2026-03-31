@@ -256,17 +256,19 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
           const fp = dashboard?.fund_performance || {};
           return (
           <div className="space-y-6">
-            {/* Fund Source */}
+            {/* Fund Source + Retail Performance */}
             <Card className="border-cyan-500/15 bg-cyan-900/5">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-slate-400">Fund Source</div>
-                  <div className="text-white font-bold">Account {fp.source_account} ({fp.source_name})</div>
-                  <div className="text-slate-500 text-xs">{fp.days_since_start} days since inception</div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-2xl font-bold font-mono ${fp.fund_return_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fp.fund_return_pct >= 0 ? '+' : ''}{fp.fund_return_pct}%</div>
-                  <div className="text-xs text-slate-400">Fund Return</div>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-slate-400">Performance Source: Account {fp.source_account} ({fp.source_name})</div>
+                    <div className="text-white font-bold">Fund Return: {fp.fund_return_pct}% → Applied to Retail AUM</div>
+                    <div className="text-slate-500 text-xs">{fp.days_since_start} days since inception | Daily rates applied to ${fmt(fp.retail_aum)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold font-mono ${fp.retail_return_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>+{fmt(fp.retail_gross_return)}</div>
+                    <div className="text-xs text-slate-400">Retail Fund P&L ({fp.retail_return_pct}%)</div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -275,10 +277,10 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {[
                 { l: 'Retail AUM', v: fmt(fp.retail_aum), c: '#0ea5e9' },
-                { l: 'Fund Equity', v: fmt(fp.fund_equity), c: '#8b5cf6' },
-                { l: 'Fund P&L', v: `${fp.fund_pnl >= 0 ? '+' : ''}${fmt(fp.fund_pnl)}`, c: fp.fund_pnl >= 0 ? '#10b981' : '#ef4444' },
-                { l: 'Clients', v: `${stats.total_clients} (${stats.incubation_clients || 0} incubation)`, c: '#f59e0b' },
-                { l: 'Avg Balance', v: fmt(stats.avg_balance), c: '#64748b' },
+                { l: 'Retail Equity', v: fmt(fp.retail_equity), c: '#8b5cf6' },
+                { l: 'Retail P&L', v: `${fp.retail_gross_return >= 0 ? '+' : ''}${fmt(fp.retail_gross_return)}`, c: fp.retail_gross_return >= 0 ? '#10b981' : '#ef4444' },
+                { l: 'Clients', v: `${stats.total_clients} (${stats.incubation_clients || 0} incub)`, c: '#f59e0b' },
+                { l: 'Return %', v: `${fp.retail_return_pct >= 0 ? '+' : ''}${fp.retail_return_pct}%`, c: fp.retail_return_pct >= 0 ? '#10b981' : '#ef4444' },
               ].map((s, i) => (
                 <Card key={i} className="border-slate-700/20 bg-slate-800/20">
                   <CardContent className="p-3 text-center">
@@ -299,7 +301,7 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
               <CardContent>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between py-2">
-                    <span className="text-slate-400">Fund Gross Return ({fp.fund_return_pct}% on ${fmt(fp.retail_aum)})</span>
+                    <span className="text-slate-400">Retail Fund Gross Return ({fp.retail_return_pct}% on ${fmt(fp.retail_aum)})</span>
                     <span className={`font-mono font-bold ${fp.retail_gross_return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fp.retail_gross_return >= 0 ? '+' : ''}{fmt(fp.retail_gross_return)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-t border-slate-700/30">
@@ -321,6 +323,31 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
                 </div>
               </CardContent>
             </Card>
+
+
+            {/* Daily Performance */}
+            {fp.daily_performance && fp.daily_performance.length > 0 && (
+              <Card className="border-slate-700/20 bg-slate-800/20">
+                <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Daily Performance (Retail Fund)</CardTitle></CardHeader>
+                <CardContent>
+                  <table className="w-full text-xs">
+                    <thead><tr className="border-b border-slate-700/30 text-slate-400">
+                      <th className="text-left p-2">Date</th><th className="text-right p-2">2210 Rate</th><th className="text-right p-2">Retail P&L</th><th className="text-right p-2">Retail Equity</th>
+                    </tr></thead>
+                    <tbody>
+                      {fp.daily_performance.map((d, i) => (
+                        <tr key={i} className="border-b border-slate-700/10">
+                          <td className="p-2 text-white font-mono">{d.date}</td>
+                          <td className={`p-2 text-right font-mono ${d.rate_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{d.rate_pct >= 0 ? '+' : ''}{d.rate_pct}%</td>
+                          <td className={`p-2 text-right font-mono font-bold ${d.retail_pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${d.retail_pnl >= 0 ? '+' : ''}{d.retail_pnl.toLocaleString()}</td>
+                          <td className="p-2 text-right text-white font-mono">${d.retail_equity.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Revenue Scaling */}
             <Card className="border-slate-700/20 bg-slate-800/20">

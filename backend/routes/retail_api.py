@@ -258,20 +258,46 @@ async def get_retail_admin_dashboard(authorization: str = Header(None)):
     avg_bal = total_aum / len(clients) if clients else 0
 
     # ── FUND PERFORMANCE from Account 2210 (FIDUS DEMO) ──
+    # Apply 2210's daily RETURN RATES to retail AUM (not raw P&L)
     acc_2210 = await db.mt5_accounts.find_one({"account": 2210}, {"_id": 0, "equity": 1, "initial_allocation": 1, "allocation_start_date": 1})
     fund_equity = float(acc_2210.get("equity", 0)) if acc_2210 else 0
     fund_initial = float(acc_2210.get("initial_allocation", 0)) if acc_2210 else 0
     fund_pnl = fund_equity - fund_initial if fund_initial > 0 else 0
     fund_return_pct = (fund_pnl / fund_initial * 100) if fund_initial > 0 else 0
 
-    # Scale performance to retail AUM
-    fund_return_rate = fund_return_pct / 100 if fund_return_pct != 0 else 0
-    retail_gross_return = total_aum * fund_return_rate
-    performance_fee_pct = 30  # 30% performance fee
-    performance_fee = retail_gross_return * (performance_fee_pct / 100) if retail_gross_return > 0 else 0
-    net_after_perf_fee = retail_gross_return - performance_fee
-    client_payout = total_aum * 0.015  # 1.5% fixed to clients
-    fidus_revenue = net_after_perf_fee - client_payout if net_after_perf_fee > client_payout else 0
+    # Get daily P&L from 2210 to compute daily return rates
+    alloc_date_2210 = acc_2210.get("allocation_start_date") if acc_2210 else None
+    if alloc_date_2210 and hasattr(alloc_date_2210, 'tzinfo') and alloc_date_2210.tzinfo is None:
+        alloc_date_2210 = alloc_date_2210.replace(tzinfo=timezone.utc)
+    since_2210 = alloc_date_2210 or datetime(2026, 3, 23, 0, 0, 0, tzinfo=timezone.utc)
+
+    daily_pipeline = [
+        {"$match": {"account": 2210, "type": {"$ne": 2}, "time": {"$gte": since_2210}}},
+        {"$addFields": {"day": {"$dateToString": {"format": "%Y-%m-%d", "date": "$time"}}}},
+        {"$group": {"_id": "$day", "daily_pnl": {"$sum": "$profit"}}},
+        {"$sort": {"_id": 1}}
+    ]
+    daily_data = list(await db.mt5_deals_history.aggregate(daily_pipeline).to_list(100))
+
+    # Apply 2210's daily rates to retail AUM
+    running_2210 = fund_initial
+    retail_running = total_aum
+    retail_total_pnl = 0
+    daily_retail = []
+    for d in daily_data:
+        rate = float(d["daily_pnl"]) / running_2210 if running_2210 > 0 else 0
+        running_2210 += float(d["daily_pnl"])
+        retail_daily_pnl = retail_running * rate
+        retail_running += retail_daily_pnl
+        retail_total_pnl += retail_daily_pnl
+        daily_retail.append({"date": d["_id"], "rate_pct": round(rate * 100, 4), "retail_pnl": round(retail_daily_pnl, 2), "retail_equity": round(retail_running, 2)})
+
+    # Performance fee on RETAIL gains (not 2210 gains)
+    performance_fee_pct = 30
+    performance_fee = retail_total_pnl * (performance_fee_pct / 100) if retail_total_pnl > 0 else 0
+    net_after_perf_fee = retail_total_pnl - performance_fee
+    client_payout = total_aum * 0.015  # 1.5% monthly to clients
+    fidus_revenue = net_after_perf_fee - client_payout if net_after_perf_fee > client_payout else max(0, net_after_perf_fee)
 
     # Safely compute days_since_start
     alloc_date = acc_2210.get("allocation_start_date") if acc_2210 else None
@@ -287,13 +313,16 @@ async def get_retail_admin_dashboard(authorization: str = Header(None)):
         "fund_pnl": round(fund_pnl, 2),
         "fund_return_pct": round(fund_return_pct, 2),
         "retail_aum": round(total_aum, 2),
-        "retail_gross_return": round(retail_gross_return, 2),
+        "retail_gross_return": round(retail_total_pnl, 2),
+        "retail_equity": round(retail_running, 2),
+        "retail_return_pct": round((retail_total_pnl / total_aum * 100) if total_aum > 0 else 0, 2),
         "performance_fee_pct": performance_fee_pct,
         "performance_fee": round(performance_fee, 2),
         "net_after_fee": round(net_after_perf_fee, 2),
         "client_payout_monthly": round(client_payout, 2),
         "fidus_net_revenue": round(fidus_revenue, 2),
         "days_since_start": days_since,
+        "daily_performance": daily_retail,
     }
 
     # Payment calendar (next 12 months) — include incubation clients after their incubation ends
