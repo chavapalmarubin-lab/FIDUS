@@ -79,13 +79,40 @@ const CopyChainSection = () => {
             })}
           </div>
           <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(14,165,233,0.06)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#0ea5e9', fontWeight: 600, fontSize: 13 }}>Total Contributed P&L</span>
+            <span style={{ color: '#0ea5e9', fontWeight: 600, fontSize: 13 }}>Total P&L ({data.period_days}d since {data.period_start?.slice(0,10)})</span>
             <span style={{ color: cc.total_contributed_pnl >= 0 ? '#10b981' : '#ef4444', fontWeight: 800, fontSize: 16, fontFamily: 'monospace' }}>
-              ${cc.total_contributed_pnl >= 0 ? '+' : ''}{(cc.total_contributed_pnl || 0).toLocaleString()}
+              ${cc.total_contributed_pnl >= 0 ? '+' : ''}{(cc.total_contributed_pnl || 0).toLocaleString()} ({data.return_pct >= 0 ? '+' : ''}{data.return_pct}%)
             </span>
           </div>
         </div>
       </div>
+
+      {/* Optimization Suggestions */}
+      {data.suggestions && data.suggestions.length > 0 && (
+        <div className="ngt-card">
+          <div className="ngt-card-header"><h3>Copy Trading Optimization Suggestions</h3></div>
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {data.suggestions.map((s, i) => {
+              const colors = { CRITICAL: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', text: '#ef4444' }, WARNING: { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', text: '#f59e0b' }, OPPORTUNITY: { bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', text: '#10b981' }, PORTFOLIO: { bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.2)', text: '#0ea5e9' } };
+              const c = colors[s.type] || colors.WARNING;
+              return (
+                <div key={i} style={{ padding: 12, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: c.text, fontSize: 10, fontWeight: 800, padding: '1px 6px', background: `${c.text}20`, borderRadius: 4 }}>{s.type}</span>
+                      <span style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{s.strategy}</span>
+                    </div>
+                    {s.potential_savings && <span style={{ color: '#10b981', fontSize: 12, fontFamily: 'monospace' }}>Save ~${s.potential_savings.toLocaleString()}</span>}
+                    {s.potential_gain && <span style={{ color: '#10b981', fontSize: 12, fontFamily: 'monospace' }}>Gain ~${s.potential_gain.toLocaleString()}</span>}
+                  </div>
+                  <div style={{ color: c.text, fontSize: 12, fontWeight: 600 }}>{s.action}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 2 }}>{s.reason}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Instrument Weights */}
       <div className="ngt-card">

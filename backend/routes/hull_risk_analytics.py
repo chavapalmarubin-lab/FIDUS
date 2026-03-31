@@ -380,9 +380,10 @@ async def get_manager_risk_alerts(account_id: int, authorization: str = Header(N
 @router.get("/copy-chain-attribution/{account_id}")
 async def get_copy_chain_attribution(account_id: int, days: int = 30, authorization: str = Header(None)):
     """
-    P&L attribution by analyzing the MASTER account's (2210) actual trades
-    and matching each trade to the sub-account that originated it (by symbol + timing).
-    Also includes instrument weight analysis.
+    P&L attribution by analyzing the TARGET account's OWN trades (e.g. 2208)
+    and tracing each trade back through the copy chain to the originating sub-strategy.
+    2208 → 2210 → [20062, 2215, 2216, 2219, 2122]
+    Includes instrument weights and optimization suggestions.
     """
     _auth(authorization, account_id)
     db = await get_db()
@@ -391,15 +392,17 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    # Get master account (2210)
+    equity = float(acc.get("equity", 0))
+    initial = float(acc.get("initial_allocation", 0)) or equity
+
+    # Get master account (2210) and its sub-strategies
     master_acc = None
     master_id = None
     if acc.get("copy_sources"):
         master_id = acc["copy_sources"][0].get("master_account")
         if master_id:
-            master_acc = await db.mt5_accounts.find_one({"account": master_id}, {"_id": 0, "copy_sources": 1, "manager_name": 1, "account": 1, "allocation_start_date": 1})
+            master_acc = await db.mt5_accounts.find_one({"account": master_id}, {"_id": 0, "copy_sources": 1, "manager_name": 1, "account": 1})
 
-    # Build list of sub-strategies from master
     sub_strategies = []
     sub_account_ids = []
     if master_acc and master_acc.get("copy_sources"):
@@ -407,8 +410,8 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
             sub_strategies.append({"account": cs["master_account"], "name": cs["master_name"], "ratio": cs.get("ratio", 1.0)})
             sub_account_ids.append(cs["master_account"])
 
-    # Use allocation start date (March 23) or fallback to days
-    alloc_date = acc.get("allocation_start_date") or master_acc.get("allocation_start_date") if master_acc else None
+    # Use allocation start date
+    alloc_date = acc.get("allocation_start_date")
     if alloc_date:
         if alloc_date.tzinfo is None:
             alloc_date = alloc_date.replace(tzinfo=timezone.utc)
@@ -416,34 +419,35 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
     else:
         since = datetime.now(timezone.utc) - timedelta(days=days)
 
-    # Get ALL trades from master account (2210) since allocation date
-    master_trades = await db.mt5_deals_history.find(
-        {"account": master_id, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}},
+    # Get THIS ACCOUNT'S OWN TRADES (2208, not 2210)
+    own_trades = await db.mt5_deals_history.find(
+        {"account": account_id, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}},
         {"_id": 0, "symbol": 1, "profit": 1, "time": 1, "volume": 1}
     ).sort("time", 1).to_list(5000)
 
-    # Attribution: match each master trade to the sub-account that originated it
-    attribution = {acc_id: {"account": acc_id, "name": "", "pnl": 0, "trades": 0, "wins": 0, "symbols": []} for acc_id in sub_account_ids}
-    attribution["unmatched"] = {"account": 0, "name": "Unmatched", "pnl": 0, "trades": 0, "wins": 0, "symbols": []}
+    # Match each trade back through the copy chain to the originating sub-strategy
+    attribution = {aid: {"account": aid, "name": "", "pnl": 0, "trades": 0, "wins": 0, "losses": 0,
+                          "gross_profit": 0, "gross_loss": 0, "symbols": [], "volumes": []} for aid in sub_account_ids}
+    attribution["unmatched"] = {"account": 0, "name": "Unmatched", "pnl": 0, "trades": 0, "wins": 0, "losses": 0,
+                                 "gross_profit": 0, "gross_loss": 0, "symbols": [], "volumes": []}
     for s in sub_strategies:
         if s["account"] in attribution:
             attribution[s["account"]]["name"] = s["name"]
 
-    for trade in master_trades:
+    for trade in own_trades:
         sym = trade.get("symbol", "")
         tm = trade.get("time")
         profit = float(trade.get("profit", 0))
+        vol = float(trade.get("volume", 0))
         if not tm or not sym:
             continue
 
-        # Find matching sub-account trade (same symbol, within 60 seconds)
+        # Match: find sub-account that had the same symbol trade within 120 seconds
         best_match = None
         for sub_id in sub_account_ids:
             match = await db.mt5_deals_history.find_one({
-                "account": sub_id,
-                "symbol": sym,
-                "type": {"$ne": 2},
-                "time": {"$gte": tm - timedelta(seconds=60), "$lte": tm + timedelta(seconds=60)}
+                "account": sub_id, "symbol": sym, "type": {"$ne": 2},
+                "time": {"$gte": tm - timedelta(seconds=120), "$lte": tm + timedelta(seconds=120)}
             })
             if match:
                 best_match = sub_id
@@ -452,48 +456,50 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
         target = best_match if best_match else "unmatched"
         attribution[target]["pnl"] += profit
         attribution[target]["trades"] += 1
-        if profit > 0:
-            attribution[target]["wins"] += 1
+        attribution[target]["volumes"].append(vol)
         if sym not in attribution[target]["symbols"]:
             attribution[target]["symbols"].append(sym)
+        if profit > 0:
+            attribution[target]["wins"] += 1
+            attribution[target]["gross_profit"] += profit
+        else:
+            attribution[target]["losses"] += 1
+            attribution[target]["gross_loss"] += profit
 
-    # Build result
+    # Build results
     total_pnl = sum(a["pnl"] for a in attribution.values())
     result_attribution = []
     for key, a in attribution.items():
         if a["trades"] == 0:
             continue
         wr = (a["wins"] / a["trades"] * 100) if a["trades"] > 0 else 0
+        pf = abs(a["gross_profit"] / a["gross_loss"]) if a["gross_loss"] != 0 else 99.9
         pct = (abs(a["pnl"]) / abs(total_pnl) * 100) if total_pnl != 0 else 0
-        result_attribution.append({
-            "account": a["account"],
-            "name": a["name"],
-            "ratio": 1.0,
-            "pnl": round(a["pnl"], 2),
-            "contributed_pnl": round(a["pnl"], 2),
-            "trades": a["trades"],
-            "wins": a["wins"],
-            "win_rate": round(wr, 1),
-            "profit_factor": 0,
-            "pct_of_total": round(pct, 1),
-            "symbols": a["symbols"],
-        })
-    result_attribution.sort(key=lambda x: abs(x["contributed_pnl"]), reverse=True)
+        avg_vol = sum(a["volumes"]) / len(a["volumes"]) if a["volumes"] else 0
+        roi = (a["pnl"] / initial * 100) if initial > 0 else 0
 
-    # ── INSTRUMENT ANALYSIS from master account's own trades ──
-    instrument_pipeline = [
-        {"$match": {"account": master_id, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}}},
+        result_attribution.append({
+            "account": a["account"], "name": a["name"], "ratio": 1.0,
+            "pnl": round(a["pnl"], 2), "contributed_pnl": round(a["pnl"], 2),
+            "trades": a["trades"], "wins": a["wins"], "losses": a["losses"],
+            "win_rate": round(wr, 1), "profit_factor": round(min(pf, 99.9), 2),
+            "pct_of_total": round(pct, 1), "avg_volume": round(avg_vol, 2),
+            "roi_pct": round(roi, 4), "symbols": a["symbols"],
+            "gross_profit": round(a["gross_profit"], 2), "gross_loss": round(a["gross_loss"], 2),
+        })
+    result_attribution.sort(key=lambda x: x["pnl"], reverse=True)
+
+    # ── INSTRUMENT ANALYSIS from this account's own trades ──
+    inst_pipeline = [
+        {"$match": {"account": account_id, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}}},
         {"$group": {
-            "_id": "$symbol",
-            "total_pnl": {"$sum": "$profit"},
-            "trades": {"$sum": 1},
+            "_id": "$symbol", "total_pnl": {"$sum": "$profit"}, "trades": {"$sum": 1},
             "wins": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, 1, 0]}},
             "total_volume": {"$sum": "$volume"},
         }},
         {"$sort": {"total_pnl": -1}}
     ]
-    instruments = list(await db.mt5_deals_history.aggregate(instrument_pipeline).to_list(50))
-
+    instruments = list(await db.mt5_deals_history.aggregate(inst_pipeline).to_list(50))
     total_inst_pnl = sum(abs(float(i["total_pnl"])) for i in instruments) or 1
     instrument_data = []
     for inst in instruments:
@@ -502,7 +508,7 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
         tc = inst["trades"]
         wr = (inst["wins"] / tc * 100) if tc > 0 else 0
         weight = abs(pnl) / total_inst_pnl * 100
-        category = "GOLD" if "XAU" in sym.upper() else "FOREX" if any(x in sym.upper() for x in ["EUR","GBP","USD","JPY","AUD","CAD","CHF","NZD"]) and "XAU" not in sym.upper() else "INDICES" if any(x in sym.upper() for x in ["NAS","US30","DAX","DE40","SPX"]) else "CRYPTO" if any(x in sym.upper() for x in ["BTC","ETH"]) else "OTHER"
+        category = "GOLD" if "XAU" in sym.upper() else "FOREX" if any(x in sym.upper() for x in ["EUR","GBP","JPY","AUD","CAD","CHF","NZD"]) and "XAU" not in sym.upper() else "INDICES" if any(x in sym.upper() for x in ["NAS","US30","DAX","DE40","SPX"]) else "CRYPTO" if any(x in sym.upper() for x in ["BTC","ETH"]) else "OTHER"
         instrument_data.append({"symbol": sym, "category": category, "pnl": round(pnl, 2), "trades": tc, "wins": inst["wins"], "win_rate": round(wr, 1), "weight_pct": round(weight, 1), "total_volume": round(float(inst.get("total_volume", 0)), 2)})
 
     categories = {}
@@ -517,14 +523,64 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
         cat["weight_pct"] = round(abs(cat["pnl"]) / total_inst_pnl * 100, 1)
         cat["pnl"] = round(cat["pnl"], 2)
 
+    # ── OPTIMIZATION SUGGESTIONS ──
+    suggestions = []
+    active_strats = [a for a in result_attribution if a["account"] != 0]
+
+    # Find losing strategies
+    losers = [a for a in active_strats if a["pnl"] < 0]
+    winners = [a for a in active_strats if a["pnl"] > 0]
+
+    for loser in losers:
+        if loser["profit_factor"] < 0.8:
+            suggestions.append({
+                "type": "CRITICAL",
+                "strategy": loser["name"],
+                "action": f"REDUCE copy ratio from 1.0 to 0.5 or PAUSE",
+                "reason": f"P&L ${loser['pnl']:+,.2f}, PF {loser['profit_factor']}, WR {loser['win_rate']}%. Dragging portfolio down.",
+                "potential_savings": round(abs(loser["pnl"]) * 0.5, 2)
+            })
+        elif loser["profit_factor"] < 1.0:
+            suggestions.append({
+                "type": "WARNING",
+                "strategy": loser["name"],
+                "action": f"Monitor closely — reduce if PF stays below 1.0",
+                "reason": f"P&L ${loser['pnl']:+,.2f}, PF {loser['profit_factor']}. Marginal performer.",
+                "potential_savings": round(abs(loser["pnl"]) * 0.3, 2)
+            })
+
+    for winner in winners:
+        if winner["profit_factor"] > 2.0 and winner["trades"] >= 3:
+            suggestions.append({
+                "type": "OPPORTUNITY",
+                "strategy": winner["name"],
+                "action": f"INCREASE copy ratio from 1.0 to 1.5 or 2.0",
+                "reason": f"P&L ${winner['pnl']:+,.2f}, PF {winner['profit_factor']}, WR {winner['win_rate']}%. Strong performer.",
+                "potential_gain": round(winner["pnl"] * 0.5, 2)
+            })
+
+    # Overall portfolio suggestion
+    if total_pnl < 0:
+        drag = sum(a["pnl"] for a in losers)
+        suggestions.append({
+            "type": "PORTFOLIO",
+            "strategy": "Overall",
+            "action": f"Portfolio is negative (${total_pnl:+,.2f}). Losing strategies contribute ${drag:+,.2f}.",
+            "reason": "Reducing or pausing losing strategies would improve net return.",
+            "potential_savings": round(abs(drag) * 0.5, 2)
+        })
+
     return {
         "success": True,
         "account": account_id,
         "manager_name": acc.get("manager_name"),
-        "equity": float(acc.get("equity", 0)),
+        "equity": equity,
+        "initial_allocation": initial,
         "period_start": since.isoformat(),
         "period_days": (datetime.now(timezone.utc) - since).days,
-        "total_master_trades": len(master_trades),
+        "total_own_trades": len(own_trades),
+        "total_pnl": round(total_pnl, 2),
+        "return_pct": round(total_pnl / initial * 100, 4) if initial > 0 else 0,
         "copy_chain": {
             "master": {"account": master_acc["account"], "name": master_acc["manager_name"]} if master_acc else None,
             "sub_strategies": result_attribution,
@@ -532,4 +588,5 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
         },
         "instruments": instrument_data,
         "categories": sorted(categories.values(), key=lambda x: abs(x["pnl"]), reverse=True),
+        "suggestions": suggestions,
     }
