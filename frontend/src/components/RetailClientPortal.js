@@ -103,6 +103,8 @@ const RetailApp = ({ authData, onLogout }) => {
   const balance = clientData?.balance || 0;
   const totalReturns = clientData?.total_returns || 0;
   const monthlyReturn = balance * 0.015;
+  const [showLucrum, setShowLucrum] = useState(false);
+  const [lucrumUrl, setLucrumUrl] = useState('');
   const payments = clientData?.payments || [];
   const fundHealth = clientData?.fund_health || [];
 
@@ -139,8 +141,8 @@ const RetailApp = ({ authData, onLogout }) => {
           {/* Quick Actions */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 20px', marginBottom: 24 }}>
             {[
-              { icon: Plus, label: 'Add Money', color: '#10b981', action: () => window.open(LUCRUM_DEPOSIT, '_blank') },
-              { icon: Minus, label: 'Withdraw', color: '#f59e0b', action: () => setActiveView('withdraw') },
+              { icon: Plus, label: 'Add Money', color: '#10b981', action: () => { setLucrumUrl(LUCRUM_DEPOSIT); setShowLucrum(true); } },
+              { icon: Minus, label: 'Withdraw', color: '#f59e0b', action: () => { setLucrumUrl(LUCRUM_DEPOSIT); setShowLucrum(true); } },
               { icon: Info, label: 'Product', color: '#0ea5e9', action: () => setActiveView('info') },
               { icon: Calculator, label: 'Simulator', color: '#8b5cf6', action: () => setActiveView('simulator') },
             ].map((a, i) => (
@@ -236,10 +238,10 @@ const RetailApp = ({ authData, onLogout }) => {
             </div>
           </div>
 
-          <a href={LUCRUM_DEPOSIT} target="_blank" rel="noopener noreferrer"
+          <button onClick={() => { setLucrumUrl(LUCRUM_DEPOSIT); setShowLucrum(true); }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none', marginTop: 20, boxSizing: 'border-box' }}>
             <Plus size={18} /> Deposit ${simAmount.toLocaleString()} Now
-          </a>
+          </button>
         </div>
       )}
 
@@ -252,16 +254,16 @@ const RetailApp = ({ authData, onLogout }) => {
           <div style={{ padding: 20, background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 14, marginBottom: 16 }}>
             <p style={{ color: '#f59e0b', fontSize: 14, fontWeight: 600, margin: '0 0 8px' }}>How to Withdraw</p>
             <ol style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.8, margin: 0, paddingLeft: 16 }}>
-              <li>Log in to your LUCRUM account at <a href={LUCRUM_DEPOSIT} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9' }}>my.lucrumfx.com</a></li>
+              <li>Log in to your LUCRUM account at <button onClick={() => { setLucrumUrl(LUCRUM_DEPOSIT); setShowLucrum(true); }} style={{ color: '#0ea5e9' }}>my.lucrumfx.com</button></li>
               <li>Go to "Billetera" (Wallet) section</li>
               <li>Select "Withdrawal" and enter the amount</li>
               <li>Processing time: 1-3 business days</li>
             </ol>
           </div>
-          <a href={LUCRUM_DEPOSIT} target="_blank" rel="noopener noreferrer"
+          <button onClick={() => { setLucrumUrl(LUCRUM_DEPOSIT); setShowLucrum(true); }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '14px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none', boxSizing: 'border-box' }}>
             Go to LUCRUM <ArrowUpRight size={18} />
-          </a>
+          </button>
         </div>
       )}
 
@@ -286,6 +288,22 @@ const RetailApp = ({ authData, onLogout }) => {
           ))}
         </div>
       )}
+
+
+      {/* LUCRUM Iframe Overlay */}
+      {showLucrum && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: '#050a15', borderBottom: '1px solid rgba(14,165,233,0.2)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 28 }} />
+              <span style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 600 }}>LUCRUM Capital</span>
+            </div>
+            <button onClick={() => setShowLucrum(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '5px 14px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Cerrar</button>
+          </div>
+          <iframe src={lucrumUrl} style={{ flex: 1, border: 'none', width: '100%' }} title="LUCRUM" />
+        </div>
+      )}
+
 
       {/* ─── BOTTOM NAV ─── */}
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: 'rgba(5,10,21,0.95)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 0', display: 'flex', justifyContent: 'space-around', zIndex: 50 }}>
