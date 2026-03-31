@@ -17,9 +17,13 @@ JWT_SECRET = os.environ.get("JWT_SECRET", "fidus-retail-secret-2026")
 SALT = "fidus_retail_salt_2026"
 
 
+_db = None
 async def get_db():
-    client = AsyncIOMotorClient(os.environ.get("MONGO_URL"))
-    return client.fidus_production
+    global _db
+    if _db is None:
+        client = AsyncIOMotorClient(os.environ.get("MONGO_URL"), serverSelectionTimeoutMS=10000)
+        _db = client.fidus_production
+    return _db
 
 
 def _hash(pwd):
@@ -236,7 +240,7 @@ async def login_retail_admin(creds: RetailAdminLogin):
 
 @router.get("/admin/dashboard")
 async def get_retail_admin_dashboard(authorization: str = Header(None)):
-    """Full admin dashboard — all clients, AUM, calendar."""
+    """Full admin dashboard — all clients, AUM, calendar, fund performance from 2210."""
     _decode_admin(authorization)
     db = await get_db()
 
@@ -244,12 +248,55 @@ async def get_retail_admin_dashboard(authorization: str = Header(None)):
         {}, {"_id": 0, "password_hash": 0}
     ).sort("balance", -1).to_list(1000)
 
+    # Keep datetime objects for calculations, serialize later
+
     total_aum = sum(c.get("balance", 0) for c in clients)
+    all_clients = [c for c in clients if c.get("status") in ("active", "incubation")]
     active = [c for c in clients if c.get("status") == "active"]
-    monthly_rev = total_aum * 0.015
+    incubation = [c for c in clients if c.get("status") == "incubation"]
+    monthly_client_payout = total_aum * 0.015
     avg_bal = total_aum / len(clients) if clients else 0
 
-    # Payment calendar (next 12 months)
+    # ── FUND PERFORMANCE from Account 2210 (FIDUS DEMO) ──
+    acc_2210 = await db.mt5_accounts.find_one({"account": 2210}, {"_id": 0, "equity": 1, "initial_allocation": 1, "allocation_start_date": 1})
+    fund_equity = float(acc_2210.get("equity", 0)) if acc_2210 else 0
+    fund_initial = float(acc_2210.get("initial_allocation", 0)) if acc_2210 else 0
+    fund_pnl = fund_equity - fund_initial if fund_initial > 0 else 0
+    fund_return_pct = (fund_pnl / fund_initial * 100) if fund_initial > 0 else 0
+
+    # Scale performance to retail AUM
+    fund_return_rate = fund_return_pct / 100 if fund_return_pct != 0 else 0
+    retail_gross_return = total_aum * fund_return_rate
+    performance_fee_pct = 30  # 30% performance fee
+    performance_fee = retail_gross_return * (performance_fee_pct / 100) if retail_gross_return > 0 else 0
+    net_after_perf_fee = retail_gross_return - performance_fee
+    client_payout = total_aum * 0.015  # 1.5% fixed to clients
+    fidus_revenue = net_after_perf_fee - client_payout if net_after_perf_fee > client_payout else 0
+
+    # Safely compute days_since_start
+    alloc_date = acc_2210.get("allocation_start_date") if acc_2210 else None
+    if alloc_date and hasattr(alloc_date, 'tzinfo') and alloc_date.tzinfo is None:
+        alloc_date = alloc_date.replace(tzinfo=timezone.utc)
+    days_since = (datetime.now(timezone.utc) - alloc_date).days if alloc_date else 0
+
+    fund_performance = {
+        "source_account": 2210,
+        "source_name": "FIDUS DEMO",
+        "fund_equity": round(fund_equity, 2),
+        "fund_initial": round(fund_initial, 2),
+        "fund_pnl": round(fund_pnl, 2),
+        "fund_return_pct": round(fund_return_pct, 2),
+        "retail_aum": round(total_aum, 2),
+        "retail_gross_return": round(retail_gross_return, 2),
+        "performance_fee_pct": performance_fee_pct,
+        "performance_fee": round(performance_fee, 2),
+        "net_after_fee": round(net_after_perf_fee, 2),
+        "client_payout_monthly": round(client_payout, 2),
+        "fidus_net_revenue": round(fidus_revenue, 2),
+        "days_since_start": days_since,
+    }
+
+    # Payment calendar (next 12 months) — include incubation clients after their incubation ends
     from dateutil.relativedelta import relativedelta
     now = datetime.now(timezone.utc)
     calendar = []
@@ -257,12 +304,22 @@ async def get_retail_admin_dashboard(authorization: str = Header(None)):
         pay_date = now + relativedelta(months=i + 1, day=28)
         month_clients = []
         month_total = 0
-        for c in active:
+        for c in all_clients:
             bal = c.get("balance", 0)
-            if bal > 0:
-                amt = bal * 0.015
-                month_total += amt
-                month_clients.append({"name": f"{c.get('first_name','')} {c.get('last_name','')}", "amount": round(amt, 2), "balance": bal})
+            if bal <= 0:
+                continue
+            # Check if incubation has ended by this payment date
+            inc_end = c.get("incubation_end_date")
+            if inc_end:
+                if isinstance(inc_end, str):
+                    inc_end = datetime.fromisoformat(inc_end.replace('Z', '+00:00'))
+                if inc_end.tzinfo is None:
+                    inc_end = inc_end.replace(tzinfo=timezone.utc)
+                if pay_date < inc_end:
+                    continue  # Still in incubation
+            amt = bal * 0.015
+            month_total += amt
+            month_clients.append({"name": f"{c.get('first_name','')} {c.get('last_name','')}", "amount": round(amt, 2), "balance": bal})
 
         calendar.append({
             "month": pay_date.strftime("%Y-%m"),
@@ -274,15 +331,33 @@ async def get_retail_admin_dashboard(authorization: str = Header(None)):
             "clients": sorted(month_clients, key=lambda x: x["amount"], reverse=True)
         })
 
+        calendar.append({
+            "month": pay_date.strftime("%Y-%m"),
+            "month_name": pay_date.strftime("%B %Y"),
+            "pay_date": pay_date.strftime("%B %d, %Y"),
+            "total_due": round(month_total, 2),
+            "client_count": len(month_clients),
+            "aum": total_aum,
+            "clients": sorted(month_clients, key=lambda x: x["amount"], reverse=True)
+        })
+
+    # Serialize datetime fields in clients before returning
+    for cl in clients:
+        for k in list(cl.keys()):
+            if isinstance(cl[k], datetime):
+                cl[k] = cl[k].isoformat()
+
     return {
         "success": True,
         "stats": {
             "total_aum": total_aum,
             "total_clients": len(clients),
             "active_clients": len(active),
-            "monthly_revenue": round(monthly_rev, 2),
+            "incubation_clients": len(incubation),
+            "monthly_revenue": round(monthly_client_payout, 2),
             "avg_balance": round(avg_bal, 2)
         },
+        "fund_performance": fund_performance,
         "clients": clients,
         "payment_calendar": calendar
     }

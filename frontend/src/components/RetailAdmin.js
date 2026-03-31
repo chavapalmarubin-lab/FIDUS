@@ -168,6 +168,7 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
                 { l: 'Total AUM', v: fmt(stats.total_aum), c: '#0ea5e9', icon: DollarSign },
                 { l: 'Total Clients', v: stats.total_clients || 0, c: '#10b981', icon: Users },
                 { l: 'Active Clients', v: stats.active_clients || 0, c: '#8b5cf6', icon: Activity },
+                { l: 'In Incubation', v: stats.incubation_clients || 0, c: '#f59e0b', icon: Clock },
                 { l: 'Monthly Revenue', v: fmt(stats.monthly_revenue), c: '#f59e0b', icon: TrendingUp },
                 { l: 'Avg Balance', v: fmt(stats.avg_balance), c: '#06b6d4', icon: PieChart },
               ].map((s, i) => (
@@ -251,93 +252,100 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
 
 
         {/* ═══ FUND TAB — Cash Flow & Performance ═══ */}
-        {activeTab === 'fund' && (
+        {activeTab === 'fund' && (() => {
+          const fp = dashboard?.fund_performance || {};
+          return (
           <div className="space-y-6">
-            {/* Capital Overview */}
-            <Card className="border-slate-700/20 bg-slate-800/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" /> Capital & Revenue (FIDUS CORE Retail)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-2"><span className="text-slate-400">Total AUM (Client Capital)</span><span className="text-white font-bold font-mono">{fmt(stats.total_aum)}</span></div>
-                  <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">x Gross Return (2.5% monthly)</span><span className="text-emerald-400 font-mono">+{fmt((stats.total_aum || 0) * 0.025)}</span></div>
-                  <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">- Client Return (1.5% monthly)</span><span className="text-red-400 font-mono">-{fmt((stats.total_aum || 0) * 0.015)}</span></div>
-                  <div className="flex justify-between py-2 border-t border-dashed border-amber-500/30 bg-amber-900/10 px-3 rounded-lg">
-                    <span className="text-amber-400 font-bold">= FIDUS Revenue (1.0%)</span>
-                    <span className="text-amber-400 font-bold font-mono">{fmt((stats.total_aum || 0) * 0.01)}</span>
-                  </div>
+            {/* Fund Source */}
+            <Card className="border-cyan-500/15 bg-cyan-900/5">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-slate-400">Fund Source</div>
+                  <div className="text-white font-bold">Account {fp.source_account} ({fp.source_name})</div>
+                  <div className="text-slate-500 text-xs">{fp.days_since_start} days since inception</div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-2xl font-bold font-mono ${fp.fund_return_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fp.fund_return_pct >= 0 ? '+' : ''}{fp.fund_return_pct}%</div>
+                  <div className="text-xs text-slate-400">Fund Return</div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Performance Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="border-emerald-500/15 bg-emerald-900/5">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-emerald-400 font-mono">{fmt((stats.total_aum || 0) * 0.025)}</div>
-                  <div className="text-xs text-slate-500 mt-1">Gross Monthly (2.5%)</div>
-                </CardContent>
-              </Card>
-              <Card className="border-red-500/15 bg-red-900/5">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-red-400 font-mono">-{fmt(stats.monthly_revenue)}</div>
-                  <div className="text-xs text-slate-500 mt-1">Client Payments (1.5%)</div>
-                </CardContent>
-              </Card>
-              <Card className="border-amber-500/15 bg-amber-900/5">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-amber-400 font-mono">{fmt((stats.total_aum || 0) * 0.01)}</div>
-                  <div className="text-xs text-slate-500 mt-1">FIDUS Revenue (1.0%)</div>
-                </CardContent>
-              </Card>
-              <Card className="border-cyan-500/15 bg-cyan-900/5">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-cyan-400 font-mono">{fmt((stats.total_aum || 0) * 0.01 * 12)}</div>
-                  <div className="text-xs text-slate-500 mt-1">Annual Revenue (12mo)</div>
-                </CardContent>
-              </Card>
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[
+                { l: 'Retail AUM', v: fmt(fp.retail_aum), c: '#0ea5e9' },
+                { l: 'Fund Equity', v: fmt(fp.fund_equity), c: '#8b5cf6' },
+                { l: 'Fund P&L', v: `${fp.fund_pnl >= 0 ? '+' : ''}${fmt(fp.fund_pnl)}`, c: fp.fund_pnl >= 0 ? '#10b981' : '#ef4444' },
+                { l: 'Clients', v: `${stats.total_clients} (${stats.incubation_clients || 0} incubation)`, c: '#f59e0b' },
+                { l: 'Avg Balance', v: fmt(stats.avg_balance), c: '#64748b' },
+              ].map((s, i) => (
+                <Card key={i} className="border-slate-700/20 bg-slate-800/20">
+                  <CardContent className="p-3 text-center">
+                    <div style={{ color: s.c }} className="text-lg font-bold font-mono">{s.v}</div>
+                    <div className="text-[10px] text-slate-500">{s.l}</div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
-            {/* Net Fund Position */}
+            {/* Performance Fee Waterfall */}
             <Card className="border-slate-700/20 bg-slate-800/20">
-              <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Net Fund Position</CardTitle></CardHeader>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" /> Performance Fee Calculation (Waterfall)
+                </CardTitle>
+              </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between py-2"><span className="text-slate-400">Total Capital (AUM)</span><span className="text-white font-mono">{fmt(stats.total_aum)}</span></div>
-                  <div className="flex justify-between py-2 border-t border-slate-700/30"><span className="text-slate-400">- Total Client Obligations (14mo at 1.5%)</span><span className="text-red-400 font-mono">-{fmt((stats.total_aum || 0) * 0.015 * 14)}</span></div>
-                  <div className="flex justify-between py-2 border-t border-cyan-500/20 bg-cyan-900/10 px-3 rounded-lg">
-                    <span className="text-cyan-400 font-bold">= Net Position</span>
-                    <span className={`font-bold font-mono ${(stats.total_aum || 0) - (stats.total_aum || 0) * 0.015 * 14 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {fmt((stats.total_aum || 0) - (stats.total_aum || 0) * 0.015 * 14)}
-                    </span>
+                  <div className="flex justify-between py-2">
+                    <span className="text-slate-400">Fund Gross Return ({fp.fund_return_pct}% on ${fmt(fp.retail_aum)})</span>
+                    <span className={`font-mono font-bold ${fp.retail_gross_return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fp.retail_gross_return >= 0 ? '+' : ''}{fmt(fp.retail_gross_return)}</span>
                   </div>
-                  <p className="text-xs text-slate-600">Note: Retail clients have no contract — obligation is month-to-month. 14-month projection shown for comparison with institutional.</p>
+                  <div className="flex justify-between py-2 border-t border-slate-700/30">
+                    <span className="text-slate-400">- Performance Fee ({fp.performance_fee_pct}%)</span>
+                    <span className="text-red-400 font-mono">-{fmt(fp.performance_fee)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-t border-dashed border-cyan-500/30 bg-cyan-900/10 px-3 rounded-lg">
+                    <span className="text-cyan-400 font-bold">= Net After Performance Fee</span>
+                    <span className={`font-mono font-bold ${fp.net_after_fee >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>{fmt(fp.net_after_fee)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-t border-slate-700/30">
+                    <span className="text-slate-400">- Client Payouts (1.5% × {stats.total_clients} clients)</span>
+                    <span className="text-red-400 font-mono">-{fmt(fp.client_payout_monthly)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-t border-dashed border-emerald-500/30 bg-emerald-900/10 px-3 rounded-lg">
+                    <span className="text-emerald-400 font-bold">= FIDUS Net Revenue</span>
+                    <span className={`font-mono font-bold text-lg ${fp.fidus_net_revenue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(fp.fidus_net_revenue)}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Revenue Scaling */}
             <Card className="border-slate-700/20 bg-slate-800/20">
-              <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Revenue at Scale</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Revenue at Scale (with 30% Performance Fee)</CardTitle></CardHeader>
               <CardContent>
                 <table className="w-full text-xs">
                   <thead><tr className="border-b border-slate-700/30 text-slate-400">
-                    <th className="text-left p-2">AUM</th><th className="text-right p-2">Clients</th><th className="text-right p-2">Gross (2.5%)</th><th className="text-right p-2">Client Pay (1.5%)</th><th className="text-right p-2 text-amber-400">FIDUS Rev (1.0%)</th><th className="text-right p-2">Annual</th>
+                    <th className="text-left p-2">AUM</th><th className="text-right p-2">Clients</th><th className="text-right p-2">Gross ({fp.fund_return_pct}%)</th><th className="text-right p-2 text-red-400">Perf Fee (30%)</th><th className="text-right p-2">Client Pay (1.5%)</th><th className="text-right p-2 text-emerald-400">FIDUS Net</th>
                   </tr></thead>
                   <tbody>
                     {[50000, 100000, 500000, 1000000, 5000000].map(aum => {
-                      const isActive = Math.abs(aum - (stats.total_aum || 0)) < aum * 0.5;
+                      const gross = aum * (fp.fund_return_pct / 100);
+                      const fee = gross > 0 ? gross * 0.30 : 0;
+                      const net = gross - fee;
+                      const clientPay = aum * 0.015;
+                      const fidusNet = net > clientPay ? net - clientPay : 0;
+                      const isActive = Math.abs(aum - fp.retail_aum) < aum * 0.5;
                       return (
                         <tr key={aum} className={`border-b border-slate-700/10 ${isActive ? 'bg-cyan-900/10' : ''}`}>
                           <td className={`p-2 font-medium ${isActive ? 'text-cyan-400' : 'text-slate-200'}`}>{fmt(aum)}</td>
-                          <td className="p-2 text-right text-slate-400">{Math.round(aum / (stats.avg_balance || 5000))}</td>
-                          <td className="p-2 text-right text-emerald-400 font-mono">{fmt(aum * 0.025)}</td>
-                          <td className="p-2 text-right text-red-400 font-mono">-{fmt(aum * 0.015)}</td>
-                          <td className="p-2 text-right text-amber-400 font-bold font-mono">{fmt(aum * 0.01)}</td>
-                          <td className="p-2 text-right text-cyan-400 font-mono">{fmt(aum * 0.01 * 12)}</td>
+                          <td className="p-2 text-right text-slate-400">{Math.round(aum / (stats.avg_balance || 950))}</td>
+                          <td className="p-2 text-right text-emerald-400 font-mono">{fmt(gross)}</td>
+                          <td className="p-2 text-right text-red-400 font-mono">-{fmt(fee)}</td>
+                          <td className="p-2 text-right text-amber-400 font-mono">-{fmt(clientPay)}</td>
+                          <td className="p-2 text-right text-emerald-400 font-bold font-mono">{fmt(fidusNet)}</td>
                         </tr>
                       );
                     })}
@@ -345,8 +353,22 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
                 </table>
               </CardContent>
             </Card>
+
+            {/* Fund Terms */}
+            <Card className="border-slate-700/20 bg-slate-800/20">
+              <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-200">Retail Fund Structure</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-center">
+                  <div className="p-3 bg-slate-700/20 rounded-lg"><div className="text-lg font-bold text-emerald-400">1.5%</div><div className="text-xs text-slate-500">Client Monthly Return</div></div>
+                  <div className="p-3 bg-slate-700/20 rounded-lg"><div className="text-lg font-bold text-red-400">30%</div><div className="text-xs text-slate-500">Performance Fee</div></div>
+                  <div className="p-3 bg-slate-700/20 rounded-lg"><div className="text-lg font-bold text-amber-400">1 mo</div><div className="text-xs text-slate-500">Incubation Period</div></div>
+                  <div className="p-3 bg-slate-700/20 rounded-lg"><div className="text-lg font-bold text-white">EOM</div><div className="text-xs text-slate-500">Payment: End of Month</div></div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+          );
+        })()}
 
         {/* ═══ PAYMENT CALENDAR ═══ */}
         {activeTab === 'calendar' && (
