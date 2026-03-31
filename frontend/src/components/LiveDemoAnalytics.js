@@ -23,6 +23,48 @@ import { RiskGradeBadge } from './RiskFrameworkShared';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+
+// Copy Chain Attribution — reusable for Risk Limits tab
+const CopyChainAnalysis = ({ account }) => {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    if (!account) return; setLoading(true);
+    const token = localStorage.getItem('fidus_token');
+    fetch(`${BACKEND_URL}/api/manager/copy-chain-attribution/${account}?days=30`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.json()).then(d => { if (d.success) setData(d); }).catch(() => {}).finally(() => setLoading(false));
+  }, [account]);
+  if (loading) return <div style={{ textAlign: 'center', padding: '16px', color: '#64748b', fontSize: 12 }}>Loading copy chain...</div>;
+  if (!data || !data.copy_chain?.sub_strategies?.length) return null;
+  const cc = data.copy_chain, cats = data.categories || [], sugg = data.suggestions || [];
+  const catColors = { GOLD: '#f59e0b', FOREX: '#0ea5e9', INDICES: '#8b5cf6', CRYPTO: '#10b981', OTHER: '#64748b' };
+  return (
+    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ borderTop: '2px solid rgba(139,92,246,0.2)', paddingTop: 14 }}>
+        <h3 style={{ color: '#8b5cf6', fontSize: 14, margin: '0 0 4px' }}>Copy Chain P&L Attribution — {data.manager_name}</h3>
+        <p style={{ color: '#475569', fontSize: 11, margin: 0 }}>{data.total_own_trades} trades since {data.period_start?.slice(0,10)} ({data.period_days}d) | Return: {data.return_pct >= 0 ? '+' : ''}{data.return_pct}%</p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {cc.sub_strategies.map((s, i) => { const color = s.contributed_pnl >= 0 ? '#10b981' : '#ef4444'; return (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: `${color}06`, border: `1px solid ${color}15`, borderRadius: 6 }}>
+            <span style={{ color: 'white', fontWeight: 600, fontSize: 12, width: 155 }}>{s.name}</span>
+            <div style={{ flex: 1, background: 'rgba(100,116,139,0.1)', borderRadius: 3, height: 6 }}><div style={{ width: `${Math.min(s.pct_of_total, 100)}%`, height: '100%', borderRadius: 3, background: color }} /></div>
+            <span style={{ color, fontWeight: 700, fontFamily: 'monospace', fontSize: 12, width: 90, textAlign: 'right' }}>${s.contributed_pnl >= 0 ? '+' : ''}{s.contributed_pnl.toLocaleString()}</span>
+            <span style={{ color: '#64748b', fontSize: 10, width: 40, textAlign: 'right' }}>{s.pct_of_total}%</span>
+            <span style={{ color: '#94a3b8', fontSize: 10, width: 70, textAlign: 'right' }}>{s.trades}T {s.win_rate}%</span>
+            <span style={{ color: s.profit_factor >= 1 ? '#10b981' : '#ef4444', fontSize: 10, width: 40, textAlign: 'right' }}>PF{s.profit_factor}</span>
+          </div>); })}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(14,165,233,0.06)', borderRadius: 6 }}>
+          <span style={{ color: '#0ea5e9', fontWeight: 600, fontSize: 12 }}>Total</span>
+          <span style={{ color: cc.total_contributed_pnl >= 0 ? '#10b981' : '#ef4444', fontWeight: 800, fontSize: 14, fontFamily: 'monospace' }}>${cc.total_contributed_pnl >= 0 ? '+' : ''}{cc.total_contributed_pnl.toLocaleString()}</span>
+        </div>
+      </div>
+      {cats.length > 0 && <div style={{ display: 'flex', gap: 3, height: 22, borderRadius: 5, overflow: 'hidden' }}>{cats.map((c, i) => (<div key={i} style={{ flex: c.weight_pct, background: catColors[c.category] || '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.weight_pct > 10 && <span style={{ color: 'white', fontSize: 9, fontWeight: 700 }}>{c.category} {c.weight_pct}%</span>}</div>))}</div>}
+      {sugg.length > 0 && sugg.map((s, i) => { const sc = { CRITICAL: '#ef4444', WARNING: '#f59e0b', OPPORTUNITY: '#10b981', PORTFOLIO: '#0ea5e9' }; return (<div key={i} style={{ padding: '6px 10px', background: `${sc[s.type] || '#64748b'}08`, border: `1px solid ${sc[s.type] || '#64748b'}20`, borderRadius: 6, fontSize: 10 }}><span style={{ color: sc[s.type], fontWeight: 700 }}>{s.type}: {s.strategy}</span><span style={{ color: '#94a3b8', marginLeft: 6 }}>{s.action}</span></div>); })}
+    </div>
+  );
+};
+
 // Daily P&L Breach Section — reusable for Risk Limits tab
 const DailyPnlSection = ({ account }) => {
   const [data, setData] = React.useState(null);
@@ -3104,6 +3146,7 @@ export default function LiveDemoAnalytics() {
 
                   {/* Daily P&L Breach Analysis — integrated into Risk Limits */}
                   <DailyPnlSection account={mgr.account} />
+                  <CopyChainAnalysis account={mgr.account} />
                 </div>
               );
             })()}

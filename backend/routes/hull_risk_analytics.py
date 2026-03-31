@@ -395,13 +395,24 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
     equity = float(acc.get("equity", 0))
     initial = float(acc.get("initial_allocation", 0)) or equity
 
-    # Get master account (2210) and its sub-strategies
+    # Determine the copy chain structure:
+    # Case 1: account_id IS the master (e.g. 2210) — has copy_sources directly
+    # Case 2: account_id copies a master (e.g. 2208 → 2210) — follow the chain
     master_acc = None
     master_id = None
-    if acc.get("copy_sources"):
+    analyze_account = account_id  # Which account's trades to analyze
+
+    if acc.get("copy_sources") and len(acc["copy_sources"]) > 1:
+        # This account HAS multiple copy sources — it IS the master aggregator (like 2210)
+        master_acc = {"account": account_id, "manager_name": acc.get("manager_name"), "copy_sources": acc["copy_sources"]}
+        master_id = account_id
+        analyze_account = account_id
+    elif acc.get("copy_sources") and len(acc["copy_sources"]) == 1:
+        # This account copies ONE master (like 2208 → 2210)
         master_id = acc["copy_sources"][0].get("master_account")
         if master_id:
             master_acc = await db.mt5_accounts.find_one({"account": master_id}, {"_id": 0, "copy_sources": 1, "manager_name": 1, "account": 1})
+        analyze_account = account_id  # Still analyze this account's own trades
 
     sub_strategies = []
     sub_account_ids = []
@@ -419,9 +430,9 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
     else:
         since = datetime.now(timezone.utc) - timedelta(days=days)
 
-    # Get THIS ACCOUNT'S OWN TRADES (2208, not 2210)
+    # Get THIS ACCOUNT'S OWN TRADES since allocation date
     own_trades = await db.mt5_deals_history.find(
-        {"account": account_id, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}},
+        {"account": analyze_account, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}},
         {"_id": 0, "symbol": 1, "profit": 1, "time": 1, "volume": 1}
     ).sort("time", 1).to_list(5000)
 
@@ -491,7 +502,7 @@ async def get_copy_chain_attribution(account_id: int, days: int = 30, authorizat
 
     # ── INSTRUMENT ANALYSIS from this account's own trades ──
     inst_pipeline = [
-        {"$match": {"account": account_id, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}}},
+        {"$match": {"account": analyze_account, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}}},
         {"$group": {
             "_id": "$symbol", "total_pnl": {"$sum": "$profit"}, "trades": {"$sum": 1},
             "wins": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, 1, 0]}},
