@@ -28,6 +28,94 @@ const DEFAULT_DEEP_DIVE_ACCOUNT = 2206;
 // Auto-refresh interval (30 seconds)
 const AUTO_REFRESH_INTERVAL = 30000;
 
+const BACKEND_URL_NGT = process.env.REACT_APP_BACKEND_URL;
+
+// Copy Chain Attribution Component
+const CopyChainSection = () => {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('fidus_token');
+    fetch(`${BACKEND_URL_NGT}/api/manager/copy-chain-attribution/2208?days=30`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json()).then(d => { if (d.success) setData(d); }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Loading copy chain...</div>;
+  if (!data) return null;
+
+  const cc = data.copy_chain || {};
+  const cats = data.categories || [];
+  const catColors = { GOLD: '#f59e0b', FOREX: '#0ea5e9', INDICES: '#8b5cf6', CRYPTO: '#10b981', OTHER: '#64748b' };
+
+  return (
+    <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Copy Chain Attribution */}
+      <div className="ngt-card">
+        <div className="ngt-card-header"><h3>Copy Chain P&L Attribution — FIDUS CONCENTRADORA</h3></div>
+        <div style={{ padding: 16 }}>
+          <p style={{ color: '#64748b', fontSize: 12, marginBottom: 12 }}>
+            2208 → 2210 (FIDUS DEMO) → {(cc.sub_strategies || []).map(s => s.name).join(', ')} — all 1:1 ratio
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {(cc.sub_strategies || []).map((s, i) => {
+              const barW = Math.min(s.pct_of_total, 100);
+              const color = s.contributed_pnl >= 0 ? '#10b981' : '#ef4444';
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ color: 'white', fontWeight: 700, fontSize: 13, width: 180, flexShrink: 0 }}>{s.name}</span>
+                  <span style={{ color: '#64748b', fontSize: 11, width: 50, flexShrink: 0 }}>#{s.account}</span>
+                  <div style={{ flex: 1, background: 'rgba(100,116,139,0.15)', borderRadius: 4, height: 8 }}>
+                    <div style={{ width: `${barW}%`, height: '100%', borderRadius: 4, background: color }} />
+                  </div>
+                  <span style={{ color, fontWeight: 700, fontFamily: 'monospace', fontSize: 13, width: 100, textAlign: 'right', flexShrink: 0 }}>
+                    ${s.contributed_pnl >= 0 ? '+' : ''}{s.contributed_pnl.toLocaleString()}
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: 11, width: 45, textAlign: 'right', flexShrink: 0 }}>{s.pct_of_total}%</span>
+                  <span style={{ color: '#94a3b8', fontSize: 11, width: 60, textAlign: 'right', flexShrink: 0 }}>{s.trades}T {s.win_rate}%</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(14,165,233,0.06)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#0ea5e9', fontWeight: 600, fontSize: 13 }}>Total Contributed P&L</span>
+            <span style={{ color: cc.total_contributed_pnl >= 0 ? '#10b981' : '#ef4444', fontWeight: 800, fontSize: 16, fontFamily: 'monospace' }}>
+              ${cc.total_contributed_pnl >= 0 ? '+' : ''}{(cc.total_contributed_pnl || 0).toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Instrument Weights */}
+      <div className="ngt-card">
+        <div className="ngt-card-header"><h3>Instrument Category Weights — Portfolio Exposure</h3></div>
+        <div style={{ padding: 16 }}>
+          {/* Category bars */}
+          <div style={{ display: 'flex', gap: 4, height: 32, borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
+            {cats.map((c, i) => (
+              <div key={i} style={{ flex: c.weight_pct, background: catColors[c.category] || '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: c.weight_pct > 5 ? 40 : 0 }}>
+                {c.weight_pct > 8 && <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{c.category} {c.weight_pct}%</span>}
+              </div>
+            ))}
+          </div>
+          {/* Category details */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+            {cats.map((c, i) => (
+              <div key={i} style={{ padding: 12, background: `${catColors[c.category] || '#64748b'}10`, border: `1px solid ${catColors[c.category] || '#64748b'}30`, borderRadius: 10, textAlign: 'center' }}>
+                <div style={{ color: catColors[c.category], fontSize: 22, fontWeight: 800, fontFamily: 'monospace' }}>{c.weight_pct}%</div>
+                <div style={{ color: 'white', fontSize: 13, fontWeight: 700 }}>{c.category}</div>
+                <div style={{ color: c.pnl >= 0 ? '#10b981' : '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>${c.pnl >= 0 ? '+' : ''}{c.pnl.toLocaleString()}</div>
+                <div style={{ color: '#64748b', fontSize: 10 }}>{c.trades}T | {c.instruments.join(', ')}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function NextGenTradingAnalytics() {
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE MANAGEMENT
@@ -1379,6 +1467,13 @@ export default function NextGenTradingAnalytics() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────────
+            COPY CHAIN ATTRIBUTION & INSTRUMENT WEIGHTS
+        ───────────────────────────────────────────────────────────────────── */}
+        {activeTab === 'portfolio' && (
+          <CopyChainSection />
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────

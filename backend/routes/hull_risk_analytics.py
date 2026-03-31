@@ -369,3 +369,162 @@ async def get_manager_risk_alerts(account_id: int, authorization: str = Header(N
                 a[k] = a[k].isoformat()
 
     return {"success": True, "alerts": alerts, "count": len(alerts)}
+
+
+
+# ═══════════════════════════════════════════════════════
+# COPY CHAIN P&L ATTRIBUTION
+# Shows how each sub-strategy contributes to 2208
+# ═══════════════════════════════════════════════════════
+
+@router.get("/copy-chain-attribution/{account_id}")
+async def get_copy_chain_attribution(account_id: int, days: int = 30, authorization: str = Header(None)):
+    """
+    P&L attribution across the copy chain.
+    For 2208: shows contribution from each account that 2210 copies.
+    Also includes instrument weight analysis.
+    """
+    _auth(authorization, account_id)
+    db = await get_db()
+
+    # Get the copy chain: 2208 → 2210 → [20062, 2215, 2216, 2219]
+    acc = await db.mt5_accounts.find_one({"account": account_id}, {"_id": 0, "copy_sources": 1, "manager_name": 1, "equity": 1, "initial_allocation": 1})
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    # Get 2210's copy sources (the actual strategies)
+    master_acc = None
+    if acc.get("copy_sources"):
+        master_id = acc["copy_sources"][0].get("master_account")
+        if master_id:
+            master_acc = await db.mt5_accounts.find_one({"account": master_id}, {"_id": 0, "copy_sources": 1, "manager_name": 1, "account": 1})
+
+    # Build list of sub-strategies
+    sub_strategies = []
+    if master_acc and master_acc.get("copy_sources"):
+        for cs in master_acc["copy_sources"]:
+            sub_strategies.append({"account": cs["master_account"], "name": cs["master_name"], "ratio": cs.get("ratio", 1.0)})
+
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Get P&L per sub-strategy by analyzing their deal history
+    attribution = []
+    total_pnl = 0
+    for strat in sub_strategies:
+        pipeline = [
+            {"$match": {"account": strat["account"], "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}}},
+            {"$group": {
+                "_id": None,
+                "total_pnl": {"$sum": "$profit"},
+                "trades": {"$sum": 1},
+                "wins": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, 1, 0]}},
+                "total_profit": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, "$profit", 0]}},
+                "total_loss": {"$sum": {"$cond": [{"$lt": ["$profit", 0]}, "$profit", 0]}},
+                "symbols": {"$addToSet": "$symbol"}
+            }}
+        ]
+        result = list(await db.mt5_deals_history.aggregate(pipeline).to_list(1))
+        s = result[0] if result else {}
+
+        pnl = float(s.get("total_pnl", 0))
+        trades = s.get("trades", 0)
+        wins = s.get("wins", 0)
+        wr = (wins / trades * 100) if trades > 0 else 0
+        pf = abs(float(s.get("total_profit", 0)) / float(s.get("total_loss", 1))) if s.get("total_loss", 0) != 0 else 0
+        total_pnl += pnl * strat["ratio"]
+
+        # Get sub-account equity
+        sub_acc = await db.mt5_accounts.find_one({"account": strat["account"]}, {"_id": 0, "equity": 1, "initial_allocation": 1})
+        sub_eq = float(sub_acc.get("equity", 0)) if sub_acc else 0
+        sub_init = float(sub_acc.get("initial_allocation", 0)) if sub_acc else 0
+
+        attribution.append({
+            "account": strat["account"],
+            "name": strat["name"],
+            "ratio": strat["ratio"],
+            "pnl": round(pnl, 2),
+            "contributed_pnl": round(pnl * strat["ratio"], 2),
+            "trades": trades,
+            "wins": wins,
+            "win_rate": round(wr, 1),
+            "profit_factor": round(pf, 2),
+            "symbols": s.get("symbols", []),
+            "equity": round(sub_eq, 2),
+            "initial_allocation": round(sub_init, 2),
+        })
+
+    # Sort by absolute contribution
+    attribution.sort(key=lambda x: abs(x["contributed_pnl"]), reverse=True)
+
+    # Contribution percentages
+    for a in attribution:
+        a["pct_of_total"] = round((abs(a["contributed_pnl"]) / abs(total_pnl) * 100) if total_pnl != 0 else 0, 1)
+
+    # ── INSTRUMENT ANALYSIS across all sub-strategies ──
+    all_sub_accounts = [s["account"] for s in sub_strategies]
+    instrument_pipeline = [
+        {"$match": {"account": {"$in": all_sub_accounts}, "type": {"$ne": 2}, "profit": {"$ne": 0}, "time": {"$gte": since}}},
+        {"$group": {
+            "_id": "$symbol",
+            "total_pnl": {"$sum": "$profit"},
+            "trades": {"$sum": 1},
+            "wins": {"$sum": {"$cond": [{"$gt": ["$profit", 0]}, 1, 0]}},
+            "total_volume": {"$sum": "$volume"},
+            "accounts": {"$addToSet": "$account"},
+        }},
+        {"$sort": {"total_pnl": -1}}
+    ]
+    instruments = list(await db.mt5_deals_history.aggregate(instrument_pipeline).to_list(50))
+
+    instrument_data = []
+    total_instrument_pnl = sum(abs(float(i["total_pnl"])) for i in instruments) or 1
+    for inst in instruments:
+        pnl = float(inst["total_pnl"])
+        tc = inst["trades"]
+        wr = (inst["wins"] / tc * 100) if tc > 0 else 0
+        weight = abs(pnl) / total_instrument_pnl * 100
+
+        # Map to category
+        sym = inst["_id"] or "UNKNOWN"
+        category = "GOLD" if "XAU" in sym.upper() else "FOREX" if any(x in sym.upper() for x in ["EUR","GBP","USD","JPY","AUD","CAD","CHF","NZD"]) else "INDICES" if any(x in sym.upper() for x in ["NAS","US30","DAX","DE40","SPX"]) else "CRYPTO" if any(x in sym.upper() for x in ["BTC","ETH","CRYPTO"]) else "OTHER"
+
+        instrument_data.append({
+            "symbol": sym,
+            "category": category,
+            "pnl": round(pnl, 2),
+            "trades": tc,
+            "wins": inst["wins"],
+            "win_rate": round(wr, 1),
+            "total_volume": round(float(inst.get("total_volume", 0)), 2),
+            "weight_pct": round(weight, 1),
+            "accounts": inst["accounts"],
+        })
+
+    # Category weights
+    categories = {}
+    for i in instrument_data:
+        cat = i["category"]
+        if cat not in categories:
+            categories[cat] = {"category": cat, "pnl": 0, "trades": 0, "instruments": []}
+        categories[cat]["pnl"] += i["pnl"]
+        categories[cat]["trades"] += i["trades"]
+        categories[cat]["instruments"].append(i["symbol"])
+    for cat in categories.values():
+        cat["weight_pct"] = round(abs(cat["pnl"]) / total_instrument_pnl * 100, 1)
+        cat["pnl"] = round(cat["pnl"], 2)
+    category_list = sorted(categories.values(), key=lambda x: abs(x["pnl"]), reverse=True)
+
+    return {
+        "success": True,
+        "account": account_id,
+        "manager_name": acc.get("manager_name"),
+        "equity": float(acc.get("equity", 0)),
+        "period_days": days,
+        "copy_chain": {
+            "master": {"account": master_acc["account"], "name": master_acc["manager_name"]} if master_acc else None,
+            "sub_strategies": attribution,
+            "total_contributed_pnl": round(total_pnl, 2),
+        },
+        "instruments": instrument_data[:20],
+        "categories": category_list,
+    }

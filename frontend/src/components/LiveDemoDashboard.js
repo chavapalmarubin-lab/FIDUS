@@ -429,8 +429,23 @@ const LiveDemoDashboard = () => {
                       {account.evaluation_notes && (
                         <div className="bg-slate-800/50 rounded p-3 border border-slate-700">
                           <div className="text-xs text-slate-400 mb-1">Evaluation Notes</div>
-                          <div className="text-slate-300 text-sm">
+                          <div className="text-slate-300 text-sm whitespace-pre-line">
                             {account.evaluation_notes}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Copy Strategy Display */}
+                      {account.copy_sources && account.copy_sources.length > 0 && (
+                        <div className="bg-cyan-900/10 rounded p-3 border border-cyan-500/20">
+                          <div className="text-xs text-cyan-400 font-semibold mb-2">Copy Strategy ({account.copy_sources.length} sources)</div>
+                          <div className="space-y-1">
+                            {account.copy_sources.map((cs, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-xs">
+                                <span className="text-white font-medium">{cs.master_name || `#${cs.master_account}`}</span>
+                                <span className="text-cyan-400 font-mono">{cs.ratio}x {cs.description || ''}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
