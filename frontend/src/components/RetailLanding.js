@@ -60,7 +60,23 @@ const T = {
 const RetailLanding = () => {
   const [lang, setLang] = useState('es');
   const [showLucrumFrame, setShowLucrumFrame] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const t = T[lang];
+
+  const handleOpenAccount = () => {
+    if (termsAccepted) {
+      setShowLucrumFrame(true);
+    } else {
+      setShowTerms(true);
+    }
+  };
+
+  const handleAcceptTerms = () => {
+    setTermsAccepted(true);
+    setShowTerms(false);
+    setShowLucrumFrame(true);
+  };
 
   return (
     <div style={{ background: '#050a15', color: '#e2e8f0', minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif" }}>
@@ -77,7 +93,7 @@ const RetailLanding = () => {
               <button onClick={() => setLang('en')} style={{ padding: '5px 10px', background: lang === 'en' ? '#0ea5e9' : 'transparent', color: lang === 'en' ? 'white' : '#64748b', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>EN</button>
             </div>
             <a href="/retail/login" style={{ padding: '8px 20px', color: '#94a3b8', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>{t.signIn}</a>
-            <button onClick={() => setShowLucrumFrame(true)} style={{ padding: '8px 24px', background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', color: 'white', borderRadius: 8, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>{t.openAccount}</button>
+            <button onClick={handleOpenAccount} style={{ padding: '8px 24px', background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', color: 'white', borderRadius: 8, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>{t.openAccount}</button>
           </div>
         </div>
       </nav>
@@ -94,7 +110,7 @@ const RetailLanding = () => {
           </h1>
           <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: '#94a3b8', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>{t.heroDesc}</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => setShowLucrumFrame(true)} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={handleOpenAccount} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
               {t.startBtn} <ArrowRight size={18} />
             </button>
             <a href="/retail/login" style={{ padding: '14px 32px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 600, textDecoration: 'none' }}>{t.loginBtn}</a>
@@ -122,7 +138,7 @@ const RetailLanding = () => {
         <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', textAlign: 'center', marginBottom: 48 }}>{t.howTitle}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
           {[
-            { step: '1', title: t.step1t, desc: t.step1d, icon: Users, action: t.openAccount, onClick: () => setShowLucrumFrame(true) },
+            { step: '1', title: t.step1t, desc: t.step1d, icon: Users, action: t.openAccount, onClick: handleOpenAccount },
             { step: '2', title: t.step2t, desc: t.step2d, icon: DollarSign },
             { step: '3', title: t.step3t, desc: t.step3d, icon: Shield },
             { step: '4', title: t.step4t, desc: t.step4d, icon: TrendingUp },
@@ -169,13 +185,77 @@ const RetailLanding = () => {
         <div style={{ padding: 40, background: 'linear-gradient(135deg, rgba(14,165,233,0.1), rgba(6,182,212,0.05))', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 20 }}>
           <h2 style={{ color: 'white', fontSize: 28, fontWeight: 800, marginBottom: 12 }}>{t.ctaTitle}</h2>
           <p style={{ color: '#94a3b8', marginBottom: 24 }}>{t.ctaDesc}</p>
-          <button onClick={() => setShowLucrumFrame(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+          <button onClick={handleOpenAccount} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', borderRadius: 12, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             {t.ctaBtn} <ArrowRight size={18} />
           </button>
         </div>
       </section>
 
       {/* Footer */}
+
+      {/* Terms & Conditions Acceptance */}
+      {showTerms && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#0f172a', borderRadius: 16, border: '1px solid rgba(14,165,233,0.2)', maxWidth: 520, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 28 }} />
+                <span style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>{lang === 'es' ? 'Terminos y Condiciones' : 'Terms & Conditions'}</span>
+              </div>
+              <button onClick={() => setShowTerms(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}>✕</button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: 20, flex: 1, overflowY: 'auto' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+                <h4 style={{ color: '#0ea5e9', fontSize: 14, margin: '0 0 8px' }}>FIDUS Solutions LLC</h4>
+                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.6, margin: '0 0 8px' }}>
+                  {lang === 'es'
+                    ? 'Al abrir una cuenta gestionada por FIDUS Solutions LLC, usted acepta que FIDUS operara su cuenta bajo una estrategia de trading algoritmico. FIDUS cobra una comision de rendimiento del 30% sobre las ganancias generadas. Su capital permanece en su cuenta de broker LUCRUM Capital en todo momento. FIDUS solo tiene acceso de operacion, nunca de retiro. Los rendimientos pasados no garantizan resultados futuros. El trading implica riesgo de perdida.'
+                    : 'By opening an account managed by FIDUS Solutions LLC, you agree that FIDUS will operate your account under an algorithmic trading strategy. FIDUS charges a 30% performance fee on generated profits. Your capital remains in your LUCRUM Capital broker account at all times. FIDUS has trading access only, never withdrawal access. Past performance does not guarantee future results. Trading involves risk of loss.'}
+                </p>
+                <a href="/FIDUS_Retail_Terms.docx" target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                  {lang === 'es' ? 'Ver documento completo de FIDUS' : 'View full FIDUS disclosure'} →
+                </a>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+                <h4 style={{ color: '#f59e0b', fontSize: 14, margin: '0 0 8px' }}>LUCRUM Capital</h4>
+                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.6, margin: '0 0 8px' }}>
+                  {lang === 'es'
+                    ? 'Al abrir una cuenta con LUCRUM Capital, usted acepta los terminos de servicio del broker, incluyendo politicas de segregacion de fondos, proteccion de saldo negativo, y regulaciones aplicables. LUCRUM Capital es un broker regulado. Los fondos de clientes se mantienen en cuentas segregadas.'
+                    : 'By opening an account with LUCRUM Capital, you agree to the broker\'s terms of service, including fund segregation policies, negative balance protection, and applicable regulations. LUCRUM Capital is a regulated broker. Client funds are held in segregated accounts.'}
+                </p>
+                <a href="https://my.lucrumfx.com" target="_blank" rel="noopener noreferrer" style={{ color: '#f59e0b', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                  {lang === 'es' ? 'Ver terminos de LUCRUM Capital' : 'View LUCRUM Capital terms'} →
+                </a>
+              </div>
+
+              {/* Risk Warning */}
+              <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+                <p style={{ color: '#ef4444', fontSize: 11, lineHeight: 1.5, margin: 0 }}>
+                  {lang === 'es'
+                    ? 'ADVERTENCIA DE RIESGO: El trading de instrumentos financieros implica un alto nivel de riesgo y puede no ser adecuado para todos los inversionistas. Usted podria perder parte o la totalidad de su capital. Solo invierta dinero que pueda permitirse perder.'
+                    : 'RISK WARNING: Trading financial instruments involves a high level of risk and may not be suitable for all investors. You could lose some or all of your capital. Only invest money you can afford to lose.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Accept Button */}
+            <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button onClick={handleAcceptTerms}
+                style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <CheckCircle size={18} />
+                {lang === 'es' ? 'Acepto los Terminos y Condiciones — Continuar' : 'I Accept Terms & Conditions — Continue'}
+              </button>
+              <p style={{ textAlign: 'center', color: '#475569', fontSize: 10, marginTop: 8 }}>
+                {lang === 'es' ? 'Al hacer clic, acepta los terminos de FIDUS Solutions LLC y LUCRUM Capital.' : 'By clicking, you accept terms of FIDUS Solutions LLC and LUCRUM Capital.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LUCRUM Iframe Overlay */}
       {showLucrumFrame && (
