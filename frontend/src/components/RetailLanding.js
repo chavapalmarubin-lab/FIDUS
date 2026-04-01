@@ -62,6 +62,9 @@ const RetailLanding = () => {
   const [showLucrumFrame, setShowLucrumFrame] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [checkFidus, setCheckFidus] = useState(false);
+  const [checkLucrum, setCheckLucrum] = useState(false);
+  const [checkCopy, setCheckCopy] = useState(false);
   const t = T[lang];
 
   const handleOpenAccount = () => {
@@ -72,7 +75,10 @@ const RetailLanding = () => {
     }
   };
 
+  const allChecked = checkFidus && checkLucrum && checkCopy;
+
   const handleAcceptTerms = () => {
+    if (!allChecked) return;
     setTermsAccepted(true);
     setShowTerms(false);
     setShowLucrumFrame(true);
@@ -208,33 +214,57 @@ const RetailLanding = () => {
 
             {/* Content */}
             <div style={{ padding: 20, flex: 1, overflowY: 'auto' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
-                <h4 style={{ color: '#0ea5e9', fontSize: 14, margin: '0 0 8px' }}>FIDUS Solutions LLC</h4>
-                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.6, margin: '0 0 8px' }}>
-                  {lang === 'es'
-                    ? 'Al abrir una cuenta gestionada por FIDUS Solutions LLC, usted acepta que FIDUS operara su cuenta bajo una estrategia de trading algoritmico. FIDUS cobra una comision de rendimiento del 30% sobre las ganancias generadas. Su capital permanece en su cuenta de broker LUCRUM Capital en todo momento. FIDUS solo tiene acceso de operacion, nunca de retiro. Los rendimientos pasados no garantizan resultados futuros. El trading implica riesgo de perdida.'
-                    : 'By opening an account managed by FIDUS Solutions LLC, you agree that FIDUS will operate your account under an algorithmic trading strategy. FIDUS charges a 30% performance fee on generated profits. Your capital remains in your LUCRUM Capital broker account at all times. FIDUS has trading access only, never withdrawal access. Past performance does not guarantee future results. Trading involves risk of loss.'}
-                </p>
-                <a href="/FIDUS_Retail_Terms.docx" target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
-                  {lang === 'es' ? 'Ver documento completo de FIDUS' : 'View full FIDUS disclosure'} →
-                </a>
-              </div>
+              {/* 1. FIDUS Terms */}
+              <label style={{ display: 'flex', gap: 12, padding: 14, background: checkFidus ? 'rgba(14,165,233,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${checkFidus ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, marginBottom: 10, cursor: 'pointer', transition: 'all 0.2s' }}>
+                <input type="checkbox" checked={checkFidus} onChange={e => setCheckFidus(e.target.checked)} style={{ width: 20, height: 20, marginTop: 2, accentColor: '#0ea5e9', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ color: '#0ea5e9', fontSize: 14, margin: '0 0 6px' }}>FIDUS Solutions LLC</h4>
+                  <p style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5, margin: '0 0 6px' }}>
+                    {lang === 'es'
+                      ? 'Acepto que FIDUS operara mi cuenta bajo una estrategia de trading algoritmico. FIDUS cobra una comision de rendimiento del 30% sobre las ganancias. Mi capital permanece en mi cuenta de broker LUCRUM Capital. FIDUS solo tiene acceso de operacion, nunca de retiro.'
+                      : 'I agree that FIDUS will operate my account under an algorithmic trading strategy. FIDUS charges a 30% performance fee on profits. My capital remains in my LUCRUM Capital broker account. FIDUS has trading access only, never withdrawal access.'}
+                  </p>
+                  <a href="/FIDUS_Retail_Terms.docx" target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}>
+                    {lang === 'es' ? 'Ver documento completo' : 'View full document'} →
+                  </a>
+                </div>
+              </label>
 
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
-                <h4 style={{ color: '#f59e0b', fontSize: 14, margin: '0 0 8px' }}>LUCRUM Capital</h4>
-                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.6, margin: '0 0 8px' }}>
-                  {lang === 'es'
-                    ? 'Al abrir una cuenta con LUCRUM Capital, usted acepta los terminos de servicio del broker, incluyendo politicas de segregacion de fondos, proteccion de saldo negativo, y regulaciones aplicables. LUCRUM Capital es un broker regulado. Los fondos de clientes se mantienen en cuentas segregadas.'
-                    : 'By opening an account with LUCRUM Capital, you agree to the broker\'s terms of service, including fund segregation policies, negative balance protection, and applicable regulations. LUCRUM Capital is a regulated broker. Client funds are held in segregated accounts.'}
-                </p>
-                <a href="https://my.lucrumfx.com" target="_blank" rel="noopener noreferrer" style={{ color: '#f59e0b', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
-                  {lang === 'es' ? 'Ver terminos de LUCRUM Capital' : 'View LUCRUM Capital terms'} →
-                </a>
-              </div>
+              {/* 2. LUCRUM Terms */}
+              <label style={{ display: 'flex', gap: 12, padding: 14, background: checkLucrum ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${checkLucrum ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, marginBottom: 10, cursor: 'pointer', transition: 'all 0.2s' }}>
+                <input type="checkbox" checked={checkLucrum} onChange={e => setCheckLucrum(e.target.checked)} style={{ width: 20, height: 20, marginTop: 2, accentColor: '#f59e0b', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ color: '#f59e0b', fontSize: 14, margin: '0 0 6px' }}>LUCRUM Capital — Broker Terms</h4>
+                  <p style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5, margin: '0 0 6px' }}>
+                    {lang === 'es'
+                      ? 'Acepto los terminos de servicio de LUCRUM Capital, incluyendo politicas de segregacion de fondos, proteccion de saldo negativo, y regulaciones aplicables. Los fondos se mantienen en cuentas segregadas.'
+                      : 'I accept LUCRUM Capital\'s terms of service, including fund segregation policies, negative balance protection, and applicable regulations. Funds are held in segregated accounts.'}
+                  </p>
+                  <a href="https://my.lucrumfx.com" target="_blank" rel="noopener noreferrer" style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}>
+                    {lang === 'es' ? 'Ver terminos de LUCRUM' : 'View LUCRUM terms'} →
+                  </a>
+                </div>
+              </label>
+
+              {/* 3. Copy Trading Agreement */}
+              <label style={{ display: 'flex', gap: 12, padding: 14, background: checkCopy ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${checkCopy ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, marginBottom: 14, cursor: 'pointer', transition: 'all 0.2s' }}>
+                <input type="checkbox" checked={checkCopy} onChange={e => setCheckCopy(e.target.checked)} style={{ width: 20, height: 20, marginTop: 2, accentColor: '#8b5cf6', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ color: '#8b5cf6', fontSize: 14, margin: '0 0 6px' }}>Copy Trading Investor Participation Agreement & Limited Trading Authorization</h4>
+                  <p style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5, margin: '0 0 6px' }}>
+                    {lang === 'es'
+                      ? 'Autorizo a FIDUS Solutions LLC a ejecutar operaciones en mi cuenta mediante copia automatica de estrategias (copy trading). Entiendo que las operaciones se replican automaticamente y que FIDUS tiene autorizacion limitada de trading sobre mi cuenta. No otorgo acceso a retiros ni transferencias de fondos.'
+                      : 'I authorize FIDUS Solutions LLC to execute trades in my account through automated strategy copying (copy trading). I understand that trades are replicated automatically and that FIDUS has limited trading authorization over my account. I do not grant withdrawal or fund transfer access.'}
+                  </p>
+                  <a href="/FIDUS_Retail_Terms.docx" target="_blank" rel="noopener noreferrer" style={{ color: '#8b5cf6', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}>
+                    {lang === 'es' ? 'Ver acuerdo completo (Seccion 18)' : 'View full agreement (Section 18)'} →
+                  </a>
+                </div>
+              </label>
 
               {/* Risk Warning */}
-              <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
-                <p style={{ color: '#ef4444', fontSize: 11, lineHeight: 1.5, margin: 0 }}>
+              <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 10, padding: 12 }}>
+                <p style={{ color: '#ef4444', fontSize: 10, lineHeight: 1.5, margin: 0 }}>
                   {lang === 'es'
                     ? 'ADVERTENCIA DE RIESGO: El trading de instrumentos financieros implica un alto nivel de riesgo y puede no ser adecuado para todos los inversionistas. Usted podria perder parte o la totalidad de su capital. Solo invierta dinero que pueda permitirse perder.'
                     : 'RISK WARNING: Trading financial instruments involves a high level of risk and may not be suitable for all investors. You could lose some or all of your capital. Only invest money you can afford to lose.'}
@@ -244,14 +274,13 @@ const RetailLanding = () => {
 
             {/* Accept Button */}
             <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <button onClick={handleAcceptTerms}
-                style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button onClick={handleAcceptTerms} disabled={!allChecked}
+                style={{ width: '100%', padding: '14px', background: allChecked ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(100,116,139,0.2)', color: allChecked ? 'white' : '#475569', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: allChecked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
                 <CheckCircle size={18} />
-                {lang === 'es' ? 'Acepto los Terminos y Condiciones — Continuar' : 'I Accept Terms & Conditions — Continue'}
+                {allChecked
+                  ? (lang === 'es' ? 'Acepto — Continuar a Apertura de Cuenta' : 'I Accept — Continue to Account Opening')
+                  : (lang === 'es' ? `Acepta los 3 acuerdos para continuar (${[checkFidus,checkLucrum,checkCopy].filter(Boolean).length}/3)` : `Accept all 3 agreements to continue (${[checkFidus,checkLucrum,checkCopy].filter(Boolean).length}/3)`)}
               </button>
-              <p style={{ textAlign: 'center', color: '#475569', fontSize: 10, marginTop: 8 }}>
-                {lang === 'es' ? 'Al hacer clic, acepta los terminos de FIDUS Solutions LLC y LUCRUM Capital.' : 'By clicking, you accept terms of FIDUS Solutions LLC and LUCRUM Capital.'}
-              </p>
             </div>
           </div>
         </div>
