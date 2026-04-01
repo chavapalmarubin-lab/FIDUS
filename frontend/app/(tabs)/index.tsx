@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Dimensions,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,8 @@ import { translations } from '../../src/i18n/translations';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+
+const FidusLogo = require('../../assets/images/fidus-logo.png');
 
 const API_BASE = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || 
                  process.env.EXPO_PUBLIC_BACKEND_URL || 
@@ -146,9 +149,11 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.logoSmall}>
-              <Ionicons name="trending-up" size={16} color="#00b4d8" />
-            </View>
+            <Image 
+              source={FidusLogo}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
             <View>
               <Text style={styles.welcomeText}>{t.welcome}</Text>
               <Text style={styles.userName}>{user?.name || 'User'}</Text>
@@ -306,13 +311,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 180, 216, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  headerLogo: {
+    width: 40,
+    height: 40,
     marginRight: 12,
   },
   welcomeText: {

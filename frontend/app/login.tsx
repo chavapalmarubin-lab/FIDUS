@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../src/context/LanguageContext';
 import { useAuth } from '../src/context/AuthContext';
 import { translations } from '../src/i18n/translations';
+
+const FidusLogo = require('../assets/images/fidus-logo.png');
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -86,11 +89,11 @@ export default function LoginScreen() {
         >
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="trending-up" size={32} color="#00b4d8" />
-            </View>
-            <Text style={styles.logoText}>FIDUS</Text>
-            <Text style={styles.subtitle}>{t.investmentPortal}</Text>
+            <Image 
+              source={FidusLogo} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Form */}
@@ -183,25 +186,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
-  logoIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 180, 216, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#ffffff',
-    letterSpacing: 2,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 8,
+  logoImage: {
+    width: 180,
+    height: 180,
   },
   formContainer: {
     width: '100%',
