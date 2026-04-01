@@ -50,7 +50,8 @@ export default function LoginScreen() {
     try {
       const success = await login(email, password);
       if (success) {
-        router.replace('/(tabs)');
+        // Route to index which will check terms acceptance
+        router.replace('/');
       } else {
         Alert.alert(t.error, t.invalidCredentials);
       }
@@ -66,7 +67,8 @@ export default function LoginScreen() {
     try {
       const success = await loginWithBiometric();
       if (success) {
-        router.replace('/(tabs)');
+        // Route to index which will check terms acceptance
+        router.replace('/');
       } else {
         Alert.alert(t.error, t.invalidCredentials);
       }

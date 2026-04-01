@@ -179,6 +179,16 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms-log')}>
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+                <Ionicons name="document-text-outline" size={20} color="#3b82f6" />
+              </View>
+              <Text style={styles.menuItemText}>{t.viewTermsAcceptances}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/withdraw')}>
             <View style={styles.menuItemLeft}>
               <View style={[styles.menuIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>

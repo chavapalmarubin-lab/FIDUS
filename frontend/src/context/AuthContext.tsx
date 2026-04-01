@@ -40,6 +40,8 @@ interface User {
   totalEarnings: number;
   monthlyReturn: number;
   biometricEnabled: boolean;
+  termsAccepted: boolean;
+  termsAcceptedAt?: string;
   notificationPreferences: NotificationPreferences;
   paymentSchedule: PaymentScheduleItem[];
 }
@@ -129,6 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           totalEarnings: userData.totalEarnings,
           monthlyReturn: userData.monthlyReturn,
           biometricEnabled: userData.biometricEnabled || false,
+          termsAccepted: userData.termsAccepted || false,
+          termsAcceptedAt: userData.termsAcceptedAt,
           notificationPreferences: userData.notificationPreferences || {
             payment_reminders: true,
             deposit_alerts: true,
@@ -229,6 +233,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           totalEarnings: userData.totalEarnings,
           monthlyReturn: userData.monthlyReturn,
           biometricEnabled: userData.biometricEnabled || false,
+          termsAccepted: userData.termsAccepted || false,
+          termsAcceptedAt: userData.termsAcceptedAt,
           notificationPreferences: userData.notificationPreferences || {
             payment_reminders: true,
             deposit_alerts: true,

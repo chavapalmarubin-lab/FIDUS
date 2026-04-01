@@ -59,6 +59,18 @@ class NotificationPreferences(BaseModel):
     monthly_reports: bool = True
     push_enabled: bool = True
 
+class TermsAcceptance(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    user_email: str
+    user_name: str
+    fidus_terms_accepted: bool = False
+    lucrum_terms_accepted: bool = False
+    terms_version: str = "1.0"
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    accepted_at: datetime = Field(default_factory=datetime.utcnow)
+
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
@@ -69,6 +81,8 @@ class User(BaseModel):
     total_earnings: float = 225.0
     monthly_return: float = 75.0
     biometric_enabled: bool = False
+    terms_accepted: bool = False
+    terms_accepted_at: Optional[datetime] = None
     notification_preferences: NotificationPreferences = Field(default_factory=NotificationPreferences)
     push_token: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -83,6 +97,8 @@ class UserResponse(BaseModel):
     totalEarnings: float
     monthlyReturn: float
     biometricEnabled: bool
+    termsAccepted: bool
+    termsAcceptedAt: Optional[datetime] = None
     notificationPreferences: NotificationPreferences
     paymentSchedule: List[PaymentScheduleItem]
 
@@ -114,6 +130,24 @@ class UpdateNotificationPreferencesRequest(BaseModel):
     payment_reminders: Optional[bool] = None
     deposit_alerts: Optional[bool] = None
     monthly_reports: Optional[bool] = None
+
+class AcceptTermsRequest(BaseModel):
+    fidus_terms_accepted: bool
+    lucrum_terms_accepted: bool
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+
+class TermsAcceptanceLog(BaseModel):
+    id: str
+    user_id: str
+    user_email: str
+    user_name: str
+    fidus_terms_accepted: bool
+    lucrum_terms_accepted: bool
+    terms_version: str
+    ip_address: Optional[str]
+    user_agent: Optional[str]
+    accepted_at: datetime
     push_enabled: Optional[bool] = None
 
 class RegisterPushTokenRequest(BaseModel):
@@ -335,6 +369,8 @@ async def login(request: LoginRequest):
             totalEarnings=user.total_earnings,
             monthlyReturn=user.monthly_return,
             biometricEnabled=user.biometric_enabled,
+            termsAccepted=user.terms_accepted,
+            termsAcceptedAt=user.terms_accepted_at,
             notificationPreferences=user.notification_preferences,
             paymentSchedule=user.payment_schedule
         )
@@ -355,9 +391,86 @@ async def get_user_profile(user: User = Depends(get_current_user)):
         totalEarnings=user.total_earnings,
         monthlyReturn=user.monthly_return,
         biometricEnabled=user.biometric_enabled,
+        termsAccepted=user.terms_accepted,
+        termsAcceptedAt=user.terms_accepted_at,
         notificationPreferences=user.notification_preferences,
         paymentSchedule=user.payment_schedule
     )
+
+@api_router.post("/user/accept-terms")
+async def accept_terms(request: AcceptTermsRequest, user: User = Depends(get_current_user)):
+    """Accept terms and conditions - creates legal log"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if not request.fidus_terms_accepted or not request.lucrum_terms_accepted:
+        raise HTTPException(status_code=400, detail="Both FIDUS and LUCRUM terms must be accepted")
+    
+    # Create acceptance log for legal records
+    acceptance_log = TermsAcceptance(
+        user_id=user.id,
+        user_email=user.email,
+        user_name=user.name,
+        fidus_terms_accepted=request.fidus_terms_accepted,
+        lucrum_terms_accepted=request.lucrum_terms_accepted,
+        terms_version="1.0",
+        ip_address=request.ip_address,
+        user_agent=request.user_agent,
+    )
+    await db.terms_acceptances.insert_one(acceptance_log.dict())
+    
+    # Update user record
+    now = datetime.utcnow()
+    await db.users.update_one(
+        {"id": user.id},
+        {"$set": {"terms_accepted": True, "terms_accepted_at": now}}
+    )
+    
+    logger.info(f"Terms accepted by user {user.email} at {now}")
+    
+    return {
+        "success": True,
+        "message": "Terms and conditions accepted",
+        "acceptedAt": now.isoformat()
+    }
+
+@api_router.get("/admin/terms-acceptances", response_model=List[TermsAcceptanceLog])
+async def get_terms_acceptances(
+    limit: int = 100,
+    offset: int = 0,
+    user: User = Depends(get_current_user)
+):
+    """Get all terms acceptance logs (admin only)"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # In production, add admin role check here
+    acceptances = await db.terms_acceptances.find().sort("accepted_at", -1).skip(offset).limit(limit).to_list(limit)
+    
+    return [
+        TermsAcceptanceLog(
+            id=a['id'],
+            user_id=a['user_id'],
+            user_email=a['user_email'],
+            user_name=a['user_name'],
+            fidus_terms_accepted=a['fidus_terms_accepted'],
+            lucrum_terms_accepted=a['lucrum_terms_accepted'],
+            terms_version=a['terms_version'],
+            ip_address=a.get('ip_address'),
+            user_agent=a.get('user_agent'),
+            accepted_at=a['accepted_at']
+        )
+        for a in acceptances
+    ]
+
+@api_router.get("/admin/terms-acceptances/count")
+async def get_terms_acceptances_count(user: User = Depends(get_current_user)):
+    """Get total count of terms acceptances"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    count = await db.terms_acceptances.count_documents({})
+    return {"count": count}
 
 @api_router.put("/user/profile")
 async def update_profile(request: UpdateProfileRequest, user: User = Depends(get_current_user)):

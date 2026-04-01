@@ -151,6 +151,18 @@ export const translations = {
     month: 'Month',
 
     success: 'Success',
+
+    // Terms and Conditions
+    termsAndConditions: 'Terms & Conditions',
+    pleaseReviewAndAccept: 'Please review and accept to continue',
+    highRiskWarning: 'Trading CFDs and Forex is highly speculative and carries a HIGH LEVEL OF RISK. You may lose SOME OR ALL of your invested capital.',
+    iAcceptFidusTerms: 'I accept FIDUS Solutions LLC Terms & Risk Disclosures',
+    iAcceptLucrumTerms: 'I accept Lucrum Capital Limited Terms & Conditions',
+    mustAcceptBoth: 'You must accept both FIDUS and LUCRUM terms to continue',
+    termsLegalInfo: 'Your acceptance will be logged with timestamp for legal compliance purposes.',
+    acceptAndContinue: 'Accept & Continue',
+    viewTermsAcceptances: 'Terms Acceptances Log',
+    termsAcceptedOn: 'Terms accepted on',
   },
   es: {
     // Login
@@ -304,5 +316,17 @@ export const translations = {
     month: 'Mes',
 
     success: '\u00c9xito',
+
+    // Terms and Conditions
+    termsAndConditions: 'T\u00e9rminos y Condiciones',
+    pleaseReviewAndAccept: 'Por favor revise y acepte para continuar',
+    highRiskWarning: 'Operar CFDs y Forex es altamente especulativo y conlleva un ALTO NIVEL DE RIESGO. Puede perder PARTE O TODO su capital invertido.',
+    iAcceptFidusTerms: 'Acepto los T\u00e9rminos y Divulgaciones de Riesgo de FIDUS Solutions LLC',
+    iAcceptLucrumTerms: 'Acepto los T\u00e9rminos y Condiciones de Lucrum Capital Limited',
+    mustAcceptBoth: 'Debe aceptar los t\u00e9rminos de FIDUS y LUCRUM para continuar',
+    termsLegalInfo: 'Su aceptaci\u00f3n ser\u00e1 registrada con marca de tiempo para cumplimiento legal.',
+    acceptAndContinue: 'Aceptar y Continuar',
+    viewTermsAcceptances: 'Registro de Aceptaci\u00f3n de T\u00e9rminos',
+    termsAcceptedOn: 'T\u00e9rminos aceptados el',
   },
 };

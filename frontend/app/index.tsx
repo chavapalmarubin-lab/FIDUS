@@ -5,17 +5,22 @@ import { useAuth } from '../src/context/AuthContext';
 
 export default function Index() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.replace('/(tabs)');
+        // Check if terms are accepted
+        if (!user?.termsAccepted) {
+          router.replace('/terms');
+        } else {
+          router.replace('/(tabs)');
+        }
       } else {
         router.replace('/login');
       }
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, user?.termsAccepted]);
 
   return (
     <View style={styles.container}>
