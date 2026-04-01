@@ -306,12 +306,6 @@ const RetailLanding = () => {
       <footer style={{ borderTop: '1px solid rgba(100,116,139,0.1)', padding: '24px', textAlign: 'center' }}>
         <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
         <p style={{ color: '#475569', fontSize: 11, maxWidth: 700, margin: '0 auto', lineHeight: 1.6 }}>{t.footer}</p>
-        <div style={{ marginTop: 12, display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12, color: '#64748b' }}>
-          <a href="/retail/login" style={{ color: '#64748b', textDecoration: 'none' }}>{t.clientPortal}</a>
-          <a href="/retail/admin" style={{ color: '#64748b', textDecoration: 'none' }}>{t.admin}</a>
-          <a href="/franchise/login" style={{ color: '#64748b', textDecoration: 'none' }}>{t.franchise}</a>
-          <a href="/" style={{ color: '#64748b', textDecoration: 'none' }}>{t.institutional}</a>
-        </div>
       </footer>
     </div>
   );
