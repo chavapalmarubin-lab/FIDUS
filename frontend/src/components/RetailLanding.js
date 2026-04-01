@@ -90,7 +90,7 @@ const RetailLanding = () => {
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(5,10,21,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(100,116,139,0.1)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 40, width: 'auto' }} />
+            <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 48, width: 'auto' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* Language Toggle */}
@@ -206,7 +206,7 @@ const RetailLanding = () => {
             {/* Header */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 28 }} />
+                <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 28 }} />
                 <span style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>{lang === 'es' ? 'Terminos y Condiciones' : 'Terms & Conditions'}</span>
               </div>
               <button onClick={() => setShowTerms(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}>✕</button>
@@ -291,7 +291,7 @@ const RetailLanding = () => {
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ background: '#050a15', borderBottom: '1px solid rgba(14,165,233,0.2)', padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 32 }} />
+              <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 32 }} />
               <span style={{ color: '#0ea5e9', fontSize: 13, fontWeight: 600 }}>Apertura de Cuenta LUCRUM Capital</span>
             </div>
             <button onClick={() => setShowLucrumFrame(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '6px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
@@ -304,7 +304,7 @@ const RetailLanding = () => {
 
 
       <footer style={{ borderTop: '1px solid rgba(100,116,139,0.1)', padding: '24px', textAlign: 'center' }}>
-        <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 32, margin: '0 auto 12px', display: 'block' }} />
+        <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 40, margin: '0 auto 12px', display: 'block' }} />
         <p style={{ color: '#475569', fontSize: 11, maxWidth: 700, margin: '0 auto', lineHeight: 1.6 }}>{t.footer}</p>
         <div style={{ marginTop: 12, display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12, color: '#64748b' }}>
           <a href="/retail/login" style={{ color: '#64748b', textDecoration: 'none' }}>{t.clientPortal}</a>

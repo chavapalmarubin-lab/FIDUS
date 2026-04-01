@@ -44,7 +44,7 @@ const AdminLogin = ({ onLogin }) => {
     <div style={{ background: '#050a15', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
+          <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
           <h1 style={{ color: 'white', fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>FIDUS Retail</h1>
           <p style={{ color: '#64748b', fontSize: 13 }}>Portal de Administracion</p>
         </div>
@@ -136,7 +136,7 @@ const RetailAdminDashboard = ({ authData, onLogout }) => {
       <header style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(5,10,21,0.95)', backdropFilter: 'blur(12px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 36 }} />
+            <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 36 }} />
             <div>
               <h1 style={{ color: 'white', fontSize: 18, fontWeight: 800, margin: 0 }}>FIDUS Retail — Admin</h1>
               <p style={{ color: '#64748b', fontSize: 12, margin: 0 }}>{admin.name || admin.email}</p>

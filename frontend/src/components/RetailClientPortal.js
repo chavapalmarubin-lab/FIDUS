@@ -43,7 +43,7 @@ const RetailLogin = ({ onLogin }) => {
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
+          <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
           <h1 style={{ color: 'white', fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>FIDUS</h1>
           <p style={{ color: '#64748b', fontSize: 13 }}>Portal de Inversiones</p>
         </div>
@@ -118,7 +118,7 @@ const RetailApp = ({ authData, onLogout }) => {
           {/* Header */}
           <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 32 }} />
+              <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 32 }} />
               <div>
                 <p style={{ color: '#64748b', fontSize: 11, margin: 0 }}>Bienvenido</p>
                 <h2 style={{ color: 'white', fontSize: 18, fontWeight: 700, margin: 0 }}>{client.first_name || client.name}</h2>
@@ -295,7 +295,7 @@ const RetailApp = ({ authData, onLogout }) => {
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ background: '#050a15', borderBottom: '1px solid rgba(14,165,233,0.2)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <img src="/fidus-logo.png" alt="FIDUS" style={{ height: 28 }} />
+              <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 28 }} />
               <span style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 600 }}>LUCRUM Capital</span>
             </div>
             <button onClick={() => setShowLucrum(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '5px 14px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Cerrar</button>
