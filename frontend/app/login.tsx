@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,13 +21,21 @@ import { translations } from '../src/i18n/translations';
 export default function LoginScreen() {
   const router = useRouter();
   const { language } = useLanguage();
-  const { login } = useAuth();
+  const { login, loginWithBiometric, biometricAvailable, user } = useAuth();
   const t = translations[language];
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showBiometric, setShowBiometric] = useState(false);
+
+  useEffect(() => {
+    // Check if biometric login is available
+    if (biometricAvailable && Platform.OS !== 'web') {
+      setShowBiometric(true);
+    }
+  }, [biometricAvailable]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -38,6 +46,22 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       const success = await login(email, password);
+      if (success) {
+        router.replace('/(tabs)');
+      } else {
+        Alert.alert(t.error, t.invalidCredentials);
+      }
+    } catch (error) {
+      Alert.alert(t.error, t.loginError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    try {
+      const success = await loginWithBiometric();
       if (success) {
         router.replace('/(tabs)');
       } else {
@@ -117,6 +141,18 @@ export default function LoginScreen() {
                 <Text style={styles.loginButtonText}>{t.signIn}</Text>
               )}
             </TouchableOpacity>
+
+            {/* Biometric Login Button */}
+            {showBiometric && (
+              <TouchableOpacity
+                style={styles.biometricButton}
+                onPress={handleBiometricLogin}
+                disabled={isLoading}
+              >
+                <Ionicons name="finger-print" size={24} color="#00b4d8" />
+                <Text style={styles.biometricText}>{t.useBiometric}</Text>
+              </TouchableOpacity>
+            )}
 
             <Text style={styles.noAccountText}>{t.noAccount}</Text>
             <TouchableOpacity>
@@ -202,6 +238,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#00b4d8',
+    gap: 8,
+  },
+  biometricText: {
+    color: '#00b4d8',
+    fontSize: 14,
+    fontWeight: '500',
   },
   noAccountText: {
     color: '#6b7280',

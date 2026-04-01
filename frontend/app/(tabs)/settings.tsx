@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  Switch,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +20,7 @@ import { translations } from '../../src/i18n/translations';
 export default function SettingsScreen() {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logout, toggleBiometric, biometricAvailable } = useAuth();
   const t = translations[language];
 
   const handleLogout = () => {
@@ -39,8 +41,11 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleWithdraw = () => {
-    router.push('/withdraw');
+  const handleBiometricToggle = async (value: boolean) => {
+    const success = await toggleBiometric(value);
+    if (!success) {
+      Alert.alert(t.error, 'Failed to update biometric settings');
+    }
   };
 
   const handleOpenLucrum = () => {
@@ -58,7 +63,7 @@ export default function SettingsScreen() {
         {/* Profile Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.profile}</Text>
-          <View style={styles.profileCard}>
+          <TouchableOpacity style={styles.profileCard} onPress={() => router.push('/edit-profile')}>
             <View style={styles.avatarContainer}>
               <Text style={styles.avatarText}>
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -68,7 +73,8 @@ export default function SettingsScreen() {
               <Text style={styles.profileName}>{user?.name || 'User'}</Text>
               <Text style={styles.profileEmail}>{user?.email || ''}</Text>
             </View>
-          </View>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
         </View>
 
         {/* Language Section */}
@@ -104,17 +110,76 @@ export default function SettingsScreen() {
                   language === 'es' && styles.languageTextActive,
                 ]}
               >
-                Español
+                Espa\u00f1ol
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Security Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.security}</Text>
+          
+          {biometricAvailable && Platform.OS !== 'web' && (
+            <View style={styles.settingItem}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.menuIcon, { backgroundColor: 'rgba(0, 180, 216, 0.1)' }]}>
+                  <Ionicons name="finger-print" size={20} color="#00b4d8" />
+                </View>
+                <View style={styles.settingItemInfo}>
+                  <Text style={styles.settingItemText}>{t.biometricLogin}</Text>
+                  <Text style={styles.settingItemDesc}>{t.biometricDescription}</Text>
+                </View>
+              </View>
+              <Switch
+                value={user?.biometricEnabled || false}
+                onValueChange={handleBiometricToggle}
+                trackColor={{ false: '#2a3444', true: '#00b4d8' }}
+                thumbColor="#ffffff"
+              />
+            </View>
+          )}
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password')}>
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+                <Ionicons name="lock-closed-outline" size={20} color="#ef4444" />
+              </View>
+              <Text style={styles.menuItemText}>{t.changePassword}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Notifications Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.notifications}</Text>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notification-settings')}>
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                <Ionicons name="notifications-outline" size={20} color="#10b981" />
+              </View>
+              <Text style={styles.menuItemText}>{t.notificationSettings}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
         </View>
 
         {/* Actions Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.actions}</Text>
           
-          <TouchableOpacity style={styles.menuItem} onPress={handleWithdraw}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/transactions')}>
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+                <Ionicons name="list-outline" size={20} color="#8b5cf6" />
+              </View>
+              <Text style={styles.menuItemText}>{t.transactionHistory}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/withdraw')}>
             <View style={styles.menuItemLeft}>
               <View style={[styles.menuIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
                 <Ionicons name="wallet-outline" size={20} color="#f59e0b" />
@@ -142,7 +207,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         {/* Version */}
-        <Text style={styles.versionText}>FIDUS App v1.0.0</Text>
+        <Text style={styles.versionText}>FIDUS App v2.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -237,6 +302,32 @@ const styles = StyleSheet.create({
   },
   languageTextActive: {
     color: '#00b4d8',
+  },
+  settingItem: {
+    backgroundColor: '#1a2332',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  settingItemInfo: {
+    flex: 1,
+  },
+  settingItemText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  settingItemDesc: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
   },
   menuItem: {
     backgroundColor: '#1a2332',

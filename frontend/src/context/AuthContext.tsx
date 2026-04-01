@@ -2,6 +2,16 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
+// Conditionally import native-only modules
+let SecureStore: any = null;
+let LocalAuthentication: any = null;
+
+if (Platform.OS !== 'web') {
+  SecureStore = require('expo-secure-store');
+  LocalAuthentication = require('expo-local-authentication');
+}
 
 // Use the backend URL from environment
 const API_BASE = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || 
@@ -14,13 +24,23 @@ interface PaymentScheduleItem {
   status: 'Funded' | 'Pending';
 }
 
+interface NotificationPreferences {
+  payment_reminders: boolean;
+  deposit_alerts: boolean;
+  monthly_reports: boolean;
+  push_enabled: boolean;
+}
+
 interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   balance: number;
   totalEarnings: number;
   monthlyReturn: number;
+  biometricEnabled: boolean;
+  notificationPreferences: NotificationPreferences;
   paymentSchedule: PaymentScheduleItem[];
 }
 
@@ -28,23 +48,43 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  biometricAvailable: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithBiometric: () => Promise<boolean>;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
+  updateProfile: (name: string, phone: string) => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  toggleBiometric: (enabled: boolean) => Promise<boolean>;
+  updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_TOKEN_KEY = '@fidus_auth_token';
 const USER_DATA_KEY = '@fidus_user_data';
+const BIOMETRIC_CREDENTIALS_KEY = 'fidus_biometric_creds';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   useEffect(() => {
+    checkBiometricAvailability();
     loadStoredAuth();
   }, []);
+
+  const checkBiometricAvailability = async () => {
+    try {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      setBiometricAvailable(compatible && enrolled);
+    } catch (error) {
+      console.error('Error checking biometric availability:', error);
+      setBiometricAvailable(false);
+    }
+  };
 
   const loadStoredAuth = async () => {
     try {
@@ -56,7 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token && userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        // Refresh data in background
         refreshUserDataInternal(token);
       }
     } catch (error) {
@@ -75,12 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       }, {
         timeout: 15000,
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
-
-      console.log('Login response:', response.data);
 
       if (response.data && response.data.success) {
         const { token, user: userData } = response.data;
@@ -89,9 +124,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: userData.id,
           name: userData.name,
           email: userData.email,
+          phone: userData.phone,
           balance: userData.balance,
           totalEarnings: userData.totalEarnings,
           monthlyReturn: userData.monthlyReturn,
+          biometricEnabled: userData.biometricEnabled || false,
+          notificationPreferences: userData.notificationPreferences || {
+            payment_reminders: true,
+            deposit_alerts: true,
+            monthly_reports: true,
+            push_enabled: true,
+          },
           paymentSchedule: userData.paymentSchedule || [],
         };
 
@@ -100,12 +143,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(transformedUser)),
         ]);
 
+        // Store credentials for biometric login if enabled
+        if (transformedUser.biometricEnabled && Platform.OS !== 'web') {
+          try {
+            await SecureStore.setItemAsync(BIOMETRIC_CREDENTIALS_KEY, JSON.stringify({ email, password }));
+          } catch (e) {
+            console.log('Could not store biometric credentials');
+          }
+        }
+
         setUser(transformedUser);
         return true;
       }
       return false;
     } catch (error: any) {
       console.error('Login error:', error?.response?.data || error.message);
+      return false;
+    }
+  };
+
+  const loginWithBiometric = async (): Promise<boolean> => {
+    try {
+      if (Platform.OS === 'web') {
+        return false;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to login',
+        fallbackLabel: 'Use password',
+        disableDeviceFallback: false,
+      });
+
+      if (result.success) {
+        const credentialsStr = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+        if (credentialsStr) {
+          const { email, password } = JSON.parse(credentialsStr);
+          return await login(email, password);
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Biometric login error:', error);
       return false;
     }
   };
@@ -120,9 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 5000,
           });
-        } catch (e) {
-          // Ignore logout API errors
-        }
+        } catch (e) {}
       }
       
       await Promise.all([
@@ -148,9 +224,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: userData.id,
           name: userData.name,
           email: userData.email,
+          phone: userData.phone,
           balance: userData.balance,
           totalEarnings: userData.totalEarnings,
           monthlyReturn: userData.monthlyReturn,
+          biometricEnabled: userData.biometricEnabled || false,
+          notificationPreferences: userData.notificationPreferences || {
+            payment_reminders: true,
+            deposit_alerts: true,
+            monthly_reports: true,
+            push_enabled: true,
+          },
           paymentSchedule: userData.paymentSchedule || [],
         };
 
@@ -169,15 +253,122 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateProfile = async (name: string, phone: string): Promise<boolean> => {
+    try {
+      const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+      if (!token) return false;
+
+      await axios.put(`${API_BASE}/api/user/profile`, { name, phone }, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000,
+      });
+
+      if (user) {
+        const updatedUser = { ...user, name, phone };
+        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+      return true;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return false;
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
+    try {
+      const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+      if (!token) return false;
+
+      await axios.post(`${API_BASE}/api/user/change-password`, 
+        { current_password: currentPassword, new_password: newPassword },
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
+      );
+
+      // Update stored biometric credentials if enabled
+      if (user?.biometricEnabled && Platform.OS !== 'web') {
+        try {
+          await SecureStore.setItemAsync(BIOMETRIC_CREDENTIALS_KEY, 
+            JSON.stringify({ email: user.email, password: newPassword }));
+        } catch (e) {}
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Change password error:', error);
+      return false;
+    }
+  };
+
+  const toggleBiometric = async (enabled: boolean): Promise<boolean> => {
+    try {
+      const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+      if (!token) return false;
+
+      await axios.put(`${API_BASE}/api/user/biometric?enabled=${enabled}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000,
+      });
+
+      if (user) {
+        const updatedUser = { ...user, biometricEnabled: enabled };
+        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+
+      if (!enabled && Platform.OS !== 'web') {
+        try {
+          await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+        } catch (e) {}
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Toggle biometric error:', error);
+      return false;
+    }
+  };
+
+  const updateNotificationPreferences = async (prefs: Partial<NotificationPreferences>): Promise<boolean> => {
+    try {
+      const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+      if (!token) return false;
+
+      await axios.put(`${API_BASE}/api/user/notifications`, prefs, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000,
+      });
+
+      if (user) {
+        const updatedUser = {
+          ...user,
+          notificationPreferences: { ...user.notificationPreferences, ...prefs },
+        };
+        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+      return true;
+    } catch (error) {
+      console.error('Update notifications error:', error);
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
         isLoading,
+        biometricAvailable,
         login,
+        loginWithBiometric,
         logout,
         refreshUserData,
+        updateProfile,
+        changePassword,
+        toggleBiometric,
+        updateNotificationPreferences,
       }}
     >
       {children}

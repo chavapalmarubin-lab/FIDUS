@@ -8,10 +8,11 @@ FIDUS Investment App is a mobile application (iOS & Android) for the FIDUS Inves
 - Android
 - Built with Expo/React Native for cross-platform compatibility
 
-## Core Features
+## Version 2.0 Features
 
 ### 1. Authentication
 - Login with email/password
+- **Biometric Login (Face ID / Touch ID)** - NEW
 - Demo account: carlos.demo@test.com / Fidus26@
 - Session management with token-based auth
 - Secure logout
@@ -21,54 +22,56 @@ FIDUS Investment App is a mobile application (iOS & Android) for the FIDUS Inves
 - Total balance display
 - Earnings indicator (+$X earned)
 - Product badges (1.5% monthly, FIDUS CORE)
-- Quick action buttons:
-  - Add Money
-  - Withdraw
-  - Product Info
-  - Simulator
+- Quick action buttons: Add Money, Withdraw, Product Info, Simulator
+- **Portfolio Performance Chart** - NEW
+- **Recent Transactions Preview** - NEW
 - Next payment preview with amount and date
 - Payment schedule with funded/pending status
 
 ### 3. Investment Simulator
-- Select additional investment amount ($500, $1,000, $5,000, $10,000, $25,000)
-- Shows current vs projected:
-  - Monthly returns
-  - Annual returns
+- Select additional investment amount ($500-$25,000)
+- Shows current vs projected monthly/annual returns
 - 1.5% monthly return calculation
 
 ### 4. Info/FAQ Screen
 - FIDUS CORE product information
-- Questions answered:
-  - Return rates (1.5% monthly / 18% annual target)
-  - Minimum investment ($100 USD)
-  - Withdrawal policy (no contracts, no lock-in)
-  - Money security (user's broker account)
-  - FIDUS revenue model
-  - Risk factors
+- 6 FAQs about returns, risks, withdrawals
 
-### 5. Settings
+### 5. Settings - ENHANCED
 - User profile display (name, email, avatar)
+- **Edit Profile** - NEW
 - Language toggle (English/Spanish)
-- Actions:
-  - Withdraw Funds (links to LUCRUM)
-  - Go to LUCRUM
+- **Security Section** - NEW
+  - Biometric Login toggle
+  - Change Password
+- **Notification Preferences** - NEW
+  - Push Notifications
+  - Payment Reminders
+  - Deposit Alerts
+  - Monthly Reports
+- Transaction History link
+- Withdraw Funds link
+- Go to LUCRUM link
 - Logout
-- App version
 
-### 6. Add Money Screen
-- Instructions for depositing
-- Payment methods (Bank Transfer, Crypto, Card)
-- Link to LUCRUM platform
+### 6. Transaction History - NEW
+- List of all transactions (deposits, withdrawals, returns)
+- Filter tabs: All, Deposits, Withdrawals, Returns
+- Status badges (Completed, Pending)
+- Pull-to-refresh
 
-### 7. Withdraw Screen
-- Step-by-step withdrawal instructions
-- Link to LUCRUM platform
-- Processing time info
+### 7. Profile Management - NEW
+- Edit name and phone
+- Change password with validation
+
+### 8. Add Money / Withdraw Screens
+- Step-by-step instructions
+- Payment method options
+- Links to LUCRUM platform
 
 ## Bilingual Support
 - Full English/Spanish translation
-- Language persisted in AsyncStorage
-- Instant language switching without restart
+- Instant language switching
 
 ## Design Specifications
 - Dark theme (#0a0f1a background)
@@ -76,37 +79,21 @@ FIDUS Investment App is a mobile application (iOS & Android) for the FIDUS Inves
 - Success: Green (#10b981)
 - Warning: Amber (#f59e0b)
 - Error: Red (#ef4444)
-- Cards: #1a2332 with #2a3444 borders
 
 ## Technical Stack
 - Frontend: Expo (React Native)
 - Backend: FastAPI (Python)
 - Database: MongoDB
-- Authentication: JWT tokens with Bearer auth
-- State Management: React Context + AsyncStorage
+- Authentication: JWT tokens + Biometric
+- State Management: React Context + AsyncStorage + SecureStore
 
-## API Integration
-The app connects to our custom backend API that provides:
-- User authentication
-- Profile data
-- Payment schedule generation
-- Session management
-
-## Data Model
-```typescript
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  balance: number;
-  totalEarnings: number;
-  monthlyReturn: number;
-  paymentSchedule: PaymentScheduleItem[];
-}
-
-interface PaymentScheduleItem {
-  month: string;
-  amount: number;
-  status: 'Funded' | 'Pending';
-}
-```
+## API Endpoints
+- POST /api/auth/login - User login
+- POST /api/auth/logout - User logout
+- GET /api/user/profile - Get user profile
+- PUT /api/user/profile - Update profile
+- POST /api/user/change-password - Change password
+- PUT /api/user/biometric - Toggle biometric
+- PUT /api/user/notifications - Update notification prefs
+- GET /api/transactions - Get transaction history
+- GET /api/portfolio/history - Get portfolio chart data

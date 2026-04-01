@@ -44,14 +44,33 @@ class PaymentScheduleItem(BaseModel):
     amount: float
     status: str  # 'Funded' or 'Pending'
 
+class Transaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    type: str  # 'deposit', 'withdrawal', 'return'
+    amount: float
+    description: str
+    status: str  # 'completed', 'pending', 'failed'
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class NotificationPreferences(BaseModel):
+    payment_reminders: bool = True
+    deposit_alerts: bool = True
+    monthly_reports: bool = True
+    push_enabled: bool = True
+
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
     password_hash: str
     name: str
+    phone: Optional[str] = None
     balance: float = 5000.0
     total_earnings: float = 225.0
     monthly_return: float = 75.0
+    biometric_enabled: bool = False
+    notification_preferences: NotificationPreferences = Field(default_factory=NotificationPreferences)
+    push_token: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     payment_schedule: List[PaymentScheduleItem] = []
 
@@ -59,9 +78,12 @@ class UserResponse(BaseModel):
     id: str
     email: str
     name: str
+    phone: Optional[str] = None
     balance: float
     totalEarnings: float
     monthlyReturn: float
+    biometricEnabled: bool
+    notificationPreferences: NotificationPreferences
     paymentSchedule: List[PaymentScheduleItem]
 
 class LoginRequest(BaseModel):
@@ -79,6 +101,36 @@ class Session(BaseModel):
     token: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime
+
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class UpdateNotificationPreferencesRequest(BaseModel):
+    payment_reminders: Optional[bool] = None
+    deposit_alerts: Optional[bool] = None
+    monthly_reports: Optional[bool] = None
+    push_enabled: Optional[bool] = None
+
+class RegisterPushTokenRequest(BaseModel):
+    push_token: str
+
+class TransactionResponse(BaseModel):
+    id: str
+    type: str
+    amount: float
+    description: str
+    status: str
+    createdAt: datetime
+
+class PortfolioDataPoint(BaseModel):
+    month: str
+    balance: float
+    earnings: float
 
 # ===== Helper Functions =====
 
@@ -106,6 +158,62 @@ def generate_payment_schedule(balance: float) -> List[PaymentScheduleItem]:
         ))
     
     return schedule
+
+def generate_transaction_history(user_id: str, balance: float) -> List[Transaction]:
+    """Generate sample transaction history"""
+    transactions = []
+    monthly_return = balance * 0.015
+    months = ['January', 'February', 'March', 'April', 'May', 'June']
+    
+    # Initial deposit
+    transactions.append(Transaction(
+        user_id=user_id,
+        type='deposit',
+        amount=balance,
+        description='Initial deposit via Bank Transfer',
+        status='completed',
+        created_at=datetime.now() - timedelta(days=180)
+    ))
+    
+    # Monthly returns
+    for i, month in enumerate(months[:3]):
+        transactions.append(Transaction(
+            user_id=user_id,
+            type='return',
+            amount=monthly_return,
+            description=f'{month} 2026 - 1.5% Monthly Return',
+            status='completed',
+            created_at=datetime.now() - timedelta(days=90 - (i * 30))
+        ))
+    
+    return transactions
+
+def generate_portfolio_history(balance: float) -> List[PortfolioDataPoint]:
+    """Generate 12-month portfolio history"""
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    current_month = datetime.now().month - 1
+    monthly_rate = 0.015
+    
+    # Start with initial balance 6 months ago
+    initial_balance = balance - (balance * monthly_rate * 3)  # Approximate
+    history = []
+    
+    running_balance = initial_balance
+    running_earnings = 0
+    
+    for i in range(6):
+        month_index = (current_month - 5 + i) % 12
+        month_earnings = running_balance * monthly_rate
+        running_balance += month_earnings
+        running_earnings += month_earnings
+        
+        history.append(PortfolioDataPoint(
+            month=months[month_index],
+            balance=round(running_balance, 2),
+            earnings=round(running_earnings, 2)
+        ))
+    
+    return history
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[User]:
     if not credentials:
@@ -141,24 +249,41 @@ async def init_demo_user():
             email=demo_email,
             password_hash=hash_password(demo_password),
             name="Carlos",
+            phone="+1 555-0123",
             balance=balance,
             total_earnings=225.0,
             monthly_return=balance * 0.015,
             payment_schedule=generate_payment_schedule(balance)
         )
         await db.users.insert_one(demo_user.dict())
+        
+        # Create transaction history
+        transactions = generate_transaction_history(demo_user.id, balance)
+        for tx in transactions:
+            await db.transactions.insert_one(tx.dict())
+        
         logger.info(f"Demo user created: {demo_email}")
     else:
-        # Update existing user with payment schedule if missing
-        if not existing.get('payment_schedule'):
-            balance = existing.get('balance', 5000.0)
-            await db.users.update_one(
-                {"email": demo_email},
-                {"$set": {
-                    "payment_schedule": [ps.dict() for ps in generate_payment_schedule(balance)]
-                }}
-            )
-            logger.info(f"Updated demo user payment schedule")
+        # Update existing user with new fields if missing
+        updates = {}
+        if 'notification_preferences' not in existing:
+            updates['notification_preferences'] = NotificationPreferences().dict()
+        if 'biometric_enabled' not in existing:
+            updates['biometric_enabled'] = False
+        if 'phone' not in existing:
+            updates['phone'] = "+1 555-0123"
+        
+        if updates:
+            await db.users.update_one({"email": demo_email}, {"$set": updates})
+            logger.info(f"Updated demo user with new fields")
+        
+        # Create transactions if missing
+        tx_count = await db.transactions.count_documents({"user_id": existing.get('id')})
+        if tx_count == 0:
+            transactions = generate_transaction_history(existing.get('id'), existing.get('balance', 5000.0))
+            for tx in transactions:
+                await db.transactions.insert_one(tx.dict())
+            logger.info(f"Created transactions for demo user")
 
 @app.on_event("startup")
 async def startup_event():
@@ -169,7 +294,7 @@ async def startup_event():
 
 @api_router.get("/")
 async def root():
-    return {"message": "FIDUS Investment App API", "version": "1.0.0"}
+    return {"message": "FIDUS Investment App API", "version": "2.0.0"}
 
 @api_router.get("/health")
 async def health_check():
@@ -205,9 +330,12 @@ async def login(request: LoginRequest):
             id=user.id,
             email=user.email,
             name=user.name,
+            phone=user.phone,
             balance=user.balance,
             totalEarnings=user.total_earnings,
             monthlyReturn=user.monthly_return,
+            biometricEnabled=user.biometric_enabled,
+            notificationPreferences=user.notification_preferences,
             paymentSchedule=user.payment_schedule
         )
     )
@@ -222,11 +350,126 @@ async def get_user_profile(user: User = Depends(get_current_user)):
         id=user.id,
         email=user.email,
         name=user.name,
+        phone=user.phone,
         balance=user.balance,
         totalEarnings=user.total_earnings,
         monthlyReturn=user.monthly_return,
+        biometricEnabled=user.biometric_enabled,
+        notificationPreferences=user.notification_preferences,
         paymentSchedule=user.payment_schedule
     )
+
+@api_router.put("/user/profile")
+async def update_profile(request: UpdateProfileRequest, user: User = Depends(get_current_user)):
+    """Update user profile"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    updates = {}
+    if request.name:
+        updates['name'] = request.name
+    if request.phone:
+        updates['phone'] = request.phone
+    
+    if updates:
+        await db.users.update_one({"id": user.id}, {"$set": updates})
+    
+    return {"success": True, "message": "Profile updated successfully"}
+
+@api_router.post("/user/change-password")
+async def change_password(request: ChangePasswordRequest, user: User = Depends(get_current_user)):
+    """Change user password"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if user.password_hash != hash_password(request.current_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    new_hash = hash_password(request.new_password)
+    await db.users.update_one({"id": user.id}, {"$set": {"password_hash": new_hash}})
+    
+    return {"success": True, "message": "Password changed successfully"}
+
+@api_router.put("/user/biometric")
+async def toggle_biometric(enabled: bool, user: User = Depends(get_current_user)):
+    """Enable/disable biometric authentication"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    await db.users.update_one({"id": user.id}, {"$set": {"biometric_enabled": enabled}})
+    
+    return {"success": True, "biometricEnabled": enabled}
+
+@api_router.put("/user/notifications")
+async def update_notification_preferences(
+    request: UpdateNotificationPreferencesRequest, 
+    user: User = Depends(get_current_user)
+):
+    """Update notification preferences"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    updates = {}
+    if request.payment_reminders is not None:
+        updates['notification_preferences.payment_reminders'] = request.payment_reminders
+    if request.deposit_alerts is not None:
+        updates['notification_preferences.deposit_alerts'] = request.deposit_alerts
+    if request.monthly_reports is not None:
+        updates['notification_preferences.monthly_reports'] = request.monthly_reports
+    if request.push_enabled is not None:
+        updates['notification_preferences.push_enabled'] = request.push_enabled
+    
+    if updates:
+        await db.users.update_one({"id": user.id}, {"$set": updates})
+    
+    return {"success": True, "message": "Notification preferences updated"}
+
+@api_router.post("/user/push-token")
+async def register_push_token(request: RegisterPushTokenRequest, user: User = Depends(get_current_user)):
+    """Register push notification token"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    await db.users.update_one({"id": user.id}, {"$set": {"push_token": request.push_token}})
+    
+    return {"success": True, "message": "Push token registered"}
+
+@api_router.get("/transactions", response_model=List[TransactionResponse])
+async def get_transactions(
+    limit: int = 50,
+    offset: int = 0,
+    type: Optional[str] = None,
+    user: User = Depends(get_current_user)
+):
+    """Get user transaction history"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    query = {"user_id": user.id}
+    if type:
+        query["type"] = type
+    
+    transactions = await db.transactions.find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+    
+    return [
+        TransactionResponse(
+            id=tx['id'],
+            type=tx['type'],
+            amount=tx['amount'],
+            description=tx['description'],
+            status=tx['status'],
+            createdAt=tx['created_at']
+        )
+        for tx in transactions
+    ]
+
+@api_router.get("/portfolio/history", response_model=List[PortfolioDataPoint])
+async def get_portfolio_history(user: User = Depends(get_current_user)):
+    """Get portfolio performance history"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    return generate_portfolio_history(user.balance)
 
 @api_router.post("/auth/logout")
 async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -258,9 +501,12 @@ async def refresh_user_data(user: User = Depends(get_current_user)):
         id=user.id,
         email=user.email,
         name=user.name,
+        phone=user.phone,
         balance=user.balance,
         totalEarnings=user.total_earnings,
         monthlyReturn=monthly_return,
+        biometricEnabled=user.biometric_enabled,
+        notificationPreferences=user.notification_preferences,
         paymentSchedule=payment_schedule
     )
 
