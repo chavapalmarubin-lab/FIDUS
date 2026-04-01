@@ -26,8 +26,9 @@ interface TermsAcceptanceLog {
   user_id: string;
   user_email: string;
   user_name: string;
-  fidus_terms_accepted: boolean;
   lucrum_terms_accepted: boolean;
+  fidus_terms_accepted: boolean;
+  copy_trading_terms_accepted: boolean;
   terms_version: string;
   ip_address?: string;
   user_agent?: string;
@@ -168,6 +169,14 @@ export default function TermsLogScreen() {
                   <View style={styles.checkmarks}>
                     <View style={styles.checkItem}>
                       <Ionicons
+                        name={acceptance.lucrum_terms_accepted ? 'checkmark-circle' : 'close-circle'}
+                        size={18}
+                        color={acceptance.lucrum_terms_accepted ? '#10b981' : '#ef4444'}
+                      />
+                      <Text style={styles.checkLabel}>LUCRUM</Text>
+                    </View>
+                    <View style={styles.checkItem}>
+                      <Ionicons
                         name={acceptance.fidus_terms_accepted ? 'checkmark-circle' : 'close-circle'}
                         size={18}
                         color={acceptance.fidus_terms_accepted ? '#10b981' : '#ef4444'}
@@ -176,11 +185,11 @@ export default function TermsLogScreen() {
                     </View>
                     <View style={styles.checkItem}>
                       <Ionicons
-                        name={acceptance.lucrum_terms_accepted ? 'checkmark-circle' : 'close-circle'}
+                        name={acceptance.copy_trading_terms_accepted ? 'checkmark-circle' : 'close-circle'}
                         size={18}
-                        color={acceptance.lucrum_terms_accepted ? '#10b981' : '#ef4444'}
+                        color={acceptance.copy_trading_terms_accepted ? '#10b981' : '#ef4444'}
                       />
-                      <Text style={styles.checkLabel}>LUCRUM</Text>
+                      <Text style={styles.checkLabel}>COPY</Text>
                     </View>
                   </View>
 

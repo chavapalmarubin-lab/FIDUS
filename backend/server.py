@@ -64,8 +64,9 @@ class TermsAcceptance(BaseModel):
     user_id: str
     user_email: str
     user_name: str
-    fidus_terms_accepted: bool = False
     lucrum_terms_accepted: bool = False
+    fidus_terms_accepted: bool = False
+    copy_trading_terms_accepted: bool = False
     terms_version: str = "1.0"
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
@@ -132,8 +133,9 @@ class UpdateNotificationPreferencesRequest(BaseModel):
     monthly_reports: Optional[bool] = None
 
 class AcceptTermsRequest(BaseModel):
-    fidus_terms_accepted: bool
     lucrum_terms_accepted: bool
+    fidus_terms_accepted: bool
+    copy_trading_terms_accepted: bool
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
 
@@ -142,13 +144,13 @@ class TermsAcceptanceLog(BaseModel):
     user_id: str
     user_email: str
     user_name: str
-    fidus_terms_accepted: bool
     lucrum_terms_accepted: bool
+    fidus_terms_accepted: bool
+    copy_trading_terms_accepted: bool
     terms_version: str
     ip_address: Optional[str]
     user_agent: Optional[str]
     accepted_at: datetime
-    push_enabled: Optional[bool] = None
 
 class RegisterPushTokenRequest(BaseModel):
     push_token: str
@@ -403,16 +405,17 @@ async def accept_terms(request: AcceptTermsRequest, user: User = Depends(get_cur
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    if not request.fidus_terms_accepted or not request.lucrum_terms_accepted:
-        raise HTTPException(status_code=400, detail="Both FIDUS and LUCRUM terms must be accepted")
+    if not request.lucrum_terms_accepted or not request.fidus_terms_accepted or not request.copy_trading_terms_accepted:
+        raise HTTPException(status_code=400, detail="All three terms (LUCRUM, FIDUS, and Copy Trading) must be accepted")
     
     # Create acceptance log for legal records
     acceptance_log = TermsAcceptance(
         user_id=user.id,
         user_email=user.email,
         user_name=user.name,
-        fidus_terms_accepted=request.fidus_terms_accepted,
         lucrum_terms_accepted=request.lucrum_terms_accepted,
+        fidus_terms_accepted=request.fidus_terms_accepted,
+        copy_trading_terms_accepted=request.copy_trading_terms_accepted,
         terms_version="1.0",
         ip_address=request.ip_address,
         user_agent=request.user_agent,
@@ -453,8 +456,9 @@ async def get_terms_acceptances(
             user_id=a['user_id'],
             user_email=a['user_email'],
             user_name=a['user_name'],
-            fidus_terms_accepted=a['fidus_terms_accepted'],
-            lucrum_terms_accepted=a['lucrum_terms_accepted'],
+            lucrum_terms_accepted=a.get('lucrum_terms_accepted', False),
+            fidus_terms_accepted=a.get('fidus_terms_accepted', False),
+            copy_trading_terms_accepted=a.get('copy_trading_terms_accepted', False),
             terms_version=a['terms_version'],
             ip_address=a.get('ip_address'),
             user_agent=a.get('user_agent'),
