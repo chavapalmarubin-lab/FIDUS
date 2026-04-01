@@ -90,7 +90,7 @@ const RetailLanding = () => {
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(5,10,21,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(100,116,139,0.1)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 48, width: 'auto' }} />
+            <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 80, width: 'auto' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* Language Toggle */}
@@ -304,7 +304,7 @@ const RetailLanding = () => {
 
 
       <footer style={{ borderTop: '1px solid rgba(100,116,139,0.1)', padding: '24px', textAlign: 'center' }}>
-        <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 40, margin: '0 auto 12px', display: 'block' }} />
+        <img src="/fidus-logo-white.png" alt="FIDUS" style={{ height: 56, margin: '0 auto 12px', display: 'block' }} />
         <p style={{ color: '#475569', fontSize: 11, maxWidth: 700, margin: '0 auto', lineHeight: 1.6 }}>{t.footer}</p>
         <div style={{ marginTop: 12, display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12, color: '#64748b' }}>
           <a href="/retail/login" style={{ color: '#64748b', textDecoration: 'none' }}>{t.clientPortal}</a>
