@@ -149,11 +149,13 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image 
-              source={FidusLogo}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
+            <View style={styles.headerLogoFrame}>
+              <Image 
+                source={FidusLogo}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+            </View>
             <View>
               <Text style={styles.welcomeText}>{t.welcome}</Text>
               <Text style={styles.userName}>{user?.name || 'User'}</Text>
@@ -311,10 +313,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerLogo: {
-    width: 40,
-    height: 40,
+  headerLogoFrame: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
+    shadowColor: '#00b4d8',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  headerLogo: {
+    width: 34,
+    height: 34,
   },
   welcomeText: {
     fontSize: 12,

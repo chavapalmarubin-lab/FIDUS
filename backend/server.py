@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -641,3 +642,15 @@ app.add_middleware(
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# PDF Documentation download endpoint
+@api_router.get("/docs/pdf")
+async def download_pdf():
+    pdf_path = Path("/app/FIDUS_App_Documentation.pdf")
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="PDF documentation not found")
+    return FileResponse(
+        path=str(pdf_path),
+        filename="FIDUS_App_Documentation.pdf",
+        media_type="application/pdf"
+    )

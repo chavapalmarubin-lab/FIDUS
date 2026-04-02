@@ -91,11 +91,15 @@ export default function LoginScreen() {
         >
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <Image 
-              source={FidusLogo} 
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
+            <View style={styles.logoFrame}>
+              <Image 
+                source={FidusLogo} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.brandName}>FIDUS</Text>
+            <Text style={styles.tagline}>Investment Portal</Text>
           </View>
 
           {/* Form */}
@@ -188,9 +192,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
+  logoFrame: {
+    width: 160,
+    height: 160,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#00b4d8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
   logoImage: {
-    width: 180,
-    height: 180,
+    width: 130,
+    height: 130,
+  },
+  brandName: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 8,
+  },
+  tagline: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 8,
   },
   formContainer: {
     width: '100%',
