@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIDUS | Investment Portal</title>
+  <meta name="description" content="FIDUS Investment Portal - Manage your LUCRUM trading account with real-time portfolio analytics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #050a15;
+      color: #e2e8f0;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, button, select, textarea { font-family: inherit; }
+    a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: pulse 1.5s infinite; border-radius: 8px; }
+    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #0ea5e9; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
+    const { useState, useEffect, useCallback, createContext, useContext, useRef } = React;
+
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const API_BASE = window.location.origin.includes('localhost')
+      ? ''
+      : window.location.origin;
+
+    // ============================================================
+    // AUTH CONTEXT
+    // ============================================================
+    const AuthContext = createContext(null);
+
+    function AuthProvider({ children }) {
+      const [user, setUser] = useState(null);
+      const [token, setToken] = useState(localStorage.getItem('fidus_token'));
+      const [loading, setLoading] = useState(true);
+      const [morphoData, setMorphoData] = useState(null);
+
+      const fetchProfile = useCallback(async (t) => {
+        try {
+          const res = await fetch(`${API_BASE}/api/user/profile`, {
+            headers: { Authorization: `Bearer ${t}` }
+          });
+          if (!res.ok) throw new Error('Auth failed');
+          const data = await res.json();
+          setUser(data);
+          setMorphoData(data.morpho || null);
+          return data;
+        } catch {
+          localStorage.removeItem('fidus_token');
+          setToken(null);
+          setUser(null);
+          return null;
+        }
+      }, []);
+
+      useEffect(() => {
+        if (token) {
+          fetchProfile(token).finally(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
+      }, [token, fetchProfile]);
+
+      const login = async (email, password) => {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Login failed');
+        localStorage.setItem('fidus_token', data.token);
+        setToken(data.token);
+        await fetchProfile(data.token);
+        return data;
+      };
+
+      const logout = () => {
+        fetch(`${API_BASE}/api/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => {});
+        localStorage.removeItem('fidus_token');
+        setToken(null);
+        setUser(null);
+        setMorphoData(null);
+      };
+
+      const refreshProfile = () => token ? fetchProfile(token) : Promise.resolve(null);
+
+      return (
+        <AuthContext.Provider value={{ user, token, morphoData, loading, login, logout, refreshProfile }}>
+          {children}
+        </AuthContext.Provider>
+      );
+    }
+
+    const useAuth = () => useContext(AuthContext);
+
+    // ============================================================
+    // LANGUAGE CONTEXT
+    // ============================================================
+    const LangContext = createContext(null);
+
+    const translations = {
+      en: {
+        dashboard: 'Dashboard', settings: 'Settings', login: 'Sign In', logout: 'Logout',
+        email: 'Email', password: 'Password', balance: 'Balance', equity: 'Equity',
+        margin: 'Margin', freeMargin: 'Free Margin', accounts: 'Trading Accounts',
+        kycStatus: 'KYC Verification', uploadDocs: 'Upload Documents', profile: 'Profile',
+        language: 'Language', challenges: 'Challenges', transactions: 'Transactions',
+        idDocument: 'ID Document', proofResidence: 'Proof of Residence', upload: 'Upload',
+        selectFile: 'Select File', pendingReview: 'Pending Review', approved: 'Approved',
+        rejected: 'Rejected', sentToLucrum: 'Sent to LUCRUM', noAccount: "Don't have an account?",
+        openAccount: 'Open Account at LUCRUM', welcome: 'Welcome back',
+        morphoConnected: 'LUCRUM Connected', morphoDisconnected: 'Local Data',
+        liveBrokerData: 'Live Broker Data', whatHappens: 'What happens next?',
+        step1: 'Upload your documents above',
+        step2: 'FIDUS submits them to LUCRUM for verification',
+        step3: 'Your account gets verified (1-2 business days)',
+        investmentPortal: 'Investment Portal', identityVerification: 'Identity Verification',
+        passportOrId: 'Passport, driver\'s license, or national ID',
+        utilityBill: 'Utility bill or bank statement (max 3 months old)',
+        uploadInfo: 'Upload your ID document and proof of residence to verify your LUCRUM account.',
+        documentUploaded: 'Document Uploaded', uploadSuccess: 'Your document has been submitted for review.',
+        changePassword: 'Change Password', goToLucrum: 'Go to LUCRUM Portal',
+        fullName: 'Full Name', phone: 'Phone', save: 'Save', cancel: 'Cancel',
+        emailVerified: 'Email', phoneVerified: 'Phone', docVerified: 'ID Document',
+        residenceVerified: 'Proof of Residence', fullyVerified: 'Fully Verified',
+        verificationPending: 'Verification Pending', totalEquity: 'Total Equity',
+        monthlyReturn: 'Monthly Return', challengeTracking: 'Challenge Tracking',
+        noChallenges: 'No active challenges found', loading: 'Loading...',
+        loginError: 'Invalid email or password', loggingIn: 'Signing in...',
+        amount: 'Amount', type: 'Type', date: 'Date', status: 'Status',
+        deposit: 'Deposit', withdrawal: 'Withdrawal', return: 'Return',
+        completed: 'Completed', pending: 'Pending', failed: 'Failed',
+        noTransactions: 'No transactions found', refreshing: 'Refreshing...',
+        backToRetail: 'Back to FIDUS Retail',
+      },
+      es: {
+        dashboard: 'Panel', settings: 'Ajustes', login: 'Iniciar Sesión', logout: 'Cerrar Sesión',
+        email: 'Correo', password: 'Contraseña', balance: 'Balance', equity: 'Capital',
+        margin: 'Margen', freeMargin: 'Margen Libre', accounts: 'Cuentas de Trading',
+        kycStatus: 'Verificación KYC', uploadDocs: 'Subir Documentos', profile: 'Perfil',
+        language: 'Idioma', challenges: 'Desafíos', transactions: 'Transacciones',
+        idDocument: 'Documento de Identidad', proofResidence: 'Comprobante de Domicilio',
+        upload: 'Subir', selectFile: 'Seleccionar Archivo',
+        pendingReview: 'Pendiente', approved: 'Aprobado',
+        rejected: 'Rechazado', sentToLucrum: 'Enviado a LUCRUM',
+        noAccount: '¿No tienes cuenta?', openAccount: 'Abrir Cuenta en LUCRUM',
+        welcome: 'Bienvenido', morphoConnected: 'LUCRUM Conectado',
+        morphoDisconnected: 'Datos Locales', liveBrokerData: 'Datos en Vivo del Broker',
+        whatHappens: '¿Qué sigue?',
+        step1: 'Sube tus documentos arriba',
+        step2: 'FIDUS los envía a LUCRUM para verificación',
+        step3: 'Tu cuenta se verifica (1-2 días hábiles)',
+        investmentPortal: 'Portal de Inversiones',
+        identityVerification: 'Verificación de Identidad',
+        passportOrId: 'Pasaporte, licencia de conducir o cédula',
+        utilityBill: 'Recibo de servicios o estado de cuenta bancario (máx. 3 meses)',
+        uploadInfo: 'Sube tu documento de identidad y comprobante de domicilio para verificar tu cuenta LUCRUM.',
+        documentUploaded: 'Documento Subido', uploadSuccess: 'Tu documento ha sido enviado para revisión.',
+        changePassword: 'Cambiar Contraseña', goToLucrum: 'Ir al Portal LUCRUM',
+        fullName: 'Nombre Completo', phone: 'Teléfono', save: 'Guardar', cancel: 'Cancelar',
+        emailVerified: 'Correo', phoneVerified: 'Teléfono', docVerified: 'Documento de Identidad',
+        residenceVerified: 'Comprobante de Domicilio', fullyVerified: 'Totalmente Verificado',
+        verificationPending: 'Verificación Pendiente', totalEquity: 'Capital Total',
+        monthlyReturn: 'Rendimiento Mensual', challengeTracking: 'Seguimiento de Desafíos',
+        noChallenges: 'No se encontraron desafíos activos', loading: 'Cargando...',
+        loginError: 'Correo o contraseña inválidos', loggingIn: 'Iniciando sesión...',
+        amount: 'Monto', type: 'Tipo', date: 'Fecha', status: 'Estado',
+        deposit: 'Depósito', withdrawal: 'Retiro', return: 'Rendimiento',
+        completed: 'Completado', pending: 'Pendiente', failed: 'Fallido',
+        noTransactions: 'No se encontraron transacciones', refreshing: 'Actualizando...',
+        backToRetail: 'Volver a FIDUS Retail',
+      }
+    };
+
+    function LangProvider({ children }) {
+      const [lang, setLang] = useState(localStorage.getItem('fidus_lang') || 'es');
+      const t = translations[lang];
+      const setLanguage = (l) => { setLang(l); localStorage.setItem('fidus_lang', l); };
+      return <LangContext.Provider value={{ lang, t, setLanguage }}>{children}</LangContext.Provider>;
+    }
+
+    const useLang = () => useContext(LangContext);
+
+    // ============================================================
+    // SIMPLE HASH ROUTER
+    // ============================================================
+    function useRoute() {
+      const [route, setRoute] = useState(window.location.hash.slice(1) || '/login');
+      useEffect(() => {
+        const handler = () => setRoute(window.location.hash.slice(1) || '/login');
+        window.addEventListener('hashchange', handler);
+        return () => window.removeEventListener('hashchange', handler);
+      }, []);
+      const navigate = (path) => { window.location.hash = path; };
+      return { route, navigate };
+    }
+
+    // ============================================================
+    // ICONS (SVG components)
+    // ============================================================
+    const Icon = ({ name, size = 20, color = 'currentColor' }) => {
+      const icons = {
+        'arrow-left': <><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></>,
+        'trending-up': <><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></>,
+        'shield': <><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></>,
+        'shield-check': <><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></>,
+        'log-out': <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></>,
+        'settings': <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+        'home': <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+        'upload': <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></>,
+        'file-text': <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></>,
+        'check-circle': <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></>,
+        'circle': <><circle cx="12" cy="12" r="10"/></>,
+        'user': <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+        'wallet': <><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></>,
+        'refresh': <><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></>,
+        'external': <><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></>,
+        'eye': <><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></>,
+        'eye-off': <><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></>,
+        'trophy': <><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></>,
+        'list': <><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></>,
+        'id-card': <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><line x1="6" x2="6.01" y1="14" y2="14"/><line x1="10" x2="14" y1="14" y2="14"/></>,
+        'lock': <><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+        'globe': <><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></>,
+        'zap': <><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></>,
+      };
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
+          fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {icons[name]}
+        </svg>
+      );
+    };
+
+    // ============================================================
+    // SHARED STYLES
+    // ============================================================
+    const S = {
+      card: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24 },
+      btn: { padding: '12px 24px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 },
+      btnOutline: { padding: '12px 24px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer' },
+      input: { width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 15, outline: 'none' },
+      badge: (color) => ({ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', background: `${color}18`, borderRadius: 20, fontSize: 12, fontWeight: 600, color }),
+      label: { fontSize: 13, color: '#94a3b8', marginBottom: 6, display: 'block' },
+      heading: { fontSize: 24, fontWeight: 800, color: '#fff', marginBottom: 4 },
+      subheading: { fontSize: 14, color: '#64748b' },
+      statValue: { fontSize: 28, fontWeight: 800, fontFamily: 'monospace', color: '#fff' },
+      statLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
+    };
+
+    // ============================================================
+    // LOGIN PAGE
+    // ============================================================
+    function LoginPage({ navigate }) {
+      const { login } = useAuth();
+      const { t } = useLang();
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [showPw, setShowPw] = useState(false);
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+          await login(email, password);
+          navigate('/dashboard');
+        } catch (err) {
+          setError(t.loginError);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="fade-in" style={{ width: '100%', maxWidth: 400 }}>
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <img alt="FIDUS" src="https://fidus-investment-platform.onrender.com/fidus-logo-white.png"
+                style={{ height: 56, margin: '0 auto 12px', display: 'block' }}
+                onError={(e) => { e.target.style.display = 'none'; }} />
+              <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>FIDUS</h1>
+              <p style={{ color: '#64748b', fontSize: 13 }}>{t.investmentPortal}</p>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input type="email" placeholder={t.email} value={email} onChange={e => setEmail(e.target.value)}
+                required style={S.input} />
+              <div style={{ position: 'relative' }}>
+                <input type={showPw ? 'text' : 'password'} placeholder={t.password} value={password}
+                  onChange={e => setPassword(e.target.value)} required style={{ ...S.input, paddingRight: 48 }} />
+                <button type="button" onClick={() => setShowPw(!showPw)}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                  <Icon name={showPw ? 'eye-off' : 'eye'} size={18} />
+                </button>
+              </div>
+              {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center' }}>{error}</p>}
+              <button type="submit" disabled={loading} style={{ ...S.btn, width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }}>
+                {loading ? <><span className="spinner" /> {t.loggingIn}</> : t.login}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: 20 }}>
+              <p style={{ color: '#64748b', fontSize: 13 }}>{t.noAccount}</p>
+              <a href="https://my.lucrumfx.com/auth/signup?ib=fiso3999&ref=STD%20IB" target="_blank" rel="noopener noreferrer"
+                style={{ color: '#0ea5e9', fontSize: 14, fontWeight: 600 }}>{t.openAccount}</a>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <a href="https://fidus-investment-platform.onrender.com/retail"
+                style={{ color: '#475569', fontSize: 12 }}>{t.backToRetail}</a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // SIDEBAR NAV
+    // ============================================================
+    function Sidebar({ route, navigate }) {
+      const { user, logout } = useAuth();
+      const { t } = useLang();
+      const navItems = [
+        { path: '/dashboard', icon: 'home', label: t.dashboard },
+        { path: '/kyc', icon: 'shield-check', label: t.kycStatus },
+        { path: '/challenges', icon: 'trophy', label: t.challenges },
+        { path: '/transactions', icon: 'list', label: t.transactions },
+        { path: '/settings', icon: 'settings', label: t.settings },
+      ];
+
+      return (
+        <div style={{ width: 240, minHeight: '100vh', background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.06)', padding: '24px 16px', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 36, paddingLeft: 8 }}>
+            <img alt="FIDUS" src="https://fidus-investment-platform.onrender.com/fidus-logo-white.png"
+              style={{ height: 28 }} onError={(e) => { e.target.style.display = 'none'; }} />
+            <span style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: 2 }}>FIDUS</span>
+          </div>
+
+          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {navItems.map(item => {
+              const isActive = route === item.path || route.startsWith(item.path + '/');
+              return (
+                <button key={item.path} onClick={() => navigate(item.path)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: isActive ? 600 : 500, color: isActive ? '#fff' : '#94a3b8', background: isActive ? 'rgba(14,165,233,0.12)' : 'transparent', transition: 'all 0.15s' }}>
+                  <Icon name={item.icon} size={18} color={isActive ? '#0ea5e9' : '#64748b'} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16, marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px', marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 18, background: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#fff' }}>
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
+                <div style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
+              </div>
+            </div>
+            <button onClick={() => { logout(); navigate('/login'); }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#ef4444', background: 'rgba(239,68,68,0.08)' }}>
+              <Icon name="log-out" size={16} color="#ef4444" /> {t.logout}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // LAYOUT WRAPPER
+    // ============================================================
+    function DashboardLayout({ route, navigate, children }) {
+      return (
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+          <Sidebar route={route} navigate={navigate} />
+          <div style={{ flex: 1, marginLeft: 240, padding: '32px 40px', maxWidth: 1200 }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // DASHBOARD PAGE
+    // ============================================================
+    function DashboardPage() {
+      const { user, morphoData, refreshProfile } = useAuth();
+      const { t } = useLang();
+      const [refreshing, setRefreshing] = useState(false);
+
+      const handleRefresh = async () => {
+        setRefreshing(true);
+        await refreshProfile();
+        setRefreshing(false);
+      };
+
+      const balance = morphoData ? morphoData.balance : (user?.balance || 0);
+      const equity = morphoData ? morphoData.equity : (user?.balance || 0);
+      const margin = morphoData ? morphoData.margin : 0;
+      const freeMargin = morphoData ? morphoData.free_margin : 0;
+      const accountCount = morphoData ? morphoData.account_count : 0;
+      const isLive = !!morphoData;
+
+      return (
+        <div className="fade-in">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+            <div>
+              <h1 style={S.heading}>{t.welcome}, {user?.name?.split(' ')[0] || 'User'}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: isLive ? '#10b981' : '#f59e0b' }} />
+                <span style={{ fontSize: 13, color: isLive ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
+                  {isLive ? t.morphoConnected : t.morphoDisconnected}
+                </span>
+                {isLive && <span style={{ fontSize: 12, color: '#64748b', marginLeft: 4 }}>• {t.liveBrokerData}</span>}
+              </div>
+            </div>
+            <button onClick={handleRefresh} disabled={refreshing}
+              style={{ ...S.btnOutline, display: 'flex', alignItems: 'center', gap: 8, opacity: refreshing ? 0.6 : 1 }}>
+              <Icon name="refresh" size={16} /> {refreshing ? t.refreshing : 'Refresh'}
+            </button>
+          </div>
+
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
+            <div style={{ ...S.card, borderLeft: '3px solid #10b981' }}>
+              <div style={S.statLabel}>{t.balance}</div>
+              <div style={{ ...S.statValue, color: '#10b981' }}>${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </div>
+            <div style={{ ...S.card, borderLeft: '3px solid #0ea5e9' }}>
+              <div style={S.statLabel}>{t.equity}</div>
+              <div style={{ ...S.statValue, color: '#0ea5e9' }}>${equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </div>
+            <div style={{ ...S.card, borderLeft: '3px solid #f59e0b' }}>
+              <div style={S.statLabel}>{t.margin}</div>
+              <div style={{ ...S.statValue, color: '#f59e0b' }}>${margin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </div>
+            <div style={{ ...S.card, borderLeft: '3px solid #8b5cf6' }}>
+              <div style={S.statLabel}>{t.freeMargin}</div>
+              <div style={{ ...S.statValue, color: '#8b5cf6' }}>${freeMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </div>
+          </div>
+
+          {/* Monthly Return Card */}
+          <div style={{ ...S.card, marginBottom: 32, background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(6,182,212,0.04))' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={S.statLabel}>{t.monthlyReturn} (1.5%)</div>
+                <div style={{ fontSize: 36, fontWeight: 800, fontFamily: 'monospace', color: '#10b981' }}>
+                  ${(balance * 0.015).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              </div>
+              <Icon name="trending-up" size={48} color="rgba(16,185,129,0.3)" />
+            </div>
+          </div>
+
+          {/* Trading Accounts */}
+          {isLive && morphoData.accounts && morphoData.accounts.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.accounts}</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+                {morphoData.accounts.map((acc, i) => (
+                  <div key={i} style={S.card}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{acc.username || `Account ${i + 1}`}</span>
+                      <span style={S.badge('#0ea5e9')}>{acc.platform || 'MT5'}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div><div style={{ fontSize: 11, color: '#64748b' }}>{t.balance}</div><div style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>${Number(acc.balance || 0).toFixed(2)}</div></div>
+                      <div><div style={{ fontSize: 11, color: '#64748b' }}>{t.equity}</div><div style={{ fontSize: 16, fontWeight: 700, color: '#0ea5e9', fontFamily: 'monospace' }}>${Number(acc.equity || 0).toFixed(2)}</div></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* KYC Status Quick View */}
+          {isLive && morphoData.kyc && (
+            <div style={S.card}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Icon name={morphoData.kyc.fully_verified ? 'shield-check' : 'shield'} size={24}
+                    color={morphoData.kyc.fully_verified ? '#10b981' : '#f59e0b'} />
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: morphoData.kyc.fully_verified ? '#10b981' : '#f59e0b' }}>
+                      {morphoData.kyc.fully_verified ? t.fullyVerified : t.verificationPending}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>LUCRUM KYC</div>
+                  </div>
+                </div>
+                {!morphoData.kyc.fully_verified && (
+                  <button onClick={() => window.location.hash = '/kyc'} style={S.btn}>
+                    <Icon name="upload" size={16} /> {t.uploadDocs}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ============================================================
+    // KYC UPLOAD PAGE
+    // ============================================================
+    function KYCPage() {
+      const { token, morphoData } = useAuth();
+      const { t } = useLang();
+      const [idFile, setIdFile] = useState(null);
+      const [resFile, setResFile] = useState(null);
+      const [uploadingId, setUploadingId] = useState(false);
+      const [uploadingRes, setUploadingRes] = useState(false);
+      const [idStatus, setIdStatus] = useState(null);
+      const [resStatus, setResStatus] = useState(null);
+      const [loadingStatus, setLoadingStatus] = useState(true);
+
+      useEffect(() => {
+        fetchKycStatus();
+      }, []);
+
+      const fetchKycStatus = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/kyc/status?token=${token}`);
+          const data = await res.json();
+          if (data.documents?.id_document) setIdStatus(data.documents.id_document);
+          if (data.documents?.proof_of_residence) setResStatus(data.documents.proof_of_residence);
+        } catch (e) { console.log('KYC status error:', e); }
+        finally { setLoadingStatus(false); }
+      };
+
+      const uploadDoc = async (docType) => {
+        const file = docType === 'id_document' ? idFile : resFile;
+        if (!file) return;
+        const setUploading = docType === 'id_document' ? setUploadingId : setUploadingRes;
+        setUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('doc_type', docType);
+          formData.append('token', token);
+          const res = await fetch(`${API_BASE}/api/kyc/upload`, { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.success) {
+            if (docType === 'id_document') { setIdStatus(data.document); setIdFile(null); }
+            else { setResStatus(data.document); setResFile(null); }
+            alert(t.uploadSuccess);
+          } else { throw new Error(data.detail || 'Upload failed'); }
+        } catch (e) { alert(e.message); }
+        finally { setUploading(false); }
+      };
+
+      const statusBadge = (status) => {
+        const map = {
+          pending_review: { color: '#f59e0b', label: t.pendingReview },
+          submitted_to_lucrum: { color: '#0ea5e9', label: t.sentToLucrum },
+          approved: { color: '#10b981', label: t.approved },
+          rejected: { color: '#ef4444', label: t.rejected },
+        };
+        return map[status] || { color: '#64748b', label: status };
+      };
+
+      const kyc = morphoData?.kyc;
+
+      const DocSection = ({ title, subtitle, icon, docType, file, setFile, uploading, docStatus }) => (
+        <div style={S.card}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <Icon name={icon} size={22} color="#0ea5e9" />
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff' }}>{title}</h3>
+          </div>
+          <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16, marginLeft: 32 }}>{subtitle}</p>
+
+          {docStatus ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'rgba(14,165,233,0.06)', borderRadius: 10 }}>
+              <Icon name="file-text" size={24} color="#0ea5e9" />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, color: '#d1d5db', marginBottom: 4 }}>{docStatus.original_filename}</div>
+                <span style={S.badge(statusBadge(docStatus.status).color)}>
+                  <span style={{ width: 6, height: 6, borderRadius: 3, background: statusBadge(docStatus.status).color, display: 'inline-block' }} />
+                  {statusBadge(docStatus.status).label}
+                </span>
+              </div>
+              <label style={{ cursor: 'pointer', color: '#64748b' }}>
+                <Icon name="refresh" size={18} />
+                <input type="file" accept="image/*,.pdf" style={{ display: 'none' }}
+                  onChange={e => { if (e.target.files[0]) setFile(e.target.files[0]); }} />
+              </label>
+            </div>
+          ) : file ? (
+            <div>
+              <div style={{ padding: 14, background: 'rgba(255,255,255,0.04)', borderRadius: 10, marginBottom: 10 }}>
+                <div style={{ fontSize: 13, color: '#d1d5db' }}>{file.name}</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>{(file.size / 1024).toFixed(1)} KB</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <label style={{ ...S.btnOutline, flex: 1, textAlign: 'center', cursor: 'pointer' }}>
+                  Change
+                  <input type="file" accept="image/*,.pdf" style={{ display: 'none' }}
+                    onChange={e => { if (e.target.files[0]) setFile(e.target.files[0]); }} />
+                </label>
+                <button onClick={() => uploadDoc(docType)} disabled={uploading}
+                  style={{ ...S.btn, flex: 1, justifyContent: 'center', opacity: uploading ? 0.6 : 1 }}>
+                  {uploading ? <span className="spinner" /> : <><Icon name="upload" size={16} /> {t.upload}</>}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '28px 16px', border: '2px dashed rgba(14,165,233,0.25)', borderRadius: 12, cursor: 'pointer' }}>
+              <Icon name="upload" size={28} color="#0ea5e9" />
+              <span style={{ fontSize: 14, color: '#0ea5e9', fontWeight: 500 }}>{t.selectFile}</span>
+              <input type="file" accept="image/*,.pdf" style={{ display: 'none' }}
+                onChange={e => { if (e.target.files[0]) setFile(e.target.files[0]); }} />
+            </label>
+          )}
+        </div>
+      );
+
+      return (
+        <div className="fade-in">
+          <h1 style={{ ...S.heading, marginBottom: 8 }}>{t.identityVerification}</h1>
+          <p style={{ fontSize: 13, color: '#0ea5e9', fontWeight: 500, marginBottom: 24 }}>LUCRUM KYC</p>
+
+          {/* Info banner */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 14, background: 'rgba(14,165,233,0.06)', borderRadius: 10, marginBottom: 24, borderLeft: '3px solid #0ea5e9' }}>
+            <Icon name="shield-check" size={20} color="#0ea5e9" />
+            <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, flex: 1 }}>{t.uploadInfo}</p>
+          </div>
+
+          {/* KYC Checklist from Morpho */}
+          {kyc && (
+            <div style={{ ...S.card, marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <Icon name={kyc.fully_verified ? 'shield-check' : 'shield'} size={24}
+                  color={kyc.fully_verified ? '#10b981' : '#f59e0b'} />
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: kyc.fully_verified ? '#10b981' : '#f59e0b' }}>
+                    {kyc.fully_verified ? t.fullyVerified : t.verificationPending}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[
+                  { key: 'email_validated', label: t.emailVerified },
+                  { key: 'phone_validated', label: t.phoneVerified },
+                  { key: 'document_validated', label: t.docVerified },
+                  { key: 'residence_validated', label: t.residenceVerified },
+                ].map(item => (
+                  <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon name={kyc[item.key] ? 'check-circle' : 'circle'} size={18}
+                      color={kyc[item.key] ? '#10b981' : '#4b5563'} />
+                    <span style={{ fontSize: 13, color: kyc[item.key] ? '#d1d5db' : '#6b7280' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 32 }}>
+            <DocSection title={t.idDocument} subtitle={t.passportOrId} icon="id-card"
+              docType="id_document" file={idFile} setFile={setIdFile}
+              uploading={uploadingId} docStatus={idStatus} />
+            <DocSection title={t.proofResidence} subtitle={t.utilityBill} icon="home"
+              docType="proof_of_residence" file={resFile} setFile={setResFile}
+              uploading={uploadingRes} docStatus={resStatus} />
+          </div>
+
+          {/* What happens next */}
+          <div style={S.card}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.whatHappens}</h3>
+            {[t.step1, t.step2, t.step3].map((step, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 14, background: 'rgba(14,165,233,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#0ea5e9', flexShrink: 0 }}>{i + 1}</div>
+                <span style={{ fontSize: 13, color: '#94a3b8' }}>{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // CHALLENGES PAGE
+    // ============================================================
+    function ChallengesPage() {
+      const { token } = useAuth();
+      const { t } = useLang();
+      const [challenges, setChallenges] = useState([]);
+      const [templates, setTemplates] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/user/challenges`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setChallenges(data.challenges || []);
+            setTemplates(data.templates || []);
+          } catch (e) { console.log('Challenges error:', e); }
+          finally { setLoading(false); }
+        })();
+      }, [token]);
+
+      if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><span className="spinner" /></div>;
+
+      return (
+        <div className="fade-in">
+          <h1 style={{ ...S.heading, marginBottom: 24 }}>{t.challengeTracking}</h1>
+
+          {challenges.length === 0 ? (
+            <div style={{ ...S.card, textAlign: 'center', padding: 48 }}>
+              <Icon name="trophy" size={48} color="rgba(255,255,255,0.1)" />
+              <p style={{ color: '#64748b', marginTop: 16 }}>{t.noChallenges}</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+              {challenges.map((ch, i) => (
+                <div key={i} style={S.card}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{ch.name}</span>
+                    <span style={S.badge('#0ea5e9')}>{ch.status}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {ch.profit_target != null && <div><div style={{ fontSize: 11, color: '#64748b' }}>Profit Target</div><div style={{ fontSize: 14, fontWeight: 700, color: '#10b981' }}>{ch.profit_target}%</div></div>}
+                    {ch.daily_loss_limit != null && <div><div style={{ fontSize: 11, color: '#64748b' }}>Daily Loss Limit</div><div style={{ fontSize: 14, fontWeight: 700, color: '#ef4444' }}>{ch.daily_loss_limit}%</div></div>}
+                    {ch.account_balance != null && <div><div style={{ fontSize: 11, color: '#64748b' }}>{t.balance}</div><div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>${ch.account_balance.toFixed(2)}</div></div>}
+                    {ch.account_equity != null && <div><div style={{ fontSize: 11, color: '#64748b' }}>{t.equity}</div><div style={{ fontSize: 14, fontWeight: 700, color: '#0ea5e9', fontFamily: 'monospace' }}>${ch.account_equity.toFixed(2)}</div></div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {templates.length > 0 && (
+            <div style={{ marginTop: 32 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>Available Challenge Templates</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                {templates.map((tmpl, i) => (
+                  <div key={i} style={S.card}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{tmpl.name}</h3>
+                    <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>{tmpl.description}</p>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <div><div style={{ fontSize: 11, color: '#64748b' }}>Size</div><div style={{ fontSize: 14, fontWeight: 700, color: '#0ea5e9', fontFamily: 'monospace' }}>${tmpl.account_size?.toLocaleString()}</div></div>
+                      <div><div style={{ fontSize: 11, color: '#64748b' }}>Price</div><div style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', fontFamily: 'monospace' }}>${tmpl.price}</div></div>
+                      <div><div style={{ fontSize: 11, color: '#64748b' }}>Leverage</div><div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{tmpl.leverage}</div></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ============================================================
+    // TRANSACTIONS PAGE
+    // ============================================================
+    function TransactionsPage() {
+      const { token } = useAuth();
+      const { t } = useLang();
+      const [transactions, setTransactions] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/transactions?limit=50`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setTransactions(data || []);
+          } catch (e) { console.log('Transactions error:', e); }
+          finally { setLoading(false); }
+        })();
+      }, [token]);
+
+      const typeLabel = (type) => ({ deposit: t.deposit, withdrawal: t.withdrawal, return: t.return }[type] || type);
+      const statusLabel = (s) => ({ completed: t.completed, pending: t.pending, failed: t.failed }[s] || s);
+      const statusColor = (s) => ({ completed: '#10b981', pending: '#f59e0b', failed: '#ef4444' }[s] || '#64748b');
+      const typeColor = (type) => ({ deposit: '#10b981', withdrawal: '#ef4444', return: '#0ea5e9' }[type] || '#fff');
+
+      if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><span className="spinner" /></div>;
+
+      return (
+        <div className="fade-in">
+          <h1 style={{ ...S.heading, marginBottom: 24 }}>{t.transactions}</h1>
+
+          {transactions.length === 0 ? (
+            <div style={{ ...S.card, textAlign: 'center', padding: 48 }}>
+              <Icon name="list" size={48} color="rgba(255,255,255,0.1)" />
+              <p style={{ color: '#64748b', marginTop: 16 }}>{t.noTransactions}</p>
+            </div>
+          ) : (
+            <div style={S.card}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{t.type}</th>
+                    <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{t.amount}</th>
+                    <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{t.status}</th>
+                    <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{t.date}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((tx, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <td style={{ padding: '14px 8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: 4, background: typeColor(tx.type) }} />
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{typeLabel(tx.type)}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, marginLeft: 16 }}>{tx.description}</div>
+                      </td>
+                      <td style={{ padding: '14px 8px', textAlign: 'right', fontSize: 15, fontWeight: 700, fontFamily: 'monospace', color: typeColor(tx.type) }}>
+                        {tx.type === 'withdrawal' ? '-' : '+'}${Number(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '14px 8px' }}>
+                        <span style={S.badge(statusColor(tx.status))}>{statusLabel(tx.status)}</span>
+                      </td>
+                      <td style={{ padding: '14px 8px', textAlign: 'right', fontSize: 12, color: '#64748b' }}>
+                        {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ============================================================
+    // SETTINGS PAGE
+    // ============================================================
+    function SettingsPage({ navigate }) {
+      const { user, token, morphoData, logout } = useAuth();
+      const { t, lang, setLanguage } = useLang();
+      const kyc = morphoData?.kyc;
+
+      return (
+        <div className="fade-in">
+          <h1 style={{ ...S.heading, marginBottom: 24 }}>{t.settings}</h1>
+
+          {/* Profile */}
+          <div style={{ ...S.card, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>{t.profile}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 28, background: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: '#fff' }}>
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#fff' }}>{user?.name || 'User'}</div>
+                <div style={{ fontSize: 14, color: '#64748b', marginTop: 2 }}>{user?.email || ''}</div>
+                {user?.phone && <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{user.phone}</div>}
+              </div>
+            </div>
+          </div>
+
+          {/* KYC Status */}
+          {kyc && (
+            <div style={{ ...S.card, marginBottom: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>{t.kycStatus}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <Icon name={kyc.fully_verified ? 'shield-check' : 'shield'} size={28} color={kyc.fully_verified ? '#10b981' : '#f59e0b'} />
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: kyc.fully_verified ? '#10b981' : '#f59e0b' }}>
+                    {kyc.fully_verified ? t.fullyVerified : t.verificationPending}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[
+                  { key: 'email_validated', label: t.emailVerified },
+                  { key: 'phone_validated', label: t.phoneVerified },
+                  { key: 'document_validated', label: t.docVerified },
+                  { key: 'residence_validated', label: t.residenceVerified },
+                ].map(item => (
+                  <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon name={kyc[item.key] ? 'check-circle' : 'circle'} size={18}
+                      color={kyc[item.key] ? '#10b981' : '#4b5563'} />
+                    <span style={{ fontSize: 13, color: kyc[item.key] ? '#d1d5db' : '#6b7280' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              {!kyc.fully_verified && (
+                <button onClick={() => navigate('/kyc')}
+                  style={{ ...S.btn, width: '100%', justifyContent: 'center', marginTop: 16 }}>
+                  <Icon name="upload" size={16} /> {t.uploadDocs}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Language */}
+          <div style={{ ...S.card, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>{t.language}</h3>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {[{ code: 'en', label: 'English' }, { code: 'es', label: 'Espanol' }].map(l => (
+                <button key={l.code} onClick={() => setLanguage(l.code)}
+                  style={{ flex: 1, padding: 16, borderRadius: 12, border: lang === l.code ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)', background: lang === l.code ? 'rgba(14,165,233,0.1)' : 'rgba(255,255,255,0.03)', color: lang === l.code ? '#0ea5e9' : '#64748b', fontSize: 16, fontWeight: lang === l.code ? 600 : 500, cursor: 'pointer', textAlign: 'center' }}>
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div style={{ ...S.card, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Links</h3>
+            <a href="https://my.lucrumfx.com" target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', color: '#fff', fontSize: 15, fontWeight: 500 }}>
+              <Icon name="external" size={18} color="#0ea5e9" /> {t.goToLucrum}
+            </a>
+          </div>
+
+          {/* Logout */}
+          <button onClick={() => { logout(); navigate('/login'); }}
+            style={{ width: '100%', padding: 16, borderRadius: 12, border: 'none', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Icon name="log-out" size={18} color="#ef4444" /> {t.logout}
+          </button>
+
+          <p style={{ textAlign: 'center', color: '#64748b', fontSize: 12, marginTop: 24 }}>FIDUS Web App v2.0.0</p>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // APP ROOT
+    // ============================================================
+    function App() {
+      const { route, navigate } = useRoute();
+      const { user, loading } = useAuth();
+
+      useEffect(() => {
+        if (!loading) {
+          if (user && (route === '/login' || route === '/')) {
+            navigate('/dashboard');
+          } else if (!user && route !== '/login') {
+            navigate('/login');
+          }
+        }
+      }, [user, loading, route]);
+
+      if (loading) {
+        return (
+          <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
+          </div>
+        );
+      }
+
+      if (!user || route === '/login') {
+        return <LoginPage navigate={navigate} />;
+      }
+
+      let PageComponent;
+      switch (route) {
+        case '/dashboard': PageComponent = DashboardPage; break;
+        case '/kyc': PageComponent = KYCPage; break;
+        case '/challenges': PageComponent = ChallengesPage; break;
+        case '/transactions': PageComponent = TransactionsPage; break;
+        case '/settings': PageComponent = SettingsPage; break;
+        default: PageComponent = DashboardPage;
+      }
+
+      return (
+        <DashboardLayout route={route} navigate={navigate}>
+          {route === '/settings' ? <PageComponent navigate={navigate} /> : <PageComponent />}
+        </DashboardLayout>
+      );
+    }
+
+    // ============================================================
+    // MOUNT
+    // ============================================================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <LangProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </LangProvider>
+    );
+  </script>
+</body>
+</html>
