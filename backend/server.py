@@ -29775,6 +29775,13 @@ except Exception as e:
     logging.error(f"❌ Failed to include Retail API router: {e}")
 
 try:
+    from routes.mobile_api.retail_bridge import router as retail_bridge_router
+    app.include_router(retail_bridge_router)
+    logging.info("✅ Retail Morpho Bridge router included (web dashboard API)")
+except Exception as e:
+    logging.error(f"❌ Failed to include Retail Morpho Bridge router: {e}")
+
+try:
     from routes.hull_risk_analytics import router as hull_analytics_router
     app.include_router(hull_analytics_router)
     logging.info("✅ Hull Risk Analytics router included successfully")
