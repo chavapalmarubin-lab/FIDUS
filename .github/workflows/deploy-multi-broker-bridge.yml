@@ -1,15 +1,4 @@
-Since the old FIDUS repo has working secrets and connects to the VPS, just run the workflow **from there**. 
-
-Go to the old **FIDUS** repo → **Actions** → find **"Deploy Updated MT5 Bridge (Multi-Broker Support)"** → Run it.
-
-The workflow file was already pushed there (it's in your codebase). If you don't see it in the Actions list, create it manually:
-
-1. Go to `FIDUS` repo → Code → `.github/workflows/`
-2. Click **"Add file"** → **"Create new file"**
-3. Name: `deploy-multi-broker-bridge.yml`
-4. Paste the content from here — I'll copy it for you:
-Action: $ cat /app/.github/workflows/deploy-multi-broker-bridge.yml
-Observation: name: Deploy Updated MT5 Bridge (Multi-Broker Support)
+name: Deploy Updated MT5 Bridge (Multi-Broker Support)
 
 on:
   workflow_dispatch:
@@ -35,25 +24,15 @@ jobs:
             Write-Host "================================================"
             Write-Host "  VPS DIAGNOSTIC" -ForegroundColor Cyan
             Write-Host "================================================"
-            
-            Write-Host "`n=== Port 8000 Status ===" -ForegroundColor Yellow
+            Write-Host "=== Port 8000 Status ===" -ForegroundColor Yellow
             $listening = netstat -ano | Select-String ":8000.*LISTENING"
             if ($listening) { Write-Host $listening -ForegroundColor Green } else { Write-Host "Port 8000: Nothing listening" -ForegroundColor Red }
-            
-            Write-Host "`n=== Python Processes ===" -ForegroundColor Yellow
+            Write-Host "=== Python Processes ===" -ForegroundColor Yellow
             Get-Process python* -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, CPU -AutoSize
-            
-            Write-Host "`n=== MT5 Terminal ===" -ForegroundColor Yellow
+            Write-Host "=== MT5 Terminal ===" -ForegroundColor Yellow
             Get-Process terminal64* -ErrorAction SilentlyContinue | Format-Table Id, ProcessName -AutoSize
-            
-            Write-Host "`n=== Bridge Directory ===" -ForegroundColor Yellow
-            if (Test-Path "C:\mt5_bridge_service") {
-              Get-ChildItem "C:\mt5_bridge_service\*.py" | Format-Table Name, Length, LastWriteTime -AutoSize
-            } else {
-              Write-Host "C:\mt5_bridge_service NOT FOUND" -ForegroundColor Red
-            }
-            
-            Write-Host "`n================================================"
+            Write-Host "=== Bridge Directory ===" -ForegroundColor Yellow
+            if (Test-Path "C:\mt5_bridge_service") { Get-ChildItem "C:\mt5_bridge_service\*.py" | Format-Table Name, Length, LastWriteTime -AutoSize } else { Write-Host "NOT FOUND" -ForegroundColor Red }
       
       - name: "Stop Existing Processes"
         uses: appleboy/ssh-action@master
@@ -65,33 +44,10 @@ jobs:
           command_timeout: 3m
           script: |
             Write-Host "=== Stopping Existing Processes ===" -ForegroundColor Cyan
-            
-            # Stop scheduled tasks
-            Get-ScheduledTask | Where-Object { $_.TaskName -like "*MT5*" -or $_.TaskName -like "*Bridge*" } | ForEach-Object {
-              Write-Host "Stopping task: $($_.TaskName)" -ForegroundColor Yellow
-              Stop-ScheduledTask -TaskName $_.TaskName -ErrorAction SilentlyContinue
-            }
-            
-            # Kill Python processes
+            Get-ScheduledTask | Where-Object { $_.TaskName -like "*MT5*" -or $_.TaskName -like "*Bridge*" } | ForEach-Object { Stop-ScheduledTask -TaskName $_.TaskName -ErrorAction SilentlyContinue }
             $pyProcs = Get-Process python* -ErrorAction SilentlyContinue
-            if ($pyProcs) {
-              Write-Host "Stopping Python processes..." -ForegroundColor Yellow
-              $pyProcs | Stop-Process -Force -ErrorAction SilentlyContinue
-            }
-            
+            if ($pyProcs) { $pyProcs | Stop-Process -Force -ErrorAction SilentlyContinue }
             Start-Sleep -Seconds 3
-            
-            # Free port 8000
-            $portProcs = netstat -ano | Select-String ":8000.*LISTENING"
-            if ($portProcs) {
-              $portProcs | ForEach-Object {
-                $pid = ($_ -split '\s+')[-1]
-                Write-Host "Killing PID $pid on port 8000" -ForegroundColor Yellow
-                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-              }
-            }
-            
-            Start-Sleep -Seconds 2
             Write-Host "Processes stopped" -ForegroundColor Green
       
       - name: "Deploy Updated Bridge Script"
@@ -104,41 +60,17 @@ jobs:
           command_timeout: 5m
           script: |
             Write-Host "=== Deploying Updated Bridge Script ===" -ForegroundColor Cyan
-            
             $deployDir = "C:\mt5_bridge_service"
-            
-            if (-not (Test-Path $deployDir)) {
-              New-Item -ItemType Directory -Path $deployDir -Force | Out-Null
-              Write-Host "Created: $deployDir" -ForegroundColor Green
-            }
-            
+            if (-not (Test-Path $deployDir)) { New-Item -ItemType Directory -Path $deployDir -Force | Out-Null }
             Set-Location $deployDir
-            
-            # Backup current script
-            if (Test-Path "mt5_bridge_api_service.py") {
-              Copy-Item "mt5_bridge_api_service.py" "mt5_bridge_api_service.py.backup" -Force
-              Write-Host "Backed up current script" -ForegroundColor Green
-            }
-            
-            # Download updated script
-            Write-Host "Downloading updated mt5_bridge_api_service.py..." -ForegroundColor Yellow
+            if (Test-Path "mt5_bridge_api_service.py") { Copy-Item "mt5_bridge_api_service.py" "mt5_bridge_api_service.py.backup" -Force; Write-Host "Backed up current script" -ForegroundColor Green }
+            Write-Host "Downloading updated script..." -ForegroundColor Yellow
             $url = "https://raw.githubusercontent.com/chavapalmarubin-lab/fidus-investment-platform/main/vps/mt5_bridge_api_service.py"
             $ProgressPreference = 'SilentlyContinue'
-            try {
-              Invoke-WebRequest -Uri $url -OutFile "mt5_bridge_api_service.py" -TimeoutSec 60
-              $size = (Get-Item "mt5_bridge_api_service.py").Length
-              Write-Host "Downloaded: $size bytes" -ForegroundColor Green
-            } catch {
-              Write-Host "Download failed: $_" -ForegroundColor Red
-              exit 1
-            }
-            
-            # Create logs dir
-            if (-not (Test-Path "logs")) {
-              New-Item -ItemType Directory -Path "logs" -Force | Out-Null
-            }
-            
-            Write-Host "Script deployed successfully" -ForegroundColor Green
+            Invoke-WebRequest -Uri $url -OutFile "mt5_bridge_api_service.py" -TimeoutSec 60
+            $size = (Get-Item "mt5_bridge_api_service.py").Length
+            Write-Host "Downloaded: $size bytes" -ForegroundColor Green
+            if (-not (Test-Path "logs")) { New-Item -ItemType Directory -Path "logs" -Force | Out-Null }
       
       - name: "Start MT5 Bridge Service"
         uses: appleboy/ssh-action@master
@@ -150,16 +82,11 @@ jobs:
           command_timeout: 3m
           script: |
             Write-Host "=== Starting MT5 Bridge Service ===" -ForegroundColor Cyan
-            
             Set-Location "C:\mt5_bridge_service"
-            
-            # Start service in background
             Start-Process -FilePath "python" -ArgumentList "mt5_bridge_api_service.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\service_output.log" -RedirectStandardError "logs\service_error.log"
-            
-            Write-Host "Waiting 25 seconds for service to initialize..." -ForegroundColor Yellow
+            Write-Host "Waiting 25 seconds..." -ForegroundColor Yellow
             Start-Sleep -Seconds 25
-            
-            Write-Host "Service start command completed" -ForegroundColor Green
+            Write-Host "Service started" -ForegroundColor Green
       
       - name: "Verify Service is Running"
         uses: appleboy/ssh-action@master
@@ -171,66 +98,11 @@ jobs:
           command_timeout: 3m
           script: |
             Write-Host "=== Verifying Service ===" -ForegroundColor Cyan
-            
-            # Check port 8000
             $listening = netstat -ano | Select-String ":8000.*LISTENING"
-            if ($listening) {
-              Write-Host "SUCCESS: Port 8000 is listening!" -ForegroundColor Green
-            } else {
-              Write-Host "ERROR: Port 8000 is NOT listening" -ForegroundColor Red
-              if (Test-Path "C:\mt5_bridge_service\logs\service_output.log") {
-                Write-Host "`n--- Service Output (last 30 lines) ---" -ForegroundColor Yellow
-                Get-Content "C:\mt5_bridge_service\logs\service_output.log" -Tail 30
-              }
-              if (Test-Path "C:\mt5_bridge_service\logs\service_error.log") {
-                Write-Host "`n--- Service Errors (last 30 lines) ---" -ForegroundColor Yellow
-                Get-Content "C:\mt5_bridge_service\logs\service_error.log" -Tail 30
-              }
-            }
-            
-            # Test API
-            Write-Host "`nTesting API endpoint..." -ForegroundColor Yellow
-            try {
-              $r = Invoke-RestMethod -Uri "http://localhost:8000/" -TimeoutSec 10
-              Write-Host "API Response: $($r.service) - $($r.status)" -ForegroundColor Green
-            } catch {
-              Write-Host "API test failed: $_" -ForegroundColor Red
-            }
-            
-            # Test health
-            try {
-              $r = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/bridge/health" -TimeoutSec 10
-              Write-Host "Health: $($r | ConvertTo-Json -Compress)" -ForegroundColor Green
-            } catch {
-              Write-Host "Health check failed: $_" -ForegroundColor Red
-            }
-            
-            # Test TickMill account
-            Write-Host "`nTesting TickMill account 55705730..." -ForegroundColor Yellow
-            try {
-              $r = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/account/55705730/info" -TimeoutSec 15
-              Write-Host "TickMill Account: $($r | ConvertTo-Json -Compress)" -ForegroundColor Green
-            } catch {
-              Write-Host "TickMill test: $_" -ForegroundColor Yellow
-            }
+            if ($listening) { Write-Host "SUCCESS: Port 8000 is listening!" -ForegroundColor Green } else { Write-Host "ERROR: Port 8000 NOT listening" -ForegroundColor Red; if (Test-Path "C:\mt5_bridge_service\logs\service_error.log") { Get-Content "C:\mt5_bridge_service\logs\service_error.log" -Tail 30 } }
+            try { $r = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/bridge/health" -TimeoutSec 10; Write-Host "Health OK" -ForegroundColor Green } catch { Write-Host "Health failed: $_" -ForegroundColor Red }
+            try { $r = Invoke-RestMethod -Uri "http://localhost:8000/api/mt5/account/55705730/info" -TimeoutSec 15; Write-Host "TickMill OK: $($r | ConvertTo-Json -Compress)" -ForegroundColor Green } catch { Write-Host "TickMill: $_" -ForegroundColor Yellow }
       
       - name: "Test External Access"
         run: |
-          echo "=== Testing External Access from GitHub Runner ==="
-          echo ""
-          echo "Testing root endpoint..."
-          curl -s --connect-timeout 15 --max-time 20 http://92.118.45.135:8000/ || echo "Connection failed"
-          echo ""
-          echo "Testing health endpoint..."
-          curl -s --connect-timeout 15 --max-time 20 http://92.118.45.135:8000/api/mt5/bridge/health || echo "Connection failed"
-      
-      - name: "Generate Report"
-        if: always()
-        run: |
-          echo "# MT5 Bridge Update - Multi-Broker Support" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "- Bridge now reads server field from each account config" >> $GITHUB_STEP_SUMMARY
-          echo "- Supports LUCRUM, TickMill, and any future broker" >> $GITHUB_STEP_SUMMARY
-          echo "- New account: 55705730 (TickMill, \$5,000, Feb 2025)" >> $GITHUB_STEP_SUMMARY
-Exit code: 0
+          curl -s --connect-timeout 15 http://92.118.45.135:8000/api/mt5/bridge/health || echo "External connection failed"
