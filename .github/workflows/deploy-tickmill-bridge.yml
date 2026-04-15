@@ -1,0 +1,76 @@
+
+
+```yaml
+name: Deploy TickMill Bridge to VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-tickmill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: "Deploy TickMill Bridge Script"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Deploying TickMill Bridge ===" -ForegroundColor Cyan
+            $dir = "C:\mt5_bridge_service"
+            Set-Location $dir
+            if (-not (Test-Path "logs")) { New-Item -ItemType Directory -Path "logs" -Force | Out-Null }
+            Write-Host "Downloading mt5_bridge_tickmill.py..." -ForegroundColor Yellow
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chavapalmarubin-lab/fidus-investment-platform/main/vps/mt5_bridge_tickmill.py" -OutFile "mt5_bridge_tickmill.py" -TimeoutSec 60
+            $size = (Get-Item "mt5_bridge_tickmill.py").Length
+            Write-Host "Downloaded: $size bytes" -ForegroundColor Green
+
+      - name: "Start TickMill Bridge"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Starting TickMill Bridge ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            $existing = Get-Process python* -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like "*tickmill*" }
+            if ($existing) { $existing | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2 }
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_tickmill.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\tickmill_output.log" -RedirectStandardError "logs\tickmill_error.log"
+            Write-Host "Waiting 20 seconds for initialization..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 20
+            Write-Host "TickMill Bridge started" -ForegroundColor Green
+
+      - name: "Verify TickMill Bridge"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Checking TickMill Bridge Logs ===" -ForegroundColor Cyan
+            if (Test-Path "C:\mt5_bridge_service\logs\tickmill_bridge.log") {
+              Get-Content "C:\mt5_bridge_service\logs\tickmill_bridge.log" -Tail 30
+            } else {
+              Write-Host "No log file yet" -ForegroundColor Yellow
+            }
+            if (Test-Path "C:\mt5_bridge_service\logs\tickmill_error.log") {
+              $errors = Get-Content "C:\mt5_bridge_service\logs\tickmill_error.log" -Tail 10
+              if ($errors) { Write-Host "ERRORS:" -ForegroundColor Red; Write-Host $errors }
+            }
+            Write-Host "=== Python Processes ===" -ForegroundColor Yellow
+            Get-Process python* -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, CPU -AutoSize
+```
