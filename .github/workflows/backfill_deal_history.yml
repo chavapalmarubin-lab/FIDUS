@@ -1,0 +1,58 @@
+name: Backfill Full Deal History (3 Years)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: "Deploy Backfill Script"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Deploying Backfill Script ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            if (-not (Test-Path "logs")) { New-Item -ItemType Directory -Path "logs" -Force | Out-Null }
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chavapalmarubin-lab/fidus-investment-platform/main/vps/backfill_all_deals.py" -OutFile "backfill_all_deals.py" -TimeoutSec 60
+            $size = (Get-Item "backfill_all_deals.py").Length
+            Write-Host "Downloaded: $size bytes" -ForegroundColor Green
+
+      - name: "Run Full Backfill"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 20m
+          script: |
+            Write-Host "=== Running Full Deal History Backfill ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            python backfill_all_deals.py 2>&1 | Tee-Object -FilePath "logs\backfill_output.log"
+            Write-Host "Backfill complete" -ForegroundColor Green
+
+      - name: "Show Results"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Backfill Results ===" -ForegroundColor Cyan
+            if (Test-Path "C:\mt5_bridge_service\logs\backfill.log") {
+              Get-Content "C:\mt5_bridge_service\logs\backfill.log" -Tail 40
+            }
