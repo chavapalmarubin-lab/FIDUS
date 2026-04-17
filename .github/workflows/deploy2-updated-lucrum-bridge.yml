@@ -1,0 +1,79 @@
+name: Deploy Updated Lucrum Bridge (Upsert Mode)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: "Stop Existing Lucrum Bridge"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Stopping Lucrum Bridge ===" -ForegroundColor Cyan
+            $pyProcs = Get-Process python* -ErrorAction SilentlyContinue
+            if ($pyProcs) { $pyProcs | Stop-Process -Force -ErrorAction SilentlyContinue }
+            Start-Sleep -Seconds 3
+            Write-Host "Stopped" -ForegroundColor Green
+
+      - name: "Deploy Updated Script"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Deploying Updated Lucrum Bridge ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            if (Test-Path "mt5_bridge_lucrum.py") { Copy-Item "mt5_bridge_lucrum.py" "mt5_bridge_lucrum.py.backup" -Force; Write-Host "Backed up" -ForegroundColor Green }
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chavapalmarubin-lab/fidus-investment-platform/main/vps/mt5_bridge_lucrum.py" -OutFile "mt5_bridge_lucrum.py" -TimeoutSec 60
+            $size = (Get-Item "mt5_bridge_lucrum.py").Length
+            Write-Host "Downloaded: $size bytes" -ForegroundColor Green
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chavapalmarubin-lab/fidus-investment-platform/main/vps/mt5_bridge_tickmill.py" -OutFile "mt5_bridge_tickmill.py" -TimeoutSec 60
+            $size2 = (Get-Item "mt5_bridge_tickmill.py").Length
+            Write-Host "TickMill also updated: $size2 bytes" -ForegroundColor Green
+
+      - name: "Start All Bridges"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Starting Bridges ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\lucrum_output.log" -RedirectStandardError "logs\lucrum_error.log"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_tickmill.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\tickmill_output.log" -RedirectStandardError "logs\tickmill_error.log"
+            Write-Host "Waiting 25 seconds..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 25
+            Write-Host "Bridges started" -ForegroundColor Green
+
+      - name: "Verify"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Verifying ===" -ForegroundColor Cyan
+            Get-Process python* -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, CPU -AutoSize
+            if (Test-Path "C:\mt5_bridge_service\logs\lucrum.log") { Get-Content "C:\mt5_bridge_service\logs\lucrum.log" -Tail 10 }
+            if (Test-Path "C:\mt5_bridge_service\logs\tickmill.log") { Get-Content "C:\mt5_bridge_service\logs\tickmill.log" -Tail 10 }
