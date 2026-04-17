@@ -1,0 +1,29 @@
+name: "Start All Bridges"
+uses: appleboy/ssh-action@master
+with:
+host: ${{ secrets.VPS_HOST }}
+username: ${{ secrets.VPS_USERNAME }}
+password: ${{ secrets.VPS_PASSWORD }}
+port: ${{ secrets.VPS_PORT }}
+command_timeout: 3m
+script: |
+Write-Host "=== Starting Bridges ===" -ForegroundColor Cyan
+Set-Location "C:\mt5_bridge_service"
+Start-Process -FilePath "python" -ArgumentList "mt5_bridge_lucrum.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\lucrum_output.log" -RedirectStandardError "logs\lucrum_error.log"
+Start-Process -FilePath "python" -ArgumentList "mt5_bridge_tickmill.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\tickmill_output.log" -RedirectStandardError "logs\tickmill_error.log"
+Write-Host "Waiting 25 seconds..." -ForegroundColor Yellow
+Start-Sleep -Seconds 25
+Write-Host "Bridges started" -ForegroundColor Green
+
+- name: "Verify"
+uses: appleboy/ssh-action@masterwith:
+host: ${{ secrets.VPS_HOST }}
+username: ${{ secrets.VPS_USERNAME }}
+password: ${{ secrets.VPS_PASSWORD }}
+port: ${{ secrets.VPS_PORT }}
+command_timeout: 3m
+script: |
+Write-Host "=== Verifying ===" -ForegroundColor Cyan
+Get-Process python* -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, CPU -AutoSize
+if (Test-Path "C:\mt5_bridge_service\logs\lucrum.log") { Get-Content "C:\mt5_bridge_service\logs\lucrum.log" -Tail 10 }
+if (Test-Path "C:\mt5_bridge_service\logs\tickmill.log") { Get-Content "C:\mt5_bridge_service\logs\tickmill.log" -Tail 10 }
