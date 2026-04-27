@@ -1,0 +1,61 @@
+name: Deploy Exness Bridge to VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-exness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: "Deploy Exness Bridge Script"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
+          script: |
+            Write-Host "=== Deploying Exness Bridge ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            if (-not (Test-Path "logs")) { New-Item -ItemType Directory -Path "logs" -Force | Out-Null }
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chavapalmarubin-lab/fidus-investment-platform/main/vps/mt5_bridge_exness.py" -OutFile "mt5_bridge_exness.py" -TimeoutSec 60
+            $size = (Get-Item "mt5_bridge_exness.py").Length
+            Write-Host "Downloaded: $size bytes" -ForegroundColor Green
+
+      - name: "Start Exness Bridge"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Starting Exness Bridge ===" -ForegroundColor Cyan
+            Set-Location "C:\mt5_bridge_service"
+            Start-Process -FilePath "python" -ArgumentList "mt5_bridge_exness.py" -WorkingDirectory "C:\mt5_bridge_service" -WindowStyle Hidden -RedirectStandardOutput "logs\exness_output.log" -RedirectStandardError "logs\exness_error.log"
+            Write-Host "Waiting 20 seconds..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 20
+            Write-Host "Exness Bridge started" -ForegroundColor Green
+
+      - name: "Verify Exness Bridge"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 3m
+          script: |
+            Write-Host "=== Checking Exness Bridge ===" -ForegroundColor Cyan
+            if (Test-Path "C:\mt5_bridge_service\logs\exness.log") { Get-Content "C:\mt5_bridge_service\logs\exness.log" -Tail 15 }
+            if (Test-Path "C:\mt5_bridge_service\logs\exness_error.log") { $e = Get-Content "C:\mt5_bridge_service\logs\exness_error.log" -Tail 5; if ($e) { Write-Host "ERRORS:" -ForegroundColor Red; Write-Host $e } }
+            Write-Host "=== Python Processes ===" -ForegroundColor Yellow
+            Get-Process python* -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, CPU -AutoSize
